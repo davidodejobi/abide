@@ -1,0 +1,24 @@
+{
+  "languageCode": "en",
+  "hymns": {
+    "hymn_001": {
+      "title": "All Hail the Power of Jesus' Name",
+      "lyrics": {
+        "stanzas": [
+          "All hail the power of Jesus' name!\nLet angels prostrate fall;\nBring forth the royal diadem,\nAnd crown Him Lord of all.",
+          "Crown Him, ye martyrs of our God,\nWho from His altar call;\nExtol the Stem of Jesse's Rod,\nAnd crown Him Lord of all."
+        ],
+        "chorus": "Crown Him Lord of all!"
+      }
+    },
+    "hymn_002": {
+      "title": "Holy, Holy, Holy",
+      "lyrics": {
+        "stanzas": [
+          "Holy, holy, holy! Lord God Almighty!\nEarly in the morning our song shall rise to Thee;\nHoly, holy, holy, merciful and mighty!\nGod in three Persons, blessed Trinity!",
+          "Holy, holy, holy! all the saints adore Thee,\nCasting down their golden crowns around the glassy sea;\nCherubim and seraphim falling down before Thee,\nWhich wert, and art, and evermore shalt be."
+        ]
+      }
+    }
+  }
+}
