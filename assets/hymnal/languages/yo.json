@@ -1,0 +1,56 @@
+{
+  "language": "yor",
+  "hymnal_name": "Iwe Orin Ijo Onitebomi",
+  "hymns": {
+    "hymn_0001": {
+      "number": 1,
+      "title": "E Fi Iyin Fun Olorun",
+      "lyrics": {
+        "stanzas": [
+          { "index": 1, "text": "E fi iyin fun Olorun..." }
+        ],
+        "chorus": null
+      }
+    },
+    "hymn_0002": {
+      "number": 2,
+      "title": "Je K' A Gbe Oju Wa S' Oke",
+      "lyrics": {
+        "stanzas": [
+          { "index": 1, "text": "Je k' agb' oju ayo s' oke..." }
+        ],
+        "chorus": null
+      }
+    },
+    "hymn_0003": {
+      "number": 3,
+      "title": "E Yo Gbogbo Orile-ede",
+      "lyrics": {
+        "stanzas": [
+          { "index": 1, "text": "E yo gbogb' orile-ede..." }
+        ],
+        "chorus": null
+      }
+    },
+    "hymn_0004": {
+      "number": 4,
+      "title": "O Wo At' Alabukunfun",
+      "lyrics": {
+        "stanzas": [
+          { "index": 1, "text": "O wo at' alabukunfun..." }
+        ],
+        "chorus": null
+      }
+    },
+    "hymn_0005": {
+      "number": 5,
+      "title": "Niwaju Ite Jehofa",
+      "lyrics": {
+        "stanzas": [
+          { "index": 1, "text": "Niwaju ite Jehofa nla..." }
+        ],
+        "chorus": null
+      }
+    }
+  }
+}

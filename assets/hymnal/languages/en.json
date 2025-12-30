@@ -1,23 +1,35 @@
 {
-  "languageCode": "en",
+  "language": "eng",
+  "hymnal_name": "Baptist Hymnal",
   "hymns": {
-    "hymn_001": {
-      "title": "All Hail the Power of Jesus' Name",
+    "hymn_0001": {
+      "number": 120,
+      "title": "Give Glory to God",
       "lyrics": {
         "stanzas": [
-          "All hail the power of Jesus' name!\nLet angels prostrate fall;\nBring forth the royal diadem,\nAnd crown Him Lord of all.",
-          "Crown Him, ye martyrs of our God,\nWho from His altar call;\nExtol the Stem of Jesse's Rod,\nAnd crown Him Lord of all."
+          { "index": 1, "text": "Give glory to God, you people of the world..." }
         ],
-        "chorus": "Crown Him Lord of all!"
+        "chorus": null
       }
     },
-    "hymn_002": {
-      "title": "Holy, Holy, Holy",
+    "hymn_0003": {
+      "number": 45,
+      "title": "All Nations, Clap Your Hands",
       "lyrics": {
         "stanzas": [
-          "Holy, holy, holy! Lord God Almighty!\nEarly in the morning our song shall rise to Thee;\nHoly, holy, holy, merciful and mighty!\nGod in three Persons, blessed Trinity!",
-          "Holy, holy, holy! all the saints adore Thee,\nCasting down their golden crowns around the glassy sea;\nCherubim and seraphim falling down before Thee,\nWhich wert, and art, and evermore shalt be."
-        ]
+          { "index": 1, "text": "O clap your hands, all ye nations..." }
+        ],
+        "chorus": null
+      }
+    },
+    "hymn_0005": {
+      "number": 8,
+      "title": "Before Jehovah's Throne",
+      "lyrics": {
+        "stanzas": [
+          { "index": 1, "text": "Before Jehovah's awful throne..." }
+        ],
+        "chorus": null
       }
     }
   }

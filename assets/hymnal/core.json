@@ -1,18 +1,12 @@
-[
-  {
-    "id": "hymn_001",
-    "category": "Praise",
-    "orders": {
-      "en": 1,
-      "yo": 1
-    }
-  },
-  {
-    "id": "hymn_002",
-    "category": "Worship",
-    "orders": {
-      "en": 2,
-      "yo": 2
-    }
+{
+  "schema_version": "1.0.0",
+  "hymnal_id": "onitebomi_2000",
+  "source_language": "yor",
+  "hymns": {
+    "hymn_0001": { "category": "praise" },
+    "hymn_0002": { "category": "praise" },
+    "hymn_0003": { "category": "worship" },
+    "hymn_0004": { "category": "thanksgiving" },
+    "hymn_0005": { "category": "adoration" }
   }
-]
+}
