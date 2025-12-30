@@ -6,9 +6,7 @@ part 'hymn.g.dart';
 @freezed
 class Hymn with _$Hymn {
   const factory Hymn({
-    required String id,
     required String category,
-    required Map<String, int> orders, // languageCode: order
   }) = _Hymn;
 
   factory Hymn.fromJson(Map<String, dynamic> json) => _$HymnFromJson(json);

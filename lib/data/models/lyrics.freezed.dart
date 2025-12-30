@@ -20,7 +20,7 @@ Lyrics _$LyricsFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$Lyrics {
-  List<String> get stanzas => throw _privateConstructorUsedError;
+  List<Stanza> get stanzas => throw _privateConstructorUsedError;
   String? get chorus => throw _privateConstructorUsedError;
 
   /// Serializes this Lyrics to a JSON map.
@@ -37,7 +37,7 @@ abstract class $LyricsCopyWith<$Res> {
   factory $LyricsCopyWith(Lyrics value, $Res Function(Lyrics) then) =
       _$LyricsCopyWithImpl<$Res, Lyrics>;
   @useResult
-  $Res call({List<String> stanzas, String? chorus});
+  $Res call({List<Stanza> stanzas, String? chorus});
 }
 
 /// @nodoc
@@ -62,7 +62,7 @@ class _$LyricsCopyWithImpl<$Res, $Val extends Lyrics>
       stanzas: null == stanzas
           ? _value.stanzas
           : stanzas // ignore: cast_nullable_to_non_nullable
-              as List<String>,
+              as List<Stanza>,
       chorus: freezed == chorus
           ? _value.chorus
           : chorus // ignore: cast_nullable_to_non_nullable
@@ -78,7 +78,7 @@ abstract class _$$LyricsImplCopyWith<$Res> implements $LyricsCopyWith<$Res> {
       __$$LyricsImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({List<String> stanzas, String? chorus});
+  $Res call({List<Stanza> stanzas, String? chorus});
 }
 
 /// @nodoc
@@ -101,7 +101,7 @@ class __$$LyricsImplCopyWithImpl<$Res>
       stanzas: null == stanzas
           ? _value._stanzas
           : stanzas // ignore: cast_nullable_to_non_nullable
-              as List<String>,
+              as List<Stanza>,
       chorus: freezed == chorus
           ? _value.chorus
           : chorus // ignore: cast_nullable_to_non_nullable
@@ -113,15 +113,15 @@ class __$$LyricsImplCopyWithImpl<$Res>
 /// @nodoc
 @JsonSerializable()
 class _$LyricsImpl implements _Lyrics {
-  const _$LyricsImpl({required final List<String> stanzas, this.chorus})
+  const _$LyricsImpl({required final List<Stanza> stanzas, this.chorus})
       : _stanzas = stanzas;
 
   factory _$LyricsImpl.fromJson(Map<String, dynamic> json) =>
       _$$LyricsImplFromJson(json);
 
-  final List<String> _stanzas;
+  final List<Stanza> _stanzas;
   @override
-  List<String> get stanzas {
+  List<Stanza> get stanzas {
     if (_stanzas is EqualUnmodifiableListView) return _stanzas;
     // ignore: implicit_dynamic_type
     return EqualUnmodifiableListView(_stanzas);
@@ -167,13 +167,13 @@ class _$LyricsImpl implements _Lyrics {
 
 abstract class _Lyrics implements Lyrics {
   const factory _Lyrics(
-      {required final List<String> stanzas,
+      {required final List<Stanza> stanzas,
       final String? chorus}) = _$LyricsImpl;
 
   factory _Lyrics.fromJson(Map<String, dynamic> json) = _$LyricsImpl.fromJson;
 
   @override
-  List<String> get stanzas;
+  List<Stanza> get stanzas;
   @override
   String? get chorus;
 
