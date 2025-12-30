@@ -6,7 +6,7 @@ part of 'hymns_viewmodel.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$hymnDetailHash() => r'22722588a63aa2b465ee6ce25ae1cf6da0a930cf';
+String _$hymnDetailHash() => r'b99c37d2af55dfc14ceba0063e6ac29987c34c62';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -160,7 +160,7 @@ class _HymnDetailProviderElement
 }
 
 String _$bilingualHymnDetailHash() =>
-    r'e7bf374b856408fbaf63123f7ef994d78583a49c';
+    r'81c747952e085fb2159c911864456b77ba040411';
 
 /// See also [bilingualHymnDetail].
 @ProviderFor(bilingualHymnDetail)

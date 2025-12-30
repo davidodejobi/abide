@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../domain/usecases/get_hymn_for_split_view.dart';
@@ -21,8 +22,7 @@ class HymnsViewModel extends _$HymnsViewModel {
 }
 
 @riverpod
-Future<Map<String, dynamic>> hymnDetail(
-    HymnDetailRef ref, String hymnId) async {
+Future<Map<String, dynamic>> hymnDetail(Ref ref, String hymnId) async {
   final languages = [ref.watch(languageProvider)];
   final getHymn = GetHymnForSplitView(ref.read(hymnalRepositoryProvider));
   final translations = await getHymn(hymnId, languages);
@@ -31,7 +31,7 @@ Future<Map<String, dynamic>> hymnDetail(
 
 @riverpod
 Future<Map<String, dynamic>> bilingualHymnDetail(
-    BilingualHymnDetailRef ref, String hymnId, List<String> languages) async {
+    Ref ref, String hymnId, List<String> languages) async {
   final getHymn = GetHymnForSplitView(ref.read(hymnalRepositoryProvider));
   final translations = await getHymn(hymnId, languages);
   return {'translations': translations};

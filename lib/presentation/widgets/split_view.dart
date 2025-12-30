@@ -30,8 +30,8 @@ class SplitView extends StatelessWidget {
                   style: Theme.of(context).textTheme.headlineSmall,
                 ),
                 const SizedBox(height: 16),
-                ...t.lyrics.stanzas.asMap().entries.map((entry) {
-                  return HymnStanza(number: entry.key + 1, text: entry.value);
+                ...t.lyrics.stanzas.map((stanza) {
+                  return HymnStanza(number: stanza.index, text: stanza.text);
                 }),
                 if (t.lyrics.chorus != null)
                   HymnStanza(number: 0, text: t.lyrics.chorus!, isChorus: true),
