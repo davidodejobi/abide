@@ -1,6 +1,7 @@
 import 'dart:convert';
-import 'dart:io';
 
+import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:open_baptist_hymnal/data/models/hymnal_core.dart';
 import 'package:open_baptist_hymnal/data/models/hymnal_index.dart';
@@ -8,9 +9,12 @@ import 'package:open_baptist_hymnal/data/models/language_pack.dart';
 
 void main() {
   group('Hymnal Data Models Test', () {
+    setUp(() {
+      WidgetsFlutterBinding.ensureInitialized();
+    });
+
     test('HymnalCore parses successfully from core.json', () async {
-      final file = File('assets/hymnal/core.json');
-      final jsonString = await file.readAsString();
+      final jsonString = await rootBundle.loadString('assets/hymnal/core.json');
       final Map<String, dynamic> jsonMap = json.decode(jsonString);
 
       final core = HymnalCore.fromJson(jsonMap);
@@ -23,8 +27,8 @@ void main() {
     });
 
     test('HymnalIndex parses successfully from index.json', () async {
-      final file = File('assets/hymnal/index.json');
-      final jsonString = await file.readAsString();
+      final jsonString =
+          await rootBundle.loadString('assets/hymnal/index.json');
       final Map<String, dynamic> jsonMap = json.decode(jsonString);
 
       final index = HymnalIndex.fromJson(jsonMap);
@@ -37,8 +41,8 @@ void main() {
     });
 
     test('LanguagePack parses successfully from yo.json (Yoruba)', () async {
-      final file = File('assets/hymnal/languages/yo.json');
-      final jsonString = await file.readAsString();
+      final jsonString =
+          await rootBundle.loadString('assets/hymnal/languages/yo.json');
       final Map<String, dynamic> jsonMap = json.decode(jsonString);
 
       final pack = LanguagePack.fromJson(jsonMap);
@@ -55,8 +59,8 @@ void main() {
     });
 
     test('LanguagePack parses successfully from en.json (English)', () async {
-      final file = File('assets/hymnal/languages/en.json');
-      final jsonString = await file.readAsString();
+      final jsonString =
+          await rootBundle.loadString('assets/hymnal/languages/en.json');
       final Map<String, dynamic> jsonMap = json.decode(jsonString);
 
       final pack = LanguagePack.fromJson(jsonMap);
