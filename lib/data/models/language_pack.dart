@@ -5,7 +5,6 @@ import 'lyrics.dart';
 part 'language_pack.freezed.dart';
 part 'language_pack.g.dart';
 
-// ignore_for_file: invalid_annotation_target
 @freezed
 class LanguagePack with _$LanguagePack {
   const factory LanguagePack({
