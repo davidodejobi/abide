@@ -51,28 +51,35 @@ abstract final class AppColors {
   // NEUTRAL COLORS (Grayscale)
   // ============================================
 
-  /// Near black
-  static const Color neutral900 = Color(0xFF1A1A1A);
+  /// Near black - Background dark mode
+  static const Color neutral900 = Color(0xFF0C0C0C);
 
-  /// Dark gray
-  static const Color neutral800 = Color(0xFF2B2B2B);
+  /// Dark gray - Surface dark mode
+  static const Color neutral850 = Color(0xFF141414);
 
-  static const Color neutral600 = Color(0xFF838383);
+  /// Dark gray - Surface container dark
+  static const Color neutral800 = Color(0xFF1A1A1A);
+
+  /// Medium dark gray - Verse numbers background
+  static const Color neutral700 = Color(0xFF2B2B2B);
+
+  /// Icon inactive
+  static const Color neutral600 = Color(0xFF626262);
 
   /// Medium gray
   static const Color neutral500 = Color(0xFF848484);
 
   /// Light gray
-  static const Color neutral300 = Color(0xFFBFBFBF);
-
-  /// Light gray 400
   static const Color neutral400 = Color(0xFFA1A1AA);
 
-  /// Off-white / Cream
-  static const Color neutral100 = Color(0xFFFAF8F3);
+  /// Light gray
+  static const Color neutral300 = Color(0xFFBFBFBF);
 
-  /// Beige
+  /// Beige / Divider light
   static const Color neutral200 = Color(0xFFD8D5CC);
+
+  /// Off-white / Cream - Primary text on dark
+  static const Color neutral100 = Color(0xFFFAF8F3);
 
   // ============================================
   // SEMANTIC COLORS
@@ -96,14 +103,17 @@ abstract final class AppColors {
   /// Background color (Light mode)
   static const Color backgroundLight = neutral100;
 
-  /// Background color (Dark mode)
+  /// Background color (Dark mode) - #0C0C0C
   static const Color backgroundDark = neutral900;
 
   /// Surface color (Light mode)
   static const Color surfaceLight = white;
 
-  /// Surface color (Dark mode)
-  static const Color surfaceDark = neutral800;
+  /// Surface color (Dark mode) - #141414
+  static const Color surfaceDark = neutral850;
+
+  /// Surface container (Dark mode) - #1A1A1A
+  static const Color surfaceContainerDark = neutral800;
 
   /// Error color
   static const Color error = Color(0xFFB00020);

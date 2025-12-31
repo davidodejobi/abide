@@ -44,7 +44,7 @@ abstract final class AppTheme {
       brightness: Brightness.dark,
       colorScheme: _darkColorScheme,
       textTheme: _textTheme,
-      scaffoldBackgroundColor: AppColors.backgroundDark,
+      scaffoldBackgroundColor: AppColors.backgroundDark, // #0C0C0C
       appBarTheme: _darkAppBarTheme,
       cardTheme: _darkCardTheme,
       elevatedButtonTheme: _elevatedButtonTheme,
@@ -97,30 +97,35 @@ abstract final class AppTheme {
 
   static const ColorScheme _darkColorScheme = ColorScheme(
     brightness: Brightness.dark,
-    primary: AppColors.primary300,
-    onPrimary: AppColors.primaryDark,
-    primaryContainer: AppColors.primary,
-    onPrimaryContainer: AppColors.primary200,
-    secondary: AppColors.secondary,
-    onSecondary: AppColors.secondaryDark,
-    secondaryContainer: AppColors.secondaryDark,
-    onSecondaryContainer: AppColors.secondary100,
+    // Primary - Gold accent in dark mode for better visibility
+    primary: AppColors.secondary,
+    onPrimary: AppColors.secondaryDark,
+    primaryContainer: AppColors.secondaryDark,
+    onPrimaryContainer: AppColors.secondary,
+    // Secondary - Navy blue as secondary in dark mode
+    secondary: AppColors.primary300,
+    onSecondary: AppColors.primaryDark,
+    secondaryContainer: AppColors.primaryDark,
+    onSecondaryContainer: AppColors.primary200,
+    // Tertiary
     tertiary: AppColors.primary400,
     onTertiary: AppColors.primaryDark,
     tertiaryContainer: AppColors.primaryLight,
     onTertiaryContainer: AppColors.primary200,
+    // Error
     error: AppColors.error,
     onError: AppColors.white,
-    surface: AppColors.surfaceDark,
-    onSurface: AppColors.neutral100,
-    surfaceContainerHighest: AppColors.neutral800,
-    onSurfaceVariant: AppColors.neutral300,
-    outline: AppColors.neutral500,
-    outlineVariant: AppColors.neutral800,
+    // Surface colors - from Figma dark theme
+    surface: AppColors.surfaceDark, // #141414
+    onSurface: AppColors.neutral100, // #FAF8F3
+    surfaceContainerHighest: AppColors.surfaceContainerDark, // #1A1A1A
+    onSurfaceVariant: AppColors.neutral500, // #848484
+    outline: AppColors.neutral600, // #626262
+    outlineVariant: AppColors.neutral700, // #2B2B2B
     shadow: AppColors.black,
     scrim: AppColors.black,
     inverseSurface: AppColors.neutral100,
-    onInverseSurface: AppColors.neutral800,
+    onInverseSurface: AppColors.neutral900,
     inversePrimary: AppColors.primary,
   );
 
