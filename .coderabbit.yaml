@@ -1,0 +1,45 @@
+# CodeRabbit Configuration
+# Documentation: https://docs.coderabbit.ai/guides/configure-coderabbit
+
+language: en-US
+
+reviews:
+  # Enable auto reviews on all PRs
+  auto_review:
+    enabled: true
+    # Review PRs targeting any branch, not just main
+    base_branches:
+      - "**"
+  
+  # Show review status in PR
+  review_status: true
+  
+  # Request changes when issues are found
+  request_changes_workflow: true
+  
+  # High-level summary in PR comment
+  high_level_summary: true
+  
+  # Generate poem in review (fun feature)
+  poem: false
+  
+  # Collapse walkthrough in PR comment
+  collapse_walkthrough: true
+  
+  # Path-based instructions
+  path_instructions: []
+
+chat:
+  # Enable chat in PR comments
+  auto_reply: true
+
+# Ignore patterns for files that shouldn't be reviewed
+path_filters:
+  - "!**/*.g.dart"
+  - "!**/*.freezed.dart"
+  - "!**/*.gr.dart"
+  - "!**/generated/**"
+  - "!**/*.lock"
+  - "!ios/Pods/**"
+  - "!android/.gradle/**"
+  - "!build/**"
