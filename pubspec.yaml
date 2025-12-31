@@ -31,3 +31,39 @@ flutter:
   assets:
     - assets/hymnal/
     - assets/hymnal/languages/
+
+  fonts:
+    - family: EBGaramond
+      fonts:
+        - asset: assets/fonts/EBGaramond-Regular.ttf
+        - asset: assets/fonts/EBGaramond-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/EBGaramond-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/EBGaramond-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/EBGaramond-Italic.ttf
+          style: italic
+        - asset: assets/fonts/EBGaramond-MediumItalic.ttf
+          weight: 500
+          style: italic
+        - asset: assets/fonts/EBGaramond-SemiBoldItalic.ttf
+          weight: 600
+          style: italic
+        - asset: assets/fonts/EBGaramond-BoldItalic.ttf
+          weight: 700
+          style: italic
+
+    - family: Geist
+      fonts:
+        - asset: assets/fonts/Geist-Regular.ttf
+        - asset: assets/fonts/Geist-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Geist-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Geist-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Geist-Light.ttf
+          weight: 300
+        - asset: assets/fonts/Geist-Thin.ttf
+          weight: 100
