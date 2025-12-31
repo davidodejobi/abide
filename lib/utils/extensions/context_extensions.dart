@@ -115,10 +115,13 @@ extension ContextExtensions on BuildContext {
     return mobile;
   }
 
-  /// Get font size scaled for screen size
+  /// Get font size scaled for screen size with clamping to prevent
+  /// excessively large fonts on tablets/desktops.
   /// Usage: context.scaledFontSize(16)
+  /// - Scales based on 375px base width (iPhone SE)
+  /// - Clamped between 0.85x and 1.3x to prevent extreme scaling
   double scaledFontSize(double size) {
-    final scale = width / 375; // Base width is 375 (iPhone SE)
+    final scale = (width / 375).clamp(0.85, 1.3); // Clamp scale factor
     return size * scale;
   }
 
@@ -133,22 +136,6 @@ extension ContextExtensions on BuildContext {
   /// Get language code
   /// Usage: context.languageCode
   String get languageCode => locale.languageCode;
-
-  // ============================================================================
-  // MOUNTED CHECK (useful in async operations)
-  // ============================================================================
-
-  /// Check if context is still mounted (for async operations)
-  /// Usage: if (!context.mounted) return;
-  bool get mounted {
-    try {
-      // Try to access a property that would throw if context is unmounted
-      findRenderObject();
-      return true;
-    } catch (_) {
-      return false;
-    }
-  }
 
   // ============================================================================
   // DEVICE TYPE CHECK
@@ -175,24 +162,62 @@ class _TextStylesHelper {
   TextTheme get _textTheme => Theme.of(context).textTheme;
 
   /// Extra small text (10px)
-  TextStyle get small => _textTheme.labelSmall ?? const TextStyle(fontSize: 10);
+  TextStyle get small =>
+      _textTheme.labelSmall ??
+      const TextStyle(
+        fontSize: 10,
+        fontWeight: FontWeight.w400,
+        height: 1.4,
+        letterSpacing: 0.4,
+      );
 
   /// Caption text (12px)
   TextStyle get caption =>
-      _textTheme.bodySmall ?? const TextStyle(fontSize: 12);
+      _textTheme.bodySmall ??
+      const TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w400,
+        height: 1.33,
+        letterSpacing: 0.4,
+      );
 
   /// Body text (14px)
-  TextStyle get body => _textTheme.bodyMedium ?? const TextStyle(fontSize: 14);
+  TextStyle get body =>
+      _textTheme.bodyMedium ??
+      const TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.w400,
+        height: 1.43,
+        letterSpacing: 0.25,
+      );
 
   /// Subtitle text (16px)
   TextStyle get subtitle =>
-      _textTheme.titleSmall ?? const TextStyle(fontSize: 16);
+      _textTheme.titleSmall ??
+      const TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.w500,
+        height: 1.5,
+        letterSpacing: 0.15,
+      );
 
   /// Title text (18px)
   TextStyle get title =>
-      _textTheme.titleMedium ?? const TextStyle(fontSize: 18);
+      _textTheme.titleMedium ??
+      const TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.w500,
+        height: 1.44,
+        letterSpacing: 0.15,
+      );
 
   /// Headline text (24px)
   TextStyle get headline =>
-      _textTheme.headlineSmall ?? const TextStyle(fontSize: 24);
+      _textTheme.headlineSmall ??
+      const TextStyle(
+        fontSize: 24,
+        fontWeight: FontWeight.w400,
+        height: 1.33,
+        letterSpacing: 0,
+      );
 }
