@@ -57,6 +57,8 @@ abstract final class AppColors {
   /// Dark gray
   static const Color neutral800 = Color(0xFF2B2B2B);
 
+  static const Color neutral600 = Color(0xFF838383);
+
   /// Medium gray
   static const Color neutral500 = Color(0xFF848484);
 
@@ -78,6 +80,15 @@ abstract final class AppColors {
 
   /// Black
   static const Color black = Color(0xFF000000);
+
+  /// Black shade 950 (near black)
+  static const Color black950 = Color(0xFF0A0A0A);
+
+  /// Black shade 500 (medium dark)
+  static const Color black500 = Color(0xFF737373);
+
+  /// Black shade 400
+  static const Color black400 = Color(0xFF9CA3AF);
 
   /// Background color (Light mode)
   static const Color backgroundLight = neutral100;

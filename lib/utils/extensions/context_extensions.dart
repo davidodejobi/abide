@@ -156,4 +156,43 @@ extension ContextExtensions on BuildContext {
 
   /// Check if device is an android device
   bool get isAndroid => Theme.of(this).platform == TargetPlatform.android;
+
+  // ============================================================================
+  // TEXT STYLES HELPER
+  // ============================================================================
+
+  /// Access text styles helper
+  /// Usage: context.textStyles.caption
+  _TextStylesHelper get textStyles => _TextStylesHelper(this);
+}
+
+/// Helper class for convenient text style access
+class _TextStylesHelper {
+  final BuildContext context;
+
+  _TextStylesHelper(this.context);
+
+  TextTheme get _textTheme => Theme.of(context).textTheme;
+
+  /// Extra small text (10px)
+  TextStyle get small => _textTheme.labelSmall ?? const TextStyle(fontSize: 10);
+
+  /// Caption text (12px)
+  TextStyle get caption =>
+      _textTheme.bodySmall ?? const TextStyle(fontSize: 12);
+
+  /// Body text (14px)
+  TextStyle get body => _textTheme.bodyMedium ?? const TextStyle(fontSize: 14);
+
+  /// Subtitle text (16px)
+  TextStyle get subtitle =>
+      _textTheme.titleSmall ?? const TextStyle(fontSize: 16);
+
+  /// Title text (18px)
+  TextStyle get title =>
+      _textTheme.titleMedium ?? const TextStyle(fontSize: 18);
+
+  /// Headline text (24px)
+  TextStyle get headline =>
+      _textTheme.headlineSmall ?? const TextStyle(fontSize: 24);
 }
