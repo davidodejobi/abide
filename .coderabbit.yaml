@@ -10,22 +10,22 @@ reviews:
     # Review PRs targeting any branch, not just main
     base_branches:
       - "**"
-  
+
   # Show review status in PR
   review_status: true
-  
+
   # Request changes when issues are found
   request_changes_workflow: true
-  
+
   # High-level summary in PR comment
   high_level_summary: true
-  
+
   # Generate poem in review (fun feature)
   poem: false
-  
+
   # Collapse walkthrough in PR comment
   collapse_walkthrough: true
-  
+
   # Path-based instructions
   path_instructions: []
 
