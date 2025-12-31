@@ -10,12 +10,20 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_riverpod: ^2.4.9
+  hooks_riverpod: ^2.4.9
+  flutter_hooks: ^0.20.5
   riverpod_annotation: ^2.3.3
   freezed_annotation: ^2.4.1
   json_annotation: ^4.8.1
   path_provider: ^2.1.2
   logging: ^1.2.0
   fvm: ^4.0.5
+  toastification: ^3.0.3
+  vector_graphics: ^1.1.19
+  auto_size_text: ^3.0.0
+  lottie: ^3.3.2
+  liquid_glass_renderer: ^0.2.0-dev.3
+  auto_route: ^10.1.2
 
 dev_dependencies:
   flutter_test:
@@ -25,10 +33,50 @@ dev_dependencies:
   riverpod_generator: ^2.3.9
   freezed: ^2.4.7
   json_serializable: ^6.7.1
+  vector_graphics_compiler: ^1.1.19
+  auto_route_generator: ^10.1.2
 
 flutter:
   uses-material-design: true
   assets:
     - assets/hymnal/
-    - assets/hymnal/orders/
     - assets/hymnal/languages/
+    - path: assets/images/icons/
+      transformers:
+        - package: vector_graphics_compiler
+
+  fonts:
+    - family: EBGaramond
+      fonts:
+        - asset: assets/fonts/EBGaramond-Regular.ttf
+        - asset: assets/fonts/EBGaramond-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/EBGaramond-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/EBGaramond-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/EBGaramond-Italic.ttf
+          style: italic
+        - asset: assets/fonts/EBGaramond-MediumItalic.ttf
+          weight: 500
+          style: italic
+        - asset: assets/fonts/EBGaramond-SemiBoldItalic.ttf
+          weight: 600
+          style: italic
+        - asset: assets/fonts/EBGaramond-BoldItalic.ttf
+          weight: 700
+          style: italic
+
+    - family: Geist
+      fonts:
+        - asset: assets/fonts/Geist-Regular.ttf
+        - asset: assets/fonts/Geist-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Geist-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Geist-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Geist-Light.ttf
+          weight: 300
+        - asset: assets/fonts/Geist-Thin.ttf
+          weight: 100

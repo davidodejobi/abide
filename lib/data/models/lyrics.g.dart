@@ -7,8 +7,9 @@ part of 'lyrics.dart';
 // **************************************************************************
 
 _$LyricsImpl _$$LyricsImplFromJson(Map<String, dynamic> json) => _$LyricsImpl(
-      stanzas:
-          (json['stanzas'] as List<dynamic>).map((e) => e as String).toList(),
+      stanzas: (json['stanzas'] as List<dynamic>)
+          .map((e) => Stanza.fromJson(e as Map<String, dynamic>))
+          .toList(),
       chorus: json['chorus'] as String?,
     );
 

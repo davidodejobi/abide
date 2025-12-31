@@ -1,19 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-import 'presentation/pages/hymn_list_page.dart';
+import 'providers/theme_provider.dart';
+import 'router/app_router.dart';
+import 'utils/theme/theme.dart';
 
-class OpenBaptistHymnal extends StatelessWidget {
+/// Provider for the app router instance
+final appRouterProvider = Provider<AppRouter>((ref) => AppRouter());
+
+class OpenBaptistHymnal extends ConsumerWidget {
   const OpenBaptistHymnal({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
+  Widget build(BuildContext context, WidgetRef ref) {
+    final appRouter = ref.watch(appRouterProvider);
+    final themeMode = ref.watch(themeModeProvider);
+
+    return MaterialApp.router(
       title: 'Open Baptist Hymnal',
-      theme: ThemeData(
-        useMaterial3: true,
-        colorSchemeSeed: Colors.blue,
-      ),
-      home: const HymnListPage(),
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: themeMode,
+      routerConfig: appRouter.config(),
     );
   }
 }

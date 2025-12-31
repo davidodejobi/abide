@@ -1,11 +1,12 @@
 import '../local/json_loader.dart';
-import '../models/hymn.dart';
+import '../models/hymnal_core.dart';
+import '../models/hymnal_index.dart';
 import '../models/language_pack.dart';
 
 abstract class HymnalRepository {
-  Future<List<Hymn>> getHymns();
+  Future<HymnalCore> getHymnalCore();
+  Future<HymnalIndex> getHymnalIndex();
   Future<LanguagePack> getLanguagePack(String languageCode);
-  Future<List<String>> getOrder(String languageCode);
 }
 
 class HymnalRepositoryImpl implements HymnalRepository {
@@ -14,9 +15,15 @@ class HymnalRepositoryImpl implements HymnalRepository {
   HymnalRepositoryImpl(this._jsonLoader);
 
   @override
-  Future<List<Hymn>> getHymns() async {
-    final data = await _jsonLoader.loadJsonList('assets/hymnal/core.json');
-    return data.map((e) => Hymn.fromJson(e)).toList();
+  Future<HymnalCore> getHymnalCore() async {
+    final data = await _jsonLoader.loadJson('assets/hymnal/core.json');
+    return HymnalCore.fromJson(data);
+  }
+
+  @override
+  Future<HymnalIndex> getHymnalIndex() async {
+    final data = await _jsonLoader.loadJson('assets/hymnal/index.json');
+    return HymnalIndex.fromJson(data);
   }
 
   @override
@@ -24,12 +31,5 @@ class HymnalRepositoryImpl implements HymnalRepository {
     final data = await _jsonLoader
         .loadJson('assets/hymnal/languages/$languageCode.json');
     return LanguagePack.fromJson(data);
-  }
-
-  @override
-  Future<List<String>> getOrder(String languageCode) async {
-    final data = await _jsonLoader
-        .loadJsonList('assets/hymnal/orders/$languageCode.json');
-    return data.map((e) => e.toString()).toList();
   }
 }

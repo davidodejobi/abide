@@ -8,8 +8,9 @@ part 'language_pack.g.dart';
 @freezed
 class LanguagePack with _$LanguagePack {
   const factory LanguagePack({
-    required String languageCode,
-    required Map<String, HymnTranslation> hymns, // hymnId: translation
+    required String language,
+    @JsonKey(name: 'hymnal_name') required String hymnalName,
+    required Map<String, HymnTranslation> hymns,
   }) = _LanguagePack;
 
   factory LanguagePack.fromJson(Map<String, dynamic> json) =>
@@ -19,6 +20,7 @@ class LanguagePack with _$LanguagePack {
 @freezed
 class HymnTranslation with _$HymnTranslation {
   const factory HymnTranslation({
+    required int number,
     required String title,
     required Lyrics lyrics,
   }) = _HymnTranslation;

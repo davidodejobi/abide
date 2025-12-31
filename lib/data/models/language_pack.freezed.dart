@@ -20,7 +20,9 @@ LanguagePack _$LanguagePackFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$LanguagePack {
-  String get languageCode => throw _privateConstructorUsedError;
+  String get language => throw _privateConstructorUsedError;
+  @JsonKey(name: 'hymnal_name')
+  String get hymnalName => throw _privateConstructorUsedError;
   Map<String, HymnTranslation> get hymns => throw _privateConstructorUsedError;
 
   /// Serializes this LanguagePack to a JSON map.
@@ -39,7 +41,10 @@ abstract class $LanguagePackCopyWith<$Res> {
           LanguagePack value, $Res Function(LanguagePack) then) =
       _$LanguagePackCopyWithImpl<$Res, LanguagePack>;
   @useResult
-  $Res call({String languageCode, Map<String, HymnTranslation> hymns});
+  $Res call(
+      {String language,
+      @JsonKey(name: 'hymnal_name') String hymnalName,
+      Map<String, HymnTranslation> hymns});
 }
 
 /// @nodoc
@@ -57,13 +62,18 @@ class _$LanguagePackCopyWithImpl<$Res, $Val extends LanguagePack>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? languageCode = null,
+    Object? language = null,
+    Object? hymnalName = null,
     Object? hymns = null,
   }) {
     return _then(_value.copyWith(
-      languageCode: null == languageCode
-          ? _value.languageCode
-          : languageCode // ignore: cast_nullable_to_non_nullable
+      language: null == language
+          ? _value.language
+          : language // ignore: cast_nullable_to_non_nullable
+              as String,
+      hymnalName: null == hymnalName
+          ? _value.hymnalName
+          : hymnalName // ignore: cast_nullable_to_non_nullable
               as String,
       hymns: null == hymns
           ? _value.hymns
@@ -81,7 +91,10 @@ abstract class _$$LanguagePackImplCopyWith<$Res>
       __$$LanguagePackImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String languageCode, Map<String, HymnTranslation> hymns});
+  $Res call(
+      {String language,
+      @JsonKey(name: 'hymnal_name') String hymnalName,
+      Map<String, HymnTranslation> hymns});
 }
 
 /// @nodoc
@@ -97,13 +110,18 @@ class __$$LanguagePackImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? languageCode = null,
+    Object? language = null,
+    Object? hymnalName = null,
     Object? hymns = null,
   }) {
     return _then(_$LanguagePackImpl(
-      languageCode: null == languageCode
-          ? _value.languageCode
-          : languageCode // ignore: cast_nullable_to_non_nullable
+      language: null == language
+          ? _value.language
+          : language // ignore: cast_nullable_to_non_nullable
+              as String,
+      hymnalName: null == hymnalName
+          ? _value.hymnalName
+          : hymnalName // ignore: cast_nullable_to_non_nullable
               as String,
       hymns: null == hymns
           ? _value._hymns
@@ -117,7 +135,8 @@ class __$$LanguagePackImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$LanguagePackImpl implements _LanguagePack {
   const _$LanguagePackImpl(
-      {required this.languageCode,
+      {required this.language,
+      @JsonKey(name: 'hymnal_name') required this.hymnalName,
       required final Map<String, HymnTranslation> hymns})
       : _hymns = hymns;
 
@@ -125,7 +144,10 @@ class _$LanguagePackImpl implements _LanguagePack {
       _$$LanguagePackImplFromJson(json);
 
   @override
-  final String languageCode;
+  final String language;
+  @override
+  @JsonKey(name: 'hymnal_name')
+  final String hymnalName;
   final Map<String, HymnTranslation> _hymns;
   @override
   Map<String, HymnTranslation> get hymns {
@@ -136,7 +158,7 @@ class _$LanguagePackImpl implements _LanguagePack {
 
   @override
   String toString() {
-    return 'LanguagePack(languageCode: $languageCode, hymns: $hymns)';
+    return 'LanguagePack(language: $language, hymnalName: $hymnalName, hymns: $hymns)';
   }
 
   @override
@@ -144,15 +166,17 @@ class _$LanguagePackImpl implements _LanguagePack {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$LanguagePackImpl &&
-            (identical(other.languageCode, languageCode) ||
-                other.languageCode == languageCode) &&
+            (identical(other.language, language) ||
+                other.language == language) &&
+            (identical(other.hymnalName, hymnalName) ||
+                other.hymnalName == hymnalName) &&
             const DeepCollectionEquality().equals(other._hymns, _hymns));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(
-      runtimeType, languageCode, const DeepCollectionEquality().hash(_hymns));
+  int get hashCode => Object.hash(runtimeType, language, hymnalName,
+      const DeepCollectionEquality().hash(_hymns));
 
   /// Create a copy of LanguagePack
   /// with the given fields replaced by the non-null parameter values.
@@ -172,14 +196,18 @@ class _$LanguagePackImpl implements _LanguagePack {
 
 abstract class _LanguagePack implements LanguagePack {
   const factory _LanguagePack(
-      {required final String languageCode,
+      {required final String language,
+      @JsonKey(name: 'hymnal_name') required final String hymnalName,
       required final Map<String, HymnTranslation> hymns}) = _$LanguagePackImpl;
 
   factory _LanguagePack.fromJson(Map<String, dynamic> json) =
       _$LanguagePackImpl.fromJson;
 
   @override
-  String get languageCode;
+  String get language;
+  @override
+  @JsonKey(name: 'hymnal_name')
+  String get hymnalName;
   @override
   Map<String, HymnTranslation> get hymns;
 
@@ -197,6 +225,7 @@ HymnTranslation _$HymnTranslationFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$HymnTranslation {
+  int get number => throw _privateConstructorUsedError;
   String get title => throw _privateConstructorUsedError;
   Lyrics get lyrics => throw _privateConstructorUsedError;
 
@@ -216,7 +245,7 @@ abstract class $HymnTranslationCopyWith<$Res> {
           HymnTranslation value, $Res Function(HymnTranslation) then) =
       _$HymnTranslationCopyWithImpl<$Res, HymnTranslation>;
   @useResult
-  $Res call({String title, Lyrics lyrics});
+  $Res call({int number, String title, Lyrics lyrics});
 
   $LyricsCopyWith<$Res> get lyrics;
 }
@@ -236,10 +265,15 @@ class _$HymnTranslationCopyWithImpl<$Res, $Val extends HymnTranslation>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
+    Object? number = null,
     Object? title = null,
     Object? lyrics = null,
   }) {
     return _then(_value.copyWith(
+      number: null == number
+          ? _value.number
+          : number // ignore: cast_nullable_to_non_nullable
+              as int,
       title: null == title
           ? _value.title
           : title // ignore: cast_nullable_to_non_nullable
@@ -270,7 +304,7 @@ abstract class _$$HymnTranslationImplCopyWith<$Res>
       __$$HymnTranslationImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String title, Lyrics lyrics});
+  $Res call({int number, String title, Lyrics lyrics});
 
   @override
   $LyricsCopyWith<$Res> get lyrics;
@@ -289,10 +323,15 @@ class __$$HymnTranslationImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
+    Object? number = null,
     Object? title = null,
     Object? lyrics = null,
   }) {
     return _then(_$HymnTranslationImpl(
+      number: null == number
+          ? _value.number
+          : number // ignore: cast_nullable_to_non_nullable
+              as int,
       title: null == title
           ? _value.title
           : title // ignore: cast_nullable_to_non_nullable
@@ -308,11 +347,14 @@ class __$$HymnTranslationImplCopyWithImpl<$Res>
 /// @nodoc
 @JsonSerializable()
 class _$HymnTranslationImpl implements _HymnTranslation {
-  const _$HymnTranslationImpl({required this.title, required this.lyrics});
+  const _$HymnTranslationImpl(
+      {required this.number, required this.title, required this.lyrics});
 
   factory _$HymnTranslationImpl.fromJson(Map<String, dynamic> json) =>
       _$$HymnTranslationImplFromJson(json);
 
+  @override
+  final int number;
   @override
   final String title;
   @override
@@ -320,7 +362,7 @@ class _$HymnTranslationImpl implements _HymnTranslation {
 
   @override
   String toString() {
-    return 'HymnTranslation(title: $title, lyrics: $lyrics)';
+    return 'HymnTranslation(number: $number, title: $title, lyrics: $lyrics)';
   }
 
   @override
@@ -328,13 +370,14 @@ class _$HymnTranslationImpl implements _HymnTranslation {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$HymnTranslationImpl &&
+            (identical(other.number, number) || other.number == number) &&
             (identical(other.title, title) || other.title == title) &&
             (identical(other.lyrics, lyrics) || other.lyrics == lyrics));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, title, lyrics);
+  int get hashCode => Object.hash(runtimeType, number, title, lyrics);
 
   /// Create a copy of HymnTranslation
   /// with the given fields replaced by the non-null parameter values.
@@ -355,12 +398,15 @@ class _$HymnTranslationImpl implements _HymnTranslation {
 
 abstract class _HymnTranslation implements HymnTranslation {
   const factory _HymnTranslation(
-      {required final String title,
+      {required final int number,
+      required final String title,
       required final Lyrics lyrics}) = _$HymnTranslationImpl;
 
   factory _HymnTranslation.fromJson(Map<String, dynamic> json) =
       _$HymnTranslationImpl.fromJson;
 
+  @override
+  int get number;
   @override
   String get title;
   @override

@@ -6,17 +6,21 @@ class GetHymnsByLanguage {
   GetHymnsByLanguage(this.repository);
 
   Future<List<Map<String, dynamic>>> call(String languageCode) async {
-    final hymns = await repository.getHymns();
+    final core = await repository.getHymnalCore();
+    final index = await repository.getHymnalIndex();
     final languagePack = await repository.getLanguagePack(languageCode);
-    final order = await repository.getOrder(languageCode);
+
+    // Get the order for this language, fallback to empty list if not present
+    final order = index.orders[languageCode] ?? [];
 
     final List<Map<String, dynamic>> result = [];
 
     for (var id in order) {
-      final hymn = hymns.firstWhere((h) => h.id == id);
+      final hymn = core.hymns[id];
       final translation = languagePack.hymns[id];
-      if (translation != null) {
+      if (hymn != null && translation != null) {
         result.add({
+          'id': id,
           'hymn': hymn,
           'translation': translation,
         });

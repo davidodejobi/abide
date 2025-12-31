@@ -20,9 +20,7 @@ Hymn _$HymnFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$Hymn {
-  String get id => throw _privateConstructorUsedError;
   String get category => throw _privateConstructorUsedError;
-  Map<String, int> get orders => throw _privateConstructorUsedError;
 
   /// Serializes this Hymn to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -38,7 +36,7 @@ abstract class $HymnCopyWith<$Res> {
   factory $HymnCopyWith(Hymn value, $Res Function(Hymn) then) =
       _$HymnCopyWithImpl<$Res, Hymn>;
   @useResult
-  $Res call({String id, String category, Map<String, int> orders});
+  $Res call({String category});
 }
 
 /// @nodoc
@@ -56,23 +54,13 @@ class _$HymnCopyWithImpl<$Res, $Val extends Hymn>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? id = null,
     Object? category = null,
-    Object? orders = null,
   }) {
     return _then(_value.copyWith(
-      id: null == id
-          ? _value.id
-          : id // ignore: cast_nullable_to_non_nullable
-              as String,
       category: null == category
           ? _value.category
           : category // ignore: cast_nullable_to_non_nullable
               as String,
-      orders: null == orders
-          ? _value.orders
-          : orders // ignore: cast_nullable_to_non_nullable
-              as Map<String, int>,
     ) as $Val);
   }
 }
@@ -84,7 +72,7 @@ abstract class _$$HymnImplCopyWith<$Res> implements $HymnCopyWith<$Res> {
       __$$HymnImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String id, String category, Map<String, int> orders});
+  $Res call({String category});
 }
 
 /// @nodoc
@@ -99,23 +87,13 @@ class __$$HymnImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? id = null,
     Object? category = null,
-    Object? orders = null,
   }) {
     return _then(_$HymnImpl(
-      id: null == id
-          ? _value.id
-          : id // ignore: cast_nullable_to_non_nullable
-              as String,
       category: null == category
           ? _value.category
           : category // ignore: cast_nullable_to_non_nullable
               as String,
-      orders: null == orders
-          ? _value._orders
-          : orders // ignore: cast_nullable_to_non_nullable
-              as Map<String, int>,
     ));
   }
 }
@@ -123,30 +101,17 @@ class __$$HymnImplCopyWithImpl<$Res>
 /// @nodoc
 @JsonSerializable()
 class _$HymnImpl implements _Hymn {
-  const _$HymnImpl(
-      {required this.id,
-      required this.category,
-      required final Map<String, int> orders})
-      : _orders = orders;
+  const _$HymnImpl({required this.category});
 
   factory _$HymnImpl.fromJson(Map<String, dynamic> json) =>
       _$$HymnImplFromJson(json);
 
   @override
-  final String id;
-  @override
   final String category;
-  final Map<String, int> _orders;
-  @override
-  Map<String, int> get orders {
-    if (_orders is EqualUnmodifiableMapView) return _orders;
-    // ignore: implicit_dynamic_type
-    return EqualUnmodifiableMapView(_orders);
-  }
 
   @override
   String toString() {
-    return 'Hymn(id: $id, category: $category, orders: $orders)';
+    return 'Hymn(category: $category)';
   }
 
   @override
@@ -154,16 +119,13 @@ class _$HymnImpl implements _Hymn {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$HymnImpl &&
-            (identical(other.id, id) || other.id == id) &&
             (identical(other.category, category) ||
-                other.category == category) &&
-            const DeepCollectionEquality().equals(other._orders, _orders));
+                other.category == category));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(
-      runtimeType, id, category, const DeepCollectionEquality().hash(_orders));
+  int get hashCode => Object.hash(runtimeType, category);
 
   /// Create a copy of Hymn
   /// with the given fields replaced by the non-null parameter values.
@@ -182,19 +144,12 @@ class _$HymnImpl implements _Hymn {
 }
 
 abstract class _Hymn implements Hymn {
-  const factory _Hymn(
-      {required final String id,
-      required final String category,
-      required final Map<String, int> orders}) = _$HymnImpl;
+  const factory _Hymn({required final String category}) = _$HymnImpl;
 
   factory _Hymn.fromJson(Map<String, dynamic> json) = _$HymnImpl.fromJson;
 
   @override
-  String get id;
-  @override
   String get category;
-  @override
-  Map<String, int> get orders;
 
   /// Create a copy of Hymn
   /// with the given fields replaced by the non-null parameter values.
