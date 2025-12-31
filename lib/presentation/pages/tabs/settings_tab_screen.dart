@@ -124,10 +124,12 @@ class _SettingsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        color: AppColors.neutral200,
+        color: colorScheme.surfaceContainerHighest,
       ),
       padding: const EdgeInsets.all(4),
       child: Column(
@@ -138,7 +140,7 @@ class _SettingsSection extends StatelessWidget {
             child: Text(
               title,
               style: AppTextStyles.labelLarge.copyWith(
-                color: AppColors.neutral600,
+                color: colorScheme.onSurfaceVariant,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -170,38 +172,40 @@ class _SettingsTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: AppColors.neutral200,
+          color: colorScheme.outlineVariant,
         ),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
         leading: Icon(
           icon,
-          color: AppColors.neutral800,
+          color: colorScheme.onSurface,
         ),
         title: Text(
           title,
           style: AppTextStyles.bodyLarge.copyWith(
-            color: AppColors.neutral900,
+            color: colorScheme.onSurface,
           ),
         ),
         subtitle: subtitle != null
             ? Text(
                 subtitle!,
                 style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.neutral600,
+                  color: colorScheme.onSurfaceVariant,
                 ),
               )
             : null,
         trailing: trailing ??
-            const Icon(
+            Icon(
               Icons.chevron_right,
-              color: AppColors.neutral400,
+              color: colorScheme.outline,
             ),
         onTap: onTap,
       ),
@@ -221,12 +225,14 @@ class _ThemeSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: AppColors.neutral200,
+          color: colorScheme.outlineVariant,
         ),
       ),
       padding: const EdgeInsets.all(16),
@@ -235,9 +241,9 @@ class _ThemeSelector extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.palette_outlined,
-                color: AppColors.neutral800,
+                color: colorScheme.onSurface,
                 size: 24,
               ),
               const SizedBox(width: 16),
@@ -245,7 +251,7 @@ class _ThemeSelector extends StatelessWidget {
                 child: Text(
                   'Theme',
                   style: AppTextStyles.bodyLarge.copyWith(
-                    color: AppColors.neutral900,
+                    color: colorScheme.onSurface,
                   ),
                 ),
               ),
@@ -279,18 +285,18 @@ class _ThemeSelector extends StatelessWidget {
               style: ButtonStyle(
                 backgroundColor: WidgetStateProperty.resolveWith((states) {
                   if (states.contains(WidgetState.selected)) {
-                    return AppColors.primary;
+                    return colorScheme.primary;
                   }
-                  return AppColors.neutral100;
+                  return colorScheme.surfaceContainerHighest;
                 }),
                 foregroundColor: WidgetStateProperty.resolveWith((states) {
                   if (states.contains(WidgetState.selected)) {
-                    return AppColors.white;
+                    return colorScheme.onPrimary;
                   }
-                  return AppColors.neutral800;
+                  return colorScheme.onSurface;
                 }),
                 side: WidgetStateProperty.all(
-                  const BorderSide(color: AppColors.neutral200),
+                  BorderSide(color: colorScheme.outlineVariant),
                 ),
               ),
             ),

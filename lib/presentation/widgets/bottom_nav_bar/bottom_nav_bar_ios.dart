@@ -3,6 +3,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
 // ignore: depend_on_referenced_packages
 import 'package:motor/motor.dart';
@@ -11,7 +12,6 @@ import 'package:vector_graphics/vector_graphics_compat.dart';
 import '../../../utils/extensions/context_extensions.dart';
 import '../../../utils/extensions/num_extensions.dart';
 import '../../../utils/extensions/string_extensions.dart';
-import '../../../utils/theme/app_colors.dart';
 
 /// Creates a jelly transform matrix based on velocity for organic squash and stretch effect
 Matrix4 buildJellyTransform({
@@ -267,7 +267,9 @@ class _BottomBarTab extends StatelessWidget {
                         ),
                         key: ValueKey(selected),
                         colorFilter: ColorFilter.mode(
-                          selected ? AppColors.primary : AppColors.black500,
+                          selected
+                              ? Theme.of(context).colorScheme.primary
+                              : Theme.of(context).colorScheme.onSurfaceVariant,
                           BlendMode.srcIn,
                         ),
                       ),
@@ -281,7 +283,9 @@ class _BottomBarTab extends StatelessWidget {
                   textAlign: TextAlign.center,
                   overflow: TextOverflow.ellipsis,
                   style: context.textStyles.caption.copyWith(
-                    color: selected ? AppColors.primary : AppColors.black500,
+                    color: selected
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(context).colorScheme.onSurfaceVariant,
                   )),
             ],
           ),

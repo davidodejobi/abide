@@ -18,19 +18,21 @@ class SearchBarWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       height: 56,
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(30),
       ),
       child: Row(
         children: [
           const SizedBox(width: 18),
-          const Icon(
+          Icon(
             Icons.search,
             size: 32,
-            color: AppColors.neutral500,
+            color: colorScheme.onSurfaceVariant,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -38,12 +40,12 @@ class SearchBarWidget extends StatelessWidget {
               controller: controller,
               onChanged: onChanged,
               style: AppTextStyles.bodyLarge.copyWith(
-                color: AppColors.neutral800,
+                color: colorScheme.onSurface,
               ),
               decoration: InputDecoration(
                 hintText: hintText,
                 hintStyle: AppTextStyles.bodyLarge.copyWith(
-                  color: AppColors.neutral300,
+                  color: colorScheme.outline,
                 ),
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,
@@ -60,13 +62,13 @@ class SearchBarWidget extends StatelessWidget {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: AppColors.primary,
+                color: colorScheme.primary,
                 borderRadius: BorderRadius.circular(22),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.tune,
                 size: 24,
-                color: AppColors.white,
+                color: colorScheme.onPrimary,
               ),
             ),
           ),

@@ -16,12 +16,14 @@ class HymnListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
         height: 65,
         decoration: BoxDecoration(
-          color: AppColors.secondary50,
+          color: colorScheme.secondaryContainer,
           borderRadius: BorderRadius.circular(33),
         ),
         child: Row(
@@ -32,7 +34,7 @@ class HymnListTile extends StatelessWidget {
               height: 48,
               padding: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
-                color: AppColors.neutral100,
+                color: colorScheme.surface,
                 borderRadius: BorderRadius.circular(24),
               ),
               child: Center(
@@ -40,7 +42,7 @@ class HymnListTile extends StatelessWidget {
                   number.padLeft(3, '0'),
                   style: AppTextStyles.titleMedium.copyWith(
                     fontWeight: FontWeight.w700,
-                    color: AppColors.secondary,
+                    color: colorScheme.secondary,
                   ),
                 ),
               ),
@@ -52,17 +54,17 @@ class HymnListTile extends StatelessWidget {
                 title,
                 style: AppTextStyles.titleMedium.copyWith(
                   fontWeight: FontWeight.w600,
-                  color: AppColors.primary,
+                  color: colorScheme.primary,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
             // Arrow icon
-            const Icon(
+            Icon(
               Icons.chevron_right,
               size: 24,
-              color: AppColors.primary,
+              color: colorScheme.primary,
             ),
             const SizedBox(width: 16),
           ],

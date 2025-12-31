@@ -45,21 +45,23 @@ class LanguageToggle extends HookWidget {
       return () => tabController.removeListener(listener);
     }, [tabController, selectedLanguage, onLanguageChanged]);
 
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       height: 40,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8),
-        color: AppColors.neutral200,
+        color: colorScheme.surfaceContainerHighest,
       ),
       child: TabBar(
         controller: tabController,
-        labelColor: AppColors.neutral100,
-        unselectedLabelColor: AppColors.neutral800,
+        labelColor: colorScheme.onPrimary,
+        unselectedLabelColor: colorScheme.onSurface,
         indicatorWeight: 0,
         dividerColor: Colors.transparent,
         indicator: BoxDecoration(
           borderRadius: BorderRadius.circular(8),
-          color: AppColors.primary,
+          color: colorScheme.primary,
         ),
         indicatorSize: TabBarIndicatorSize.tab,
         overlayColor: WidgetStateProperty.all(Colors.transparent),

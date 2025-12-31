@@ -38,6 +38,7 @@ class _HomeTabScreenState extends ConsumerState<HomeTabScreen>
 
     final hymnsAsync = ref.watch(hymnsViewModelProvider);
     final currentLanguage = ref.watch(languageProvider);
+    final colorScheme = Theme.of(context).colorScheme;
 
     return CustomScrollView(
       slivers: [
@@ -61,7 +62,7 @@ class _HomeTabScreenState extends ConsumerState<HomeTabScreen>
                     Text(
                       'Welcome to Open Baptist Hymnal',
                       style: AppTextStyles.labelLarge.copyWith(
-                        color: AppColors.neutral600,
+                        color: colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],
@@ -73,14 +74,14 @@ class _HomeTabScreenState extends ConsumerState<HomeTabScreen>
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: AppColors.secondary,
+                      color: colorScheme.secondary,
                       width: 2,
                     ),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.person,
                     size: 20,
-                    color: AppColors.secondary,
+                    color: colorScheme.secondary,
                   ),
                 ),
               ],
@@ -168,10 +169,10 @@ class _HomeTabScreenState extends ConsumerState<HomeTabScreen>
               ),
             );
           },
-          loading: () => const SliverFillRemaining(
+          loading: () => SliverFillRemaining(
             child: Center(
               child: CircularProgressIndicator(
-                color: AppColors.primary,
+                color: colorScheme.primary,
               ),
             ),
           ),
@@ -180,16 +181,16 @@ class _HomeTabScreenState extends ConsumerState<HomeTabScreen>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.error_outline,
                     size: 48,
-                    color: AppColors.error,
+                    color: colorScheme.error,
                   ),
                   const SizedBox(height: 16),
                   Text(
                     'Failed to load hymns',
                     style: AppTextStyles.bodyLarge.copyWith(
-                      color: AppColors.neutral800,
+                      color: colorScheme.onSurface,
                     ),
                   ),
                   const SizedBox(height: 8),

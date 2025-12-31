@@ -5,7 +5,6 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
 
 import '../../providers/bottom_nav_provider.dart';
-import '../../utils/theme/app_colors.dart';
 import '../widgets/bottom_nav_bar/bottom_nav_bar.dart';
 import 'tabs/favorites_tab_screen.dart';
 import 'tabs/home_tab_screen.dart';
@@ -63,12 +62,14 @@ class _BottomNavigation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return SafeArea(
       top: false,
       child: AdaptiveBottomNavBar(
         fake: false,
         showIndicator: true,
-        indicatorColor: AppColors.primary,
+        indicatorColor: colorScheme.primary,
         glassSettings: const LiquidGlassSettings(
           ambientStrength: 0.2,
         ),

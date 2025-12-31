@@ -31,9 +31,10 @@ class _HymnListPageState extends ConsumerState<HymnListPage> {
   Widget build(BuildContext context) {
     final hymnsAsync = ref.watch(hymnsViewModelProvider);
     final currentLanguage = ref.watch(languageProvider);
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Stack(
           children: [
@@ -59,7 +60,7 @@ class _HymnListPageState extends ConsumerState<HymnListPage> {
                             Text(
                               'Welcome to Open Baptist Hymnal',
                               style: AppTextStyles.labelLarge.copyWith(
-                                color: AppColors.neutral600,
+                                color: colorScheme.onSurfaceVariant,
                               ),
                             ),
                           ],
@@ -71,14 +72,14 @@ class _HymnListPageState extends ConsumerState<HymnListPage> {
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: AppColors.secondary,
+                              color: colorScheme.secondary,
                               width: 2,
                             ),
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.person,
                             size: 20,
-                            color: AppColors.secondary,
+                            color: colorScheme.secondary,
                           ),
                         ),
                       ],
@@ -166,10 +167,10 @@ class _HymnListPageState extends ConsumerState<HymnListPage> {
                       ),
                     );
                   },
-                  loading: () => const SliverFillRemaining(
+                  loading: () => SliverFillRemaining(
                     child: Center(
                       child: CircularProgressIndicator(
-                        color: AppColors.primary,
+                        color: colorScheme.primary,
                       ),
                     ),
                   ),
@@ -178,16 +179,16 @@ class _HymnListPageState extends ConsumerState<HymnListPage> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.error_outline,
                             size: 48,
-                            color: AppColors.error,
+                            color: colorScheme.error,
                           ),
                           const SizedBox(height: 16),
                           Text(
                             'Failed to load hymns',
                             style: AppTextStyles.bodyLarge.copyWith(
-                              color: AppColors.neutral800,
+                              color: colorScheme.onSurface,
                             ),
                           ),
                           const SizedBox(height: 8),
@@ -211,24 +212,24 @@ class _HymnListPageState extends ConsumerState<HymnListPage> {
               right: 0,
               bottom: 0,
               child: AdaptiveBottomNavBar(
-                tabs: const [
+                tabs: [
                   AdaptiveBottomNavTab(
                     label: 'Home',
                     icon: Icons.home_outlined,
                     selectedIcon: Icons.home_rounded,
-                    glowColor: AppColors.primary,
+                    glowColor: colorScheme.primary,
                   ),
                   AdaptiveBottomNavTab(
                     label: 'Favorites',
                     icon: Icons.favorite_outline,
                     selectedIcon: Icons.favorite_rounded,
-                    glowColor: AppColors.primary,
+                    glowColor: colorScheme.primary,
                   ),
                   AdaptiveBottomNavTab(
                     label: 'Settings',
                     icon: Icons.settings_outlined,
                     selectedIcon: Icons.settings_rounded,
-                    glowColor: AppColors.primary,
+                    glowColor: colorScheme.primary,
                   ),
                 ],
                 selectedIndex: _currentNavIndex,
@@ -237,7 +238,7 @@ class _HymnListPageState extends ConsumerState<HymnListPage> {
                     _currentNavIndex = index;
                   });
                 },
-                indicatorColor: AppColors.primary,
+                indicatorColor: colorScheme.primary,
               ),
             ),
           ],

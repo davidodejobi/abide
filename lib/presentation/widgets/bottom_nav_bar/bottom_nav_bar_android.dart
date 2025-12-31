@@ -3,7 +3,6 @@ import 'package:vector_graphics/vector_graphics_compat.dart';
 
 import '../../../utils/extensions/context_extensions.dart';
 import '../../../utils/extensions/string_extensions.dart';
-import '../../../utils/theme/app_colors.dart';
 
 /// Android Material Design 3 Bottom Navigation Bar
 /// Features elevated surface with shadow and proper Material theming
@@ -37,7 +36,7 @@ class MaterialBottomNavBar extends StatelessWidget {
     // Material 3 color defaults
     final bgColor = backgroundColor ?? colorScheme.surface;
     final selectedColor = selectedItemColor ?? colorScheme.primary;
-    const unselectedColor = AppColors.black500;
+    final unselectedColor = unselectedItemColor ?? colorScheme.onSurfaceVariant;
 
     return Container(
       margin: const EdgeInsets.only(
@@ -52,14 +51,14 @@ class MaterialBottomNavBar extends StatelessWidget {
         boxShadow: [
           // Primary elevated shadow - Material Design 3 elevation level 3
           BoxShadow(
-            color: AppColors.black500.withValues(alpha: 0.15),
+            color: colorScheme.shadow.withValues(alpha: 0.15),
             blurRadius: 8,
             offset: const Offset(0, 0),
             spreadRadius: 2,
           ),
           // Ambient shadow
           BoxShadow(
-            color: AppColors.black400.withValues(alpha: 0.1),
+            color: colorScheme.shadow.withValues(alpha: 0.1),
             blurRadius: 16,
             offset: const Offset(10, -4),
             spreadRadius: -2,
@@ -170,7 +169,7 @@ class _MaterialNavItem extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 6,
-                        vertical: 16,
+                        vertical: 2,
                       ),
                       decoration: BoxDecoration(
                         color: Colors.red,
@@ -182,9 +181,10 @@ class _MaterialNavItem extends StatelessWidget {
                       ),
                       child: Center(
                         child: Text(
-                          tab.badge!,
+                          tab.badge ?? '00',
                           style: context.textStyles.small.copyWith(
                             fontWeight: FontWeight.w600,
+                            fontSize: 8,
                           ),
                         ),
                       ),

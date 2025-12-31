@@ -21,6 +21,7 @@ class _FavoritesTabScreenState extends ConsumerState<FavoritesTabScreen>
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    final colorScheme = Theme.of(context).colorScheme;
 
     return CustomScrollView(
       slivers: [
@@ -43,16 +44,16 @@ class _FavoritesTabScreenState extends ConsumerState<FavoritesTabScreen>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(
+                Icon(
                   Icons.favorite_outline,
                   size: 64,
-                  color: AppColors.neutral400,
+                  color: colorScheme.outline,
                 ),
                 const SizedBox(height: 16),
                 Text(
                   'No favorites yet',
                   style: AppTextStyles.titleLarge.copyWith(
-                    color: AppColors.neutral800,
+                    color: colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -62,7 +63,7 @@ class _FavoritesTabScreenState extends ConsumerState<FavoritesTabScreen>
                     'Tap the heart icon on any hymn to add it to your favorites',
                     textAlign: TextAlign.center,
                     style: AppTextStyles.bodyMedium.copyWith(
-                      color: AppColors.neutral600,
+                      color: colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ),
