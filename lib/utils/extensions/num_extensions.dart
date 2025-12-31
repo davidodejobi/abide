@@ -58,7 +58,7 @@ extension NumExtensions on num {
 
   /// Create vertical EdgeInsets
   /// Usage: 16.paddingV => EdgeInsets.symmetric(vertical: 16)
-  EdgeInsets get paddingV => EdgeInsets.symmetric(vertical: 16);
+  EdgeInsets get paddingV => EdgeInsets.symmetric(vertical: toDouble());
 
   /// Create EdgeInsets for left only
   /// Usage: 16.paddingLeft => EdgeInsets.only(left: 16)
@@ -150,13 +150,17 @@ extension NumExtensions on num {
   /// Usage: 15.clampTo(0, 10) => 10
   num clampTo(num min, num max) => clamp(min, max);
 
-  /// Check if number is even
-  /// Usage: 4.isEven => true
-  bool get isEvenNumber => toInt() % 2 == 0;
+  /// Check if the integer part of this number is even.
+  /// Works on both int and double (uses toInt() for conversion).
+  /// For integers, prefer using the built-in `isEven` property directly.
+  /// Usage: 4.5.hasEvenIntValue => true (4 is even)
+  bool get hasEvenIntValue => toInt() % 2 == 0;
 
-  /// Check if number is odd
-  /// Usage: 5.isOdd => true
-  bool get isOddNumber => toInt() % 2 != 0;
+  /// Check if the integer part of this number is odd.
+  /// Works on both int and double (uses toInt() for conversion).
+  /// For integers, prefer using the built-in `isOdd` property directly.
+  /// Usage: 5.5.hasOddIntValue => true (5 is odd)
+  bool get hasOddIntValue => toInt() % 2 != 0;
 
   /// Check if number is positive
   /// Usage: 5.isPositive => true
