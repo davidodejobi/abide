@@ -65,6 +65,9 @@ abstract final class AppColors {
   /// Light gray
   static const Color neutral300 = Color(0xFFBFBFBF);
 
+  /// Light gray 400
+  static const Color neutral400 = Color(0xFFA1A1AA);
+
   /// Off-white / Cream
   static const Color neutral100 = Color(0xFFFAF8F3);
 

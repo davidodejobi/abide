@@ -43,7 +43,7 @@ class AdaptiveBottomNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Use platform-specific implementation
-    if (!Platform.isAndroid) {
+    if (Platform.isAndroid) {
       return MaterialBottomNavBar(
         tabs: tabs
             .map((tab) => MaterialBottomNavTab(
