@@ -1,6 +1,10 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lottie/lottie.dart';
+import 'package:open_baptist_hymnal/utils/extensions/context_extensions.dart';
+import 'package:open_baptist_hymnal/utils/extensions/num_extensions.dart';
+import 'package:open_baptist_hymnal/utils/extensions/string_extensions.dart';
 
 import '../../../utils/theme/theme.dart';
 
@@ -44,19 +48,22 @@ class _FavoritesTabScreenState extends ConsumerState<FavoritesTabScreen>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.favorite_outline,
-                  size: 64,
-                  color: colorScheme.outline,
+                Column(
+                  children: [
+                    Lottie.asset(
+                      'heart-pop'.lottie,
+                      width: 128,
+                      height: 128,
+                    ),
+                    Text(
+                      'No favorites yet',
+                      style: AppTextStyles.titleLarge.copyWith(
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 16),
-                Text(
-                  'No favorites yet',
-                  style: AppTextStyles.titleLarge.copyWith(
-                    color: colorScheme.onSurface,
-                  ),
-                ),
-                const SizedBox(height: 8),
+                8.h,
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 48),
                   child: Text(
@@ -67,6 +74,7 @@ class _FavoritesTabScreenState extends ConsumerState<FavoritesTabScreen>
                     ),
                   ),
                 ),
+                (context.screenSize.height * 0.2).h,
               ],
             ),
           ),

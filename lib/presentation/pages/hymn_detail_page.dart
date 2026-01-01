@@ -1,7 +1,11 @@
+import 'dart:ui';
+
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:open_baptist_hymnal/utils/extensions/context_extensions.dart';
+import 'package:open_baptist_hymnal/utils/extensions/string_extensions.dart';
+import 'package:vector_graphics/vector_graphics_compat.dart';
 
 import '../../data/models/language_pack.dart';
 import '../../utils/extensions/num_extensions.dart';
@@ -148,44 +152,56 @@ class HymnDetailPage extends HookConsumerWidget {
                       left: 0,
                       right: 0,
                       child: Center(
-                        child: Container(
-                          height: 64,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: isDark
-                                ? AppColors.surfaceContainerDark
-                                : Colors.white,
-                            borderRadius: BorderRadius.circular(32),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.1),
-                                blurRadius: 20,
-                                offset: const Offset(0, 10),
-                              )
-                            ],
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              _BottomBarButton(
-                                icon: Icons.ios_share,
-                                onTap: () {},
-                                isDark: isDark,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(32),
+                          child: BackdropFilter(
+                            filter: ImageFilter.blur(sigmaX: 2.0, sigmaY: 2.0),
+                            child: Container(
+                              height: 64,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: (isDark
+                                        ? AppColors.surfaceContainerDark
+                                        : Colors.white)
+                                    .withValues(alpha: 0.8),
+                                borderRadius: BorderRadius.circular(32),
+                                border: Border.all(
+                                  color: (isDark ? Colors.white : Colors.black)
+                                      .withValues(alpha: 0.1),
+                                  width: 0.5,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.1),
+                                    blurRadius: 20,
+                                    offset: const Offset(0, 10),
+                                  )
+                                ],
                               ),
-                              8.w,
-                              _BottomBarButton(
-                                icon: Icons.layers_outlined,
-                                onTap: () {},
-                                isDark: isDark,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  _BottomBarButton(
+                                    icon: 'share'.iconSvg,
+                                    onTap: () {},
+                                    isDark: isDark,
+                                  ),
+                                  8.w,
+                                  _BottomBarButton(
+                                    icon: 'split'.iconSvg,
+                                    onTap: () {},
+                                    isDark: isDark,
+                                  ),
+                                  8.w,
+                                  _BottomBarButton(
+                                    icon: 'heart'.iconSvg,
+                                    onTap: () {},
+                                    isDark: isDark,
+                                  ),
+                                ],
                               ),
-                              8.w,
-                              _BottomBarButton(
-                                icon: Icons.favorite_border,
-                                onTap: () {},
-                                isDark: isDark,
-                              ),
-                            ],
+                            ),
                           ),
                         ),
                       ),
@@ -201,7 +217,7 @@ class HymnDetailPage extends HookConsumerWidget {
 }
 
 class _BottomBarButton extends StatelessWidget {
-  final IconData icon;
+  final String icon;
   final VoidCallback onTap;
   final bool isDark;
 
@@ -218,14 +234,17 @@ class _BottomBarButton extends StatelessWidget {
       child: Container(
         width: 48,
         height: 48,
+        padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
           color: isDark ? AppColors.neutral850 : AppColors.secondary50,
           shape: BoxShape.circle,
         ),
-        child: Icon(
-          icon,
-          color: isDark ? AppColors.neutral100 : AppColors.primaryDark,
-          size: 24,
+        child: VectorGraphic(
+          loader: AssetBytesLoader(icon),
+          colorFilter: ColorFilter.mode(
+            isDark ? AppColors.neutral100 : AppColors.primaryDark,
+            BlendMode.srcIn,
+          ),
         ),
       ),
     );
