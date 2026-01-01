@@ -51,7 +51,7 @@ class _SettingsTabScreenState extends ConsumerState<SettingsTabScreen>
                   _ThemeSelector(
                     currentTheme: currentTheme,
                     onThemeChanged: (theme) {
-                      ref.read(themeModeProvider.notifier).state = theme;
+                      ref.read(themeModeProvider.notifier).setThemeMode(theme);
                     },
                   ),
                   _SettingsTile(

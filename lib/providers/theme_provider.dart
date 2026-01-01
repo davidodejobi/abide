@@ -1,8 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'storage_provider.dart';
+
 /// Provider that tracks the current theme mode
-final themeModeProvider = StateProvider<ThemeMode>((ref) => ThemeMode.system);
+final themeModeProvider =
+    NotifierProvider<ThemeNotifier, ThemeMode>(ThemeNotifier.new);
+
+class ThemeNotifier extends Notifier<ThemeMode> {
+  @override
+  ThemeMode build() {
+    final storage = ref.read(storageServiceProvider);
+    return storage.getThemeMode();
+  }
+
+  void setThemeMode(ThemeMode mode) {
+    state = mode;
+    ref.read(storageServiceProvider).saveThemeMode(mode);
+  }
+}
 
 /// Extension to get display name for ThemeMode
 extension ThemeModeExtension on ThemeMode {
