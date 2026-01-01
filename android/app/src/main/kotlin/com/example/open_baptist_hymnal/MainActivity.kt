@@ -1,4 +1,4 @@
-package com.example.open_baptist_hymnal
+package com.openbaptisthymnal
 
 import io.flutter.embedding.android.FlutterActivity
 
