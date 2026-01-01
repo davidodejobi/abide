@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../utils/extensions/num_extensions.dart';
 import '../../utils/theme/theme.dart';
 
 class SearchBarWidget extends StatelessWidget {
@@ -28,13 +29,13 @@ class SearchBarWidget extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const SizedBox(width: 18),
+          18.w,
           Icon(
             Icons.search,
             size: 32,
             color: colorScheme.onSurfaceVariant,
           ),
-          const SizedBox(width: 12),
+          12.w,
           Expanded(
             child: TextField(
               controller: controller,
@@ -55,24 +56,6 @@ class SearchBarWidget extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 8),
-          GestureDetector(
-            onTap: onFilterTap,
-            child: Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: colorScheme.primary,
-                borderRadius: BorderRadius.circular(22),
-              ),
-              child: Icon(
-                Icons.tune,
-                size: 24,
-                color: colorScheme.onPrimary,
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
         ],
       ),
     );

@@ -1,9 +1,11 @@
 import 'dart:developer' show log;
 
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../providers/hymnal_provider.dart';
+import '../../utils/extensions/num_extensions.dart';
 import '../../utils/theme/theme.dart';
 import '../viewmodels/hymns_viewmodel.dart';
 import '../widgets/bottom_nav_bar/bottom_nav_bar.dart';
@@ -11,26 +13,15 @@ import '../widgets/hymn_list_tile.dart';
 import '../widgets/language_toggle.dart';
 import '../widgets/search_bar_widget.dart';
 
-class HymnListPage extends ConsumerStatefulWidget {
+class HymnListPage extends HookConsumerWidget {
   const HymnListPage({super.key});
 
   @override
-  ConsumerState<HymnListPage> createState() => _HymnListPageState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final currentNavIndex = useState(0);
+    final searchController = useTextEditingController();
+    final searchQuery = useState('');
 
-class _HymnListPageState extends ConsumerState<HymnListPage> {
-  int _currentNavIndex = 0;
-  final TextEditingController _searchController = TextEditingController();
-  String _searchQuery = '';
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
     final hymnsAsync = ref.watch(hymnsViewModelProvider);
     final currentLanguage = ref.watch(languageProvider);
     final colorScheme = Theme.of(context).colorScheme;
@@ -94,11 +85,9 @@ class _HymnListPageState extends ConsumerState<HymnListPage> {
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
                     child: SearchBarWidget(
-                      controller: _searchController,
+                      controller: searchController,
                       onChanged: (value) {
-                        setState(() {
-                          _searchQuery = value.toLowerCase();
-                        });
+                        searchQuery.value = value.toLowerCase();
                       },
                       onFilterTap: () {
                         // TODO: Implement filter
@@ -127,14 +116,14 @@ class _HymnListPageState extends ConsumerState<HymnListPage> {
                   data: (hymns) {
                     log('hymns: $hymns');
                     // Filter hymns based on search query
-                    final filteredHymns = _searchQuery.isEmpty
+                    final filteredHymns = searchQuery.value.isEmpty
                         ? hymns
                         : hymns.where((hymn) {
                             final title =
                                 (hymn.title as String?)?.toLowerCase() ?? '';
                             final number = hymn.number.toString();
-                            return title.contains(_searchQuery) ||
-                                number.contains(_searchQuery);
+                            return title.contains(searchQuery.value) ||
+                                number.contains(searchQuery.value);
                           }).toList();
 
                     if (filteredHymns.isEmpty) {
@@ -187,14 +176,14 @@ class _HymnListPageState extends ConsumerState<HymnListPage> {
                             size: 48,
                             color: colorScheme.error,
                           ),
-                          const SizedBox(height: 16),
+                          16.h,
                           Text(
                             'Failed to load hymns',
                             style: AppTextStyles.bodyLarge.copyWith(
                               color: colorScheme.onSurface,
                             ),
                           ),
-                          const SizedBox(height: 8),
+                          8.h,
                           TextButton(
                             onPressed: () {
                               ref.invalidate(hymnsViewModelProvider);
@@ -235,11 +224,9 @@ class _HymnListPageState extends ConsumerState<HymnListPage> {
                     glowColor: colorScheme.primary,
                   ),
                 ],
-                selectedIndex: _currentNavIndex,
+                selectedIndex: currentNavIndex.value,
                 onTabSelected: (index) {
-                  setState(() {
-                    _currentNavIndex = index;
-                  });
+                  currentNavIndex.value = index;
                 },
                 indicatorColor: colorScheme.primary,
               ),
