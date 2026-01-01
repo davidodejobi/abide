@@ -21,7 +21,6 @@ void main() {
 
       expect(core.schemaVersion, '1.0.0');
       expect(core.hymnalId, 'onitebomi_2000');
-      expect(core.sourceLanguage, 'yor');
       expect(core.hymns.length, 5);
       expect(core.hymns['hymn_0001']?.category, 'praise');
     });

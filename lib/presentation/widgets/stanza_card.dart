@@ -90,6 +90,7 @@ class StanzaCard extends StatelessWidget {
                   color: cardText,
                   fontStyle: isChorus ? FontStyle.italic : null,
                 ),
+                textAlign: TextAlign.left,
               ),
             ),
           ],

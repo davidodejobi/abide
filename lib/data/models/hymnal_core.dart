@@ -11,7 +11,6 @@ class HymnalCore with _$HymnalCore {
   const factory HymnalCore({
     @JsonKey(name: 'schema_version') required String schemaVersion,
     @JsonKey(name: 'hymnal_id') required String hymnalId,
-    @JsonKey(name: 'source_language') required String sourceLanguage,
     required Map<String, Hymn> hymns,
   }) = _HymnalCore;
 

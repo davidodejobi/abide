@@ -24,8 +24,6 @@ mixin _$HymnalCore {
   String get schemaVersion => throw _privateConstructorUsedError;
   @JsonKey(name: 'hymnal_id')
   String get hymnalId => throw _privateConstructorUsedError;
-  @JsonKey(name: 'source_language')
-  String get sourceLanguage => throw _privateConstructorUsedError;
   Map<String, Hymn> get hymns => throw _privateConstructorUsedError;
 
   /// Serializes this HymnalCore to a JSON map.
@@ -47,7 +45,6 @@ abstract class $HymnalCoreCopyWith<$Res> {
   $Res call(
       {@JsonKey(name: 'schema_version') String schemaVersion,
       @JsonKey(name: 'hymnal_id') String hymnalId,
-      @JsonKey(name: 'source_language') String sourceLanguage,
       Map<String, Hymn> hymns});
 }
 
@@ -68,7 +65,6 @@ class _$HymnalCoreCopyWithImpl<$Res, $Val extends HymnalCore>
   $Res call({
     Object? schemaVersion = null,
     Object? hymnalId = null,
-    Object? sourceLanguage = null,
     Object? hymns = null,
   }) {
     return _then(_value.copyWith(
@@ -79,10 +75,6 @@ class _$HymnalCoreCopyWithImpl<$Res, $Val extends HymnalCore>
       hymnalId: null == hymnalId
           ? _value.hymnalId
           : hymnalId // ignore: cast_nullable_to_non_nullable
-              as String,
-      sourceLanguage: null == sourceLanguage
-          ? _value.sourceLanguage
-          : sourceLanguage // ignore: cast_nullable_to_non_nullable
               as String,
       hymns: null == hymns
           ? _value.hymns
@@ -103,7 +95,6 @@ abstract class _$$HymnalCoreImplCopyWith<$Res>
   $Res call(
       {@JsonKey(name: 'schema_version') String schemaVersion,
       @JsonKey(name: 'hymnal_id') String hymnalId,
-      @JsonKey(name: 'source_language') String sourceLanguage,
       Map<String, Hymn> hymns});
 }
 
@@ -122,7 +113,6 @@ class __$$HymnalCoreImplCopyWithImpl<$Res>
   $Res call({
     Object? schemaVersion = null,
     Object? hymnalId = null,
-    Object? sourceLanguage = null,
     Object? hymns = null,
   }) {
     return _then(_$HymnalCoreImpl(
@@ -133,10 +123,6 @@ class __$$HymnalCoreImplCopyWithImpl<$Res>
       hymnalId: null == hymnalId
           ? _value.hymnalId
           : hymnalId // ignore: cast_nullable_to_non_nullable
-              as String,
-      sourceLanguage: null == sourceLanguage
-          ? _value.sourceLanguage
-          : sourceLanguage // ignore: cast_nullable_to_non_nullable
               as String,
       hymns: null == hymns
           ? _value._hymns
@@ -152,7 +138,6 @@ class _$HymnalCoreImpl implements _HymnalCore {
   const _$HymnalCoreImpl(
       {@JsonKey(name: 'schema_version') required this.schemaVersion,
       @JsonKey(name: 'hymnal_id') required this.hymnalId,
-      @JsonKey(name: 'source_language') required this.sourceLanguage,
       required final Map<String, Hymn> hymns})
       : _hymns = hymns;
 
@@ -165,9 +150,6 @@ class _$HymnalCoreImpl implements _HymnalCore {
   @override
   @JsonKey(name: 'hymnal_id')
   final String hymnalId;
-  @override
-  @JsonKey(name: 'source_language')
-  final String sourceLanguage;
   final Map<String, Hymn> _hymns;
   @override
   Map<String, Hymn> get hymns {
@@ -178,7 +160,7 @@ class _$HymnalCoreImpl implements _HymnalCore {
 
   @override
   String toString() {
-    return 'HymnalCore(schemaVersion: $schemaVersion, hymnalId: $hymnalId, sourceLanguage: $sourceLanguage, hymns: $hymns)';
+    return 'HymnalCore(schemaVersion: $schemaVersion, hymnalId: $hymnalId, hymns: $hymns)';
   }
 
   @override
@@ -190,15 +172,13 @@ class _$HymnalCoreImpl implements _HymnalCore {
                 other.schemaVersion == schemaVersion) &&
             (identical(other.hymnalId, hymnalId) ||
                 other.hymnalId == hymnalId) &&
-            (identical(other.sourceLanguage, sourceLanguage) ||
-                other.sourceLanguage == sourceLanguage) &&
             const DeepCollectionEquality().equals(other._hymns, _hymns));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(runtimeType, schemaVersion, hymnalId,
-      sourceLanguage, const DeepCollectionEquality().hash(_hymns));
+      const DeepCollectionEquality().hash(_hymns));
 
   /// Create a copy of HymnalCore
   /// with the given fields replaced by the non-null parameter values.
@@ -220,7 +200,6 @@ abstract class _HymnalCore implements HymnalCore {
   const factory _HymnalCore(
       {@JsonKey(name: 'schema_version') required final String schemaVersion,
       @JsonKey(name: 'hymnal_id') required final String hymnalId,
-      @JsonKey(name: 'source_language') required final String sourceLanguage,
       required final Map<String, Hymn> hymns}) = _$HymnalCoreImpl;
 
   factory _HymnalCore.fromJson(Map<String, dynamic> json) =
@@ -232,9 +211,6 @@ abstract class _HymnalCore implements HymnalCore {
   @override
   @JsonKey(name: 'hymnal_id')
   String get hymnalId;
-  @override
-  @JsonKey(name: 'source_language')
-  String get sourceLanguage;
   @override
   Map<String, Hymn> get hymns;
 
