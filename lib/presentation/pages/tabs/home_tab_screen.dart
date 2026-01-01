@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lottie/lottie.dart';
 import 'package:open_baptist_hymnal/data/models/stanza.dart';
+import 'package:open_baptist_hymnal/router/app_router.dart';
 import 'package:open_baptist_hymnal/utils/extensions/string_extensions.dart';
 
 import '../../../providers/hymnal_provider.dart';
@@ -195,7 +196,18 @@ class _HomeTabScreenState extends ConsumerState<HomeTabScreen>
                         number: number,
                         title: title,
                         onTap: () {
-                          // TODO: Navigate to hymn detail
+                          // Use the ID if available (English hymnal), otherwise fallback to padding the number (Yoruba)
+                          if (hymn.id != null) {
+                            context.router.push(
+                              HymnDetailRoute(hymnId: hymn.id!),
+                            );
+                          } else {
+                            // Fallback for safety, though id should be populated
+                            final paddedId = 'hymn_${number.padLeft(4, '0')}';
+                            context.router.push(
+                              HymnDetailRoute(hymnId: paddedId),
+                            );
+                          }
                         },
                       ),
                     );

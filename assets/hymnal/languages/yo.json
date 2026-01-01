@@ -1,53 +1,253 @@
 {
   "language": "yor",
-  "hymnal_name": "Iwe Orin Ijo Onitebomi",
+  "hymnal_name": "Iwe Orin Ijo Onitebomi ti Nigeria",
   "hymns": {
     "hymn_0001": {
       "number": 1,
       "title": "E Fi Iyin Fun Olorun",
       "lyrics": {
         "stanzas": [
-          { "index": 1, "text": "E fi iyin fun Olorun..." }
+          {
+            "index": 1,
+            "text": "Efi iyin fun Olorun,\nE yin, enyin eda aiye,\nE yin, eyin eda orun.\nYin Baba, Omo on Emi."
+          }
         ],
         "chorus": null
       }
     },
     "hymn_0002": {
       "number": 2,
-      "title": "Je K' A Gbe Oju Wa S' Oke",
+      "title": "Je K’ Agb’ Oju Ayo S’ Oke",
       "lyrics": {
         "stanzas": [
-          { "index": 1, "text": "Je k' agb' oju ayo s' oke..." }
+          {
+            "index": 1,
+            "text": "Je k’ agb’ oju ayo s’ oke\nSi agbala orun,\nK’ a yo lati ri Baba wa\nLori ite ife."
+          },
+          {
+            "index": 2,
+            "text": "Wa, je k’ a wole l’ ese Re,\nK’ a sunmo Oluwa,\nAngeli ina tab’ ida\nKi’ so ‘bujoko Re."
+          },
+          {
+            "index": 3,
+            "text": "Jesu s’ ilekun ‘lafia\nT’ ayo orun sile,\nK’ orin iyin wag a s’ oke\nDe ‘te t’ o l’ agbara."
+          },
+          {
+            "index": 4,
+            "text": "A m’ opo ope wa fun O,\nAlagbawi t’ oke;\nOgo fun Oba t’ o w alai,\nT’o pa ‘binu Re mo."
+          }
         ],
-        "chorus": null
+        "chorus": "This is a test lyrics for the hymn"
       }
     },
     "hymn_0003": {
       "number": 3,
-      "title": "E Yo Gbogbo Orile-ede",
+      "title": "Eyo Gbogb’ Orile-Ede",
       "lyrics": {
         "stanzas": [
-          { "index": 1, "text": "E yo gbogb' orile-ede..." }
+          {
+            "index": 1,
+            "text": "Eyo gbogb’ orile-ede\nN’ iwaju Ob’ Alade yin,\nE sin pelu inudidun,\nFi gbogbo ahon yin l’ ogo."
+          },
+          {
+            "index": 2,
+            "text": "Oluwa On ni Olorun,\nT’ O fun wa ni gbogbo ebun;\nIse owo Re l’ awa se,\nAgutan inu papa Re."
+          },
+          {
+            "index": 3,
+            "text": "E f’ orun ayo s’ ilekun,\nE f’ iyin wo agbala Re,\nE si se n’ ise t’ o l’ ogo,\nLati f’ ope at’ ola fun."
+          },
+          {
+            "index": 4,
+            "text": "Olore at’ Alanu ni,\nEbun at’ anu Re daju,\nGbogbo oril’-ede y’o mo\nPe otito Re wa lailai"
+          }
         ],
         "chorus": null
       }
     },
     "hymn_0004": {
       "number": 4,
-      "title": "O Wo At' Alabukunfun",
+      "title": "O Wo At’ Alabukunfun",
       "lyrics": {
         "stanzas": [
-          { "index": 1, "text": "O wo at' alabukunfun..." }
+          {
+            "index": 1,
+            "text": "O wo at’ Alabukunfun\nNi ile t’ o jewo Jesu,\nOkan at’ ile na l’ ayo\nNibiti Olugbala wo."
+          },
+          {
+            "index": 2,
+            "text": "Gb’ ori s’ oke, ilekun nla,\nE wo, Oba ogo duro:\nOba awon oba mbowa,\nOlugbala araiye de."
+          },
+          {
+            "index": 3,
+            "text": "E si ‘lekun okan paya,\nBi tempili t’ a ya soto\nFun elo ohun ti orun,\nTi a fi ife se l’ oso."
+          },
+          {
+            "index": 4,
+            "text": "Wa Olugbala, mo ti si\nOkan paya, ma gbe ‘nu mi,\nT’ ayo, t’ ope ni ngo ko’ rin,\nNgo f’ igbe aiye mi yin O."
+          }
         ],
         "chorus": null
       }
     },
     "hymn_0005": {
       "number": 5,
-      "title": "Niwaju Ite Jehofa",
+      "title": "Niwaju ‘Te Jehofa Nla",
       "lyrics": {
         "stanzas": [
-          { "index": 1, "text": "Niwaju ite Jehofa nla..." }
+          {
+            "index": 1,
+            "text": "Niwaju ‘te Jehofa nla,\nOril’-ede e f’ ayo sin;\nMo p’ On nikan ni Olorun,\nO le da, Osi le parun."
+          },
+          {
+            "index": 2,
+            "text": "Ipa Re laisi ‘ranwo wa,\nL’ O famo da wa l’ enia;\nNigbat’ a sako b’ agutan,\nO mu bo si agbo Re."
+          },
+          {
+            "index": 3,
+            "text": "Enia at’ ike Re ni wa,\nEmi at’ ara iku wa,\nOla t’ o to wo l’ a ba fun\nOruko Re Eleda Nla."
+          },
+          {
+            "index": 4,
+            "text": "Ao fi orin kun ile Re,\nL’ ohun giga l’ a o korin,\nIle y’o f’ egbarun ahon\nFi iyin kun agbala Re."
+          },
+          {
+            "index": 5,
+            "text": "Ase Re gboro bi aiye,\nIfe Re bi aiyeraiye,\nOto Re y’o duro sinsin,\nNigba odun ki y’o yin mo."
+          }
+        ],
+        "chorus": null
+      }
+    },
+    "hymn_0006": {
+      "number": 6,
+      "title": "E Yin Oluwa, E Tun Ohun Se",
+      "lyrics": {
+        "stanzas": [
+          {
+            "index": 1,
+            "text": "E Yin Oluwa, e tun ohun se,\nLati korin Re ninu ajo nla;\nE je k’ aiye yo ninu Eleda won,\nK’ akobi igbala yo n nu Oba won."
+          },
+          {
+            "index": 2,
+            "text": "Ki nwon f’ itara sin oruko Re,\nKi nwon si f’ ife Re han,\nEnit’ O fi ife s’ ilekun oro,\nLati tan aini, lati bukun fun won."
+          },
+          {
+            "index": 3,
+            "text": "Ninu ogo li awon enia Re,\nY’ o ko orin si Onibu-ore,\nOhun iho ayo won si Oba won,\nY’ o ka gbogbo aiye, y’o si de orun."
+          }
+        ],
+        "chorus": null
+      }
+    },
+    "hymn_0007": {
+      "number": 7,
+      "title": "Didun N’ Ise Na, Oba Mi",
+      "lyrics": {
+        "stanzas": [
+          {
+            "index": 1,
+            "text": "Didun n’ ise na, Oba mi,\nLati ma yin oruko Re,\nLati se ‘fe Re l’ owuro,\nLati so-oro Re l’ale."
+          },
+          {
+            "index": 2,
+            "text": "Didun l’ojo ‘simi mimo\nLala ko si fun mi loni:\nOkan mi, ma ko ‘rin iyin\nBi harpu Dafidi didun."
+          },
+          {
+            "index": 3,
+            "text": "Okan mi o yo n ‘n’ Oluwa,\nY’o yin ise at’ oro Re\nIse ore Re tip o to!\nIjinle si ni imo re."
+          },
+          {
+            "index": 4,
+            "text": "Emi o yan ipo ola\n‘Gb’ ore-ofe ba we mi nu;\nTi ayo pupo si ba mi,\nAyo mimo lat ‘ oke wa."
+          },
+          {
+            "index": 5,
+            "text": "‘Gbana, ngo ri, ngo gbo, ngo mo\nOhun gbogbo ti mo ti nfe;\nGbogbo ipa mi y opapo\nLati se ‘fe Re titi lai."
+          }
+        ],
+        "chorus": null
+      }
+    },
+    "hymn_0008": {
+      "number": 8,
+      "title": "Ewole F’ Oba, Ologo Julo",
+      "lyrics": {
+        "stanzas": [
+          {
+            "index": 1,
+            "text": "Ewole f’ Oba, ologo julo,\nE korin ipa ati ife Re;\nAlabo wa ni, at’ Eni Igbani,\nO ngbe ‘nu ogo, eleru ni iyin."
+          },
+          {
+            "index": 2,
+            "text": "E so t’ ipa Re, e so t’ ore Re:\n‘Mole l’ aso Re gobi Re orun,\nB’ ara ti nsan ni ‘keke, ibinu Re;\nIpa ona Re ni a ko si le mo."
+          },
+          {
+            "index": 3,
+            "text": "Aiye yi pelu ekun re gbogbo,\nOlorun, agbara Re l’ o da won:\nO fi idi re mu ‘le, ko si le yi,\nO si f’ okun se oja igbaiya re."
+          },
+          {
+            "index": 4,
+            "text": "Itoju Re wa lara gbogbo won,\nNinu afefe, ninu imole;\nItoju Re wa nin ‘ odo ti o nsan,\nO si wa ninu iri ati ojo."
+          },
+          {
+            "index": 5,
+            "text": "Awa erupe, aw’ alailera,\n‘Wo l’ a gbekele, O ki o da ni;\nAnu Re ronu, o si le de opin\nEleda, Alabo, Olugbala wa."
+          },
+          {
+            "index": 6,
+            "text": "‘Wo alagbara, onife julo,\nB’ awon angeli ti yin O loke,\nBe l’ awa eda Re niwon t’ a le se\nA o ma juba Re, a o ma yin O."
+          }
+        ],
+        "chorus": null
+      }
+    },
+    "hymn_0009": {
+      "number": 9,
+      "title": "Yin Oluwa, Oro Didun",
+      "lyrics": {
+        "stanzas": [
+          {
+            "index": 1,
+            "text": "Yin Oluwa, oro didun\nYin oru ‘dake je,\nGbogbo aiye so ogo Re,\nYin, irawo ‘mole."
+          },
+          {
+            "index": 2,
+            "text": "Yin, enyin iji t’ o dide\nN’ igboran s’ ase Re\nK’ oke at’ igi eleso\nDapo yin Oluwa."
+          },
+          {
+            "index": 3,
+            "text": "E fi ete nyin mimo yin\nEnyin ogun orun;\nOgo, ola at’ agbara\nFun Oba ‘yeraiye."
+          },
+          {
+            "index": 4,
+            "text": "Eyin, enyin mimo ti nyo\nNihin. Nin ‘ase Re\nOrun adura eniti\nNt’ ori pepe g’ oke"
+          },
+          {
+            "index": 5,
+            "text": "E yin gbogbo ise Re ti\nO wa n’ ikawo Re,\nOluwa, ola Re ti to!\nOkan mi yin l’ ogo."
+          }
+        ],
+        "chorus": null
+      }
+    },
+    "hymn_0010": {
+      "number": 10,
+      "title": "Oluwa Po! Ogun Orun Wole Fun",
+      "lyrics": {
+        "stanzas": [
+          {
+            "index": 1,
+            "text": "Oluwa po! Ogun orun wole fun,\nAti enyin t’ o nrin l’ aiye.\nE yon in orin mimo niwaju Re,\nKi e si yin Eleda yin."
+          },
+          {
+            "index": 2,
+            "text": "Oluwa po! Titobi Re si l’ ogo,\nE yin lat’ ile de ile,\nB’ Asegun lor’ iku, ese at’ egbe,\nO njoba, O npase lailai."
+          },
+          {
+            "index": 3,
+            "text": "Oluwa po! Anu Re si tip o to\nEnyin mimo gbe harpu yin,\nE fi ohun ol’ okun wura korin\nS’ Oluwa, Oba ‘won Oba."
+          }
         ],
         "chorus": null
       }

@@ -1,8 +1,12 @@
 import 'dart:developer' show log;
 
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:lottie/lottie.dart';
+import 'package:open_baptist_hymnal/router/app_router.dart';
+import 'package:open_baptist_hymnal/utils/extensions/string_extensions.dart';
 
 import '../../providers/hymnal_provider.dart';
 import '../../utils/extensions/num_extensions.dart';
@@ -89,9 +93,6 @@ class HymnListPage extends HookConsumerWidget {
                       onChanged: (value) {
                         searchQuery.value = value.toLowerCase();
                       },
-                      onFilterTap: () {
-                        // TODO: Implement filter
-                      },
                     ),
                   ),
                 ),
@@ -127,9 +128,18 @@ class HymnListPage extends HookConsumerWidget {
                           }).toList();
 
                     if (filteredHymns.isEmpty) {
-                      return const SliverFillRemaining(
+                      return SliverFillRemaining(
                         child: Center(
-                          child: Text('No hymns found'),
+                          child: Column(
+                            children: [
+                              Lottie.asset(
+                                'empty-data'.json,
+                                height: 200,
+                                width: 200,
+                              ),
+                              const Text('No hymns found'),
+                            ],
+                          ),
                         ),
                       );
                     }
@@ -149,7 +159,22 @@ class HymnListPage extends HookConsumerWidget {
                                 number: number,
                                 title: title,
                                 onTap: () {
-                                  // TODO: Navigate to hymn detail
+                                  // Use the ID if available (English hymnal), otherwise fallback to padding the number (Yoruba)
+                                  // or ideally the API should always provide the ID.
+                                  // Given the recent change to HymnTranslation to include `id`, let's use it.
+                                  log('hymn.id: ${hymn.id}');
+                                  if (hymn.id != null) {
+                                    context.router.push(
+                                      HymnDetailRoute(hymnId: hymn.id!),
+                                    );
+                                  } else {
+                                    // Fallback for safety, though id should be populated
+                                    final paddedId =
+                                        'hymn_${number.padLeft(4, '0')}';
+                                    context.router.push(
+                                      HymnDetailRoute(hymnId: paddedId),
+                                    );
+                                  }
                                 },
                               ),
                             );

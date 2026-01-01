@@ -24,6 +24,7 @@ class GetHymnsByLanguage {
           lyrics: translation.lyrics,
           title: translation.title,
           number: translation.number,
+          id: id,
         ));
       }
     }

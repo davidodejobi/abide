@@ -228,6 +228,8 @@ mixin _$HymnTranslation {
   int get number => throw _privateConstructorUsedError;
   String get title => throw _privateConstructorUsedError;
   Lyrics get lyrics => throw _privateConstructorUsedError;
+  @JsonKey(includeFromJson: false)
+  String? get id => throw _privateConstructorUsedError;
 
   /// Serializes this HymnTranslation to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -245,7 +247,11 @@ abstract class $HymnTranslationCopyWith<$Res> {
           HymnTranslation value, $Res Function(HymnTranslation) then) =
       _$HymnTranslationCopyWithImpl<$Res, HymnTranslation>;
   @useResult
-  $Res call({int number, String title, Lyrics lyrics});
+  $Res call(
+      {int number,
+      String title,
+      Lyrics lyrics,
+      @JsonKey(includeFromJson: false) String? id});
 
   $LyricsCopyWith<$Res> get lyrics;
 }
@@ -268,6 +274,7 @@ class _$HymnTranslationCopyWithImpl<$Res, $Val extends HymnTranslation>
     Object? number = null,
     Object? title = null,
     Object? lyrics = null,
+    Object? id = freezed,
   }) {
     return _then(_value.copyWith(
       number: null == number
@@ -282,6 +289,10 @@ class _$HymnTranslationCopyWithImpl<$Res, $Val extends HymnTranslation>
           ? _value.lyrics
           : lyrics // ignore: cast_nullable_to_non_nullable
               as Lyrics,
+      id: freezed == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as String?,
     ) as $Val);
   }
 
@@ -304,7 +315,11 @@ abstract class _$$HymnTranslationImplCopyWith<$Res>
       __$$HymnTranslationImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({int number, String title, Lyrics lyrics});
+  $Res call(
+      {int number,
+      String title,
+      Lyrics lyrics,
+      @JsonKey(includeFromJson: false) String? id});
 
   @override
   $LyricsCopyWith<$Res> get lyrics;
@@ -326,6 +341,7 @@ class __$$HymnTranslationImplCopyWithImpl<$Res>
     Object? number = null,
     Object? title = null,
     Object? lyrics = null,
+    Object? id = freezed,
   }) {
     return _then(_$HymnTranslationImpl(
       number: null == number
@@ -340,6 +356,10 @@ class __$$HymnTranslationImplCopyWithImpl<$Res>
           ? _value.lyrics
           : lyrics // ignore: cast_nullable_to_non_nullable
               as Lyrics,
+      id: freezed == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as String?,
     ));
   }
 }
@@ -348,7 +368,10 @@ class __$$HymnTranslationImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$HymnTranslationImpl implements _HymnTranslation {
   const _$HymnTranslationImpl(
-      {required this.number, required this.title, required this.lyrics});
+      {required this.number,
+      required this.title,
+      required this.lyrics,
+      @JsonKey(includeFromJson: false) this.id});
 
   factory _$HymnTranslationImpl.fromJson(Map<String, dynamic> json) =>
       _$$HymnTranslationImplFromJson(json);
@@ -359,10 +382,13 @@ class _$HymnTranslationImpl implements _HymnTranslation {
   final String title;
   @override
   final Lyrics lyrics;
+  @override
+  @JsonKey(includeFromJson: false)
+  final String? id;
 
   @override
   String toString() {
-    return 'HymnTranslation(number: $number, title: $title, lyrics: $lyrics)';
+    return 'HymnTranslation(number: $number, title: $title, lyrics: $lyrics, id: $id)';
   }
 
   @override
@@ -372,12 +398,13 @@ class _$HymnTranslationImpl implements _HymnTranslation {
             other is _$HymnTranslationImpl &&
             (identical(other.number, number) || other.number == number) &&
             (identical(other.title, title) || other.title == title) &&
-            (identical(other.lyrics, lyrics) || other.lyrics == lyrics));
+            (identical(other.lyrics, lyrics) || other.lyrics == lyrics) &&
+            (identical(other.id, id) || other.id == id));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, number, title, lyrics);
+  int get hashCode => Object.hash(runtimeType, number, title, lyrics, id);
 
   /// Create a copy of HymnTranslation
   /// with the given fields replaced by the non-null parameter values.
@@ -398,9 +425,11 @@ class _$HymnTranslationImpl implements _HymnTranslation {
 
 abstract class _HymnTranslation implements HymnTranslation {
   const factory _HymnTranslation(
-      {required final int number,
-      required final String title,
-      required final Lyrics lyrics}) = _$HymnTranslationImpl;
+          {required final int number,
+          required final String title,
+          required final Lyrics lyrics,
+          @JsonKey(includeFromJson: false) final String? id}) =
+      _$HymnTranslationImpl;
 
   factory _HymnTranslation.fromJson(Map<String, dynamic> json) =
       _$HymnTranslationImpl.fromJson;
@@ -411,6 +440,9 @@ abstract class _HymnTranslation implements HymnTranslation {
   String get title;
   @override
   Lyrics get lyrics;
+  @override
+  @JsonKey(includeFromJson: false)
+  String? get id;
 
   /// Create a copy of HymnTranslation
   /// with the given fields replaced by the non-null parameter values.

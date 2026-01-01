@@ -23,6 +23,7 @@ class HymnTranslation with _$HymnTranslation {
     required int number,
     required String title,
     required Lyrics lyrics,
+    @JsonKey(includeFromJson: false) String? id,
   }) = _HymnTranslation;
 
   factory HymnTranslation.fromJson(Map<String, dynamic> json) =>

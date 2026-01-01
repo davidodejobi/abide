@@ -1,57 +1,232 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:open_baptist_hymnal/utils/extensions/context_extensions.dart';
 
+import '../../data/models/language_pack.dart';
+import '../../utils/extensions/num_extensions.dart';
+import '../../utils/theme/theme.dart';
 import '../viewmodels/hymns_viewmodel.dart';
-import '../widgets/hymn_stanza.dart';
+import '../widgets/stanza_card.dart';
 
 @RoutePage()
-class HymnDetailPage extends ConsumerWidget {
+class HymnDetailPage extends HookConsumerWidget {
   final String hymnId;
 
   const HymnDetailPage({super.key, required this.hymnId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Watch hymn details
     final detailAsync = ref.watch(hymnDetailProvider(hymnId));
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    // Define colors based on the design tokens
+    final backgroundColor =
+        isDark ? AppColors.neutral900 : AppColors.neutral100;
+    final primaryTextColor =
+        isDark ? AppColors.neutral100 : AppColors.neutral700;
+    final numberColor = isDark ? AppColors.neutral700 : AppColors.neutral300;
 
     return Scaffold(
+      backgroundColor: backgroundColor,
       appBar: AppBar(
-        title: const Text('Hymn Detail'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: const AutoLeadingButton(),
       ),
       body: detailAsync.when(
         data: (data) {
+          // Extract data
+          // Assuming data structure based on previous code
           final translations = data['translations'] as Map;
           if (translations.isEmpty) {
             return const Center(child: Text('No translation found'));
           }
+          final firstTranslation = translations.values.first as HymnTranslation;
+          final title = firstTranslation.title;
+          final stanzas = firstTranslation.lyrics.stanzas;
+          final chorus = firstTranslation.lyrics.chorus;
+          final hasChorus = chorus != null && chorus.isNotEmpty;
 
-          final firstTranslation = translations.values.first;
+          // Use hymnId as number for now, or extract if available
+          final hymnNumber = firstTranslation.number.toString().padLeft(3, '0');
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  firstTranslation.title,
-                  style: Theme.of(context).textTheme.headlineMedium,
-                ),
-                const SizedBox(height: 20),
-                ...firstTranslation.lyrics.stanzas.asMap().entries.map((entry) {
-                  return HymnStanza(number: entry.key + 1, text: entry.value);
-                }),
-                if (firstTranslation.lyrics.chorus != null)
-                  HymnStanza(
-                      number: 0,
-                      text: firstTranslation.lyrics.chorus!,
-                      isChorus: true),
-              ],
-            ),
-          );
+          return 1.isEven
+              ? const SingleChildScrollView(
+                  child: Column(),
+                )
+              : Stack(
+                  children: [
+                    // Huge Number Watermark
+                    Positioned(
+                      top: 0,
+                      right: 16,
+                      child: Text(
+                        hymnNumber,
+                        style: AppTextStyles.hymnNumber(color: numberColor)
+                            .copyWith(
+                          fontSize: 80,
+                          height: 1.0,
+                        ),
+                      ),
+                    ),
+
+                    // Content
+                    CustomScrollView(
+                      slivers: [
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: EdgeInsets.fromLTRB(
+                                16, 0, context.screenSize.width * 0.4, 0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  title,
+                                  style: AppTextStyles.headlineLarge.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: primaryTextColor,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+
+                        // Stanza List
+                        SliverPadding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 24),
+                          sliver: SliverList(
+                            delegate: SliverChildBuilderDelegate(
+                              (context, index) {
+                                if (hasChorus) {
+                                  if (index == 0) {
+                                    return StanzaCard(
+                                      text: stanzas[0].text,
+                                      displayIndex: 1,
+                                    );
+                                  } else if (index == 1) {
+                                    return StanzaCard(
+                                      text: chorus,
+                                      displayIndex: 0,
+                                      isChorus: true,
+                                    );
+                                  } else if (index - 1 < stanzas.length) {
+                                    return StanzaCard(
+                                      text: stanzas[index - 1].text,
+                                      displayIndex: index,
+                                    );
+                                  }
+                                  return null;
+                                } else {
+                                  if (index < stanzas.length) {
+                                    return StanzaCard(
+                                      text: stanzas[index].text,
+                                      displayIndex: index + 1,
+                                    );
+                                  }
+                                  return null;
+                                }
+                              },
+                              childCount: hasChorus
+                                  ? stanzas.length + 1
+                                  : stanzas.length,
+                            ),
+                          ),
+                        ),
+
+                        // Bottom Spacer
+                        const SliverToBoxAdapter(child: SizedBox(height: 100)),
+                      ],
+                    ),
+
+                    // Floating Bottom Bar
+                    Positioned(
+                      bottom: 32,
+                      left: 0,
+                      right: 0,
+                      child: Center(
+                        child: Container(
+                          height: 64,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? AppColors.surfaceContainerDark
+                                : Colors.white,
+                            borderRadius: BorderRadius.circular(32),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.1),
+                                blurRadius: 20,
+                                offset: const Offset(0, 10),
+                              )
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              _BottomBarButton(
+                                icon: Icons.ios_share,
+                                onTap: () {},
+                                isDark: isDark,
+                              ),
+                              8.w,
+                              _BottomBarButton(
+                                icon: Icons.layers_outlined,
+                                onTap: () {},
+                                isDark: isDark,
+                              ),
+                              8.w,
+                              _BottomBarButton(
+                                icon: Icons.favorite_border,
+                                onTap: () {},
+                                isDark: isDark,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(child: Text('Error: $err')),
+      ),
+    );
+  }
+}
+
+class _BottomBarButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+  final bool isDark;
+
+  const _BottomBarButton({
+    required this.icon,
+    required this.onTap,
+    required this.isDark,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 48,
+        height: 48,
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.neutral850 : AppColors.secondary50,
+          shape: BoxShape.circle,
+        ),
+        child: Icon(
+          icon,
+          color: isDark ? AppColors.neutral100 : AppColors.primaryDark,
+          size: 24,
+        ),
       ),
     );
   }
