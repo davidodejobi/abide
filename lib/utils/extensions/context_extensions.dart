@@ -150,6 +150,7 @@ extension ContextExtensions on BuildContext {
 
   /// Access text styles helper
   /// Usage: context.textStyles.caption
+  // ignore: library_private_types_in_public_api
   _TextStylesHelper get textStyles => _TextStylesHelper(this);
 }
 

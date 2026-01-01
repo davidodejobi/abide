@@ -2,9 +2,9 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lottie/lottie.dart';
-import 'package:open_baptist_hymnal/data/models/stanza.dart';
-import 'package:open_baptist_hymnal/router/app_router.dart';
-import 'package:open_baptist_hymnal/utils/extensions/string_extensions.dart';
+import 'package:openbaptisthymnal/data/models/stanza.dart';
+import 'package:openbaptisthymnal/router/app_router.dart';
+import 'package:openbaptisthymnal/utils/extensions/string_extensions.dart';
 
 import '../../../providers/hymnal_provider.dart';
 import '../../../utils/theme/theme.dart';

@@ -1,3 +1,3 @@
-# open_baptist_hymnal
+# openbaptisthymnal
 
 A new Flutter project.

@@ -1,4 +1,4 @@
-import 'package:open_baptist_hymnal/data/models/language_pack.dart';
+import 'package:openbaptisthymnal/data/models/language_pack.dart';
 
 import '../../data/repositories/hymnal_repository.dart';
 

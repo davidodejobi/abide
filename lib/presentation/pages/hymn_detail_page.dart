@@ -3,9 +3,9 @@ import 'dart:ui';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:open_baptist_hymnal/utils/extensions/context_extensions.dart';
-import 'package:open_baptist_hymnal/utils/extensions/string_extensions.dart';
-import 'package:open_baptist_hymnal/utils/toast_helper.dart';
+import 'package:openbaptisthymnal/utils/extensions/context_extensions.dart';
+import 'package:openbaptisthymnal/utils/extensions/string_extensions.dart';
+import 'package:openbaptisthymnal/utils/toast_helper.dart';
 import 'package:vector_graphics/vector_graphics_compat.dart';
 
 import '../../data/models/language_pack.dart';

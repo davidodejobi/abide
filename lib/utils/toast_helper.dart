@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:open_baptist_hymnal/utils/extensions/context_extensions.dart';
+import 'package:openbaptisthymnal/utils/extensions/context_extensions.dart';
 import 'package:toastification/toastification.dart';
 
 enum ToastType { success, error, warning, info }
