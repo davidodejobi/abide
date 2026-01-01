@@ -1,3 +1,5 @@
+import 'dart:developer' show log;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -123,13 +125,14 @@ class _HymnListPageState extends ConsumerState<HymnListPage> {
                 // Hymn list
                 hymnsAsync.when(
                   data: (hymns) {
+                    log('hymns: $hymns');
                     // Filter hymns based on search query
                     final filteredHymns = _searchQuery.isEmpty
                         ? hymns
                         : hymns.where((hymn) {
                             final title =
-                                (hymn['title'] as String?)?.toLowerCase() ?? '';
-                            final number = hymn['number']?.toString() ?? '';
+                                (hymn.title as String?)?.toLowerCase() ?? '';
+                            final number = hymn.number.toString();
                             return title.contains(_searchQuery) ||
                                 number.contains(_searchQuery);
                           }).toList();
@@ -148,8 +151,8 @@ class _HymnListPageState extends ConsumerState<HymnListPage> {
                         delegate: SliverChildBuilderDelegate(
                           (context, index) {
                             final hymn = filteredHymns[index];
-                            final number = hymn['number']?.toString() ?? '';
-                            final title = hymn['title'] as String? ?? '';
+                            final number = hymn.number.toString();
+                            final title = hymn.title;
 
                             return Padding(
                               padding: const EdgeInsets.only(bottom: 6),

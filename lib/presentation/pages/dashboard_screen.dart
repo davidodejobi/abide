@@ -3,11 +3,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
+import 'package:open_baptist_hymnal/presentation/pages/tabs/home_tab_screen.dart';
 
 import '../../providers/bottom_nav_provider.dart';
 import '../widgets/bottom_nav_bar/bottom_nav_bar.dart';
 import 'tabs/favorites_tab_screen.dart';
-import 'tabs/home_tab_screen.dart';
 import 'tabs/settings_tab_screen.dart';
 
 @RoutePage()

@@ -1,13 +1,13 @@
 {
   "orders": {
-    "yor": [
+    "yo": [
       "hymn_0001",
       "hymn_0002",
       "hymn_0003",
       "hymn_0004",
       "hymn_0005"
     ],
-    "eng": [
+    "en": [
       "hymn_0003",
       "hymn_0001",
       "hymn_0005"

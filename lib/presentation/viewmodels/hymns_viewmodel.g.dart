@@ -313,12 +313,12 @@ class _BilingualHymnDetailProviderElement
       (origin as BilingualHymnDetailProvider).languages;
 }
 
-String _$hymnsViewModelHash() => r'db8730650ecacf9c0b9843203120a50f5b5d008d';
+String _$hymnsViewModelHash() => r'c1583a70741286b6a1213c0fa51792ad89ee0ec1';
 
 /// See also [HymnsViewModel].
 @ProviderFor(HymnsViewModel)
 final hymnsViewModelProvider = AutoDisposeAsyncNotifierProvider<HymnsViewModel,
-    List<Map<String, dynamic>>>.internal(
+    List<HymnTranslation>>.internal(
   HymnsViewModel.new,
   name: r'hymnsViewModelProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
@@ -328,6 +328,6 @@ final hymnsViewModelProvider = AutoDisposeAsyncNotifierProvider<HymnsViewModel,
   allTransitiveDependencies: null,
 );
 
-typedef _$HymnsViewModel = AutoDisposeAsyncNotifier<List<Map<String, dynamic>>>;
+typedef _$HymnsViewModel = AutoDisposeAsyncNotifier<List<HymnTranslation>>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

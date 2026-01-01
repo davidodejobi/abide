@@ -41,6 +41,7 @@ flutter:
   assets:
     - assets/hymnal/
     - assets/hymnal/languages/
+    - assets/images/lottie/
     - path: assets/images/icons/
       transformers:
         - package: vector_graphics_compiler

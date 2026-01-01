@@ -1,6 +1,9 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lottie/lottie.dart';
+import 'package:open_baptist_hymnal/data/models/stanza.dart';
+import 'package:open_baptist_hymnal/utils/extensions/string_extensions.dart';
 
 import '../../../providers/hymnal_provider.dart';
 import '../../../utils/theme/theme.dart';
@@ -110,7 +113,7 @@ class _HomeTabScreenState extends ConsumerState<HomeTabScreen>
         // Language toggle
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
             child: LanguageToggle(
               selectedLanguage: currentLanguage,
               onLanguageChanged: (language) {
@@ -129,29 +132,62 @@ class _HomeTabScreenState extends ConsumerState<HomeTabScreen>
             final filteredHymns = _searchQuery.isEmpty
                 ? hymns
                 : hymns.where((hymn) {
-                    final title =
-                        (hymn['title'] as String?)?.toLowerCase() ?? '';
-                    final number = hymn['number']?.toString() ?? '';
+                    final title = (hymn.title as String?)?.toLowerCase() ?? '';
+                    final number = hymn.number.toString();
+
+                    /// make the lyrics and stanzas searchable
+                    final chorus = (hymn.lyrics.chorus)?.toLowerCase() ?? '';
+                    final stanzas = (hymn.lyrics.stanzas as List<Stanza>?)
+                            ?.map((stanza) => stanza.text.toLowerCase()) ??
+                        [];
                     return title.contains(_searchQuery) ||
-                        number.contains(_searchQuery);
+                        number.contains(_searchQuery) ||
+                        chorus.contains(_searchQuery) ||
+                        stanzas.any((stanza) => stanza.contains(_searchQuery));
                   }).toList();
 
             if (filteredHymns.isEmpty) {
-              return const SliverFillRemaining(
+              return SliverFillRemaining(
                 child: Center(
-                  child: Text('No hymns found'),
+                  child: Column(
+                    children: [
+                      Lottie.asset(
+                        'empty-state'.lottie,
+                        width: 200,
+                        height: 200,
+                      ),
+                      Text(
+                        'No hymns found',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                      const SizedBox(height: 8),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 32),
+                        child: Text(
+                          'We couldn\'t find any hymns matching "$_searchQuery". Try searching by title, hymn number, or lyrics.',
+                          textAlign: TextAlign.center,
+                          style:
+                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: Theme.of(context).hintColor,
+                                  ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               );
             }
 
             return SliverPadding(
-              padding: const EdgeInsets.fromLTRB(24, 0, 24, 120),
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 120),
               sliver: SliverList(
                 delegate: SliverChildBuilderDelegate(
                   (context, index) {
                     final hymn = filteredHymns[index];
-                    final number = hymn['number']?.toString() ?? '';
-                    final title = hymn['title'] as String? ?? '';
+                    final number = hymn.number.toString();
+                    final title = hymn.title;
 
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 6),

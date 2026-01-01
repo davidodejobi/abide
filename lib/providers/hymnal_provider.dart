@@ -10,4 +10,4 @@ final hymnalRepositoryProvider = Provider<HymnalRepository>((ref) {
   return HymnalRepositoryImpl(loader);
 });
 
-final languageProvider = StateProvider<String>((ref) => 'en');
+final languageProvider = StateProvider<String>((ref) => 'yo');

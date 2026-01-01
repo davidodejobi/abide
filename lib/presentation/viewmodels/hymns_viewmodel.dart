@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../data/models/language_pack.dart';
 import '../../domain/usecases/get_hymn_for_split_view.dart';
 import '../../domain/usecases/get_hymns_by_language.dart';
 import '../../providers/hymnal_provider.dart';
@@ -10,7 +11,7 @@ part 'hymns_viewmodel.g.dart';
 @riverpod
 class HymnsViewModel extends _$HymnsViewModel {
   @override
-  FutureOr<List<Map<String, dynamic>>> build() async {
+  FutureOr<List<HymnTranslation>> build() async {
     final languageCode = ref.watch(languageProvider);
     final getHymns = GetHymnsByLanguage(ref.read(hymnalRepositoryProvider));
     return getHymns(languageCode);

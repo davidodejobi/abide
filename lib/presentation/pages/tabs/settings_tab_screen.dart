@@ -146,7 +146,7 @@ class _SettingsSection extends StatelessWidget {
             ),
           ),
           Column(
-            spacing: 2,
+            spacing: 4,
             children: children,
           ),
         ],
@@ -160,14 +160,12 @@ class _SettingsTile extends StatelessWidget {
     required this.icon,
     required this.title,
     this.subtitle,
-    this.trailing,
     this.onTap,
   });
 
   final IconData icon;
   final String title;
   final String? subtitle;
-  final Widget? trailing;
   final VoidCallback? onTap;
 
   @override
@@ -178,9 +176,6 @@ class _SettingsTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: colorScheme.outlineVariant,
-        ),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
@@ -202,11 +197,10 @@ class _SettingsTile extends StatelessWidget {
                 ),
               )
             : null,
-        trailing: trailing ??
-            Icon(
-              Icons.chevron_right,
-              color: colorScheme.outline,
-            ),
+        trailing: Icon(
+          Icons.chevron_right,
+          color: colorScheme.outline,
+        ),
         onTap: onTap,
       ),
     );
@@ -231,9 +225,6 @@ class _ThemeSelector extends StatelessWidget {
       decoration: BoxDecoration(
         color: colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: colorScheme.outlineVariant,
-        ),
       ),
       padding: const EdgeInsets.all(16),
       child: Column(

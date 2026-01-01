@@ -58,6 +58,7 @@ class LanguageToggle extends HookWidget {
         labelColor: colorScheme.onPrimary,
         unselectedLabelColor: colorScheme.onSurface,
         indicatorWeight: 0,
+        enableFeedback: true,
         dividerColor: Colors.transparent,
         indicator: BoxDecoration(
           borderRadius: BorderRadius.circular(8),
