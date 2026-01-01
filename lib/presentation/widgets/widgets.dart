@@ -1,7 +1,6 @@
 /// Widgets barrel file - exports all widget files
 library;
 
-export 'bottom_nav_bar.dart';
 export 'hymn_card.dart';
 export 'hymn_list_tile.dart';
 export 'hymn_stanza.dart';
