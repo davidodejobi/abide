@@ -8,6 +8,7 @@ import 'package:open_baptist_hymnal/utils/extensions/string_extensions.dart';
 
 import '../../../providers/hymnal_provider.dart';
 import '../../../utils/theme/theme.dart';
+import '../../../utils/toast_helper.dart';
 import '../../viewmodels/hymns_viewmodel.dart';
 import '../../widgets/hymn_list_tile.dart';
 import '../../widgets/language_toggle.dart';
@@ -72,20 +73,24 @@ class _HomeTabScreenState extends ConsumerState<HomeTabScreen>
                   ],
                 ),
                 // Profile icon
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: colorScheme.secondary,
-                      width: 2,
+                GestureDetector(
+                  onTap: () => ToastHelper.info(
+                      context, 'Profile settings will be available soon'),
+                  child: Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: colorScheme.secondary,
+                        width: 2,
+                      ),
                     ),
-                  ),
-                  child: Icon(
-                    Icons.person,
-                    size: 20,
-                    color: colorScheme.secondary,
+                    child: Icon(
+                      Icons.person,
+                      size: 20,
+                      color: colorScheme.secondary,
+                    ),
                   ),
                 ),
               ],
@@ -105,7 +110,7 @@ class _HomeTabScreenState extends ConsumerState<HomeTabScreen>
                 });
               },
               onFilterTap: () {
-                // TODO: Implement filter
+                ToastHelper.info(context, 'Filtering will be available soon');
               },
             ),
           ),

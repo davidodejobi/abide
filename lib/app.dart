@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:toastification/toastification.dart';
 
 import 'providers/theme_provider.dart';
 import 'router/app_router.dart';
@@ -16,13 +17,15 @@ class OpenBaptistHymnal extends ConsumerWidget {
     final appRouter = ref.watch(appRouterProvider);
     final themeMode = ref.watch(themeModeProvider);
 
-    return MaterialApp.router(
-      title: 'Open Baptist Hymnal',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: themeMode,
-      routerConfig: appRouter.config(),
+    return ToastificationWrapper(
+      child: MaterialApp.router(
+        title: 'Open Baptist Hymnal',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        themeMode: themeMode,
+        routerConfig: appRouter.config(),
+      ),
     );
   }
 }

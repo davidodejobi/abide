@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:open_baptist_hymnal/utils/extensions/context_extensions.dart';
 import 'package:open_baptist_hymnal/utils/extensions/string_extensions.dart';
+import 'package:open_baptist_hymnal/utils/toast_helper.dart';
 import 'package:vector_graphics/vector_graphics_compat.dart';
 
 import '../../data/models/language_pack.dart';
@@ -184,19 +185,22 @@ class HymnDetailPage extends HookConsumerWidget {
                                 children: [
                                   _BottomBarButton(
                                     icon: 'share'.iconSvg,
-                                    onTap: () {},
+                                    onTap: () => ToastHelper.info(context,
+                                        'Sharing will be available soon'),
                                     isDark: isDark,
                                   ),
                                   8.w,
                                   _BottomBarButton(
                                     icon: 'split'.iconSvg,
-                                    onTap: () {},
+                                    onTap: () => ToastHelper.info(context,
+                                        'Split view will be available soon'),
                                     isDark: isDark,
                                   ),
                                   8.w,
                                   _BottomBarButton(
                                     icon: 'heart'.iconSvg,
-                                    onTap: () {},
+                                    onTap: () => ToastHelper.info(context,
+                                        'Favorites will be available soon'),
                                     isDark: isDark,
                                   ),
                                 ],

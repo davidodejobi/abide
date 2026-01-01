@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../providers/theme_provider.dart';
 import '../../../utils/theme/theme.dart';
+import '../../../utils/toast_helper.dart';
 
 /// Settings tab screen - App settings and preferences
 @RoutePage()
@@ -58,7 +59,8 @@ class _SettingsTabScreenState extends ConsumerState<SettingsTabScreen>
                     title: 'Font Size',
                     subtitle: 'Medium',
                     onTap: () {
-                      // TODO: Show font size picker
+                      ToastHelper.info(
+                          context, 'Font size picker will be available soon');
                     },
                   ),
                 ],
@@ -72,7 +74,8 @@ class _SettingsTabScreenState extends ConsumerState<SettingsTabScreen>
                     title: 'Default Language',
                     subtitle: 'English',
                     onTap: () {
-                      // TODO: Show language picker
+                      ToastHelper.info(
+                          context, 'Language picker will be available soon');
                     },
                   ),
                 ],
@@ -86,21 +89,24 @@ class _SettingsTabScreenState extends ConsumerState<SettingsTabScreen>
                     title: 'About',
                     subtitle: 'Version 1.0.0',
                     onTap: () {
-                      // TODO: Show about dialog
+                      ToastHelper.info(
+                          context, 'About dialog will be available soon');
                     },
                   ),
                   _SettingsTile(
                     icon: Icons.privacy_tip_outlined,
                     title: 'Privacy Policy',
                     onTap: () {
-                      // TODO: Open privacy policy
+                      ToastHelper.info(
+                          context, 'Privacy Policy will be available soon');
                     },
                   ),
                   _SettingsTile(
                     icon: Icons.description_outlined,
                     title: 'Terms of Service',
                     onTap: () {
-                      // TODO: Open terms of service
+                      ToastHelper.info(
+                          context, 'Terms of Service will be available soon');
                     },
                   ),
                 ],
