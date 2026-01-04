@@ -1,7 +1,7 @@
 name: openbaptisthymnal
 description: "A new Flutter project."
 publish_to: "none"
-version: 0.1.0
+version: 0.1.0+2
 
 environment:
   sdk: ^3.0.0
@@ -25,6 +25,11 @@ dependencies:
   liquid_glass_renderer: ^0.2.0-dev.3
   auto_route: ^10.1.2
   shared_preferences: ^2.5.4
+  share_plus: ^12.0.1
+  url_launcher: ^6.3.2
+  image: ^4.7.2
+  cupertino_icons: ^1.0.8
+  package_info_plus: ^9.0.0
 
 dev_dependencies:
   flutter_test:

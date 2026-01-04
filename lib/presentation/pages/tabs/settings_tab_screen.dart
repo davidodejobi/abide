@@ -2,6 +2,8 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../providers/app_info_provider.dart';
+import '../../../providers/service_providers.dart';
 import '../../../providers/theme_provider.dart';
 import '../../../utils/theme/theme.dart';
 import '../../../utils/toast_helper.dart';
@@ -87,7 +89,11 @@ class _SettingsTabScreenState extends ConsumerState<SettingsTabScreen>
                   _SettingsTile(
                     icon: Icons.info_outline,
                     title: 'About',
-                    subtitle: 'Version 1.0.0',
+                    subtitle: ref.watch(appVersionProvider).when(
+                          data: (version) => 'Version $version',
+                          loading: () => 'Loading...',
+                          error: (_, __) => 'Version Unknown',
+                        ),
                     onTap: () {
                       ToastHelper.info(
                           context, 'About dialog will be available soon');
@@ -97,16 +103,16 @@ class _SettingsTabScreenState extends ConsumerState<SettingsTabScreen>
                     icon: Icons.privacy_tip_outlined,
                     title: 'Privacy Policy',
                     onTap: () {
-                      ToastHelper.info(
-                          context, 'Privacy Policy will be available soon');
+                      ref.read(urlLauncherServiceProvider).openUrl(
+                          'https://openbaptisthymnal.vercel.app/privacy.html');
                     },
                   ),
                   _SettingsTile(
                     icon: Icons.description_outlined,
                     title: 'Terms of Service',
                     onTap: () {
-                      ToastHelper.info(
-                          context, 'Terms of Service will be available soon');
+                      ref.read(urlLauncherServiceProvider).openUrl(
+                          'https://openbaptisthymnal.vercel.app/terms.html');
                     },
                   ),
                 ],
