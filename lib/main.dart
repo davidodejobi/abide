@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'app.dart';
-import 'providers/storage_provider.dart';
+import 'core/app.dart';
+import 'core/storage/storage_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
