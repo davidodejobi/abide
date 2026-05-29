@@ -214,6 +214,13 @@ class HymnDetailPage extends HookConsumerWidget {
                                   ),
                                   8.w,
                                   _BottomBarButton(
+                                    icon: 'share'.iconSvg,
+                                    onTap: () => ToastHelper.info(context,
+                                        'Language switch will be available soon'),
+                                    isDark: isDark,
+                                  ),
+                                  8.w,
+                                  _BottomBarButton(
                                     icon: 'split'.iconSvg,
                                     onTap: () => ToastHelper.info(context,
                                         'Split view will be available soon'),

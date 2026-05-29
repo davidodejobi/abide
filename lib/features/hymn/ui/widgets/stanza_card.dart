@@ -50,9 +50,13 @@ class StanzaCard extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(16),
+      child: GestureDetector(
+        // Double-tapping anywhere on the card shares the whole stanza. Taps on
+        // the lyric text are handled by SelectableText's own double-tap below.
+        onDoubleTap: onShare == null ? null : () => onShare!(text),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: cardBg,
           borderRadius: BorderRadius.circular(32),
@@ -132,6 +136,7 @@ class StanzaCard extends StatelessWidget {
               ),
             ),
           ],
+          ),
         ),
       ),
     );

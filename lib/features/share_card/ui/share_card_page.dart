@@ -100,30 +100,39 @@ class _ShareCardPageState extends State<ShareCardPage> {
           ),
           SizedBox(
             height: 64,
-            child: ListView.separated(
+            child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              itemCount: ShareCardStyle.presets.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 12),
-              itemBuilder: (context, index) {
-                final preset = ShareCardStyle.presets[index];
-                final selected = preset.id == _style.id;
-                return GestureDetector(
-                  onTap: () => setState(() => _style = preset),
-                  child: Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      gradient: preset.gradient,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: selected ? AppColors.secondary : Colors.transparent,
-                        width: 2.5,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minWidth: MediaQuery.of(context).size.width,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    for (final preset in ShareCardStyle.presets)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                        child: GestureDetector(
+                          onTap: () => setState(() => _style = preset),
+                          child: Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              gradient: preset.gradient,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: preset.id == _style.id
+                                    ? AppColors.secondary
+                                    : Colors.transparent,
+                                width: 2.5,
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                );
-              },
+                  ],
+                ),
+              ),
             ),
           ),
           const SizedBox(height: 16),
