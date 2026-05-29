@@ -106,6 +106,22 @@ class HymnDetailRouteArgs {
 }
 
 /// generated route for
+/// [OnboardingPage]
+class OnboardingRoute extends PageRouteInfo<void> {
+  const OnboardingRoute({List<PageRouteInfo>? children})
+      : super(OnboardingRoute.name, initialChildren: children);
+
+  static const String name = 'OnboardingRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const OnboardingPage();
+    },
+  );
+}
+
+/// generated route for
 /// [SettingsTabScreen]
 class SettingsTabRoute extends PageRouteInfo<void> {
   const SettingsTabRoute({List<PageRouteInfo>? children})

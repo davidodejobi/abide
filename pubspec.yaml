@@ -30,6 +30,7 @@ dependencies:
   image: ^4.7.2
   cupertino_icons: ^1.0.8
   package_info_plus: ^9.0.0
+  audioplayers: ^6.1.0
 
 dev_dependencies:
   flutter_test:
@@ -49,6 +50,7 @@ flutter:
     - assets/hymnal/
     - assets/hymnal/languages/
     - assets/images/lottie/
+    - assets/audio/
     - path: assets/images/icons/
       transformers:
         - package: vector_graphics_compiler

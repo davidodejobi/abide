@@ -1,13 +1,20 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:toastification/toastification.dart';
 
 import 'router/app_router.dart';
+import 'storage/storage_provider.dart';
 import 'theme/theme.dart';
 import 'theme/theme_provider.dart';
 
-/// Provider for the app router instance
-final appRouterProvider = Provider<AppRouter>((ref) => AppRouter());
+/// Provider for the app router instance. In debug builds the onboarding flow
+/// shows on every launch so it can be reviewed; release builds show it once.
+final appRouterProvider = Provider<AppRouter>((ref) {
+  final storage = ref.watch(storageServiceProvider);
+  final showOnboarding = kDebugMode || !storage.isOnboardingComplete();
+  return AppRouter(showOnboarding: showOnboarding);
+});
 
 class AbideApp extends ConsumerWidget {
   const AbideApp({super.key});
@@ -24,7 +31,9 @@ class AbideApp extends ConsumerWidget {
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
         themeMode: themeMode,
-        routerConfig: appRouter.config(),
+        routerConfig: appRouter.config(
+          deepLinkBuilder: appRouter.onboardingDeepLink,
+        ),
       ),
     );
   }
