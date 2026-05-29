@@ -1,7 +1,7 @@
-name: open_baptist_hymnal
+name: openbaptisthymnal
 description: "A new Flutter project."
 publish_to: "none"
-version: 0.1.0
+version: 0.1.0+2
 
 environment:
   sdk: ^3.0.0
@@ -14,7 +14,7 @@ dependencies:
   flutter_hooks: ^0.20.5
   riverpod_annotation: ^2.3.3
   freezed_annotation: ^2.4.1
-  json_annotation: ^4.8.1
+  json_annotation: ^4.9.0
   path_provider: ^2.1.2
   logging: ^1.2.0
   fvm: ^4.0.5
@@ -24,6 +24,13 @@ dependencies:
   lottie: ^3.3.2
   liquid_glass_renderer: ^0.2.0-dev.3
   auto_route: ^10.1.2
+  shared_preferences: ^2.5.4
+  share_plus: ^12.0.1
+  url_launcher: ^6.3.2
+  image: ^4.7.2
+  cupertino_icons: ^1.0.8
+  package_info_plus: ^9.0.0
+  audioplayers: ^6.1.0
 
 dev_dependencies:
   flutter_test:
@@ -35,12 +42,15 @@ dev_dependencies:
   json_serializable: ^6.7.1
   vector_graphics_compiler: ^1.1.19
   auto_route_generator: ^10.1.2
+  analyzer: ^7.6.0
 
 flutter:
   uses-material-design: true
   assets:
     - assets/hymnal/
     - assets/hymnal/languages/
+    - assets/images/lottie/
+    - assets/audio/
     - path: assets/images/icons/
       transformers:
         - package: vector_graphics_compiler
@@ -80,3 +90,11 @@ flutter:
           weight: 300
         - asset: assets/fonts/Geist-Thin.ttf
           weight: 100
+
+    - family: ShantellSans
+      fonts:
+        - asset: assets/fonts/ShantellSans-Variable.ttf
+
+    - family: PatrickHand
+      fonts:
+        - asset: assets/fonts/PatrickHand-Regular.ttf

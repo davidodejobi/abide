@@ -3,9 +3,9 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:open_baptist_hymnal/data/models/hymnal_core.dart';
-import 'package:open_baptist_hymnal/data/models/hymnal_index.dart';
-import 'package:open_baptist_hymnal/data/models/language_pack.dart';
+import 'package:openbaptisthymnal/features/hymn/model/hymnal_core.dart';
+import 'package:openbaptisthymnal/features/hymn/model/hymnal_index.dart';
+import 'package:openbaptisthymnal/features/hymn/model/language_pack.dart';
 
 void main() {
   group('Hymnal Data Models Test', () {
@@ -21,7 +21,6 @@ void main() {
 
       expect(core.schemaVersion, '1.0.0');
       expect(core.hymnalId, 'onitebomi_2000');
-      expect(core.sourceLanguage, 'yor');
       expect(core.hymns.length, 5);
       expect(core.hymns['hymn_0001']?.category, 'praise');
     });

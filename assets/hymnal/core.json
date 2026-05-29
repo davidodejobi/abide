@@ -1,12 +1,1986 @@
 {
   "schema_version": "1.0.0",
   "hymnal_id": "onitebomi_2000",
-  "source_language": "yor",
   "hymns": {
-    "hymn_0001": { "category": "praise" },
-    "hymn_0002": { "category": "praise" },
-    "hymn_0003": { "category": "worship" },
-    "hymn_0004": { "category": "thanksgiving" },
-    "hymn_0005": { "category": "adoration" }
+    "hymn_0001": {
+      "category": "general"
+    },
+    "hymn_0002": {
+      "category": "general"
+    },
+    "hymn_0003": {
+      "category": "general"
+    },
+    "hymn_0004": {
+      "category": "general"
+    },
+    "hymn_0005": {
+      "category": "general"
+    },
+    "hymn_0006": {
+      "category": "general"
+    },
+    "hymn_0007": {
+      "category": "general"
+    },
+    "hymn_0008": {
+      "category": "general"
+    },
+    "hymn_0009": {
+      "category": "general"
+    },
+    "hymn_0010": {
+      "category": "general"
+    },
+    "hymn_0011": {
+      "category": "general"
+    },
+    "hymn_0012": {
+      "category": "general"
+    },
+    "hymn_0013": {
+      "category": "general"
+    },
+    "hymn_0014": {
+      "category": "general"
+    },
+    "hymn_0015": {
+      "category": "general"
+    },
+    "hymn_0016": {
+      "category": "general"
+    },
+    "hymn_0017": {
+      "category": "general"
+    },
+    "hymn_0018": {
+      "category": "general"
+    },
+    "hymn_0019": {
+      "category": "general"
+    },
+    "hymn_0020": {
+      "category": "general"
+    },
+    "hymn_0021": {
+      "category": "general"
+    },
+    "hymn_0022": {
+      "category": "general"
+    },
+    "hymn_0023": {
+      "category": "general"
+    },
+    "hymn_0024": {
+      "category": "general"
+    },
+    "hymn_0025": {
+      "category": "general"
+    },
+    "hymn_0026": {
+      "category": "general"
+    },
+    "hymn_0027": {
+      "category": "general"
+    },
+    "hymn_0028": {
+      "category": "general"
+    },
+    "hymn_0029": {
+      "category": "general"
+    },
+    "hymn_0030": {
+      "category": "general"
+    },
+    "hymn_0031": {
+      "category": "general"
+    },
+    "hymn_0032": {
+      "category": "general"
+    },
+    "hymn_0033": {
+      "category": "general"
+    },
+    "hymn_0034": {
+      "category": "general"
+    },
+    "hymn_0035": {
+      "category": "general"
+    },
+    "hymn_0036": {
+      "category": "general"
+    },
+    "hymn_0037": {
+      "category": "general"
+    },
+    "hymn_0038": {
+      "category": "general"
+    },
+    "hymn_0039": {
+      "category": "general"
+    },
+    "hymn_0040": {
+      "category": "general"
+    },
+    "hymn_0041": {
+      "category": "general"
+    },
+    "hymn_0042": {
+      "category": "general"
+    },
+    "hymn_0043": {
+      "category": "general"
+    },
+    "hymn_0044": {
+      "category": "general"
+    },
+    "hymn_0045": {
+      "category": "general"
+    },
+    "hymn_0046": {
+      "category": "general"
+    },
+    "hymn_0047": {
+      "category": "general"
+    },
+    "hymn_0048": {
+      "category": "general"
+    },
+    "hymn_0049": {
+      "category": "general"
+    },
+    "hymn_0050": {
+      "category": "general"
+    },
+    "hymn_0051": {
+      "category": "general"
+    },
+    "hymn_0052": {
+      "category": "general"
+    },
+    "hymn_0053": {
+      "category": "general"
+    },
+    "hymn_0054": {
+      "category": "general"
+    },
+    "hymn_0055": {
+      "category": "general"
+    },
+    "hymn_0056": {
+      "category": "general"
+    },
+    "hymn_0057": {
+      "category": "general"
+    },
+    "hymn_0058": {
+      "category": "general"
+    },
+    "hymn_0059": {
+      "category": "general"
+    },
+    "hymn_0060": {
+      "category": "general"
+    },
+    "hymn_0061": {
+      "category": "general"
+    },
+    "hymn_0062": {
+      "category": "general"
+    },
+    "hymn_0063": {
+      "category": "general"
+    },
+    "hymn_0064": {
+      "category": "general"
+    },
+    "hymn_0065": {
+      "category": "general"
+    },
+    "hymn_0066": {
+      "category": "general"
+    },
+    "hymn_0067": {
+      "category": "general"
+    },
+    "hymn_0068": {
+      "category": "general"
+    },
+    "hymn_0069": {
+      "category": "general"
+    },
+    "hymn_0070": {
+      "category": "general"
+    },
+    "hymn_0071": {
+      "category": "general"
+    },
+    "hymn_0072": {
+      "category": "general"
+    },
+    "hymn_0073": {
+      "category": "general"
+    },
+    "hymn_0074": {
+      "category": "general"
+    },
+    "hymn_0075": {
+      "category": "general"
+    },
+    "hymn_0076": {
+      "category": "general"
+    },
+    "hymn_0077": {
+      "category": "general"
+    },
+    "hymn_0078": {
+      "category": "general"
+    },
+    "hymn_0079": {
+      "category": "general"
+    },
+    "hymn_0080": {
+      "category": "general"
+    },
+    "hymn_0081": {
+      "category": "general"
+    },
+    "hymn_0082": {
+      "category": "general"
+    },
+    "hymn_0083": {
+      "category": "general"
+    },
+    "hymn_0084": {
+      "category": "general"
+    },
+    "hymn_0085": {
+      "category": "general"
+    },
+    "hymn_0086": {
+      "category": "general"
+    },
+    "hymn_0087": {
+      "category": "general"
+    },
+    "hymn_0088": {
+      "category": "general"
+    },
+    "hymn_0089": {
+      "category": "general"
+    },
+    "hymn_0090": {
+      "category": "general"
+    },
+    "hymn_0091": {
+      "category": "general"
+    },
+    "hymn_0092": {
+      "category": "general"
+    },
+    "hymn_0093": {
+      "category": "general"
+    },
+    "hymn_0094": {
+      "category": "general"
+    },
+    "hymn_0095": {
+      "category": "general"
+    },
+    "hymn_0096": {
+      "category": "general"
+    },
+    "hymn_0097": {
+      "category": "general"
+    },
+    "hymn_0098": {
+      "category": "general"
+    },
+    "hymn_0099": {
+      "category": "general"
+    },
+    "hymn_0100": {
+      "category": "general"
+    },
+    "hymn_0101": {
+      "category": "general"
+    },
+    "hymn_0102": {
+      "category": "general"
+    },
+    "hymn_0103": {
+      "category": "general"
+    },
+    "hymn_0104": {
+      "category": "general"
+    },
+    "hymn_0105": {
+      "category": "general"
+    },
+    "hymn_0106": {
+      "category": "general"
+    },
+    "hymn_0107": {
+      "category": "general"
+    },
+    "hymn_0108": {
+      "category": "general"
+    },
+    "hymn_0109": {
+      "category": "general"
+    },
+    "hymn_0110": {
+      "category": "general"
+    },
+    "hymn_0111": {
+      "category": "general"
+    },
+    "hymn_0112": {
+      "category": "general"
+    },
+    "hymn_0113": {
+      "category": "general"
+    },
+    "hymn_0114": {
+      "category": "general"
+    },
+    "hymn_0115": {
+      "category": "general"
+    },
+    "hymn_0116": {
+      "category": "general"
+    },
+    "hymn_0117": {
+      "category": "general"
+    },
+    "hymn_0118": {
+      "category": "general"
+    },
+    "hymn_0119": {
+      "category": "general"
+    },
+    "hymn_0120": {
+      "category": "general"
+    },
+    "hymn_0121": {
+      "category": "general"
+    },
+    "hymn_0122": {
+      "category": "general"
+    },
+    "hymn_0123": {
+      "category": "general"
+    },
+    "hymn_0124": {
+      "category": "general"
+    },
+    "hymn_0125": {
+      "category": "general"
+    },
+    "hymn_0126": {
+      "category": "general"
+    },
+    "hymn_0127": {
+      "category": "general"
+    },
+    "hymn_0128": {
+      "category": "general"
+    },
+    "hymn_0129": {
+      "category": "general"
+    },
+    "hymn_0130": {
+      "category": "general"
+    },
+    "hymn_0131": {
+      "category": "general"
+    },
+    "hymn_0132": {
+      "category": "general"
+    },
+    "hymn_0133": {
+      "category": "general"
+    },
+    "hymn_0134": {
+      "category": "general"
+    },
+    "hymn_0135": {
+      "category": "general"
+    },
+    "hymn_0136": {
+      "category": "general"
+    },
+    "hymn_0137": {
+      "category": "general"
+    },
+    "hymn_0138": {
+      "category": "general"
+    },
+    "hymn_0139": {
+      "category": "general"
+    },
+    "hymn_0140": {
+      "category": "general"
+    },
+    "hymn_0141": {
+      "category": "general"
+    },
+    "hymn_0142": {
+      "category": "general"
+    },
+    "hymn_0143": {
+      "category": "general"
+    },
+    "hymn_0144": {
+      "category": "general"
+    },
+    "hymn_0145": {
+      "category": "general"
+    },
+    "hymn_0146": {
+      "category": "general"
+    },
+    "hymn_0147": {
+      "category": "general"
+    },
+    "hymn_0148": {
+      "category": "general"
+    },
+    "hymn_0149": {
+      "category": "general"
+    },
+    "hymn_0150": {
+      "category": "general"
+    },
+    "hymn_0151": {
+      "category": "general"
+    },
+    "hymn_0152": {
+      "category": "general"
+    },
+    "hymn_0153": {
+      "category": "general"
+    },
+    "hymn_0154": {
+      "category": "general"
+    },
+    "hymn_0155": {
+      "category": "general"
+    },
+    "hymn_0156": {
+      "category": "general"
+    },
+    "hymn_0157": {
+      "category": "general"
+    },
+    "hymn_0158": {
+      "category": "general"
+    },
+    "hymn_0159": {
+      "category": "general"
+    },
+    "hymn_0160": {
+      "category": "general"
+    },
+    "hymn_0161": {
+      "category": "general"
+    },
+    "hymn_0162": {
+      "category": "general"
+    },
+    "hymn_0163": {
+      "category": "general"
+    },
+    "hymn_0164": {
+      "category": "general"
+    },
+    "hymn_0165": {
+      "category": "general"
+    },
+    "hymn_0166": {
+      "category": "general"
+    },
+    "hymn_0167": {
+      "category": "general"
+    },
+    "hymn_0168": {
+      "category": "general"
+    },
+    "hymn_0169": {
+      "category": "general"
+    },
+    "hymn_0170": {
+      "category": "general"
+    },
+    "hymn_0171": {
+      "category": "general"
+    },
+    "hymn_0172": {
+      "category": "general"
+    },
+    "hymn_0173": {
+      "category": "general"
+    },
+    "hymn_0174": {
+      "category": "general"
+    },
+    "hymn_0175": {
+      "category": "general"
+    },
+    "hymn_0176": {
+      "category": "general"
+    },
+    "hymn_0177": {
+      "category": "general"
+    },
+    "hymn_0178": {
+      "category": "general"
+    },
+    "hymn_0179": {
+      "category": "general"
+    },
+    "hymn_0180": {
+      "category": "general"
+    },
+    "hymn_0181": {
+      "category": "general"
+    },
+    "hymn_0182": {
+      "category": "general"
+    },
+    "hymn_0183": {
+      "category": "general"
+    },
+    "hymn_0184": {
+      "category": "general"
+    },
+    "hymn_0185": {
+      "category": "general"
+    },
+    "hymn_0186": {
+      "category": "general"
+    },
+    "hymn_0187": {
+      "category": "general"
+    },
+    "hymn_0188": {
+      "category": "general"
+    },
+    "hymn_0189": {
+      "category": "general"
+    },
+    "hymn_0190": {
+      "category": "general"
+    },
+    "hymn_0191": {
+      "category": "general"
+    },
+    "hymn_0192": {
+      "category": "general"
+    },
+    "hymn_0193": {
+      "category": "general"
+    },
+    "hymn_0194": {
+      "category": "general"
+    },
+    "hymn_0195": {
+      "category": "general"
+    },
+    "hymn_0196": {
+      "category": "general"
+    },
+    "hymn_0197": {
+      "category": "general"
+    },
+    "hymn_0198": {
+      "category": "general"
+    },
+    "hymn_0199": {
+      "category": "general"
+    },
+    "hymn_0200": {
+      "category": "general"
+    },
+    "hymn_0201": {
+      "category": "general"
+    },
+    "hymn_0202": {
+      "category": "general"
+    },
+    "hymn_0203": {
+      "category": "general"
+    },
+    "hymn_0204": {
+      "category": "general"
+    },
+    "hymn_0205": {
+      "category": "general"
+    },
+    "hymn_0206": {
+      "category": "general"
+    },
+    "hymn_0207": {
+      "category": "general"
+    },
+    "hymn_0208": {
+      "category": "general"
+    },
+    "hymn_0209": {
+      "category": "general"
+    },
+    "hymn_0210": {
+      "category": "general"
+    },
+    "hymn_0211": {
+      "category": "general"
+    },
+    "hymn_0212": {
+      "category": "general"
+    },
+    "hymn_0213": {
+      "category": "general"
+    },
+    "hymn_0214": {
+      "category": "general"
+    },
+    "hymn_0215": {
+      "category": "general"
+    },
+    "hymn_0216": {
+      "category": "general"
+    },
+    "hymn_0217": {
+      "category": "general"
+    },
+    "hymn_0218": {
+      "category": "general"
+    },
+    "hymn_0219": {
+      "category": "general"
+    },
+    "hymn_0220": {
+      "category": "general"
+    },
+    "hymn_0221": {
+      "category": "general"
+    },
+    "hymn_0222": {
+      "category": "general"
+    },
+    "hymn_0223": {
+      "category": "general"
+    },
+    "hymn_0224": {
+      "category": "general"
+    },
+    "hymn_0225": {
+      "category": "general"
+    },
+    "hymn_0226": {
+      "category": "general"
+    },
+    "hymn_0227": {
+      "category": "general"
+    },
+    "hymn_0228": {
+      "category": "general"
+    },
+    "hymn_0229": {
+      "category": "general"
+    },
+    "hymn_0230": {
+      "category": "general"
+    },
+    "hymn_0231": {
+      "category": "general"
+    },
+    "hymn_0232": {
+      "category": "general"
+    },
+    "hymn_0233": {
+      "category": "general"
+    },
+    "hymn_0234": {
+      "category": "general"
+    },
+    "hymn_0235": {
+      "category": "general"
+    },
+    "hymn_0236": {
+      "category": "general"
+    },
+    "hymn_0237": {
+      "category": "general"
+    },
+    "hymn_0238": {
+      "category": "general"
+    },
+    "hymn_0239": {
+      "category": "general"
+    },
+    "hymn_0240": {
+      "category": "general"
+    },
+    "hymn_0241": {
+      "category": "general"
+    },
+    "hymn_0242": {
+      "category": "general"
+    },
+    "hymn_0243": {
+      "category": "general"
+    },
+    "hymn_0244": {
+      "category": "general"
+    },
+    "hymn_0245": {
+      "category": "general"
+    },
+    "hymn_0246": {
+      "category": "general"
+    },
+    "hymn_0247": {
+      "category": "general"
+    },
+    "hymn_0248": {
+      "category": "general"
+    },
+    "hymn_0249": {
+      "category": "general"
+    },
+    "hymn_0250": {
+      "category": "general"
+    },
+    "hymn_0251": {
+      "category": "general"
+    },
+    "hymn_0252": {
+      "category": "general"
+    },
+    "hymn_0253": {
+      "category": "general"
+    },
+    "hymn_0254": {
+      "category": "general"
+    },
+    "hymn_0255": {
+      "category": "general"
+    },
+    "hymn_0256": {
+      "category": "general"
+    },
+    "hymn_0257": {
+      "category": "general"
+    },
+    "hymn_0258": {
+      "category": "general"
+    },
+    "hymn_0259": {
+      "category": "general"
+    },
+    "hymn_0260": {
+      "category": "general"
+    },
+    "hymn_0261": {
+      "category": "general"
+    },
+    "hymn_0262": {
+      "category": "general"
+    },
+    "hymn_0263": {
+      "category": "general"
+    },
+    "hymn_0264": {
+      "category": "general"
+    },
+    "hymn_0265": {
+      "category": "general"
+    },
+    "hymn_0266": {
+      "category": "general"
+    },
+    "hymn_0267": {
+      "category": "general"
+    },
+    "hymn_0268": {
+      "category": "general"
+    },
+    "hymn_0269": {
+      "category": "general"
+    },
+    "hymn_0270": {
+      "category": "general"
+    },
+    "hymn_0271": {
+      "category": "general"
+    },
+    "hymn_0272": {
+      "category": "general"
+    },
+    "hymn_0273": {
+      "category": "general"
+    },
+    "hymn_0274": {
+      "category": "general"
+    },
+    "hymn_0275": {
+      "category": "general"
+    },
+    "hymn_0276": {
+      "category": "general"
+    },
+    "hymn_0277": {
+      "category": "general"
+    },
+    "hymn_0278": {
+      "category": "general"
+    },
+    "hymn_0279": {
+      "category": "general"
+    },
+    "hymn_0280": {
+      "category": "general"
+    },
+    "hymn_0281": {
+      "category": "general"
+    },
+    "hymn_0282": {
+      "category": "general"
+    },
+    "hymn_0283": {
+      "category": "general"
+    },
+    "hymn_0284": {
+      "category": "general"
+    },
+    "hymn_0285": {
+      "category": "general"
+    },
+    "hymn_0286": {
+      "category": "general"
+    },
+    "hymn_0287": {
+      "category": "general"
+    },
+    "hymn_0288": {
+      "category": "general"
+    },
+    "hymn_0289": {
+      "category": "general"
+    },
+    "hymn_0290": {
+      "category": "general"
+    },
+    "hymn_0291": {
+      "category": "general"
+    },
+    "hymn_0292": {
+      "category": "general"
+    },
+    "hymn_0293": {
+      "category": "general"
+    },
+    "hymn_0294": {
+      "category": "general"
+    },
+    "hymn_0295": {
+      "category": "general"
+    },
+    "hymn_0296": {
+      "category": "general"
+    },
+    "hymn_0297": {
+      "category": "general"
+    },
+    "hymn_0298": {
+      "category": "general"
+    },
+    "hymn_0299": {
+      "category": "general"
+    },
+    "hymn_0300": {
+      "category": "general"
+    },
+    "hymn_0301": {
+      "category": "general"
+    },
+    "hymn_0302": {
+      "category": "general"
+    },
+    "hymn_0303": {
+      "category": "general"
+    },
+    "hymn_0304": {
+      "category": "general"
+    },
+    "hymn_0305": {
+      "category": "general"
+    },
+    "hymn_0306": {
+      "category": "general"
+    },
+    "hymn_0307": {
+      "category": "general"
+    },
+    "hymn_0308": {
+      "category": "general"
+    },
+    "hymn_0309": {
+      "category": "general"
+    },
+    "hymn_0310": {
+      "category": "general"
+    },
+    "hymn_0311": {
+      "category": "general"
+    },
+    "hymn_0312": {
+      "category": "general"
+    },
+    "hymn_0313": {
+      "category": "general"
+    },
+    "hymn_0314": {
+      "category": "general"
+    },
+    "hymn_0315": {
+      "category": "general"
+    },
+    "hymn_0316": {
+      "category": "general"
+    },
+    "hymn_0317": {
+      "category": "general"
+    },
+    "hymn_0318": {
+      "category": "general"
+    },
+    "hymn_0319": {
+      "category": "general"
+    },
+    "hymn_0320": {
+      "category": "general"
+    },
+    "hymn_0321": {
+      "category": "general"
+    },
+    "hymn_0322": {
+      "category": "general"
+    },
+    "hymn_0323": {
+      "category": "general"
+    },
+    "hymn_0324": {
+      "category": "general"
+    },
+    "hymn_0325": {
+      "category": "general"
+    },
+    "hymn_0326": {
+      "category": "general"
+    },
+    "hymn_0327": {
+      "category": "general"
+    },
+    "hymn_0328": {
+      "category": "general"
+    },
+    "hymn_0329": {
+      "category": "general"
+    },
+    "hymn_0330": {
+      "category": "general"
+    },
+    "hymn_0331": {
+      "category": "general"
+    },
+    "hymn_0332": {
+      "category": "general"
+    },
+    "hymn_0333": {
+      "category": "general"
+    },
+    "hymn_0334": {
+      "category": "general"
+    },
+    "hymn_0335": {
+      "category": "general"
+    },
+    "hymn_0336": {
+      "category": "general"
+    },
+    "hymn_0337": {
+      "category": "general"
+    },
+    "hymn_0338": {
+      "category": "general"
+    },
+    "hymn_0339": {
+      "category": "general"
+    },
+    "hymn_0340": {
+      "category": "general"
+    },
+    "hymn_0341": {
+      "category": "general"
+    },
+    "hymn_0342": {
+      "category": "general"
+    },
+    "hymn_0343": {
+      "category": "general"
+    },
+    "hymn_0344": {
+      "category": "general"
+    },
+    "hymn_0345": {
+      "category": "general"
+    },
+    "hymn_0346": {
+      "category": "general"
+    },
+    "hymn_0347": {
+      "category": "general"
+    },
+    "hymn_0348": {
+      "category": "general"
+    },
+    "hymn_0349": {
+      "category": "general"
+    },
+    "hymn_0350": {
+      "category": "general"
+    },
+    "hymn_0351": {
+      "category": "general"
+    },
+    "hymn_0352": {
+      "category": "general"
+    },
+    "hymn_0353": {
+      "category": "general"
+    },
+    "hymn_0354": {
+      "category": "general"
+    },
+    "hymn_0355": {
+      "category": "general"
+    },
+    "hymn_0356": {
+      "category": "general"
+    },
+    "hymn_0357": {
+      "category": "general"
+    },
+    "hymn_0358": {
+      "category": "general"
+    },
+    "hymn_0359": {
+      "category": "general"
+    },
+    "hymn_0360": {
+      "category": "general"
+    },
+    "hymn_0361": {
+      "category": "general"
+    },
+    "hymn_0362": {
+      "category": "general"
+    },
+    "hymn_0363": {
+      "category": "general"
+    },
+    "hymn_0364": {
+      "category": "general"
+    },
+    "hymn_0365": {
+      "category": "general"
+    },
+    "hymn_0366": {
+      "category": "general"
+    },
+    "hymn_0367": {
+      "category": "general"
+    },
+    "hymn_0368": {
+      "category": "general"
+    },
+    "hymn_0369": {
+      "category": "general"
+    },
+    "hymn_0370": {
+      "category": "general"
+    },
+    "hymn_0371": {
+      "category": "general"
+    },
+    "hymn_0372": {
+      "category": "general"
+    },
+    "hymn_0373": {
+      "category": "general"
+    },
+    "hymn_0374": {
+      "category": "general"
+    },
+    "hymn_0375": {
+      "category": "general"
+    },
+    "hymn_0376": {
+      "category": "general"
+    },
+    "hymn_0377": {
+      "category": "general"
+    },
+    "hymn_0378": {
+      "category": "general"
+    },
+    "hymn_0379": {
+      "category": "general"
+    },
+    "hymn_0380": {
+      "category": "general"
+    },
+    "hymn_0381": {
+      "category": "general"
+    },
+    "hymn_0382": {
+      "category": "general"
+    },
+    "hymn_0383": {
+      "category": "general"
+    },
+    "hymn_0384": {
+      "category": "general"
+    },
+    "hymn_0385": {
+      "category": "general"
+    },
+    "hymn_0386": {
+      "category": "general"
+    },
+    "hymn_0387": {
+      "category": "general"
+    },
+    "hymn_0388": {
+      "category": "general"
+    },
+    "hymn_0389": {
+      "category": "general"
+    },
+    "hymn_0390": {
+      "category": "general"
+    },
+    "hymn_0391": {
+      "category": "general"
+    },
+    "hymn_0392": {
+      "category": "general"
+    },
+    "hymn_0393": {
+      "category": "general"
+    },
+    "hymn_0394": {
+      "category": "general"
+    },
+    "hymn_0395": {
+      "category": "general"
+    },
+    "hymn_0396": {
+      "category": "general"
+    },
+    "hymn_0397": {
+      "category": "general"
+    },
+    "hymn_0398": {
+      "category": "general"
+    },
+    "hymn_0399": {
+      "category": "general"
+    },
+    "hymn_0400": {
+      "category": "general"
+    },
+    "hymn_0401": {
+      "category": "general"
+    },
+    "hymn_0402": {
+      "category": "general"
+    },
+    "hymn_0403": {
+      "category": "general"
+    },
+    "hymn_0404": {
+      "category": "general"
+    },
+    "hymn_0405": {
+      "category": "general"
+    },
+    "hymn_0406": {
+      "category": "general"
+    },
+    "hymn_0407": {
+      "category": "general"
+    },
+    "hymn_0408": {
+      "category": "general"
+    },
+    "hymn_0409": {
+      "category": "general"
+    },
+    "hymn_0410": {
+      "category": "general"
+    },
+    "hymn_0411": {
+      "category": "general"
+    },
+    "hymn_0412": {
+      "category": "general"
+    },
+    "hymn_0413": {
+      "category": "general"
+    },
+    "hymn_0414": {
+      "category": "general"
+    },
+    "hymn_0415": {
+      "category": "general"
+    },
+    "hymn_0416": {
+      "category": "general"
+    },
+    "hymn_0417": {
+      "category": "general"
+    },
+    "hymn_0418": {
+      "category": "general"
+    },
+    "hymn_0419": {
+      "category": "general"
+    },
+    "hymn_0420": {
+      "category": "general"
+    },
+    "hymn_0421": {
+      "category": "general"
+    },
+    "hymn_0422": {
+      "category": "general"
+    },
+    "hymn_0423": {
+      "category": "general"
+    },
+    "hymn_0424": {
+      "category": "general"
+    },
+    "hymn_0425": {
+      "category": "general"
+    },
+    "hymn_0426": {
+      "category": "general"
+    },
+    "hymn_0427": {
+      "category": "general"
+    },
+    "hymn_0428": {
+      "category": "general"
+    },
+    "hymn_0429": {
+      "category": "general"
+    },
+    "hymn_0430": {
+      "category": "general"
+    },
+    "hymn_0431": {
+      "category": "general"
+    },
+    "hymn_0432": {
+      "category": "general"
+    },
+    "hymn_0433": {
+      "category": "general"
+    },
+    "hymn_0434": {
+      "category": "general"
+    },
+    "hymn_0435": {
+      "category": "general"
+    },
+    "hymn_0436": {
+      "category": "general"
+    },
+    "hymn_0437": {
+      "category": "general"
+    },
+    "hymn_0438": {
+      "category": "general"
+    },
+    "hymn_0439": {
+      "category": "general"
+    },
+    "hymn_0440": {
+      "category": "general"
+    },
+    "hymn_0441": {
+      "category": "general"
+    },
+    "hymn_0442": {
+      "category": "general"
+    },
+    "hymn_0443": {
+      "category": "general"
+    },
+    "hymn_0444": {
+      "category": "general"
+    },
+    "hymn_0445": {
+      "category": "general"
+    },
+    "hymn_0446": {
+      "category": "general"
+    },
+    "hymn_0447": {
+      "category": "general"
+    },
+    "hymn_0448": {
+      "category": "general"
+    },
+    "hymn_0449": {
+      "category": "general"
+    },
+    "hymn_0450": {
+      "category": "general"
+    },
+    "hymn_0451": {
+      "category": "general"
+    },
+    "hymn_0452": {
+      "category": "general"
+    },
+    "hymn_0453": {
+      "category": "general"
+    },
+    "hymn_0454": {
+      "category": "general"
+    },
+    "hymn_0455": {
+      "category": "general"
+    },
+    "hymn_0456": {
+      "category": "general"
+    },
+    "hymn_0457": {
+      "category": "general"
+    },
+    "hymn_0458": {
+      "category": "general"
+    },
+    "hymn_0459": {
+      "category": "general"
+    },
+    "hymn_0460": {
+      "category": "general"
+    },
+    "hymn_0461": {
+      "category": "general"
+    },
+    "hymn_0462": {
+      "category": "general"
+    },
+    "hymn_0463": {
+      "category": "general"
+    },
+    "hymn_0464": {
+      "category": "general"
+    },
+    "hymn_0465": {
+      "category": "general"
+    },
+    "hymn_0466": {
+      "category": "general"
+    },
+    "hymn_0467": {
+      "category": "general"
+    },
+    "hymn_0468": {
+      "category": "general"
+    },
+    "hymn_0469": {
+      "category": "general"
+    },
+    "hymn_0470": {
+      "category": "general"
+    },
+    "hymn_0471": {
+      "category": "general"
+    },
+    "hymn_0472": {
+      "category": "general"
+    },
+    "hymn_0473": {
+      "category": "general"
+    },
+    "hymn_0474": {
+      "category": "general"
+    },
+    "hymn_0475": {
+      "category": "general"
+    },
+    "hymn_0476": {
+      "category": "general"
+    },
+    "hymn_0477": {
+      "category": "general"
+    },
+    "hymn_0478": {
+      "category": "general"
+    },
+    "hymn_0479": {
+      "category": "general"
+    },
+    "hymn_0480": {
+      "category": "general"
+    },
+    "hymn_0481": {
+      "category": "general"
+    },
+    "hymn_0482": {
+      "category": "general"
+    },
+    "hymn_0483": {
+      "category": "general"
+    },
+    "hymn_0484": {
+      "category": "general"
+    },
+    "hymn_0485": {
+      "category": "general"
+    },
+    "hymn_0486": {
+      "category": "general"
+    },
+    "hymn_0487": {
+      "category": "general"
+    },
+    "hymn_0488": {
+      "category": "general"
+    },
+    "hymn_0489": {
+      "category": "general"
+    },
+    "hymn_0490": {
+      "category": "general"
+    },
+    "hymn_0491": {
+      "category": "general"
+    },
+    "hymn_0492": {
+      "category": "general"
+    },
+    "hymn_0493": {
+      "category": "general"
+    },
+    "hymn_0494": {
+      "category": "general"
+    },
+    "hymn_0495": {
+      "category": "general"
+    },
+    "hymn_0496": {
+      "category": "general"
+    },
+    "hymn_0497": {
+      "category": "general"
+    },
+    "hymn_0498": {
+      "category": "general"
+    },
+    "hymn_0499": {
+      "category": "general"
+    },
+    "hymn_0500": {
+      "category": "general"
+    },
+    "hymn_0501": {
+      "category": "general"
+    },
+    "hymn_0502": {
+      "category": "general"
+    },
+    "hymn_0503": {
+      "category": "general"
+    },
+    "hymn_0504": {
+      "category": "general"
+    },
+    "hymn_0505": {
+      "category": "general"
+    },
+    "hymn_0506": {
+      "category": "general"
+    },
+    "hymn_0507": {
+      "category": "general"
+    },
+    "hymn_0508": {
+      "category": "general"
+    },
+    "hymn_0509": {
+      "category": "general"
+    },
+    "hymn_0510": {
+      "category": "general"
+    },
+    "hymn_0511": {
+      "category": "general"
+    },
+    "hymn_0512": {
+      "category": "general"
+    },
+    "hymn_0513": {
+      "category": "general"
+    },
+    "hymn_0514": {
+      "category": "general"
+    },
+    "hymn_0515": {
+      "category": "general"
+    },
+    "hymn_0516": {
+      "category": "general"
+    },
+    "hymn_0517": {
+      "category": "general"
+    },
+    "hymn_0518": {
+      "category": "general"
+    },
+    "hymn_0519": {
+      "category": "general"
+    },
+    "hymn_0520": {
+      "category": "general"
+    },
+    "hymn_0521": {
+      "category": "general"
+    },
+    "hymn_0522": {
+      "category": "general"
+    },
+    "hymn_0523": {
+      "category": "general"
+    },
+    "hymn_0524": {
+      "category": "general"
+    },
+    "hymn_0525": {
+      "category": "general"
+    },
+    "hymn_0526": {
+      "category": "general"
+    },
+    "hymn_0527": {
+      "category": "general"
+    },
+    "hymn_0528": {
+      "category": "general"
+    },
+    "hymn_0529": {
+      "category": "general"
+    },
+    "hymn_0530": {
+      "category": "general"
+    },
+    "hymn_0531": {
+      "category": "general"
+    },
+    "hymn_0532": {
+      "category": "general"
+    },
+    "hymn_0533": {
+      "category": "general"
+    },
+    "hymn_0534": {
+      "category": "general"
+    },
+    "hymn_0535": {
+      "category": "general"
+    },
+    "hymn_0536": {
+      "category": "general"
+    },
+    "hymn_0537": {
+      "category": "general"
+    },
+    "hymn_0538": {
+      "category": "general"
+    },
+    "hymn_0539": {
+      "category": "general"
+    },
+    "hymn_0540": {
+      "category": "general"
+    },
+    "hymn_0541": {
+      "category": "general"
+    },
+    "hymn_0542": {
+      "category": "general"
+    },
+    "hymn_0543": {
+      "category": "general"
+    },
+    "hymn_0544": {
+      "category": "general"
+    },
+    "hymn_0545": {
+      "category": "general"
+    },
+    "hymn_0546": {
+      "category": "general"
+    },
+    "hymn_0547": {
+      "category": "general"
+    },
+    "hymn_0549": {
+      "category": "general"
+    },
+    "hymn_0550": {
+      "category": "general"
+    },
+    "hymn_0551": {
+      "category": "general"
+    },
+    "hymn_0552": {
+      "category": "general"
+    },
+    "hymn_0553": {
+      "category": "general"
+    },
+    "hymn_0554": {
+      "category": "general"
+    },
+    "hymn_0555": {
+      "category": "general"
+    },
+    "hymn_0556": {
+      "category": "general"
+    },
+    "hymn_0557": {
+      "category": "general"
+    },
+    "hymn_0558": {
+      "category": "general"
+    },
+    "hymn_0559": {
+      "category": "general"
+    },
+    "hymn_0560": {
+      "category": "general"
+    },
+    "hymn_0561": {
+      "category": "general"
+    },
+    "hymn_0562": {
+      "category": "general"
+    },
+    "hymn_0563": {
+      "category": "general"
+    },
+    "hymn_0564": {
+      "category": "general"
+    },
+    "hymn_0565": {
+      "category": "general"
+    },
+    "hymn_0566": {
+      "category": "general"
+    },
+    "hymn_0567": {
+      "category": "general"
+    },
+    "hymn_0568": {
+      "category": "general"
+    },
+    "hymn_0569": {
+      "category": "general"
+    },
+    "hymn_0570": {
+      "category": "general"
+    },
+    "hymn_0571": {
+      "category": "general"
+    },
+    "hymn_0572": {
+      "category": "general"
+    },
+    "hymn_0573": {
+      "category": "general"
+    },
+    "hymn_0574": {
+      "category": "general"
+    },
+    "hymn_0575": {
+      "category": "general"
+    },
+    "hymn_0576": {
+      "category": "general"
+    },
+    "hymn_0577": {
+      "category": "general"
+    },
+    "hymn_0578": {
+      "category": "general"
+    },
+    "hymn_0579": {
+      "category": "general"
+    },
+    "hymn_0580": {
+      "category": "general"
+    },
+    "hymn_0581": {
+      "category": "general"
+    },
+    "hymn_0582": {
+      "category": "general"
+    },
+    "hymn_0583": {
+      "category": "general"
+    },
+    "hymn_0584": {
+      "category": "general"
+    },
+    "hymn_0585": {
+      "category": "general"
+    },
+    "hymn_0586": {
+      "category": "general"
+    },
+    "hymn_0587": {
+      "category": "general"
+    },
+    "hymn_0588": {
+      "category": "general"
+    },
+    "hymn_0589": {
+      "category": "general"
+    },
+    "hymn_0590": {
+      "category": "general"
+    },
+    "hymn_0591": {
+      "category": "general"
+    },
+    "hymn_0592": {
+      "category": "general"
+    },
+    "hymn_0593": {
+      "category": "general"
+    },
+    "hymn_0594": {
+      "category": "general"
+    },
+    "hymn_0595": {
+      "category": "general"
+    },
+    "hymn_0596": {
+      "category": "general"
+    },
+    "hymn_0597": {
+      "category": "general"
+    },
+    "hymn_0598": {
+      "category": "general"
+    },
+    "hymn_0599": {
+      "category": "general"
+    },
+    "hymn_0600": {
+      "category": "general"
+    },
+    "hymn_0601": {
+      "category": "general"
+    },
+    "hymn_0602": {
+      "category": "general"
+    },
+    "hymn_0603": {
+      "category": "general"
+    },
+    "hymn_0604": {
+      "category": "general"
+    },
+    "hymn_0605": {
+      "category": "general"
+    },
+    "hymn_0606": {
+      "category": "general"
+    },
+    "hymn_0607": {
+      "category": "general"
+    },
+    "hymn_0608": {
+      "category": "general"
+    },
+    "hymn_0610": {
+      "category": "general"
+    },
+    "hymn_0611": {
+      "category": "general"
+    },
+    "hymn_0612": {
+      "category": "general"
+    },
+    "hymn_0613": {
+      "category": "general"
+    },
+    "hymn_0614": {
+      "category": "general"
+    },
+    "hymn_0615": {
+      "category": "general"
+    },
+    "hymn_0616": {
+      "category": "general"
+    },
+    "hymn_0617": {
+      "category": "general"
+    },
+    "hymn_0618": {
+      "category": "general"
+    },
+    "hymn_0619": {
+      "category": "general"
+    },
+    "hymn_0620": {
+      "category": "general"
+    },
+    "hymn_0621": {
+      "category": "general"
+    },
+    "hymn_0622": {
+      "category": "general"
+    },
+    "hymn_0623": {
+      "category": "general"
+    },
+    "hymn_0624": {
+      "category": "general"
+    },
+    "hymn_0625": {
+      "category": "general"
+    },
+    "hymn_0626": {
+      "category": "general"
+    },
+    "hymn_0627": {
+      "category": "general"
+    },
+    "hymn_0628": {
+      "category": "general"
+    },
+    "hymn_0629": {
+      "category": "general"
+    },
+    "hymn_0630": {
+      "category": "general"
+    },
+    "hymn_0631": {
+      "category": "general"
+    },
+    "hymn_0632": {
+      "category": "general"
+    },
+    "hymn_0633": {
+      "category": "general"
+    },
+    "hymn_0634": {
+      "category": "general"
+    },
+    "hymn_0635": {
+      "category": "general"
+    },
+    "hymn_0636": {
+      "category": "general"
+    },
+    "hymn_0637": {
+      "category": "general"
+    },
+    "hymn_0638": {
+      "category": "general"
+    },
+    "hymn_0639": {
+      "category": "general"
+    },
+    "hymn_0640": {
+      "category": "general"
+    },
+    "hymn_0641": {
+      "category": "general"
+    },
+    "hymn_0642": {
+      "category": "general"
+    },
+    "hymn_0643": {
+      "category": "general"
+    },
+    "hymn_0644": {
+      "category": "general"
+    },
+    "hymn_0645": {
+      "category": "general"
+    },
+    "hymn_0646": {
+      "category": "general"
+    },
+    "hymn_0647": {
+      "category": "general"
+    },
+    "hymn_0648": {
+      "category": "general"
+    },
+    "hymn_0649": {
+      "category": "general"
+    },
+    "hymn_0650": {
+      "category": "general"
+    },
+    "hymn_0651": {
+      "category": "general"
+    },
+    "hymn_0652": {
+      "category": "general"
+    },
+    "hymn_0653": {
+      "category": "general"
+    },
+    "hymn_0654": {
+      "category": "general"
+    },
+    "hymn_0655": {
+      "category": "general"
+    },
+    "hymn_0656": {
+      "category": "general"
+    },
+    "hymn_0657": {
+      "category": "general"
+    },
+    "hymn_0658": {
+      "category": "general"
+    },
+    "hymn_0659": {
+      "category": "general"
+    },
+    "hymn_0660": {
+      "category": "general"
+    },
+    "hymn_0661": {
+      "category": "general"
+    },
+    "hymn_0665": {
+      "category": "general"
+    }
   }
 }
