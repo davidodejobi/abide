@@ -64,7 +64,7 @@ class _HomeTabScreenState extends ConsumerState<HomeTabScreen>
                       ),
                     ),
                     Text(
-                      'Welcome to Open Baptist Hymnal',
+                      'Welcome to Abide',
                       style: AppTextStyles.labelLarge.copyWith(
                         color: colorScheme.onSurfaceVariant,
                       ),

@@ -9,8 +9,8 @@ import 'theme/theme_provider.dart';
 /// Provider for the app router instance
 final appRouterProvider = Provider<AppRouter>((ref) => AppRouter());
 
-class OpenBaptistHymnal extends ConsumerWidget {
-  const OpenBaptistHymnal({super.key});
+class AbideApp extends ConsumerWidget {
+  const AbideApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -19,7 +19,7 @@ class OpenBaptistHymnal extends ConsumerWidget {
 
     return ToastificationWrapper(
       child: MaterialApp.router(
-        title: 'Open Baptist Hymnal',
+        title: 'Abide',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,

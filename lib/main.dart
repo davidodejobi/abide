@@ -15,7 +15,7 @@ void main() async {
       overrides: [
         sharedPreferencesProvider.overrideWithValue(prefs),
       ],
-      child: const OpenBaptistHymnal(),
+      child: const AbideApp(),
     ),
   );
 }
