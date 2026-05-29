@@ -6,6 +6,7 @@ import 'package:openbaptisthymnal/features/hymn/ui/home_tab_screen.dart';
 import 'package:openbaptisthymnal/features/hymn/ui/hymn_detail_page.dart';
 import 'package:openbaptisthymnal/features/onboarding/ui/onboarding_page.dart';
 import 'package:openbaptisthymnal/features/settings/ui/settings_tab_screen.dart';
+import 'package:openbaptisthymnal/features/share_card/ui/share_card_page.dart';
 
 part 'app_router.gr.dart';
 
@@ -31,6 +32,7 @@ class AppRouter extends RootStackRouter {
         ),
         // Standalone routes (pushed on top of dashboard)
         AutoRoute(page: HymnDetailRoute.page),
+        AutoRoute(page: ShareCardRoute.page),
         AutoRoute(page: OnboardingRoute.page),
       ];
 
