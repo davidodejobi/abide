@@ -89,10 +89,10 @@ flutter:
         - asset: assets/fonts/Geist-Thin.ttf
           weight: 100
 
-    - family: Caveat
+    - family: ShantellSans
       fonts:
-        - asset: assets/fonts/Caveat-Variable.ttf
+        - asset: assets/fonts/ShantellSans-Variable.ttf
 
-    - family: DancingScript
+    - family: PatrickHand
       fonts:
-        - asset: assets/fonts/DancingScript-Variable.ttf
+        - asset: assets/fonts/PatrickHand-Regular.ttf

@@ -14,11 +14,11 @@ abstract final class AppTextStyles {
   /// Display/Serif font family - used for headings and hymn content
   static const String fontFamilyEBGaramond = 'EBGaramond';
 
-  /// Handwriting font - used for onboarding headlines and intimate accent text
-  static const String fontFamilyCaveat = 'Caveat';
+  /// Hand-printed marker font - used for the hand-drawn onboarding doodle screens
+  static const String fontFamilyShantellSans = 'ShantellSans';
 
-  /// Calligraphy font - used for decorative display and section titles
-  static const String fontFamilyDancingScript = 'DancingScript';
+  /// Hand-printed fallback for the doodle styles
+  static const String fontFamilyPatrickHand = 'PatrickHand';
 
   // ============================================
   // DISPLAY TEXT STYLES (EB Garamond - Serif)
@@ -204,45 +204,52 @@ abstract final class AppTextStyles {
       );
 
   // ============================================
-  // ONBOARDING / HANDWRITING TEXT STYLES
+  // ONBOARDING — HAND-DRAWN DOODLE TEXT STYLES
   // ============================================
+  // Pure hand-printed marker (Shantell Sans). Color defaults to null so the
+  // onboarding screens pass colorScheme.onSurface — keeping it theme-aware
+  // (dark ink on light, light ink on dark).
 
-  /// Single-word splash headline — "Abide." on the opening onboarding screen
-  static TextStyle onboardingSplash({Color? color}) => TextStyle(
-        fontFamily: fontFamilyCaveat,
-        fontSize: 72,
-        fontWeight: FontWeight.w700,
-        color: color ?? AppColors.primary,
-        height: 1.0,
-        letterSpacing: -1.0,
-      );
-
-  /// Onboarding subtitle / tagline in Caveat
-  static TextStyle onboardingSubtitle({Color? color}) => TextStyle(
-        fontFamily: fontFamilyCaveat,
-        fontSize: 24,
-        fontWeight: FontWeight.w400,
-        color: color ?? AppColors.neutral500,
-        height: 1.4,
+  /// Body line typed out on the hand-drawn onboarding screens
+  static TextStyle doodleBody({Color? color}) => TextStyle(
+        fontFamily: fontFamilyShantellSans,
+        fontFamilyFallback: const [fontFamilyPatrickHand],
+        fontSize: 22,
+        fontWeight: FontWeight.w500,
+        color: color,
+        height: 1.45,
         letterSpacing: 0.2,
       );
 
-  /// Section title accent in Dancing Script — decorative, used sparingly
-  static TextStyle accentTitle({Color? color}) => TextStyle(
-        fontFamily: fontFamilyDancingScript,
-        fontSize: 32,
+  /// Larger hand-drawn headline (e.g. a single prompt line)
+  static TextStyle doodleHeadline({Color? color}) => TextStyle(
+        fontFamily: fontFamilyShantellSans,
+        fontFamilyFallback: const [fontFamilyPatrickHand],
+        fontSize: 30,
         fontWeight: FontWeight.w600,
-        color: color ?? AppColors.secondary,
+        color: color,
         height: 1.3,
+        letterSpacing: 0.2,
+      );
+
+  /// Hand-drawn button label
+  static TextStyle doodleButton({Color? color}) => TextStyle(
+        fontFamily: fontFamilyShantellSans,
+        fontFamilyFallback: const [fontFamilyPatrickHand],
+        fontSize: 22,
+        fontWeight: FontWeight.w600,
+        color: color,
+        height: 1.0,
         letterSpacing: 0.5,
       );
 
-  /// Small handwriting label — e.g. "verse 1", category tags
-  static TextStyle handwritingLabel({Color? color}) => TextStyle(
-        fontFamily: fontFamilyCaveat,
-        fontSize: 16,
+  /// Small hand-drawn label / caption
+  static TextStyle doodleLabel({Color? color}) => TextStyle(
+        fontFamily: fontFamilyShantellSans,
+        fontFamilyFallback: const [fontFamilyPatrickHand],
+        fontSize: 15,
         fontWeight: FontWeight.w400,
-        color: color ?? AppColors.neutral500,
-        height: 1.5,
+        color: color,
+        height: 1.4,
       );
 }
