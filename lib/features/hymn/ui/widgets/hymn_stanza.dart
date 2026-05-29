@@ -5,15 +5,22 @@ class HymnStanza extends StatelessWidget {
   final String text;
   final bool isChorus;
 
+  /// Reader's font-size multiplier applied to the lyric text.
+  final double textScale;
+
   const HymnStanza({
     super.key,
     required this.number,
     required this.text,
     this.isChorus = false,
+    this.textScale = 1.0,
   });
 
   @override
   Widget build(BuildContext context) {
+    // Base reading size mirrors the lyric body style used elsewhere.
+    const baseSize = 16.0;
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Row(
@@ -24,7 +31,10 @@ class HymnStanza extends StatelessWidget {
               width: 30,
               child: Text(
                 '$number.',
-                style: const TextStyle(fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: baseSize * textScale,
+                ),
               ),
             ),
           Expanded(
@@ -33,6 +43,7 @@ class HymnStanza extends StatelessWidget {
               style: TextStyle(
                 fontStyle: isChorus ? FontStyle.italic : FontStyle.normal,
                 fontWeight: isChorus ? FontWeight.w500 : FontWeight.normal,
+                fontSize: baseSize * textScale,
               ),
             ),
           ),

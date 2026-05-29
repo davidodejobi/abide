@@ -1,80 +1,107 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:openbaptisthymnal/core/theme/app_colors.dart';
 import 'package:openbaptisthymnal/core/theme/app_text_styles.dart';
 
-class LanguageToggle extends HookWidget {
+/// A language option the hymnal can switch between.
+class LanguageOption {
+  const LanguageOption({required this.code, required this.label});
+
+  /// Language code stored in state (e.g. 'yo', 'en').
+  final String code;
+
+  /// Human-friendly chip label (e.g. 'Yoruba').
+  final String label;
+}
+
+/// Horizontal, scrollable row of language chips. Renders the languages it is
+/// given today and grows gracefully as more are added in future releases —
+/// no fixed two-tab assumption.
+class LanguageToggle extends StatelessWidget {
   final String selectedLanguage;
   final ValueChanged<String> onLanguageChanged;
+  final List<LanguageOption> languages;
 
   const LanguageToggle({
     super.key,
     required this.selectedLanguage,
     required this.onLanguageChanged,
+    this.languages = const [
+      LanguageOption(code: 'yo', label: 'Yoruba'),
+      LanguageOption(code: 'en', label: 'English'),
+    ],
   });
 
   @override
   Widget build(BuildContext context) {
-    final initialIndex = selectedLanguage == 'yo' ? 0 : 1;
-    final tabController = useTabController(
-      initialLength: 2,
-      initialIndex: initialIndex,
-    );
-
-    // Sync tab controller with external state
-    useEffect(() {
-      final newIndex = selectedLanguage == 'yo' ? 0 : 1;
-      if (tabController.index != newIndex) {
-        tabController.animateTo(newIndex);
-      }
-      return null;
-    }, [selectedLanguage]);
-
-    // Handle tab changes
-    useEffect(() {
-      void listener() {
-        if (!tabController.indexIsChanging) {
-          final language = tabController.index == 0 ? 'yo' : 'en';
-          if (language != selectedLanguage) {
-            onLanguageChanged(language);
-          }
-        }
-      }
-
-      tabController.addListener(listener);
-      return () => tabController.removeListener(listener);
-    }, [tabController, selectedLanguage, onLanguageChanged]);
-
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Container(
+    return SizedBox(
       height: 40,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
-        color: colorScheme.surfaceContainerHighest,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        padding: EdgeInsets.zero,
+        itemCount: languages.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 10),
+        itemBuilder: (context, index) {
+          final language = languages[index];
+          return _LanguageChip(
+            label: language.label,
+            selected: language.code == selectedLanguage,
+            onTap: () => onLanguageChanged(language.code),
+          );
+        },
       ),
-      child: TabBar(
-        controller: tabController,
-        labelColor: colorScheme.onPrimary,
-        unselectedLabelColor: colorScheme.onSurface,
-        indicatorWeight: 0,
-        enableFeedback: true,
-        dividerColor: Colors.transparent,
-        indicator: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
-          color: colorScheme.primary,
+    );
+  }
+}
+
+class _LanguageChip extends StatelessWidget {
+  const _LanguageChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final fill = selected
+        ? AppColors.secondary
+        : (isDark ? AppColors.neutral800 : AppColors.secondary50);
+    final textColor = selected
+        ? AppColors.primaryDark
+        : (isDark ? AppColors.neutral300 : AppColors.primary);
+    final border = selected
+        ? AppColors.secondary
+        : (isDark ? AppColors.neutral700 : AppColors.secondary200);
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOut,
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: fill,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: border, width: 1),
+          ),
+          child: Text(
+            label,
+            style: AppTextStyles.labelLarge.copyWith(
+              color: textColor,
+              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+            ),
+          ),
         ),
-        indicatorSize: TabBarIndicatorSize.tab,
-        overlayColor: WidgetStateProperty.all(Colors.transparent),
-        labelStyle: AppTextStyles.labelLarge.copyWith(
-          fontWeight: FontWeight.w600,
-        ),
-        unselectedLabelStyle: AppTextStyles.labelLarge.copyWith(
-          fontWeight: FontWeight.w500,
-        ),
-        tabs: const [
-          Tab(text: 'Yoruba Version'),
-          Tab(text: 'English Version'),
-        ],
       ),
     );
   }

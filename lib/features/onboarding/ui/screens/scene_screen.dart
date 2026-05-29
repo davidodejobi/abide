@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:openbaptisthymnal/core/theme/app_text_styles.dart';
+import 'package:openbaptisthymnal/core/utils/time_greeting.dart';
 import 'package:openbaptisthymnal/features/onboarding/ui/widgets/hand_drawn_button.dart';
 import 'package:openbaptisthymnal/features/onboarding/ui/widgets/hand_drawn_moon.dart';
 import 'package:openbaptisthymnal/features/onboarding/ui/widgets/hand_drawn_sun.dart';
@@ -97,43 +98,46 @@ class _SceneCopy {
   final bool isNight;
 
   factory _SceneCopy.forHour(int hour) {
-    if (hour >= 5 && hour < 12) {
-      return const _SceneCopy(
-        isNight: false,
-        headline: 'good morning.',
-        body: 'his mercies are new with the light.\n'
-            'before the day fills up, pause here.\n'
-            'open a hymn, read a little of his word,\n'
-            'and let your first thoughts be grateful ones.',
-      );
+    // Day-part boundaries live in [TimeGreeting]; the onboarding scene keeps its
+    // own longer, lowercase devotional copy but shares the same clock logic.
+    final part = TimeGreeting.forHour(hour).part;
+    switch (part) {
+      case DayPart.morning:
+        return const _SceneCopy(
+          isNight: false,
+          headline: 'good morning.',
+          body: 'his mercies are new with the light.\n'
+              'before the day fills up, pause here.\n'
+              'open a hymn, read a little of his word,\n'
+              'and let your first thoughts be grateful ones.',
+        );
+      case DayPart.afternoon:
+        return const _SceneCopy(
+          isNight: false,
+          headline: 'good afternoon.',
+          body: 'the day is loud and full.\n'
+              'step aside for just a moment —\n'
+              'breathe, read a verse, and let\n'
+              'the noise grow quiet within you.',
+        );
+      case DayPart.evening:
+        return const _SceneCopy(
+          isNight: true,
+          headline: 'good evening.',
+          body: 'as the light grows soft,\n'
+              'look back and give thanks for the day.\n'
+              'lay down what was heavy to carry,\n'
+              'and let your heart be still.',
+        );
+      case DayPart.night:
+        return const _SceneCopy(
+          isNight: true,
+          headline: 'abide with me.',
+          body: 'fast falls the eventide.\n'
+              'the day is done, and you are kept.\n'
+              'he gives his beloved sleep —\n'
+              'rest now, and abide through the night.',
+        );
     }
-    if (hour >= 12 && hour < 17) {
-      return const _SceneCopy(
-        isNight: false,
-        headline: 'good afternoon.',
-        body: 'the day is loud and full.\n'
-            'step aside for just a moment —\n'
-            'breathe, read a verse, and let\n'
-            'the noise grow quiet within you.',
-      );
-    }
-    if (hour >= 17 && hour < 21) {
-      return const _SceneCopy(
-        isNight: true,
-        headline: 'good evening.',
-        body: 'as the light grows soft,\n'
-            'look back and give thanks for the day.\n'
-            'lay down what was heavy to carry,\n'
-            'and let your heart be still.',
-      );
-    }
-    return const _SceneCopy(
-      isNight: true,
-      headline: 'abide with me.',
-      body: 'fast falls the eventide.\n'
-          'the day is done, and you are kept.\n'
-          'he gives his beloved sleep —\n'
-          'rest now, and abide through the night.',
-    );
   }
 }

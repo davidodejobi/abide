@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:openbaptisthymnal/core/theme/app_colors.dart';
 import 'package:openbaptisthymnal/core/theme/app_text_styles.dart';
 import 'package:openbaptisthymnal/core/utils/extensions/num_extensions.dart';
 
@@ -19,12 +20,18 @@ class SearchBarWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
       height: 56,
       decoration: BoxDecoration(
         color: colorScheme.surface,
         borderRadius: BorderRadius.circular(30),
+        // A subtle warm hairline so the field doesn't float on the dark canvas.
+        border: Border.all(
+          color: isDark ? AppColors.neutral700 : AppColors.secondary200,
+          width: 1,
+        ),
       ),
       child: Row(
         children: [

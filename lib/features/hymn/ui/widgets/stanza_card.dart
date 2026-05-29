@@ -7,6 +7,10 @@ class StanzaCard extends StatelessWidget {
   final int displayIndex;
   final bool isChorus;
 
+  /// Multiplier applied to the lyric body text only (the reader's font-size
+  /// preference). The watermark number and card chrome stay fixed.
+  final double textScale;
+
   /// Called with the text the user chose to share — the full stanza on a
   /// double-tap, or the highlighted selection from the "Share" toolbar action.
   final void Function(String text)? onShare;
@@ -16,6 +20,7 @@ class StanzaCard extends StatelessWidget {
     required this.text,
     required this.displayIndex,
     this.isChorus = false,
+    this.textScale = 1.0,
     this.onShare,
   });
 
@@ -98,6 +103,7 @@ class StanzaCard extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                   color: cardText,
                   fontStyle: isChorus ? FontStyle.italic : null,
+                  fontSize: (AppTextStyles.bodyLarge.fontSize ?? 16) * textScale,
                 ),
                 textAlign: TextAlign.left,
                 // Double-tapping a stanza shares the whole stanza.

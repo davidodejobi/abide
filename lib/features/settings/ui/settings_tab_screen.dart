@@ -6,6 +6,7 @@ import 'package:openbaptisthymnal/core/providers/service_providers.dart';
 import 'package:openbaptisthymnal/core/theme/app_text_styles.dart';
 import 'package:openbaptisthymnal/core/theme/theme_provider.dart';
 import 'package:openbaptisthymnal/core/utils/toast_helper.dart';
+import 'package:openbaptisthymnal/features/settings/ui/widgets/font_size_control.dart';
 
 /// Settings tab screen - App settings and preferences
 @RoutePage()
@@ -55,15 +56,7 @@ class _SettingsTabScreenState extends ConsumerState<SettingsTabScreen>
                       ref.read(themeModeProvider.notifier).setThemeMode(theme);
                     },
                   ),
-                  _SettingsTile(
-                    icon: Icons.text_fields,
-                    title: 'Font Size',
-                    subtitle: 'Medium',
-                    onTap: () {
-                      ToastHelper.info(
-                          context, 'Font size picker will be available soon');
-                    },
-                  ),
+                  const _FontSizeSelector(),
                 ],
               ),
               const SizedBox(height: 24),
@@ -213,6 +206,49 @@ class _SettingsTile extends StatelessWidget {
           color: colorScheme.outline,
         ),
         onTap: onTap,
+      ),
+    );
+  }
+}
+
+/// Font-size selector card: a snapping slider with a live lyric preview.
+class _FontSizeSelector extends StatelessWidget {
+  const _FontSizeSelector();
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.text_fields,
+                color: colorScheme.onSurface,
+                size: 24,
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Text(
+                  'Font Size',
+                  style: AppTextStyles.bodyLarge.copyWith(
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          const FontSizeControl(),
+        ],
       ),
     );
   }
