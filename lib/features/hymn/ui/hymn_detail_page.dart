@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:openbaptisthymnal/core/theme/app_colors.dart';
 import 'package:openbaptisthymnal/core/theme/app_text_styles.dart';
+import 'package:openbaptisthymnal/core/theme/font_scale_provider.dart';
 import 'package:openbaptisthymnal/core/utils/extensions/context_extensions.dart';
 import 'package:openbaptisthymnal/core/utils/extensions/num_extensions.dart';
 import 'package:openbaptisthymnal/core/utils/extensions/string_extensions.dart';
@@ -13,6 +14,7 @@ import 'package:openbaptisthymnal/features/hymn/model/language_pack.dart';
 import 'package:openbaptisthymnal/features/hymn/providers/favorites_provider.dart';
 import 'package:openbaptisthymnal/features/hymn/ui/viewmodels/hymns_viewmodel.dart';
 import 'package:openbaptisthymnal/features/hymn/ui/widgets/stanza_card.dart';
+import 'package:openbaptisthymnal/features/settings/ui/widgets/font_size_control.dart';
 import 'package:vector_graphics/vector_graphics_compat.dart';
 
 @RoutePage()
@@ -28,6 +30,7 @@ class HymnDetailPage extends HookConsumerWidget {
     final isFavorited = ref.watch(
       favoritesProvider.select((ids) => ids.contains(hymnId)),
     );
+    final textScale = ref.watch(fontScaleProvider).scale;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     // Define colors based on the design tokens
@@ -115,17 +118,20 @@ class HymnDetailPage extends HookConsumerWidget {
                                     return StanzaCard(
                                       text: stanzas[0].text,
                                       displayIndex: 1,
+                                      textScale: textScale,
                                     );
                                   } else if (index == 1) {
                                     return StanzaCard(
                                       text: chorus,
                                       displayIndex: 0,
                                       isChorus: true,
+                                      textScale: textScale,
                                     );
                                   } else if (index - 1 < stanzas.length) {
                                     return StanzaCard(
                                       text: stanzas[index - 1].text,
                                       displayIndex: index,
+                                      textScale: textScale,
                                     );
                                   }
                                   return null;
@@ -134,6 +140,7 @@ class HymnDetailPage extends HookConsumerWidget {
                                     return StanzaCard(
                                       text: stanzas[index].text,
                                       displayIndex: index + 1,
+                                      textScale: textScale,
                                     );
                                   }
                                   return null;
@@ -201,6 +208,11 @@ class HymnDetailPage extends HookConsumerWidget {
                                     isDark: isDark,
                                   ),
                                   8.w,
+                                  _FontSizeBarButton(
+                                    onTap: () => _showFontSizeSheet(context),
+                                    isDark: isDark,
+                                  ),
+                                  8.w,
                                   _BottomBarButton(
                                     icon: 'heart'.iconSvg,
                                     onTap: () => ref
@@ -221,6 +233,65 @@ class HymnDetailPage extends HookConsumerWidget {
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(child: Text('Error: $err')),
+      ),
+    );
+  }
+}
+
+/// Opens the reader font-size control in a bottom sheet. Lyrics behind the
+/// sheet resize live because the page watches [fontScaleProvider].
+void _showFontSizeSheet(BuildContext context) {
+  showModalBottomSheet<void>(
+    context: context,
+    showDragHandle: true,
+    builder: (context) {
+      return SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Lyric size',
+                style: AppTextStyles.titleLarge.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
+              const SizedBox(height: 16),
+              const FontSizeControl(),
+            ],
+          ),
+        ),
+      );
+    },
+  );
+}
+
+class _FontSizeBarButton extends StatelessWidget {
+  final VoidCallback onTap;
+  final bool isDark;
+
+  const _FontSizeBarButton({required this.onTap, required this.isDark});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 48,
+        height: 48,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.neutral850 : AppColors.secondary50,
+          shape: BoxShape.circle,
+        ),
+        child: Icon(
+          Icons.format_size,
+          size: 22,
+          color: isDark ? AppColors.neutral100 : AppColors.primaryDark,
+        ),
       ),
     );
   }

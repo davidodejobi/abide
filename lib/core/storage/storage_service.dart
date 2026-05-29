@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:openbaptisthymnal/core/theme/font_scale.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class StorageService {
@@ -9,6 +10,7 @@ class StorageService {
   static const String _themeKey = 'theme_mode';
   static const String _onboardingCompleteKey = 'onboarding_complete';
   static const String _userNameKey = 'user_name';
+  static const String _fontScaleKey = 'font_scale';
 
   /// Save theme mode
   Future<void> saveThemeMode(ThemeMode mode) async {
@@ -44,5 +46,15 @@ class StorageService {
   /// Get the user's chosen name (null if not set)
   String? getUserName() {
     return _prefs.getString(_userNameKey);
+  }
+
+  /// Save the reading font-size preference
+  Future<void> saveFontScale(FontScale scale) async {
+    await _prefs.setString(_fontScaleKey, scale.name);
+  }
+
+  /// Get the reading font-size preference (defaults to medium)
+  FontScale getFontScale() {
+    return FontScale.fromName(_prefs.getString(_fontScaleKey));
   }
 }
