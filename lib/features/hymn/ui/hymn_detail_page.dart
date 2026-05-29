@@ -4,6 +4,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:openbaptisthymnal/core/theme/app_colors.dart';
+import 'package:openbaptisthymnal/core/router/app_router.dart';
 import 'package:openbaptisthymnal/core/theme/app_text_styles.dart';
 import 'package:openbaptisthymnal/core/utils/extensions/context_extensions.dart';
 import 'package:openbaptisthymnal/core/utils/extensions/num_extensions.dart';
@@ -61,6 +62,18 @@ class HymnDetailPage extends HookConsumerWidget {
           // Use hymnId as number for now, or extract if available
           final hymnNumber = firstTranslation.number.toString().padLeft(3, '0');
 
+          void shareText(String body) {
+            final trimmed = body.trim();
+            if (trimmed.isEmpty) return;
+            context.router.push(
+              ShareCardRoute(
+                hymnNumber: hymnNumber,
+                title: title,
+                body: trimmed,
+              ),
+            );
+          }
+
           return 1.isEven
               ? const SingleChildScrollView(
                   child: Column(),
@@ -115,17 +128,20 @@ class HymnDetailPage extends HookConsumerWidget {
                                     return StanzaCard(
                                       text: stanzas[0].text,
                                       displayIndex: 1,
+                                      onShare: shareText,
                                     );
                                   } else if (index == 1) {
                                     return StanzaCard(
                                       text: chorus,
                                       displayIndex: 0,
                                       isChorus: true,
+                                      onShare: shareText,
                                     );
                                   } else if (index - 1 < stanzas.length) {
                                     return StanzaCard(
                                       text: stanzas[index - 1].text,
                                       displayIndex: index,
+                                      onShare: shareText,
                                     );
                                   }
                                   return null;
@@ -134,6 +150,7 @@ class HymnDetailPage extends HookConsumerWidget {
                                     return StanzaCard(
                                       text: stanzas[index].text,
                                       displayIndex: index + 1,
+                                      onShare: shareText,
                                     );
                                   }
                                   return null;
@@ -188,9 +205,18 @@ class HymnDetailPage extends HookConsumerWidget {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   _BottomBarButton(
+                                    icon: 'share_out'.iconSvg,
+                                    onTap: () => shareText([
+                                      for (final s in stanzas) s.text,
+                                      if (hasChorus) chorus,
+                                    ].join('\n\n')),
+                                    isDark: isDark,
+                                  ),
+                                  8.w,
+                                  _BottomBarButton(
                                     icon: 'share'.iconSvg,
                                     onTap: () => ToastHelper.info(context,
-                                        'Sharing will be available soon'),
+                                        'Language switch will be available soon'),
                                     isDark: isDark,
                                   ),
                                   8.w,
@@ -202,7 +228,9 @@ class HymnDetailPage extends HookConsumerWidget {
                                   ),
                                   8.w,
                                   _BottomBarButton(
-                                    icon: 'heart'.iconSvg,
+                                    icon: isFavorited
+                                        ? 'heart_filled'.iconSvg
+                                        : 'heart'.iconSvg,
                                     onTap: () => ref
                                         .read(favoritesProvider.notifier)
                                         .toggle(hymnId),
