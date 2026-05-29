@@ -58,4 +58,3 @@ Existing features: `hymn`, `bible`, `dashboard`, `notes`, `onboarding`, `setting
 ## Git
 
 - Main branch: `main`. Feature work happens on branches / worktrees off the latest base.
-- Commit co-author: `Co-Authored-By: Craft Agent <agents-noreply@craft.do>`

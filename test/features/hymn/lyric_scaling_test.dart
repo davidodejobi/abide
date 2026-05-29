@@ -9,12 +9,13 @@ import 'package:openbaptisthymnal/features/hymn/ui/widgets/stanza_card.dart';
 void main() {
   Widget host(Widget child) => MaterialApp(home: Scaffold(body: child));
 
+  // StanzaCard renders its lyric in a SelectableText (for selection/sharing).
   testWidgets('StanzaCard scales its lyric text by textScale', (tester) async {
     await tester.pumpWidget(host(
       const StanzaCard(text: 'grace', displayIndex: 1, textScale: 1.5),
     ));
 
-    final style = tester.widget<Text>(find.text('grace')).style;
+    final style = tester.widget<SelectableText>(find.byType(SelectableText)).style;
     expect(style?.fontSize, 16 * 1.5);
   });
 
@@ -23,7 +24,8 @@ void main() {
       const StanzaCard(text: 'grace', displayIndex: 1),
     ));
 
-    expect(tester.widget<Text>(find.text('grace')).style?.fontSize, 16);
+    final style = tester.widget<SelectableText>(find.byType(SelectableText)).style;
+    expect(style?.fontSize, 16);
   });
 
   testWidgets('HymnStanza scales its lyric text by textScale', (tester) async {

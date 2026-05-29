@@ -26,9 +26,11 @@ class ShareService {
 
       // Share
       final xFile = XFile(filePath);
-      await Share.shareXFiles(
-        [xFile],
-        sharePositionOrigin: sharePositionOrigin,
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [xFile],
+          sharePositionOrigin: sharePositionOrigin,
+        ),
       );
     } catch (e) {
       debugPrint('Error sharing image: $e');

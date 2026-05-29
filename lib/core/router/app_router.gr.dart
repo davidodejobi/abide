@@ -136,3 +136,75 @@ class SettingsTabRoute extends PageRouteInfo<void> {
     },
   );
 }
+
+/// generated route for
+/// [ShareCardPage]
+class ShareCardRoute extends PageRouteInfo<ShareCardRouteArgs> {
+  ShareCardRoute({
+    Key? key,
+    required String hymnNumber,
+    required String title,
+    required String body,
+    List<PageRouteInfo>? children,
+  }) : super(
+          ShareCardRoute.name,
+          args: ShareCardRouteArgs(
+            key: key,
+            hymnNumber: hymnNumber,
+            title: title,
+            body: body,
+          ),
+          initialChildren: children,
+        );
+
+  static const String name = 'ShareCardRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      final args = data.argsAs<ShareCardRouteArgs>();
+      return ShareCardPage(
+        key: args.key,
+        hymnNumber: args.hymnNumber,
+        title: args.title,
+        body: args.body,
+      );
+    },
+  );
+}
+
+class ShareCardRouteArgs {
+  const ShareCardRouteArgs({
+    this.key,
+    required this.hymnNumber,
+    required this.title,
+    required this.body,
+  });
+
+  final Key? key;
+
+  final String hymnNumber;
+
+  final String title;
+
+  final String body;
+
+  @override
+  String toString() {
+    return 'ShareCardRouteArgs{key: $key, hymnNumber: $hymnNumber, title: $title, body: $body}';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! ShareCardRouteArgs) return false;
+    return key == other.key &&
+        hymnNumber == other.hymnNumber &&
+        title == other.title &&
+        body == other.body;
+  }
+
+  @override
+  int get hashCode =>
+      key.hashCode ^ hymnNumber.hashCode ^ title.hashCode ^ body.hashCode;
+}
