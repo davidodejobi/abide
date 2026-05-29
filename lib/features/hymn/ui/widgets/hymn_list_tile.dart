@@ -5,12 +5,14 @@ class HymnListTile extends StatelessWidget {
   final String number;
   final String title;
   final VoidCallback? onTap;
+  final bool isFavorited;
 
   const HymnListTile({
     super.key,
     required this.number,
     required this.title,
     this.onTap,
+    this.isFavorited = false,
   });
 
   @override
@@ -64,6 +66,13 @@ class HymnListTile extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
+                // Favorite indicator
+                if (isFavorited)
+                  Icon(
+                    Icons.favorite,
+                    size: 18,
+                    color: colorScheme.primary,
+                  ),
                 // Arrow icon
                 Icon(
                   Icons.chevron_right,

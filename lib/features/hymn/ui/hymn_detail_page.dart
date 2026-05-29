@@ -10,6 +10,7 @@ import 'package:openbaptisthymnal/core/utils/extensions/num_extensions.dart';
 import 'package:openbaptisthymnal/core/utils/extensions/string_extensions.dart';
 import 'package:openbaptisthymnal/core/utils/toast_helper.dart';
 import 'package:openbaptisthymnal/features/hymn/model/language_pack.dart';
+import 'package:openbaptisthymnal/features/hymn/providers/favorites_provider.dart';
 import 'package:openbaptisthymnal/features/hymn/ui/viewmodels/hymns_viewmodel.dart';
 import 'package:openbaptisthymnal/features/hymn/ui/widgets/stanza_card.dart';
 import 'package:vector_graphics/vector_graphics_compat.dart';
@@ -24,6 +25,9 @@ class HymnDetailPage extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // Watch hymn details
     final detailAsync = ref.watch(hymnDetailProvider(hymnId));
+    final isFavorited = ref.watch(
+      favoritesProvider.select((ids) => ids.contains(hymnId)),
+    );
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     // Define colors based on the design tokens
@@ -199,9 +203,11 @@ class HymnDetailPage extends HookConsumerWidget {
                                   8.w,
                                   _BottomBarButton(
                                     icon: 'heart'.iconSvg,
-                                    onTap: () => ToastHelper.info(context,
-                                        'Favorites will be available soon'),
+                                    onTap: () => ref
+                                        .read(favoritesProvider.notifier)
+                                        .toggle(hymnId),
                                     isDark: isDark,
+                                    isActive: isFavorited,
                                   ),
                                 ],
                               ),
@@ -224,15 +230,21 @@ class _BottomBarButton extends StatelessWidget {
   final String icon;
   final VoidCallback onTap;
   final bool isDark;
+  final bool isActive;
 
   const _BottomBarButton({
     required this.icon,
     required this.onTap,
     required this.isDark,
+    this.isActive = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final iconColor = isActive
+        ? Colors.red
+        : (isDark ? AppColors.neutral100 : AppColors.primaryDark);
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -245,10 +257,7 @@ class _BottomBarButton extends StatelessWidget {
         ),
         child: VectorGraphic(
           loader: AssetBytesLoader(icon),
-          colorFilter: ColorFilter.mode(
-            isDark ? AppColors.neutral100 : AppColors.primaryDark,
-            BlendMode.srcIn,
-          ),
+          colorFilter: ColorFilter.mode(iconColor, BlendMode.srcIn),
         ),
       ),
     );
