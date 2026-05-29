@@ -14,6 +14,12 @@ abstract final class AppTextStyles {
   /// Display/Serif font family - used for headings and hymn content
   static const String fontFamilyEBGaramond = 'EBGaramond';
 
+  /// Handwriting font - used for onboarding headlines and intimate accent text
+  static const String fontFamilyCaveat = 'Caveat';
+
+  /// Calligraphy font - used for decorative display and section titles
+  static const String fontFamilyDancingScript = 'DancingScript';
+
   // ============================================
   // DISPLAY TEXT STYLES (EB Garamond - Serif)
   // ============================================
@@ -195,5 +201,48 @@ abstract final class AppTextStyles {
         color: color ?? AppColors.primary400,
         height: 1.6,
         letterSpacing: 0.3,
+      );
+
+  // ============================================
+  // ONBOARDING / HANDWRITING TEXT STYLES
+  // ============================================
+
+  /// Single-word splash headline — "Abide." on the opening onboarding screen
+  static TextStyle onboardingSplash({Color? color}) => TextStyle(
+        fontFamily: fontFamilyCaveat,
+        fontSize: 72,
+        fontWeight: FontWeight.w700,
+        color: color ?? AppColors.primary,
+        height: 1.0,
+        letterSpacing: -1.0,
+      );
+
+  /// Onboarding subtitle / tagline in Caveat
+  static TextStyle onboardingSubtitle({Color? color}) => TextStyle(
+        fontFamily: fontFamilyCaveat,
+        fontSize: 24,
+        fontWeight: FontWeight.w400,
+        color: color ?? AppColors.neutral500,
+        height: 1.4,
+        letterSpacing: 0.2,
+      );
+
+  /// Section title accent in Dancing Script — decorative, used sparingly
+  static TextStyle accentTitle({Color? color}) => TextStyle(
+        fontFamily: fontFamilyDancingScript,
+        fontSize: 32,
+        fontWeight: FontWeight.w600,
+        color: color ?? AppColors.secondary,
+        height: 1.3,
+        letterSpacing: 0.5,
+      );
+
+  /// Small handwriting label — e.g. "verse 1", category tags
+  static TextStyle handwritingLabel({Color? color}) => TextStyle(
+        fontFamily: fontFamilyCaveat,
+        fontSize: 16,
+        fontWeight: FontWeight.w400,
+        color: color ?? AppColors.neutral500,
+        height: 1.5,
       );
 }

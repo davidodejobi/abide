@@ -88,3 +88,11 @@ flutter:
           weight: 300
         - asset: assets/fonts/Geist-Thin.ttf
           weight: 100
+
+    - family: Caveat
+      fonts:
+        - asset: assets/fonts/Caveat-Variable.ttf
+
+    - family: DancingScript
+      fonts:
+        - asset: assets/fonts/DancingScript-Variable.ttf
