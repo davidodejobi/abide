@@ -59,6 +59,9 @@ final tagsProvider = StreamProvider<List<Tag>>((ref) {
   return ref.watch(tabletsRepositoryProvider).watchTags();
 });
 
+/// The tag currently selected on the tablets tab; null means no tag filter.
+final activeTagProvider = StateProvider<String?>((ref) => null);
+
 /// Tags currently attached to a single tablet.
 final tagsForNoteProvider =
     StreamProvider.family<List<Tag>, String>((ref, noteId) {

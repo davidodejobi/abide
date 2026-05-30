@@ -12,6 +12,7 @@ import 'package:openbaptisthymnal/features/hymn/ui/widgets/search_bar_widget.dar
 import 'package:openbaptisthymnal/features/tablet/domain/tablet_preview.dart';
 import 'package:openbaptisthymnal/features/tablet/providers/tablets_providers.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/widgets/folder_picker_sheet.dart';
+import 'package:openbaptisthymnal/features/tablet/ui/widgets/tag_picker_sheet.dart';
 
 /// Tablets tab — the app's default landing screen. Lists the user's tablets and
 /// opens the editor for create/edit.
@@ -27,6 +28,14 @@ class TabletsTabScreen extends HookConsumerWidget {
     final searchQuery = useState('');
     final query = searchQuery.value.trim();
     final activeFolder = ref.watch(activeFolderProvider);
+    final activeTag = ref.watch(activeTagProvider);
+
+    Widget body() {
+      if (query.isNotEmpty) return _SearchResults(query: query);
+      if (activeTag != null) return _TagTabletsList(tagId: activeTag);
+      if (activeFolder != null) return _FolderTabletsList(folderId: activeFolder);
+      return const _TabletsList();
+    }
 
     return Column(
       children: [
@@ -58,14 +67,11 @@ class TabletsTabScreen extends HookConsumerWidget {
             onChanged: (value) => searchQuery.value = value,
           ),
         ),
-        if (query.isEmpty) const _FolderChips(),
-        Expanded(
-          child: query.isNotEmpty
-              ? _SearchResults(query: query)
-              : activeFolder == null
-                  ? const _TabletsList()
-                  : _FolderTabletsList(folderId: activeFolder),
-        ),
+        if (query.isEmpty) ...[
+          const _FolderChips(),
+          const _TagChips(),
+        ],
+        Expanded(child: body()),
       ],
     );
   }
@@ -81,13 +87,19 @@ class _FolderChips extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final foldersAsync = ref.watch(foldersProvider);
     final active = ref.watch(activeFolderProvider);
+    final tagActive = ref.watch(activeTagProvider) != null;
     final folders = foldersAsync.valueOrNull ?? const [];
+
+    void selectFolder(String? id) {
+      ref.read(activeTagProvider.notifier).state = null;
+      ref.read(activeFolderProvider.notifier).state = id;
+    }
 
     Future<void> createFolder() async {
       final name = await promptFolderName(context);
       if (name == null || name.isEmpty) return;
       final id = await ref.read(tabletsRepositoryProvider).createFolder(name);
-      ref.read(activeFolderProvider.notifier).state = id;
+      selectFolder(id);
     }
 
     Future<void> manageFolder(Folder folder) async {
@@ -135,16 +147,15 @@ class _FolderChips extends ConsumerWidget {
         children: [
           _Chip(
             label: 'All',
-            selected: active == null,
-            onTap: () => ref.read(activeFolderProvider.notifier).state = null,
+            selected: active == null && !tagActive,
+            onTap: () => selectFolder(null),
           ),
           for (final folder in folders) ...[
             const SizedBox(width: 10),
             _Chip(
               label: folder.name,
               selected: active == folder.id,
-              onTap: () =>
-                  ref.read(activeFolderProvider.notifier).state = folder.id,
+              onTap: () => selectFolder(folder.id),
               onLongPress: () => manageFolder(folder),
             ),
           ],
@@ -157,6 +168,86 @@ class _FolderChips extends ConsumerWidget {
 }
 
 enum _FolderAction { rename, delete }
+
+/// Horizontal tag filter: a chip per tag, shown only when tags exist. Tapping
+/// selects (or, if already active, clears) the tag filter; long-pressing opens
+/// rename/delete actions. Tags are created from the editor, not here. Hidden
+/// while searching.
+class _TagChips extends ConsumerWidget {
+  const _TagChips();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tagsAsync = ref.watch(tagsProvider);
+    final active = ref.watch(activeTagProvider);
+    final tags = tagsAsync.valueOrNull ?? const [];
+    if (tags.isEmpty) return const SizedBox.shrink();
+
+    void selectTag(String? id) {
+      ref.read(activeFolderProvider.notifier).state = null;
+      ref.read(activeTagProvider.notifier).state = id;
+    }
+
+    Future<void> manageTag(Tag tag) async {
+      final action = await showModalBottomSheet<_FolderAction>(
+        context: context,
+        builder: (context) => SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.drive_file_rename_outline),
+                title: const Text('Rename'),
+                onTap: () => Navigator.of(context).pop(_FolderAction.rename),
+              ),
+              ListTile(
+                leading: const Icon(Icons.delete_outline),
+                title: const Text('Delete tag'),
+                subtitle: const Text('Tablets are kept and untagged'),
+                onTap: () => Navigator.of(context).pop(_FolderAction.delete),
+              ),
+            ],
+          ),
+        ),
+      );
+      final repo = ref.read(tabletsRepositoryProvider);
+      if (action == _FolderAction.rename) {
+        if (!context.mounted) return;
+        final name = await promptTagName(context, initial: tag.name);
+        if (name != null && name.isNotEmpty) {
+          await repo.renameTag(tag.id, name);
+        }
+      } else if (action == _FolderAction.delete) {
+        await repo.deleteTag(tag.id);
+        if (active == tag.id) {
+          ref.read(activeTagProvider.notifier).state = null;
+        }
+      }
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: SizedBox(
+        height: 40,
+        child: ListView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          children: [
+            for (final tag in tags) ...[
+              _Chip(
+                label: '#${tag.name}',
+                selected: active == tag.id,
+                onTap: () => selectTag(active == tag.id ? null : tag.id),
+                onLongPress: () => manageTag(tag),
+              ),
+              const SizedBox(width: 10),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 class _Chip extends StatelessWidget {
   const _Chip({
@@ -220,6 +311,31 @@ class _FolderTabletsList extends ConsumerWidget {
       error: (err, _) => Center(child: Text('Could not load tablets: $err')),
       data: (tablets) {
         if (tablets.isEmpty) return const _EmptyFolder();
+        return ListView.separated(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
+          itemCount: tablets.length,
+          separatorBuilder: (_, __) => const Divider(height: 1),
+          itemBuilder: (context, index) => _TabletTile(tablet: tablets[index]),
+        );
+      },
+    );
+  }
+}
+
+/// Live list of tablets carrying the active tag.
+class _TagTabletsList extends ConsumerWidget {
+  const _TagTabletsList({required this.tagId});
+
+  final String tagId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tabletsAsync = ref.watch(notesWithTagProvider(tagId));
+    return tabletsAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (err, _) => Center(child: Text('Could not load tablets: $err')),
+      data: (tablets) {
+        if (tablets.isEmpty) return const _EmptyTag();
         return ListView.separated(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
           itemCount: tablets.length,
@@ -487,6 +603,40 @@ class _EmptyFolder extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             'Move tablets here from the editor',
+            style:
+                TextStyle(fontFamily: 'EBGaramond', fontSize: 15, color: color),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Empty state shown when the selected tag has no tablets.
+class _EmptyTag extends StatelessWidget {
+  const _EmptyTag();
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme.onSurfaceVariant;
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.label_off_outlined, size: 64, color: color),
+          const SizedBox(height: 12),
+          Text(
+            'Nothing tagged here',
+            style: TextStyle(
+              fontFamily: 'Geist',
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Add this tag to tablets from the editor',
             style:
                 TextStyle(fontFamily: 'EBGaramond', fontSize: 15, color: color),
           ),
