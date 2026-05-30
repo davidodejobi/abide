@@ -9,6 +9,7 @@ final tabletsLocalSourceProvider = Provider<TabletsLocalSource>((ref) {
   return TabletsLocalSource(
     ref.watch(notesDaoProvider),
     ref.watch(noteLinksDaoProvider),
+    ref.watch(foldersDaoProvider),
   );
 });
 
@@ -36,6 +37,20 @@ final outgoingLinksProvider =
 final backlinksProvider =
     StreamProvider.family<List<Note>, String>((ref, title) {
   return ref.watch(tabletsRepositoryProvider).watchBacklinks(title);
+});
+
+/// All folders, sorted by name, for the filter chips and the move picker.
+final foldersProvider = StreamProvider<List<Folder>>((ref) {
+  return ref.watch(tabletsRepositoryProvider).watchFolders();
+});
+
+/// The folder currently selected on the tablets tab; null means "All".
+final activeFolderProvider = StateProvider<String?>((ref) => null);
+
+/// Live list of tablets in a single folder, newest edit first.
+final tabletsInFolderProvider =
+    StreamProvider.family<List<Note>, String>((ref, folderId) {
+  return ref.watch(tabletsRepositoryProvider).watchNotesInFolder(folderId);
 });
 
 /// Debounced full-text search over tablets, keyed by the raw query string.

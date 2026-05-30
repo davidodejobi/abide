@@ -24,6 +24,21 @@ class TabletsRepository {
   Future<List<NoteSearchHit>> searchNotes(String query) =>
       _local.searchNotes(query);
 
+  Stream<List<Folder>> watchFolders() => _local.watchFolders();
+
+  Stream<List<Note>> watchNotesInFolder(String folderId) =>
+      _local.watchNotesInFolder(folderId);
+
+  Future<String> createFolder(String name) => _local.createFolder(name);
+
+  Future<void> renameFolder(String id, String name) =>
+      _local.renameFolder(id, name);
+
+  Future<void> deleteFolder(String id) => _local.deleteFolder(id);
+
+  Future<void> moveNoteToFolder(String noteId, String? folderId) =>
+      _local.moveNoteToFolder(noteId, folderId);
+
   Future<String> createNote({String title = '', String contentMarkdown = ''}) =>
       _local.createNote(title: title, contentMarkdown: contentMarkdown);
 

@@ -1,6 +1,7 @@
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:openbaptisthymnal/core/storage/database/app_database.dart';
+import 'package:openbaptisthymnal/core/storage/database/daos/folders_dao.dart';
 import 'package:openbaptisthymnal/core/storage/database/daos/note_links_dao.dart';
 import 'package:openbaptisthymnal/core/storage/database/daos/notes_dao.dart';
 import 'package:openbaptisthymnal/features/tablet/data/repositories/tablets_repository.dart';
@@ -15,7 +16,9 @@ void main() {
 
   setUp(() {
     db = AppDatabase.forTesting(NativeDatabase.memory());
-    repo = TabletsRepository(TabletsLocalSource(NotesDao(db), NoteLinksDao(db)));
+    repo = TabletsRepository(
+      TabletsLocalSource(NotesDao(db), NoteLinksDao(db), FoldersDao(db)),
+    );
   });
 
   tearDown(() => db.close());
