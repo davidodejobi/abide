@@ -1,9 +1,19 @@
 import 'package:drift/drift.dart';
 
 import '../app_database.dart';
+import '../fts_query.dart';
 import '../tables.dart';
 
 part 'notes_dao.g.dart';
+
+/// A single full-text search result: the matched note plus a highlighted text
+/// snippet (with `[` … `]` around the matched terms) for the results list.
+class NoteSearchHit {
+  const NoteSearchHit({required this.note, required this.snippet});
+
+  final Note note;
+  final String snippet;
+}
 
 @DriftAccessor(tables: [Notes])
 class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
@@ -25,6 +35,32 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
 
   Future<void> upsertNote(NotesCompanion note) =>
       into(notes).insertOnConflictUpdate(note);
+
+  /// Full-text search over active notes' title + body, best match first.
+  /// Returns an empty list for blank input. The snippet is drawn from the body
+  /// (with the title as fallback) and wraps matches in `[` … `]`.
+  Future<List<NoteSearchHit>> searchNotes(String query) async {
+    final match = buildFtsMatchQuery(query);
+    if (match.isEmpty) return const [];
+
+    final rows = await customSelect(
+      'SELECT n.*, '
+      "snippet(notes_fts, 2, '[', ']', '…', 12) AS snippet "
+      'FROM notes_fts f '
+      'JOIN notes n ON n.id = f.note_id '
+      'WHERE notes_fts MATCH ? AND n.is_deleted = 0 '
+      'ORDER BY bm25(notes_fts)',
+      variables: [Variable<String>(match)],
+      readsFrom: {notes},
+    ).get();
+
+    return rows
+        .map((row) => NoteSearchHit(
+              note: notes.map(row.data),
+              snippet: row.read<String>('snippet'),
+            ))
+        .toList();
+  }
 
   Future<void> softDelete(String id) =>
       (update(notes)..where((t) => t.id.equals(id))).write(

@@ -35,14 +35,14 @@ class NoteLinksSheet extends ConsumerWidget {
           children: [
             _SectionHeader('Links', count: outgoing.length),
             if (outgoing.isEmpty)
-              const _Hint('Use [[Note Title]], [[hymn:hymn_0001]] or '
+              const _Hint('Use [[Tablet Title]], [[hymn:hymn_0001]] or '
                   '[[bible:JHN.3.16]] to link.')
             else
               ...outgoing.map((l) => _OutgoingTile(link: l)),
             const SizedBox(height: 20),
             _BacklinksSection(title: title),
             if (title.trim().isEmpty)
-              const _Hint('Give this note a title to receive backlinks.'),
+              const _Hint('Give this tablet a title to receive backlinks.'),
             const SizedBox(height: 8),
             Text(
               'Tip: backlinks match on title.',
@@ -123,7 +123,7 @@ class _BacklinksSection extends ConsumerWidget {
       children: [
         _SectionHeader('Backlinks', count: backlinks.length),
         if (backlinks.isEmpty)
-          const _Hint('No other notes link here yet.')
+          const _Hint('No other tablets link here yet.')
         else
           ...backlinks.map(
             (n) => _LinkTile(

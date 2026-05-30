@@ -49,7 +49,7 @@ class TabletEditorPage extends HookConsumerWidget {
           data: (note) {
             if (note == null) {
               return const Scaffold(
-                body: Center(child: Text('Note not found')),
+                body: Center(child: Text('Tablet not found')),
               );
             }
             // Keyed by id so the editor mounts once per note and ignores later

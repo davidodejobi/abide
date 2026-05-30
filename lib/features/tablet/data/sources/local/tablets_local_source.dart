@@ -27,6 +27,9 @@ class TabletsLocalSource {
   Stream<List<Note>> watchBacklinks(String title) =>
       _linksDao.watchBacklinks(title);
 
+  Future<List<NoteSearchHit>> searchNotes(String query) =>
+      _dao.searchNotes(query);
+
   /// Inserts a new note and returns its generated id.
   Future<String> createNote({
     String title = '',

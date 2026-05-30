@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openbaptisthymnal/core/storage/database/app_database.dart';
+import 'package:openbaptisthymnal/core/storage/database/daos/notes_dao.dart';
 import 'package:openbaptisthymnal/core/storage/database/database_provider.dart';
 import 'package:openbaptisthymnal/features/tablet/data/repositories/tablets_repository.dart';
 import 'package:openbaptisthymnal/features/tablet/data/sources/local/tablets_local_source.dart';
@@ -36,3 +37,21 @@ final backlinksProvider =
     StreamProvider.family<List<Note>, String>((ref, title) {
   return ref.watch(tabletsRepositoryProvider).watchBacklinks(title);
 });
+
+/// Debounced full-text search over tablets, keyed by the raw query string.
+/// Auto-disposes so superseded queries are cancelled: when the query changes,
+/// the previous keystroke's provider is disposed and its pending debounce bails
+/// out before hitting the database. Blank queries short-circuit to no results.
+final tabletSearchProvider =
+    FutureProvider.autoDispose.family<List<NoteSearchHit>, String>(
+  (ref, query) async {
+    if (query.trim().isEmpty) return const [];
+
+    var cancelled = false;
+    ref.onDispose(() => cancelled = true);
+    await Future<void>.delayed(const Duration(milliseconds: 250));
+    if (cancelled) return const [];
+
+    return ref.watch(tabletsRepositoryProvider).searchNotes(query);
+  },
+);

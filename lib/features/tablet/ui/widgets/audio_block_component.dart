@@ -166,7 +166,7 @@ class _AudioBlockComponentWidgetState extends State<AudioBlockComponentWidget>
                     height: 40,
                     child: Center(
                       child: Text(
-                        'Voice note',
+                        'Voice tablet',
                         style: TextStyle(
                           fontFamily: 'Geist',
                           color: theme.colorScheme.onSurfaceVariant,
