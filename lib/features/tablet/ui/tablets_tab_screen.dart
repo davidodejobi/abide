@@ -11,6 +11,7 @@ import 'package:openbaptisthymnal/core/theme/app_text_styles.dart';
 import 'package:openbaptisthymnal/features/hymn/ui/widgets/search_bar_widget.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/tablet_preview.dart';
 import 'package:openbaptisthymnal/features/tablet/providers/tablets_providers.dart';
+import 'package:openbaptisthymnal/features/tablet/ui/widgets/tablet_filter_sheet.dart';
 
 /// Tablets tab — the app's default landing screen. Lists the user's tablets and
 /// opens the editor for create/edit.
@@ -25,6 +26,16 @@ class TabletsTabScreen extends HookConsumerWidget {
     final searchController = useTextEditingController();
     final searchQuery = useState('');
     final query = searchQuery.value.trim();
+    final activeFolder = ref.watch(activeFolderProvider);
+    final activeTag = ref.watch(activeTagProvider);
+    final hasFilter = activeFolder != null || activeTag != null;
+
+    Widget body() {
+      if (query.isNotEmpty) return _SearchResults(query: query);
+      if (activeTag != null) return _TagTabletsList(tagId: activeTag);
+      if (activeFolder != null) return _FolderTabletsList(folderId: activeFolder);
+      return const _TabletsList();
+    }
 
     return Column(
       children: [
@@ -40,6 +51,26 @@ class TabletsTabScreen extends HookConsumerWidget {
                   ),
                 ),
               ),
+              if (query.isEmpty)
+                IconButton(
+                  icon: Icon(
+                    hasFilter ? Icons.filter_list : Icons.filter_list_outlined,
+                    color: hasFilter
+                        ? Theme.of(context).colorScheme.primary
+                        : null,
+                  ),
+                  tooltip: 'Filter tablets',
+                  onPressed: () => showModalBottomSheet<void>(
+                    context: context,
+                    showDragHandle: true,
+                    isScrollControlled: true,
+                    useSafeArea: true,
+                    constraints: BoxConstraints(
+                      maxHeight: MediaQuery.of(context).size.height * 0.9,
+                    ),
+                    builder: (_) => const TabletFilterSheet(),
+                  ),
+                ),
               IconButton(
                 icon: const Icon(Icons.add),
                 tooltip: 'New tablet',
@@ -56,12 +87,111 @@ class TabletsTabScreen extends HookConsumerWidget {
             onChanged: (value) => searchQuery.value = value,
           ),
         ),
-        Expanded(
-          child: query.isEmpty
-              ? const _TabletsList()
-              : _SearchResults(query: query),
-        ),
+        if (query.isEmpty && hasFilter) const _ActiveFilterBar(),
+        Expanded(child: body()),
       ],
+    );
+  }
+}
+
+/// A dismissible strip naming the active folder/tag filter so the user can see
+/// what's narrowing the list now that the chip rows are gone, and clear it.
+class _ActiveFilterBar extends ConsumerWidget {
+  const _ActiveFilterBar();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final scheme = Theme.of(context).colorScheme;
+    final activeFolder = ref.watch(activeFolderProvider);
+    final activeTag = ref.watch(activeTagProvider);
+
+    String? label;
+    if (activeTag != null) {
+      final tag = (ref.watch(tagsProvider).valueOrNull ?? const [])
+          .where((t) => t.id == activeTag)
+          .firstOrNull;
+      if (tag != null) label = '#${tag.name}';
+    } else if (activeFolder != null) {
+      final folder = (ref.watch(foldersProvider).valueOrNull ?? const [])
+          .where((f) => f.id == activeFolder)
+          .firstOrNull;
+      if (folder != null) label = folder.name;
+    }
+    if (label == null) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: InputChip(
+          label: Text(label),
+          avatar: Icon(
+            activeTag != null ? Icons.label_outline : Icons.folder_outlined,
+            size: 18,
+          ),
+          backgroundColor: scheme.primaryContainer,
+          labelStyle: TextStyle(
+            color: scheme.onPrimaryContainer,
+            fontFamily: 'Geist',
+            fontWeight: FontWeight.w600,
+          ),
+          deleteIconColor: scheme.onPrimaryContainer,
+          onDeleted: () {
+            ref.read(activeFolderProvider.notifier).state = null;
+            ref.read(activeTagProvider.notifier).state = null;
+          },
+        ),
+      ),
+    );
+  }
+}
+
+/// Live list of tablets in the active folder.
+class _FolderTabletsList extends ConsumerWidget {
+  const _FolderTabletsList({required this.folderId});
+
+  final String folderId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tabletsAsync = ref.watch(tabletsInFolderProvider(folderId));
+    return tabletsAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (err, _) => Center(child: Text('Could not load tablets: $err')),
+      data: (tablets) {
+        if (tablets.isEmpty) return const _EmptyFolder();
+        return ListView.separated(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
+          itemCount: tablets.length,
+          separatorBuilder: (_, __) => const Divider(height: 1),
+          itemBuilder: (context, index) => _TabletTile(tablet: tablets[index]),
+        );
+      },
+    );
+  }
+}
+
+/// Live list of tablets carrying the active tag.
+class _TagTabletsList extends ConsumerWidget {
+  const _TagTabletsList({required this.tagId});
+
+  final String tagId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tabletsAsync = ref.watch(notesWithTagProvider(tagId));
+    return tabletsAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (err, _) => Center(child: Text('Could not load tablets: $err')),
+      data: (tablets) {
+        if (tablets.isEmpty) return const _EmptyTag();
+        return ListView.separated(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
+          itemCount: tablets.length,
+          separatorBuilder: (_, __) => const Divider(height: 1),
+          itemBuilder: (context, index) => _TabletTile(tablet: tablets[index]),
+        );
+      },
     );
   }
 }
@@ -239,25 +369,91 @@ class _TabletTile extends ConsumerWidget {
             fontSize: 16,
           ),
         ),
-        subtitle: preview.isEmpty
-            ? ((imagePath == null && !hasAudio)
-                ? null
-                : Text(
-                    hasAudio ? 'Voice tablet' : 'Photo',
-                    style: TextStyle(
-                      fontFamily: 'EBGaramond',
-                      fontSize: 15,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ))
-            : Text(
-                preview,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontFamily: 'EBGaramond', fontSize: 15),
-              ),
+        subtitle: _TabletSubtitle(
+          noteId: tablet.id,
+          preview: preview,
+          hasAudio: hasAudio,
+          hasImage: imagePath != null,
+        ),
         onTap: () => context.router.push(TabletEditorRoute(noteId: tablet.id)),
       ),
+    );
+  }
+}
+
+/// Tablet tile subtitle: preview text (or a media label) above a wrap of the
+/// tablet's tags. Tags are watched per tile, so attaching/removing one in the
+/// editor reflects here live.
+class _TabletSubtitle extends ConsumerWidget {
+  const _TabletSubtitle({
+    required this.noteId,
+    required this.preview,
+    required this.hasAudio,
+    required this.hasImage,
+  });
+
+  final String noteId;
+  final String preview;
+  final bool hasAudio;
+  final bool hasImage;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final scheme = Theme.of(context).colorScheme;
+    final tags = ref.watch(tagsForNoteProvider(noteId)).valueOrNull ?? const [];
+
+    Widget? primary;
+    if (preview.isNotEmpty) {
+      primary = Text(
+        preview,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(fontFamily: 'EBGaramond', fontSize: 15),
+      );
+    } else if (hasAudio || hasImage) {
+      primary = Text(
+        hasAudio ? 'Voice tablet' : 'Photo',
+        style: TextStyle(
+          fontFamily: 'EBGaramond',
+          fontSize: 15,
+          color: scheme.onSurfaceVariant,
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (primary != null) primary,
+        if (tags.isNotEmpty)
+          Padding(
+            padding: EdgeInsets.only(top: primary != null ? 6 : 2),
+            child: Wrap(
+              spacing: 6,
+              runSpacing: 4,
+              children: [
+                for (final tag in tags)
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: scheme.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      '#${tag.name}',
+                      style: TextStyle(
+                        fontFamily: 'Geist',
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+      ],
     );
   }
 }
@@ -292,6 +488,74 @@ class _TabletThumbnail extends StatelessWidget {
                   ),
                 ),
               ),
+      ),
+    );
+  }
+}
+
+/// Empty state shown when the selected folder has no tablets.
+class _EmptyFolder extends StatelessWidget {
+  const _EmptyFolder();
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme.onSurfaceVariant;
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.folder_open_outlined, size: 64, color: color),
+          const SizedBox(height: 12),
+          Text(
+            'This folder is empty',
+            style: TextStyle(
+              fontFamily: 'Geist',
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Move tablets here from the editor',
+            style:
+                TextStyle(fontFamily: 'EBGaramond', fontSize: 15, color: color),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Empty state shown when the selected tag has no tablets.
+class _EmptyTag extends StatelessWidget {
+  const _EmptyTag();
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme.onSurfaceVariant;
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.label_off_outlined, size: 64, color: color),
+          const SizedBox(height: 12),
+          Text(
+            'Nothing tagged here',
+            style: TextStyle(
+              fontFamily: 'Geist',
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Add this tag to tablets from the editor',
+            style:
+                TextStyle(fontFamily: 'EBGaramond', fontSize: 15, color: color),
+          ),
+        ],
       ),
     );
   }

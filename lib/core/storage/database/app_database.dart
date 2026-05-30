@@ -7,8 +7,10 @@ import 'package:path_provider/path_provider.dart';
 import 'package:sqlite3/sqlite3.dart';
 import 'package:sqlite3_flutter_libs/sqlite3_flutter_libs.dart';
 
+import 'daos/folders_dao.dart';
 import 'daos/note_links_dao.dart';
 import 'daos/notes_dao.dart';
+import 'daos/tags_dao.dart';
 import 'tables.dart';
 
 part 'app_database.g.dart';
@@ -23,7 +25,7 @@ part 'app_database.g.dart';
     Attachments,
     BibleAnnotations,
   ],
-  daos: [NotesDao, NoteLinksDao],
+  daos: [NotesDao, NoteLinksDao, FoldersDao, TagsDao],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
