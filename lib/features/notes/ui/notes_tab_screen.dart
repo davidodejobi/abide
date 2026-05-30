@@ -75,6 +75,7 @@ class _NoteTile extends ConsumerWidget {
     final title = note.title.trim().isEmpty ? 'Untitled' : note.title.trim();
     final preview = notePreviewText(note.contentMarkdown);
     final imagePath = notePreviewImage(note.contentMarkdown);
+    final hasAudio = imagePath == null && noteHasAudio(note.contentMarkdown);
 
     return Dismissible(
       key: ValueKey(note.id),
@@ -91,7 +92,22 @@ class _NoteTile extends ConsumerWidget {
       onDismissed: (_) => ref.read(notesRepositoryProvider).deleteNote(note.id),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(vertical: 6),
-        leading: imagePath == null ? null : _NoteThumbnail(path: imagePath),
+        leading: imagePath != null
+            ? _NoteThumbnail(path: imagePath)
+            : hasAudio
+                ? Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.mic_none,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  )
+                : null,
         title: Text(
           title,
           maxLines: 1,
@@ -103,10 +119,10 @@ class _NoteTile extends ConsumerWidget {
           ),
         ),
         subtitle: preview.isEmpty
-            ? (imagePath == null
+            ? ((imagePath == null && !hasAudio)
                 ? null
                 : Text(
-                    'Photo',
+                    hasAudio ? 'Voice note' : 'Photo',
                     style: TextStyle(
                       fontFamily: 'EBGaramond',
                       fontSize: 15,

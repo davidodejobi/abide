@@ -48,6 +48,11 @@ void main() {
     expect(roundTrip(md), md);
   });
 
+  test('audio clips (image nodes pointing at audio) round-trip untouched', () {
+    const md = '![](note_audio/abc.m4a)';
+    expect(roundTrip(md), md);
+  });
+
   test('wikilinks stay parseable by the link graph after a round-trip', () {
     const md = 'See [[Grace]], [[hymn:hymn_0001]] and [[bible:JHN.3.16]].';
     final links = parseLinks(roundTrip(md));

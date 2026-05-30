@@ -1,4 +1,5 @@
 import 'package:openbaptisthymnal/core/utils/services/file_storage_service.dart';
+import 'package:openbaptisthymnal/features/notes/domain/note_media.dart';
 
 /// Helpers that turn a note's raw markdown into list-friendly previews, so the
 /// Tablets list shows readable text and thumbnails instead of leaking syntax
@@ -40,17 +41,24 @@ String notePreviewText(String markdown) {
   return '';
 }
 
-/// The first image in a note resolved to an absolute path for `Image.file`, or
-/// an external URL as-is. `null` when the note has no image. Used for the list
-/// thumbnail.
+/// The first *image* in a note resolved to an absolute path for `Image.file`,
+/// or an external URL as-is. `null` when the note has no image. Audio clips are
+/// stored as image nodes too, so they're skipped here (see [noteHasAudio]).
 String? notePreviewImage(String markdown) {
-  final match = _image.firstMatch(markdown);
-  if (match == null) return null;
-  final url = match.group(1)!;
-  if (url.startsWith('http://') ||
-      url.startsWith('https://') ||
-      url.startsWith('data:')) {
-    return url;
+  for (final match in _image.allMatches(markdown)) {
+    final url = match.group(1)!;
+    if (isAudioPath(url)) continue;
+    if (url.startsWith('http://') ||
+        url.startsWith('https://') ||
+        url.startsWith('data:')) {
+      return url;
+    }
+    return FileStorageService.absolutePath(url);
   }
-  return FileStorageService.absolutePath(url);
+  return null;
 }
+
+/// Whether the note contains at least one audio clip. Used to show a voice-note
+/// marker in the list when there's no image thumbnail to display.
+bool noteHasAudio(String markdown) =>
+    _image.allMatches(markdown).any((m) => isAudioPath(m.group(1)!));

@@ -14,6 +14,8 @@ import 'package:openbaptisthymnal/features/notes/domain/link_autocomplete.dart';
 import 'package:openbaptisthymnal/features/notes/domain/note_markdown_codec.dart';
 import 'package:openbaptisthymnal/features/notes/domain/parse_links.dart';
 import 'package:openbaptisthymnal/features/notes/providers/notes_providers.dart';
+import 'package:openbaptisthymnal/features/notes/ui/widgets/audio_block_component.dart';
+import 'package:openbaptisthymnal/features/notes/ui/widgets/audio_recorder_sheet.dart';
 import 'package:openbaptisthymnal/features/notes/ui/widgets/link_suggestions.dart';
 import 'package:openbaptisthymnal/features/notes/ui/widgets/note_links_sheet.dart';
 
@@ -225,6 +227,29 @@ class _NoteEditorView extends HookConsumerWidget {
       );
     }
 
+    Future<void> insertAudio() async {
+      final sel = editorState.selection;
+      final tempPath = await showModalBottomSheet<String>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: theme.colorScheme.surface,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        builder: (_) => const AudioRecorderSheet(),
+      );
+      if (tempPath == null) return;
+      // Audio clips live as image nodes pointing at an audio file; the custom
+      // block builder renders them as a player (see MediaBlockComponentBuilder).
+      final relativePath = await ref
+          .read(fileStorageServiceProvider)
+          .persistFile(tempPath, bucket: 'note_audio');
+      if (sel != null) editorState.selection = sel;
+      await editorState.insertImageNode(
+        FileStorageService.absolutePath(relativePath),
+      );
+    }
+
     // Style every `[[...]]` token gold + underlined and make it tappable.
     // `before` already carries the run's bold/italic styling, so we reuse its
     // style as the base and only recolour the link spans.
@@ -341,6 +366,7 @@ class _NoteEditorView extends HookConsumerWidget {
       dividerMobileToolbarItem,
       actionItem(Icons.link, insertLinkToken),
       actionItem(Icons.image_outlined, insertImage),
+      actionItem(Icons.mic_none, insertAudio),
     ];
 
     return PopScope(
@@ -398,6 +424,10 @@ class _NoteEditorView extends HookConsumerWidget {
                   editorStyle: editorStyle,
                   autoFocus: noteId == null,
                   header: titleField,
+                  blockComponentBuilders: {
+                    ...standardBlockComponentBuilderMap,
+                    ImageBlockKeys.type: MediaBlockComponentBuilder(),
+                  },
                 ),
                 if (linkQuery.value != null)
                   Positioned(
