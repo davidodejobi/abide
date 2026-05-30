@@ -11,14 +11,14 @@ import 'package:openbaptisthymnal/core/router/app_router.dart';
 import 'package:openbaptisthymnal/core/theme/app_colors.dart';
 import 'package:openbaptisthymnal/core/theme/font_scale_provider.dart';
 import 'package:openbaptisthymnal/core/utils/services/file_storage_service.dart';
-import 'package:openbaptisthymnal/features/notes/domain/link_autocomplete.dart';
-import 'package:openbaptisthymnal/features/notes/domain/note_markdown_codec.dart';
-import 'package:openbaptisthymnal/features/notes/domain/parse_links.dart';
-import 'package:openbaptisthymnal/features/notes/providers/notes_providers.dart';
-import 'package:openbaptisthymnal/features/notes/ui/widgets/audio_block_component.dart';
-import 'package:openbaptisthymnal/features/notes/ui/widgets/audio_recorder_sheet.dart';
-import 'package:openbaptisthymnal/features/notes/ui/widgets/link_suggestions.dart';
-import 'package:openbaptisthymnal/features/notes/ui/widgets/note_links_sheet.dart';
+import 'package:openbaptisthymnal/features/tablet/domain/link_autocomplete.dart';
+import 'package:openbaptisthymnal/features/tablet/domain/tablet_markdown_codec.dart';
+import 'package:openbaptisthymnal/features/tablet/domain/parse_links.dart';
+import 'package:openbaptisthymnal/features/tablet/providers/tablets_providers.dart';
+import 'package:openbaptisthymnal/features/tablet/ui/widgets/audio_block_component.dart';
+import 'package:openbaptisthymnal/features/tablet/ui/widgets/audio_recorder_sheet.dart';
+import 'package:openbaptisthymnal/features/tablet/ui/widgets/link_suggestions.dart';
+import 'package:openbaptisthymnal/features/tablet/ui/widgets/tablet_links_sheet.dart';
 
 /// Create / edit a single note. Markdown is the source of truth; the body is
 /// edited in an [AppFlowyEditor] document and converted back to markdown on
@@ -29,8 +29,8 @@ import 'package:openbaptisthymnal/features/notes/ui/widgets/note_links_sheet.dar
 /// (async for existing notes) before mounting [_NoteEditorView], because an
 /// [EditorState]'s document is final and must be seeded once, up front.
 @RoutePage()
-class NoteEditorPage extends HookConsumerWidget {
-  const NoteEditorPage({super.key, this.noteId});
+class TabletEditorPage extends HookConsumerWidget {
+  const TabletEditorPage({super.key, this.noteId});
 
   final String? noteId;
 
@@ -45,7 +45,7 @@ class NoteEditorPage extends HookConsumerWidget {
       );
     }
 
-    return ref.watch(noteByIdProvider(noteId!)).maybeWhen(
+    return ref.watch(tabletByIdProvider(noteId!)).maybeWhen(
           data: (note) {
             if (note == null) {
               return const Scaffold(
@@ -108,7 +108,7 @@ class _NoteEditorView extends HookConsumerWidget {
             const SnackBar(content: Text('Bible reading is coming soon.')),
           );
         case NoteLinkType.note:
-          final notes = ref.read(notesListProvider).valueOrNull ?? [];
+          final notes = ref.read(tabletsListProvider).valueOrNull ?? [];
           final match = notes
               .where(
                   (n) => n.title.toLowerCase() == link.targetKey.toLowerCase())
@@ -116,12 +116,12 @@ class _NoteEditorView extends HookConsumerWidget {
           // Obsidian-style: linking to a note that doesn't exist yet creates
           // it from the link text, then opens it.
           final targetId = match?.id ??
-              await ref.read(notesRepositoryProvider).createNote(
+              await ref.read(tabletsRepositoryProvider).createNote(
                     title: link.display,
                     contentMarkdown: '',
                   );
           if (!context.mounted) return;
-          context.router.push(NoteEditorRoute(noteId: targetId));
+          context.router.push(TabletEditorRoute(noteId: targetId));
       }
     }
 
@@ -130,7 +130,7 @@ class _NoteEditorView extends HookConsumerWidget {
       final body = noteDocumentToMarkdown(editorState.document);
       if (title.isEmpty && body.trim().isEmpty) return;
 
-      final repo = ref.read(notesRepositoryProvider);
+      final repo = ref.read(tabletsRepositoryProvider);
       final id = currentId.value;
       if (id == null) {
         currentId.value = await repo.createNote(

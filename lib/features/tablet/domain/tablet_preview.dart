@@ -1,5 +1,5 @@
 import 'package:openbaptisthymnal/core/utils/services/file_storage_service.dart';
-import 'package:openbaptisthymnal/features/notes/domain/note_media.dart';
+import 'package:openbaptisthymnal/features/tablet/domain/tablet_media.dart';
 
 /// Helpers that turn a note's raw markdown into list-friendly previews, so the
 /// Tablets list shows readable text and thumbnails instead of leaking syntax

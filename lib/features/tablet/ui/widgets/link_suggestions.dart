@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:openbaptisthymnal/features/hymn/ui/viewmodels/hymns_viewmodel.dart';
-import 'package:openbaptisthymnal/features/notes/providers/notes_providers.dart';
+import 'package:openbaptisthymnal/features/tablet/providers/tablets_providers.dart';
 
 /// Floating autocomplete list for `[[` link tokens. Matches existing notes by
 /// title and hymns by number/title; tapping a row inserts the closed token via
@@ -23,7 +23,7 @@ class LinkSuggestions extends ConsumerWidget {
     final theme = Theme.of(context);
     final q = query.trim().toLowerCase();
 
-    final notes = (ref.watch(notesListProvider).valueOrNull ?? [])
+    final notes = (ref.watch(tabletsListProvider).valueOrNull ?? [])
         .where((n) => n.id != currentNoteId && n.title.trim().isNotEmpty)
         .where((n) => q.isEmpty || n.title.toLowerCase().contains(q))
         .take(4)

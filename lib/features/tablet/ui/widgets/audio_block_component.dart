@@ -2,7 +2,7 @@ import 'package:appflowy_editor/appflowy_editor.dart';
 import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:flutter/material.dart';
 import 'package:openbaptisthymnal/core/utils/services/file_storage_service.dart';
-import 'package:openbaptisthymnal/features/notes/domain/note_media.dart';
+import 'package:openbaptisthymnal/features/tablet/domain/tablet_media.dart';
 
 /// Audio clips are persisted as ordinary `image` nodes whose url points at an
 /// audio file (see [isAudioPath]). This builder intercepts the standard `image`

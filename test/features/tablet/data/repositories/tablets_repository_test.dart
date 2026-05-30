@@ -3,19 +3,19 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:openbaptisthymnal/core/storage/database/app_database.dart';
 import 'package:openbaptisthymnal/core/storage/database/daos/note_links_dao.dart';
 import 'package:openbaptisthymnal/core/storage/database/daos/notes_dao.dart';
-import 'package:openbaptisthymnal/features/notes/data/repositories/notes_repository.dart';
-import 'package:openbaptisthymnal/features/notes/data/sources/local/notes_local_source.dart';
+import 'package:openbaptisthymnal/features/tablet/data/repositories/tablets_repository.dart';
+import 'package:openbaptisthymnal/features/tablet/data/sources/local/tablets_local_source.dart';
 
 // Exercises the notes data layer (repository -> local source -> Drift DAO)
 // against an in-memory SQLite database, so create/read/update/soft-delete and
 // the active-notes ordering are verified end to end.
 void main() {
   late AppDatabase db;
-  late NotesRepository repo;
+  late TabletsRepository repo;
 
   setUp(() {
     db = AppDatabase.forTesting(NativeDatabase.memory());
-    repo = NotesRepository(NotesLocalSource(NotesDao(db), NoteLinksDao(db)));
+    repo = TabletsRepository(TabletsLocalSource(NotesDao(db), NoteLinksDao(db)));
   });
 
   tearDown(() => db.close());

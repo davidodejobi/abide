@@ -7,20 +7,20 @@ import 'package:openbaptisthymnal/core/storage/database/app_database.dart';
 import 'dart:io';
 
 import 'package:openbaptisthymnal/core/theme/app_text_styles.dart';
-import 'package:openbaptisthymnal/features/notes/domain/note_preview.dart';
-import 'package:openbaptisthymnal/features/notes/providers/notes_providers.dart';
+import 'package:openbaptisthymnal/features/tablet/domain/tablet_preview.dart';
+import 'package:openbaptisthymnal/features/tablet/providers/tablets_providers.dart';
 
 /// Notes tab — the app's default landing screen. Lists the user's notes and
 /// opens the editor for create/edit.
 @RoutePage()
-class NotesTabScreen extends HookConsumerWidget {
-  const NotesTabScreen({super.key});
+class TabletsTabScreen extends HookConsumerWidget {
+  const TabletsTabScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     useAutomaticKeepAlive();
 
-    final notesAsync = ref.watch(notesListProvider);
+    final notesAsync = ref.watch(tabletsListProvider);
 
     return Column(
       children: [
@@ -39,7 +39,7 @@ class NotesTabScreen extends HookConsumerWidget {
               IconButton(
                 icon: const Icon(Icons.add),
                 tooltip: 'New tablet',
-                onPressed: () => context.router.push(NoteEditorRoute()),
+                onPressed: () => context.router.push(TabletEditorRoute()),
               ),
             ],
           ),
@@ -89,7 +89,7 @@ class _NoteTile extends ConsumerWidget {
           color: Theme.of(context).colorScheme.onErrorContainer,
         ),
       ),
-      onDismissed: (_) => ref.read(notesRepositoryProvider).deleteNote(note.id),
+      onDismissed: (_) => ref.read(tabletsRepositoryProvider).deleteNote(note.id),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(vertical: 6),
         leading: imagePath != null
@@ -135,7 +135,7 @@ class _NoteTile extends ConsumerWidget {
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(fontFamily: 'EBGaramond', fontSize: 15),
               ),
-        onTap: () => context.router.push(NoteEditorRoute(noteId: note.id)),
+        onTap: () => context.router.push(TabletEditorRoute(noteId: note.id)),
       ),
     );
   }

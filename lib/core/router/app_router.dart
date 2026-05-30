@@ -4,8 +4,8 @@ import 'package:openbaptisthymnal/features/dashboard/ui/dashboard_screen.dart';
 import 'package:openbaptisthymnal/features/hymn/ui/favorites_tab_screen.dart';
 import 'package:openbaptisthymnal/features/hymn/ui/home_tab_screen.dart';
 import 'package:openbaptisthymnal/features/hymn/ui/hymn_detail_page.dart';
-import 'package:openbaptisthymnal/features/notes/ui/notes_tab_screen.dart';
-import 'package:openbaptisthymnal/features/notes/ui/pages/note_editor_page.dart';
+import 'package:openbaptisthymnal/features/tablet/ui/tablets_tab_screen.dart';
+import 'package:openbaptisthymnal/features/tablet/ui/pages/tablet_editor_page.dart';
 import 'package:openbaptisthymnal/features/onboarding/ui/onboarding_page.dart';
 import 'package:openbaptisthymnal/features/settings/ui/settings_tab_screen.dart';
 import 'package:openbaptisthymnal/features/share_card/ui/share_card_page.dart';
@@ -27,14 +27,14 @@ class AppRouter extends RootStackRouter {
           page: DashboardRoute.page,
           initial: true,
           children: [
-            AutoRoute(page: NotesTabRoute.page),
+            AutoRoute(page: TabletsTabRoute.page),
             AutoRoute(page: HomeTabRoute.page),
             AutoRoute(page: FavoritesTabRoute.page),
             AutoRoute(page: SettingsTabRoute.page),
           ],
         ),
         // Standalone routes (pushed on top of dashboard)
-        AutoRoute(page: NoteEditorRoute.page),
+        AutoRoute(page: TabletEditorRoute.page),
         AutoRoute(page: HymnDetailRoute.page),
         AutoRoute(page: ShareCardRoute.page),
         AutoRoute(page: OnboardingRoute.page),

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:openbaptisthymnal/features/notes/domain/parse_links.dart';
+import 'package:openbaptisthymnal/features/tablet/domain/parse_links.dart';
 
 void main() {
   group('parseLinks', () {

@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:openbaptisthymnal/features/notes/domain/note_markdown_codec.dart';
-import 'package:openbaptisthymnal/features/notes/domain/parse_links.dart';
+import 'package:openbaptisthymnal/features/tablet/domain/tablet_markdown_codec.dart';
+import 'package:openbaptisthymnal/features/tablet/domain/parse_links.dart';
 
 void main() {
   String roundTrip(String md) =>
