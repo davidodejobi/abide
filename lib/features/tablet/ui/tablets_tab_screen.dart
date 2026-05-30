@@ -64,6 +64,10 @@ class TabletsTabScreen extends HookConsumerWidget {
                     context: context,
                     showDragHandle: true,
                     isScrollControlled: true,
+                    useSafeArea: true,
+                    constraints: BoxConstraints(
+                      maxHeight: MediaQuery.of(context).size.height * 0.9,
+                    ),
                     builder: (_) => const TabletFilterSheet(),
                   ),
                 ),
