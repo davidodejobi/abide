@@ -8,8 +8,9 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:openbaptisthymnal/core/providers/service_providers.dart';
 import 'package:openbaptisthymnal/core/router/app_router.dart';
-import 'package:openbaptisthymnal/core/utils/services/file_storage_service.dart';
 import 'package:openbaptisthymnal/core/theme/app_colors.dart';
+import 'package:openbaptisthymnal/core/theme/font_scale_provider.dart';
+import 'package:openbaptisthymnal/core/utils/services/file_storage_service.dart';
 import 'package:openbaptisthymnal/features/notes/domain/link_autocomplete.dart';
 import 'package:openbaptisthymnal/features/notes/domain/note_markdown_codec.dart';
 import 'package:openbaptisthymnal/features/notes/domain/parse_links.dart';
@@ -85,6 +86,7 @@ class _NoteEditorView extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final textScale = ref.watch(fontScaleProvider).scale;
     final titleController = useTextEditingController(text: initialTitle);
     final currentId = useState<String?>(noteId);
     final createdAt = useRef<DateTime?>(initialCreatedAt);
@@ -305,7 +307,7 @@ class _NoteEditorView extends HookConsumerWidget {
       textStyleConfiguration: TextStyleConfiguration(
         text: TextStyle(
           fontFamily: 'Geist',
-          fontSize: 17,
+          fontSize: 17 * textScale,
           height: 1.55,
           color: theme.colorScheme.onSurface,
         ),
@@ -327,9 +329,9 @@ class _NoteEditorView extends HookConsumerWidget {
         controller: titleController,
         textCapitalization: TextCapitalization.sentences,
         maxLines: null,
-        style: const TextStyle(
+        style: TextStyle(
           fontFamily: 'Geist',
-          fontSize: 28,
+          fontSize: 28 * textScale,
           fontWeight: FontWeight.w700,
           height: 1.2,
         ),
@@ -337,7 +339,7 @@ class _NoteEditorView extends HookConsumerWidget {
           hintText: 'Title',
           hintStyle: TextStyle(
             fontFamily: 'Geist',
-            fontSize: 28,
+            fontSize: 28 * textScale,
             fontWeight: FontWeight.w700,
             color: theme.hintColor.withValues(alpha: 0.4),
           ),
