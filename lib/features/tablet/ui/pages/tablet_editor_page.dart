@@ -17,6 +17,7 @@ import 'package:openbaptisthymnal/features/tablet/domain/parse_links.dart';
 import 'package:openbaptisthymnal/features/tablet/providers/tablets_providers.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/widgets/audio_block_component.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/widgets/audio_recorder_sheet.dart';
+import 'package:openbaptisthymnal/features/tablet/ui/widgets/folder_picker_sheet.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/widgets/link_suggestions.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/widgets/tablet_links_sheet.dart';
 
@@ -385,6 +386,25 @@ class _NoteEditorView extends HookConsumerWidget {
             onPressed: () => context.router.maybePop(),
           ),
           actions: [
+            IconButton(
+              icon: const Icon(Icons.folder_outlined),
+              tooltip: 'Move to folder',
+              onPressed: () async {
+                await save();
+                final id = currentId.value;
+                if (id == null || !context.mounted) return;
+                showModalBottomSheet<void>(
+                  context: context,
+                  showDragHandle: true,
+                  backgroundColor: theme.colorScheme.surface,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius:
+                        BorderRadius.vertical(top: Radius.circular(20)),
+                  ),
+                  builder: (_) => FolderPickerSheet(noteId: id),
+                );
+              },
+            ),
             IconButton(
               icon: const Icon(Icons.account_tree_outlined),
               tooltip: 'Links & backlinks',

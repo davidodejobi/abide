@@ -11,6 +11,7 @@ import 'package:openbaptisthymnal/core/theme/app_text_styles.dart';
 import 'package:openbaptisthymnal/features/hymn/ui/widgets/search_bar_widget.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/tablet_preview.dart';
 import 'package:openbaptisthymnal/features/tablet/providers/tablets_providers.dart';
+import 'package:openbaptisthymnal/features/tablet/ui/widgets/folder_picker_sheet.dart';
 
 /// Tablets tab — the app's default landing screen. Lists the user's tablets and
 /// opens the editor for create/edit.
@@ -25,6 +26,7 @@ class TabletsTabScreen extends HookConsumerWidget {
     final searchController = useTextEditingController();
     final searchQuery = useState('');
     final query = searchQuery.value.trim();
+    final activeFolder = ref.watch(activeFolderProvider);
 
     return Column(
       children: [
@@ -56,12 +58,175 @@ class TabletsTabScreen extends HookConsumerWidget {
             onChanged: (value) => searchQuery.value = value,
           ),
         ),
+        if (query.isEmpty) const _FolderChips(),
         Expanded(
-          child: query.isEmpty
-              ? const _TabletsList()
-              : _SearchResults(query: query),
+          child: query.isNotEmpty
+              ? _SearchResults(query: query)
+              : activeFolder == null
+                  ? const _TabletsList()
+                  : _FolderTabletsList(folderId: activeFolder),
         ),
       ],
+    );
+  }
+}
+
+/// Horizontal folder filter: "All" plus a chip per folder and a trailing add
+/// chip. Tapping selects the active filter; long-pressing a folder opens
+/// rename/delete actions. Hidden while searching.
+class _FolderChips extends ConsumerWidget {
+  const _FolderChips();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final foldersAsync = ref.watch(foldersProvider);
+    final active = ref.watch(activeFolderProvider);
+    final folders = foldersAsync.valueOrNull ?? const [];
+
+    Future<void> createFolder() async {
+      final name = await promptFolderName(context);
+      if (name == null || name.isEmpty) return;
+      final id = await ref.read(tabletsRepositoryProvider).createFolder(name);
+      ref.read(activeFolderProvider.notifier).state = id;
+    }
+
+    Future<void> manageFolder(Folder folder) async {
+      final action = await showModalBottomSheet<_FolderAction>(
+        context: context,
+        builder: (context) => SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.drive_file_rename_outline),
+                title: const Text('Rename'),
+                onTap: () => Navigator.of(context).pop(_FolderAction.rename),
+              ),
+              ListTile(
+                leading: const Icon(Icons.delete_outline),
+                title: const Text('Delete folder'),
+                subtitle: const Text('Tablets are kept and unfiled'),
+                onTap: () => Navigator.of(context).pop(_FolderAction.delete),
+              ),
+            ],
+          ),
+        ),
+      );
+      final repo = ref.read(tabletsRepositoryProvider);
+      if (action == _FolderAction.rename) {
+        if (!context.mounted) return;
+        final name = await promptFolderName(context, initial: folder.name);
+        if (name != null && name.isNotEmpty) {
+          await repo.renameFolder(folder.id, name);
+        }
+      } else if (action == _FolderAction.delete) {
+        await repo.deleteFolder(folder.id);
+        if (active == folder.id) {
+          ref.read(activeFolderProvider.notifier).state = null;
+        }
+      }
+    }
+
+    return SizedBox(
+      height: 40,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        children: [
+          _Chip(
+            label: 'All',
+            selected: active == null,
+            onTap: () => ref.read(activeFolderProvider.notifier).state = null,
+          ),
+          for (final folder in folders) ...[
+            const SizedBox(width: 10),
+            _Chip(
+              label: folder.name,
+              selected: active == folder.id,
+              onTap: () =>
+                  ref.read(activeFolderProvider.notifier).state = folder.id,
+              onLongPress: () => manageFolder(folder),
+            ),
+          ],
+          const SizedBox(width: 10),
+          _Chip(label: '+ New', selected: false, onTap: createFolder),
+        ],
+      ),
+    );
+  }
+}
+
+enum _FolderAction { rename, delete }
+
+class _Chip extends StatelessWidget {
+  const _Chip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+    this.onLongPress,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+  final VoidCallback? onLongPress;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        onLongPress: onLongPress,
+        borderRadius: BorderRadius.circular(20),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOut,
+          padding: const EdgeInsets.symmetric(horizontal: 18),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: selected ? scheme.primary : scheme.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: selected ? scheme.primary : scheme.outlineVariant,
+            ),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontFamily: 'Geist',
+              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+              color: selected ? scheme.onPrimary : scheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Live list of tablets in the active folder.
+class _FolderTabletsList extends ConsumerWidget {
+  const _FolderTabletsList({required this.folderId});
+
+  final String folderId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tabletsAsync = ref.watch(tabletsInFolderProvider(folderId));
+    return tabletsAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (err, _) => Center(child: Text('Could not load tablets: $err')),
+      data: (tablets) {
+        if (tablets.isEmpty) return const _EmptyFolder();
+        return ListView.separated(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
+          itemCount: tablets.length,
+          separatorBuilder: (_, __) => const Divider(height: 1),
+          itemBuilder: (context, index) => _TabletTile(tablet: tablets[index]),
+        );
+      },
     );
   }
 }
@@ -292,6 +457,40 @@ class _TabletThumbnail extends StatelessWidget {
                   ),
                 ),
               ),
+      ),
+    );
+  }
+}
+
+/// Empty state shown when the selected folder has no tablets.
+class _EmptyFolder extends StatelessWidget {
+  const _EmptyFolder();
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme.onSurfaceVariant;
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.folder_open_outlined, size: 64, color: color),
+          const SizedBox(height: 12),
+          Text(
+            'This folder is empty',
+            style: TextStyle(
+              fontFamily: 'Geist',
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Move tablets here from the editor',
+            style:
+                TextStyle(fontFamily: 'EBGaramond', fontSize: 15, color: color),
+          ),
+        ],
       ),
     );
   }
