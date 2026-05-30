@@ -11,8 +11,7 @@ import 'package:openbaptisthymnal/core/theme/app_text_styles.dart';
 import 'package:openbaptisthymnal/features/hymn/ui/widgets/search_bar_widget.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/tablet_preview.dart';
 import 'package:openbaptisthymnal/features/tablet/providers/tablets_providers.dart';
-import 'package:openbaptisthymnal/features/tablet/ui/widgets/folder_picker_sheet.dart';
-import 'package:openbaptisthymnal/features/tablet/ui/widgets/tag_picker_sheet.dart';
+import 'package:openbaptisthymnal/features/tablet/ui/widgets/tablet_filter_sheet.dart';
 
 /// Tablets tab — the app's default landing screen. Lists the user's tablets and
 /// opens the editor for create/edit.
@@ -29,6 +28,7 @@ class TabletsTabScreen extends HookConsumerWidget {
     final query = searchQuery.value.trim();
     final activeFolder = ref.watch(activeFolderProvider);
     final activeTag = ref.watch(activeTagProvider);
+    final hasFilter = activeFolder != null || activeTag != null;
 
     Widget body() {
       if (query.isNotEmpty) return _SearchResults(query: query);
@@ -51,6 +51,22 @@ class TabletsTabScreen extends HookConsumerWidget {
                   ),
                 ),
               ),
+              if (query.isEmpty)
+                IconButton(
+                  icon: Icon(
+                    hasFilter ? Icons.filter_list : Icons.filter_list_outlined,
+                    color: hasFilter
+                        ? Theme.of(context).colorScheme.primary
+                        : null,
+                  ),
+                  tooltip: 'Filter tablets',
+                  onPressed: () => showModalBottomSheet<void>(
+                    context: context,
+                    showDragHandle: true,
+                    isScrollControlled: true,
+                    builder: (_) => const TabletFilterSheet(),
+                  ),
+                ),
               IconButton(
                 icon: const Icon(Icons.add),
                 tooltip: 'New tablet',
@@ -67,230 +83,59 @@ class TabletsTabScreen extends HookConsumerWidget {
             onChanged: (value) => searchQuery.value = value,
           ),
         ),
-        if (query.isEmpty) ...[
-          const _FolderChips(),
-          const _TagChips(),
-        ],
+        if (query.isEmpty && hasFilter) const _ActiveFilterBar(),
         Expanded(child: body()),
       ],
     );
   }
 }
 
-/// Horizontal folder filter: "All" plus a chip per folder and a trailing add
-/// chip. Tapping selects the active filter; long-pressing a folder opens
-/// rename/delete actions. Hidden while searching.
-class _FolderChips extends ConsumerWidget {
-  const _FolderChips();
+/// A dismissible strip naming the active folder/tag filter so the user can see
+/// what's narrowing the list now that the chip rows are gone, and clear it.
+class _ActiveFilterBar extends ConsumerWidget {
+  const _ActiveFilterBar();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final foldersAsync = ref.watch(foldersProvider);
-    final active = ref.watch(activeFolderProvider);
-    final tagActive = ref.watch(activeTagProvider) != null;
-    final folders = foldersAsync.valueOrNull ?? const [];
+    final scheme = Theme.of(context).colorScheme;
+    final activeFolder = ref.watch(activeFolderProvider);
+    final activeTag = ref.watch(activeTagProvider);
 
-    void selectFolder(String? id) {
-      ref.read(activeTagProvider.notifier).state = null;
-      ref.read(activeFolderProvider.notifier).state = id;
+    String? label;
+    if (activeTag != null) {
+      final tag = (ref.watch(tagsProvider).valueOrNull ?? const [])
+          .where((t) => t.id == activeTag)
+          .firstOrNull;
+      if (tag != null) label = '#${tag.name}';
+    } else if (activeFolder != null) {
+      final folder = (ref.watch(foldersProvider).valueOrNull ?? const [])
+          .where((f) => f.id == activeFolder)
+          .firstOrNull;
+      if (folder != null) label = folder.name;
     }
-
-    Future<void> createFolder() async {
-      final name = await promptFolderName(context);
-      if (name == null || name.isEmpty) return;
-      final id = await ref.read(tabletsRepositoryProvider).createFolder(name);
-      selectFolder(id);
-    }
-
-    Future<void> manageFolder(Folder folder) async {
-      final action = await showModalBottomSheet<_FolderAction>(
-        context: context,
-        builder: (context) => SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.drive_file_rename_outline),
-                title: const Text('Rename'),
-                onTap: () => Navigator.of(context).pop(_FolderAction.rename),
-              ),
-              ListTile(
-                leading: const Icon(Icons.delete_outline),
-                title: const Text('Delete folder'),
-                subtitle: const Text('Tablets are kept and unfiled'),
-                onTap: () => Navigator.of(context).pop(_FolderAction.delete),
-              ),
-            ],
-          ),
-        ),
-      );
-      final repo = ref.read(tabletsRepositoryProvider);
-      if (action == _FolderAction.rename) {
-        if (!context.mounted) return;
-        final name = await promptFolderName(context, initial: folder.name);
-        if (name != null && name.isNotEmpty) {
-          await repo.renameFolder(folder.id, name);
-        }
-      } else if (action == _FolderAction.delete) {
-        await repo.deleteFolder(folder.id);
-        if (active == folder.id) {
-          ref.read(activeFolderProvider.notifier).state = null;
-        }
-      }
-    }
-
-    return SizedBox(
-      height: 40,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        children: [
-          _Chip(
-            label: 'All',
-            selected: active == null && !tagActive,
-            onTap: () => selectFolder(null),
-          ),
-          for (final folder in folders) ...[
-            const SizedBox(width: 10),
-            _Chip(
-              label: folder.name,
-              selected: active == folder.id,
-              onTap: () => selectFolder(folder.id),
-              onLongPress: () => manageFolder(folder),
-            ),
-          ],
-          const SizedBox(width: 10),
-          _Chip(label: '+ New', selected: false, onTap: createFolder),
-        ],
-      ),
-    );
-  }
-}
-
-enum _FolderAction { rename, delete }
-
-/// Horizontal tag filter: a chip per tag, shown only when tags exist. Tapping
-/// selects (or, if already active, clears) the tag filter; long-pressing opens
-/// rename/delete actions. Tags are created from the editor, not here. Hidden
-/// while searching.
-class _TagChips extends ConsumerWidget {
-  const _TagChips();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final tagsAsync = ref.watch(tagsProvider);
-    final active = ref.watch(activeTagProvider);
-    final tags = tagsAsync.valueOrNull ?? const [];
-    if (tags.isEmpty) return const SizedBox.shrink();
-
-    void selectTag(String? id) {
-      ref.read(activeFolderProvider.notifier).state = null;
-      ref.read(activeTagProvider.notifier).state = id;
-    }
-
-    Future<void> manageTag(Tag tag) async {
-      final action = await showModalBottomSheet<_FolderAction>(
-        context: context,
-        builder: (context) => SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.drive_file_rename_outline),
-                title: const Text('Rename'),
-                onTap: () => Navigator.of(context).pop(_FolderAction.rename),
-              ),
-              ListTile(
-                leading: const Icon(Icons.delete_outline),
-                title: const Text('Delete tag'),
-                subtitle: const Text('Tablets are kept and untagged'),
-                onTap: () => Navigator.of(context).pop(_FolderAction.delete),
-              ),
-            ],
-          ),
-        ),
-      );
-      final repo = ref.read(tabletsRepositoryProvider);
-      if (action == _FolderAction.rename) {
-        if (!context.mounted) return;
-        final name = await promptTagName(context, initial: tag.name);
-        if (name != null && name.isNotEmpty) {
-          await repo.renameTag(tag.id, name);
-        }
-      } else if (action == _FolderAction.delete) {
-        await repo.deleteTag(tag.id);
-        if (active == tag.id) {
-          ref.read(activeTagProvider.notifier).state = null;
-        }
-      }
-    }
+    if (label == null) return const SizedBox.shrink();
 
     return Padding(
-      padding: const EdgeInsets.only(top: 8),
-      child: SizedBox(
-        height: 40,
-        child: ListView(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          children: [
-            for (final tag in tags) ...[
-              _Chip(
-                label: '#${tag.name}',
-                selected: active == tag.id,
-                onTap: () => selectTag(active == tag.id ? null : tag.id),
-                onLongPress: () => manageTag(tag),
-              ),
-              const SizedBox(width: 10),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _Chip extends StatelessWidget {
-  const _Chip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-    this.onLongPress,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-  final VoidCallback? onLongPress;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        onLongPress: onLongPress,
-        borderRadius: BorderRadius.circular(20),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          curve: Curves.easeOut,
-          padding: const EdgeInsets.symmetric(horizontal: 18),
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: selected ? scheme.primary : scheme.surfaceContainerHighest,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: selected ? scheme.primary : scheme.outlineVariant,
-            ),
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: InputChip(
+          label: Text(label),
+          avatar: Icon(
+            activeTag != null ? Icons.label_outline : Icons.folder_outlined,
+            size: 18,
           ),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontFamily: 'Geist',
-              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-              color: selected ? scheme.onPrimary : scheme.onSurfaceVariant,
-            ),
+          backgroundColor: scheme.primaryContainer,
+          labelStyle: TextStyle(
+            color: scheme.onPrimaryContainer,
+            fontFamily: 'Geist',
+            fontWeight: FontWeight.w600,
           ),
+          deleteIconColor: scheme.onPrimaryContainer,
+          onDeleted: () {
+            ref.read(activeFolderProvider.notifier).state = null;
+            ref.read(activeTagProvider.notifier).state = null;
+          },
         ),
       ),
     );
@@ -520,25 +365,91 @@ class _TabletTile extends ConsumerWidget {
             fontSize: 16,
           ),
         ),
-        subtitle: preview.isEmpty
-            ? ((imagePath == null && !hasAudio)
-                ? null
-                : Text(
-                    hasAudio ? 'Voice tablet' : 'Photo',
-                    style: TextStyle(
-                      fontFamily: 'EBGaramond',
-                      fontSize: 15,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ))
-            : Text(
-                preview,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontFamily: 'EBGaramond', fontSize: 15),
-              ),
+        subtitle: _TabletSubtitle(
+          noteId: tablet.id,
+          preview: preview,
+          hasAudio: hasAudio,
+          hasImage: imagePath != null,
+        ),
         onTap: () => context.router.push(TabletEditorRoute(noteId: tablet.id)),
       ),
+    );
+  }
+}
+
+/// Tablet tile subtitle: preview text (or a media label) above a wrap of the
+/// tablet's tags. Tags are watched per tile, so attaching/removing one in the
+/// editor reflects here live.
+class _TabletSubtitle extends ConsumerWidget {
+  const _TabletSubtitle({
+    required this.noteId,
+    required this.preview,
+    required this.hasAudio,
+    required this.hasImage,
+  });
+
+  final String noteId;
+  final String preview;
+  final bool hasAudio;
+  final bool hasImage;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final scheme = Theme.of(context).colorScheme;
+    final tags = ref.watch(tagsForNoteProvider(noteId)).valueOrNull ?? const [];
+
+    Widget? primary;
+    if (preview.isNotEmpty) {
+      primary = Text(
+        preview,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(fontFamily: 'EBGaramond', fontSize: 15),
+      );
+    } else if (hasAudio || hasImage) {
+      primary = Text(
+        hasAudio ? 'Voice tablet' : 'Photo',
+        style: TextStyle(
+          fontFamily: 'EBGaramond',
+          fontSize: 15,
+          color: scheme.onSurfaceVariant,
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (primary != null) primary,
+        if (tags.isNotEmpty)
+          Padding(
+            padding: EdgeInsets.only(top: primary != null ? 6 : 2),
+            child: Wrap(
+              spacing: 6,
+              runSpacing: 4,
+              children: [
+                for (final tag in tags)
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: scheme.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      '#${tag.name}',
+                      style: TextStyle(
+                        fontFamily: 'Geist',
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+      ],
     );
   }
 }
