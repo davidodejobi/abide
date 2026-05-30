@@ -20,6 +20,7 @@ import 'package:openbaptisthymnal/features/tablet/ui/widgets/audio_recorder_shee
 import 'package:openbaptisthymnal/features/tablet/ui/widgets/folder_picker_sheet.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/widgets/link_suggestions.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/widgets/tablet_links_sheet.dart';
+import 'package:openbaptisthymnal/features/tablet/ui/widgets/tag_picker_sheet.dart';
 
 /// Create / edit a single note. Markdown is the source of truth; the body is
 /// edited in an [AppFlowyEditor] document and converted back to markdown on
@@ -402,6 +403,25 @@ class _NoteEditorView extends HookConsumerWidget {
                         BorderRadius.vertical(top: Radius.circular(20)),
                   ),
                   builder: (_) => FolderPickerSheet(noteId: id),
+                );
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.label_outline),
+              tooltip: 'Tags',
+              onPressed: () async {
+                await save();
+                final id = currentId.value;
+                if (id == null || !context.mounted) return;
+                showModalBottomSheet<void>(
+                  context: context,
+                  showDragHandle: true,
+                  backgroundColor: theme.colorScheme.surface,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius:
+                        BorderRadius.vertical(top: Radius.circular(20)),
+                  ),
+                  builder: (_) => TagPickerSheet(noteId: id),
                 );
               },
             ),
