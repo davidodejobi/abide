@@ -8,8 +8,9 @@ final bottomNavProvider = StateProvider<int>((ref) => 0);
 enum BottomNavTab {
   tablets(0, 'Tablets'),
   songs(1, 'Songs'),
-  favorites(2, 'Favorites'),
-  settings(3, 'Settings');
+  bible(2, 'Bible'),
+  favorites(3, 'Favorites'),
+  settings(4, 'Settings');
 
   const BottomNavTab(this.tabIndex, this.label);
 

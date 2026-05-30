@@ -11,6 +11,22 @@
 part of 'app_router.dart';
 
 /// generated route for
+/// [BibleTabScreen]
+class BibleTabRoute extends PageRouteInfo<void> {
+  const BibleTabRoute({List<PageRouteInfo>? children})
+      : super(BibleTabRoute.name, initialChildren: children);
+
+  static const String name = 'BibleTabRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const BibleTabScreen();
+    },
+  );
+}
+
+/// generated route for
 /// [DashboardScreen]
 class DashboardRoute extends PageRouteInfo<void> {
   const DashboardRoute({List<PageRouteInfo>? children})

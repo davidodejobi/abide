@@ -1,5 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:openbaptisthymnal/features/bible/ui/bible_tab_screen.dart';
 import 'package:openbaptisthymnal/features/dashboard/ui/dashboard_screen.dart';
 import 'package:openbaptisthymnal/features/hymn/ui/favorites_tab_screen.dart';
 import 'package:openbaptisthymnal/features/hymn/ui/home_tab_screen.dart';
@@ -29,6 +30,7 @@ class AppRouter extends RootStackRouter {
           children: [
             AutoRoute(page: TabletsTabRoute.page),
             AutoRoute(page: HomeTabRoute.page),
+            AutoRoute(page: BibleTabRoute.page),
             AutoRoute(page: FavoritesTabRoute.page),
             AutoRoute(page: SettingsTabRoute.page),
           ],

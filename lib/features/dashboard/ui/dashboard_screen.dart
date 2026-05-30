@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
 import 'package:openbaptisthymnal/core/providers/bottom_nav_provider.dart';
+import 'package:openbaptisthymnal/features/bible/ui/bible_tab_screen.dart';
 import 'package:openbaptisthymnal/features/dashboard/ui/widgets/bottom_nav_bar/bottom_nav_bar.dart';
 import 'package:openbaptisthymnal/features/hymn/ui/favorites_tab_screen.dart';
 import 'package:openbaptisthymnal/features/hymn/ui/home_tab_screen.dart';
@@ -28,6 +29,7 @@ class DashboardScreen extends HookConsumerWidget {
               children: const [
                 TabletsTabScreen(),
                 HomeTabScreen(),
+                BibleTabScreen(),
                 FavoritesTabScreen(),
                 SettingsTabScreen(),
               ],
@@ -83,6 +85,11 @@ class _BottomNavigation extends StatelessWidget {
           AdaptiveBottomNavTab(
             label: 'Songs',
             icon: CupertinoIcons.music_note_list,
+          ),
+          AdaptiveBottomNavTab(
+            label: 'Bible',
+            icon: CupertinoIcons.book,
+            selectedIcon: CupertinoIcons.book_fill,
           ),
           AdaptiveBottomNavTab(
             label: 'Favorites',
