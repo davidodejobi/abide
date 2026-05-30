@@ -106,68 +106,6 @@ class HymnDetailRouteArgs {
 }
 
 /// generated route for
-/// [NoteEditorPage]
-class NoteEditorRoute extends PageRouteInfo<NoteEditorRouteArgs> {
-  NoteEditorRoute({Key? key, String? noteId, List<PageRouteInfo>? children})
-      : super(
-          NoteEditorRoute.name,
-          args: NoteEditorRouteArgs(key: key, noteId: noteId),
-          initialChildren: children,
-        );
-
-  static const String name = 'NoteEditorRoute';
-
-  static PageInfo page = PageInfo(
-    name,
-    builder: (data) {
-      final args = data.argsAs<NoteEditorRouteArgs>(
-        orElse: () => const NoteEditorRouteArgs(),
-      );
-      return NoteEditorPage(key: args.key, noteId: args.noteId);
-    },
-  );
-}
-
-class NoteEditorRouteArgs {
-  const NoteEditorRouteArgs({this.key, this.noteId});
-
-  final Key? key;
-
-  final String? noteId;
-
-  @override
-  String toString() {
-    return 'NoteEditorRouteArgs{key: $key, noteId: $noteId}';
-  }
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    if (other is! NoteEditorRouteArgs) return false;
-    return key == other.key && noteId == other.noteId;
-  }
-
-  @override
-  int get hashCode => key.hashCode ^ noteId.hashCode;
-}
-
-/// generated route for
-/// [NotesTabScreen]
-class NotesTabRoute extends PageRouteInfo<void> {
-  const NotesTabRoute({List<PageRouteInfo>? children})
-      : super(NotesTabRoute.name, initialChildren: children);
-
-  static const String name = 'NotesTabRoute';
-
-  static PageInfo page = PageInfo(
-    name,
-    builder: (data) {
-      return const NotesTabScreen();
-    },
-  );
-}
-
-/// generated route for
 /// [OnboardingPage]
 class OnboardingRoute extends PageRouteInfo<void> {
   const OnboardingRoute({List<PageRouteInfo>? children})
@@ -269,4 +207,66 @@ class ShareCardRouteArgs {
   @override
   int get hashCode =>
       key.hashCode ^ hymnNumber.hashCode ^ title.hashCode ^ body.hashCode;
+}
+
+/// generated route for
+/// [TabletEditorPage]
+class TabletEditorRoute extends PageRouteInfo<TabletEditorRouteArgs> {
+  TabletEditorRoute({Key? key, String? noteId, List<PageRouteInfo>? children})
+      : super(
+          TabletEditorRoute.name,
+          args: TabletEditorRouteArgs(key: key, noteId: noteId),
+          initialChildren: children,
+        );
+
+  static const String name = 'TabletEditorRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      final args = data.argsAs<TabletEditorRouteArgs>(
+        orElse: () => const TabletEditorRouteArgs(),
+      );
+      return TabletEditorPage(key: args.key, noteId: args.noteId);
+    },
+  );
+}
+
+class TabletEditorRouteArgs {
+  const TabletEditorRouteArgs({this.key, this.noteId});
+
+  final Key? key;
+
+  final String? noteId;
+
+  @override
+  String toString() {
+    return 'TabletEditorRouteArgs{key: $key, noteId: $noteId}';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! TabletEditorRouteArgs) return false;
+    return key == other.key && noteId == other.noteId;
+  }
+
+  @override
+  int get hashCode => key.hashCode ^ noteId.hashCode;
+}
+
+/// generated route for
+/// [TabletsTabScreen]
+class TabletsTabRoute extends PageRouteInfo<void> {
+  const TabletsTabRoute({List<PageRouteInfo>? children})
+      : super(TabletsTabRoute.name, initialChildren: children);
+
+  static const String name = 'TabletsTabRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const TabletsTabScreen();
+    },
+  );
 }

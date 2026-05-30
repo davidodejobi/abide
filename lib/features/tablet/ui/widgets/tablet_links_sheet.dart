@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:openbaptisthymnal/core/router/app_router.dart';
 import 'package:openbaptisthymnal/features/hymn/ui/viewmodels/hymns_viewmodel.dart';
-import 'package:openbaptisthymnal/features/notes/domain/parse_links.dart';
-import 'package:openbaptisthymnal/features/notes/providers/notes_providers.dart';
+import 'package:openbaptisthymnal/features/tablet/domain/parse_links.dart';
+import 'package:openbaptisthymnal/features/tablet/providers/tablets_providers.dart';
 
 /// Bottom sheet showing a note's outgoing links (parsed live from its markdown)
 /// and its backlinks (other notes that link to it by title).
@@ -89,7 +89,7 @@ class _OutgoingTile extends ConsumerWidget {
           },
         );
       case NoteLinkType.note:
-        final notes = ref.watch(notesListProvider).valueOrNull;
+        final notes = ref.watch(tabletsListProvider).valueOrNull;
         final match = notes
             ?.where((n) => n.title.toLowerCase() == link.targetKey.toLowerCase())
             .firstOrNull;
@@ -101,7 +101,7 @@ class _OutgoingTile extends ConsumerWidget {
               : null,
           onTap: match == null
               ? null
-              : () => context.router.push(NoteEditorRoute(noteId: match.id)),
+              : () => context.router.push(TabletEditorRoute(noteId: match.id)),
         );
     }
   }
@@ -130,7 +130,7 @@ class _BacklinksSection extends ConsumerWidget {
               icon: Icons.subdirectory_arrow_left,
               label: n.title.isEmpty ? 'Untitled' : n.title,
               onTap: () =>
-                  context.router.push(NoteEditorRoute(noteId: n.id)),
+                  context.router.push(TabletEditorRoute(noteId: n.id)),
             ),
           ),
       ],

@@ -4,20 +4,23 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:openbaptisthymnal/core/router/app_router.dart';
 import 'package:openbaptisthymnal/core/storage/database/app_database.dart';
+import 'dart:io';
+
 import 'package:openbaptisthymnal/core/theme/app_text_styles.dart';
-import 'package:openbaptisthymnal/features/notes/providers/notes_providers.dart';
+import 'package:openbaptisthymnal/features/tablet/domain/tablet_preview.dart';
+import 'package:openbaptisthymnal/features/tablet/providers/tablets_providers.dart';
 
 /// Notes tab — the app's default landing screen. Lists the user's notes and
 /// opens the editor for create/edit.
 @RoutePage()
-class NotesTabScreen extends HookConsumerWidget {
-  const NotesTabScreen({super.key});
+class TabletsTabScreen extends HookConsumerWidget {
+  const TabletsTabScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     useAutomaticKeepAlive();
 
-    final notesAsync = ref.watch(notesListProvider);
+    final notesAsync = ref.watch(tabletsListProvider);
 
     return Column(
       children: [
@@ -36,7 +39,7 @@ class NotesTabScreen extends HookConsumerWidget {
               IconButton(
                 icon: const Icon(Icons.add),
                 tooltip: 'New tablet',
-                onPressed: () => context.router.push(NoteEditorRoute()),
+                onPressed: () => context.router.push(TabletEditorRoute()),
               ),
             ],
           ),
@@ -70,10 +73,9 @@ class _NoteTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final title = note.title.trim().isEmpty ? 'Untitled' : note.title.trim();
-    final preview = note.contentMarkdown.trim().split('\n').firstWhere(
-          (line) => line.trim().isNotEmpty,
-          orElse: () => '',
-        );
+    final preview = notePreviewText(note.contentMarkdown);
+    final imagePath = notePreviewImage(note.contentMarkdown);
+    final hasAudio = imagePath == null && noteHasAudio(note.contentMarkdown);
 
     return Dismissible(
       key: ValueKey(note.id),
@@ -87,9 +89,25 @@ class _NoteTile extends ConsumerWidget {
           color: Theme.of(context).colorScheme.onErrorContainer,
         ),
       ),
-      onDismissed: (_) => ref.read(notesRepositoryProvider).deleteNote(note.id),
+      onDismissed: (_) => ref.read(tabletsRepositoryProvider).deleteNote(note.id),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(vertical: 6),
+        leading: imagePath != null
+            ? _NoteThumbnail(path: imagePath)
+            : hasAudio
+                ? Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.mic_none,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  )
+                : null,
         title: Text(
           title,
           maxLines: 1,
@@ -101,14 +119,58 @@ class _NoteTile extends ConsumerWidget {
           ),
         ),
         subtitle: preview.isEmpty
-            ? null
+            ? ((imagePath == null && !hasAudio)
+                ? null
+                : Text(
+                    hasAudio ? 'Voice note' : 'Photo',
+                    style: TextStyle(
+                      fontFamily: 'EBGaramond',
+                      fontSize: 15,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ))
             : Text(
                 preview,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(fontFamily: 'EBGaramond', fontSize: 15),
               ),
-        onTap: () => context.router.push(NoteEditorRoute(noteId: note.id)),
+        onTap: () => context.router.push(TabletEditorRoute(noteId: note.id)),
+      ),
+    );
+  }
+}
+
+/// Square rounded thumbnail for the first image in a note. Falls back to a
+/// neutral image-broken icon if the file is missing.
+class _NoteThumbnail extends StatelessWidget {
+  const _NoteThumbnail({required this.path});
+
+  final String path;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final isNetwork = path.startsWith('http');
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: SizedBox(
+        width: 48,
+        height: 48,
+        child: isNetwork
+            ? Image.network(path, fit: BoxFit.cover)
+            : Image.file(
+                File(path),
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Container(
+                  color: scheme.surfaceContainerHighest,
+                  child: Icon(
+                    Icons.broken_image_outlined,
+                    size: 22,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
       ),
     );
   }

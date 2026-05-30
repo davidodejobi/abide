@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:openbaptisthymnal/features/notes/domain/link_autocomplete.dart';
+import 'package:openbaptisthymnal/features/tablet/domain/link_autocomplete.dart';
 
 void main() {
   group('linkAutocompleteQuery', () {

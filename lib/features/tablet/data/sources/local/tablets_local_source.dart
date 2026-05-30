@@ -2,13 +2,13 @@ import 'package:drift/drift.dart';
 import 'package:openbaptisthymnal/core/storage/database/app_database.dart';
 import 'package:openbaptisthymnal/core/storage/database/daos/note_links_dao.dart';
 import 'package:openbaptisthymnal/core/storage/database/daos/notes_dao.dart';
-import 'package:openbaptisthymnal/features/notes/domain/parse_links.dart';
+import 'package:openbaptisthymnal/features/tablet/domain/parse_links.dart';
 import 'package:uuid/uuid.dart';
 
 /// Local (offline) persistence for notes, backed by Drift. A future remote
-/// source can sit beside this behind [NotesRepository].
-class NotesLocalSource {
-  NotesLocalSource(this._dao, this._linksDao, {Uuid? uuid})
+/// source can sit beside this behind [TabletsRepository].
+class TabletsLocalSource {
+  TabletsLocalSource(this._dao, this._linksDao, {Uuid? uuid})
       : _uuid = uuid ?? const Uuid();
 
   final NotesDao _dao;

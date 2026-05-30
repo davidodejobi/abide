@@ -1,12 +1,12 @@
 import 'package:openbaptisthymnal/core/storage/database/app_database.dart';
-import 'package:openbaptisthymnal/features/notes/data/sources/local/notes_local_source.dart';
+import 'package:openbaptisthymnal/features/tablet/data/sources/local/tablets_local_source.dart';
 
 /// Offline-first entry point for note data. For now it delegates to the local
 /// Drift source; a remote source can be layered in later without UI changes.
-class NotesRepository {
-  NotesRepository(this._local);
+class TabletsRepository {
+  TabletsRepository(this._local);
 
-  final NotesLocalSource _local;
+  final TabletsLocalSource _local;
 
   Stream<List<Note>> watchNotes() => _local.watchNotes();
 
