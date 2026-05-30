@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app_database.dart';
+import 'daos/note_links_dao.dart';
 import 'daos/notes_dao.dart';
 
 /// App-wide Drift database. Lives for the whole app session (manual providers
@@ -13,4 +14,8 @@ final appDatabaseProvider = Provider<AppDatabase>((ref) {
 
 final notesDaoProvider = Provider<NotesDao>(
   (ref) => ref.watch(appDatabaseProvider).notesDao,
+);
+
+final noteLinksDaoProvider = Provider<NoteLinksDao>(
+  (ref) => ref.watch(appDatabaseProvider).noteLinksDao,
 );
