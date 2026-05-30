@@ -4,6 +4,8 @@
 	<dict>
 		<key>CFBundleDevelopmentRegion</key>
 		<string>$(DEVELOPMENT_LANGUAGE)</string>
+		<key>NSPhotoLibraryUsageDescription</key>
+		<string>Abide needs access to your photos so you can add images to your notes.</string>
 		<key>CFBundleDisplayName</key>
 		<string>Abide</string>
 		<key>CFBundleExecutable</key>
