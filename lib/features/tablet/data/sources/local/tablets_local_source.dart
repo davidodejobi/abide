@@ -3,18 +3,25 @@ import 'package:openbaptisthymnal/core/storage/database/app_database.dart';
 import 'package:openbaptisthymnal/core/storage/database/daos/folders_dao.dart';
 import 'package:openbaptisthymnal/core/storage/database/daos/note_links_dao.dart';
 import 'package:openbaptisthymnal/core/storage/database/daos/notes_dao.dart';
+import 'package:openbaptisthymnal/core/storage/database/daos/tags_dao.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/parse_links.dart';
 import 'package:uuid/uuid.dart';
 
 /// Local (offline) persistence for notes, backed by Drift. A future remote
 /// source can sit beside this behind [TabletsRepository].
 class TabletsLocalSource {
-  TabletsLocalSource(this._dao, this._linksDao, this._foldersDao, {Uuid? uuid})
-      : _uuid = uuid ?? const Uuid();
+  TabletsLocalSource(
+    this._dao,
+    this._linksDao,
+    this._foldersDao,
+    this._tagsDao, {
+    Uuid? uuid,
+  }) : _uuid = uuid ?? const Uuid();
 
   final NotesDao _dao;
   final NoteLinksDao _linksDao;
   final FoldersDao _foldersDao;
+  final TagsDao _tagsDao;
   final Uuid _uuid;
 
   Stream<List<Note>> watchNotes() => _dao.watchActiveNotes();
@@ -51,6 +58,32 @@ class TabletsLocalSource {
 
   Future<void> moveNoteToFolder(String noteId, String? folderId) =>
       _dao.setFolder(noteId, folderId);
+
+  Stream<List<Tag>> watchTags() => _tagsDao.watchTags();
+
+  Stream<List<Tag>> watchTagsForNote(String noteId) =>
+      _tagsDao.watchTagsForNote(noteId);
+
+  Stream<List<Note>> watchNotesWithTag(String tagId) =>
+      _tagsDao.watchActiveNotesWithTag(tagId);
+
+  /// Creates a tag and returns its generated id.
+  Future<String> createTag(String name) async {
+    final id = _uuid.v4();
+    await _tagsDao.upsertTag(TagsCompanion.insert(id: id, name: name));
+    return id;
+  }
+
+  Future<void> renameTag(String id, String name) =>
+      _tagsDao.upsertTag(TagsCompanion(id: Value(id), name: Value(name)));
+
+  Future<void> deleteTag(String id) => _tagsDao.deleteTag(id);
+
+  Future<void> addTagToNote(String noteId, String tagId) =>
+      _tagsDao.addTagToNote(noteId, tagId);
+
+  Future<void> removeTagFromNote(String noteId, String tagId) =>
+      _tagsDao.removeTagFromNote(noteId, tagId);
 
   /// Inserts a new note and returns its generated id.
   Future<String> createNote({
