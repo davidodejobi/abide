@@ -6,14 +6,15 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:openbaptisthymnal/core/providers/service_providers.dart';
 import 'package:openbaptisthymnal/core/router/app_router.dart';
+import 'package:openbaptisthymnal/core/utils/services/file_storage_service.dart';
 import 'package:openbaptisthymnal/core/theme/app_colors.dart';
 import 'package:openbaptisthymnal/features/notes/domain/link_autocomplete.dart';
 import 'package:openbaptisthymnal/features/notes/domain/note_markdown_codec.dart';
 import 'package:openbaptisthymnal/features/notes/domain/parse_links.dart';
 import 'package:openbaptisthymnal/features/notes/providers/notes_providers.dart';
 import 'package:openbaptisthymnal/features/notes/ui/widgets/link_suggestions.dart';
-import 'package:openbaptisthymnal/features/notes/ui/widgets/note_format_toolbar.dart';
 import 'package:openbaptisthymnal/features/notes/ui/widgets/note_links_sheet.dart';
 
 /// Create / edit a single note. Markdown is the source of truth; the body is
@@ -208,6 +209,22 @@ class _NoteEditorView extends HookConsumerWidget {
       );
     }
 
+    Future<void> insertImage() async {
+      // Capture the caret before the picker steals focus; restore it so the
+      // image lands where the user was editing.
+      final sel = editorState.selection;
+      final relativePath = await ref
+          .read(fileStorageServiceProvider)
+          .pickAndPersistImage(bucket: 'note_images');
+      if (relativePath == null) return;
+      if (sel != null) editorState.selection = sel;
+      // Live document renders via Image.file, which needs the absolute path;
+      // the codec rewrites it back to relative on save.
+      await editorState.insertImageNode(
+        FileStorageService.absolutePath(relativePath),
+      );
+    }
+
     // Style every `[[...]]` token gold + underlined and make it tappable.
     // `before` already carries the run's bold/italic styling, so we reuse its
     // style as the base and only recolour the link spans.
@@ -303,6 +320,29 @@ class _NoteEditorView extends HookConsumerWidget {
       ),
     );
 
+    MobileToolbarItem actionItem(IconData icon, VoidCallback onTap) =>
+        MobileToolbarItem.action(
+          itemIconBuilder: (context, _, __) => Icon(
+            icon,
+            color: MobileToolbarTheme.of(context).iconColor,
+          ),
+          actionHandler: (_, __) => onTap(),
+        );
+
+    // Selection toolbar docked above the keyboard. Block items (heading/list/
+    // quote/divider) and the inline decoration item all round-trip through our
+    // markdown codec, so anything inserted here survives a save.
+    final toolbarItems = <MobileToolbarItem>[
+      textDecorationMobileToolbarItemV2,
+      headingMobileToolbarItem,
+      todoListMobileToolbarItem,
+      listMobileToolbarItem,
+      quoteMobileToolbarItem,
+      dividerMobileToolbarItem,
+      actionItem(Icons.link, insertLinkToken),
+      actionItem(Icons.image_outlined, insertImage),
+    ];
+
     return PopScope(
       onPopInvokedWithResult: (didPop, _) {
         if (didPop) save();
@@ -342,40 +382,36 @@ class _NoteEditorView extends HookConsumerWidget {
           ],
         ),
         body: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                child: Stack(
-                  children: [
-                    AppFlowyEditor(
-                      editorState: editorState,
-                      editorStyle: editorStyle,
-                      autoFocus: noteId == null,
-                      header: titleField,
-                    ),
-                    if (linkQuery.value != null)
-                      Positioned(
-                        left: 16,
-                        right: 16,
-                        bottom: 8,
-                        child: LinkSuggestions(
-                          query: linkQuery.value!,
-                          currentNoteId: currentId.value,
-                          onSelected: completeLink,
-                        ),
-                      ),
-                  ],
+          child: MobileToolbarV2(
+            editorState: editorState,
+            toolbarItems: toolbarItems,
+            backgroundColor: theme.colorScheme.surface,
+            foregroundColor: theme.colorScheme.onSurfaceVariant,
+            iconColor: theme.colorScheme.onSurface,
+            primaryColor: theme.colorScheme.primary,
+            outlineColor: theme.colorScheme.outlineVariant,
+            itemOutlineColor: theme.colorScheme.outlineVariant,
+            child: Stack(
+              children: [
+                AppFlowyEditor(
+                  editorState: editorState,
+                  editorStyle: editorStyle,
+                  autoFocus: noteId == null,
+                  header: titleField,
                 ),
-              ),
-              NoteFormatToolbar(
-                onBold: () =>
-                    editorState.toggleAttribute(BuiltInAttributeKey.bold),
-                onItalic: () =>
-                    editorState.toggleAttribute(BuiltInAttributeKey.italic),
-                onLink: insertLinkToken,
-              ),
-            ],
+                if (linkQuery.value != null)
+                  Positioned(
+                    left: 16,
+                    right: 16,
+                    bottom: 8,
+                    child: LinkSuggestions(
+                      query: linkQuery.value!,
+                      currentNoteId: currentId.value,
+                      onSelected: completeLink,
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
       ),
