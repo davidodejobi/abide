@@ -4,6 +4,7 @@ import 'app_database.dart';
 import 'daos/folders_dao.dart';
 import 'daos/note_links_dao.dart';
 import 'daos/notes_dao.dart';
+import 'daos/tags_dao.dart';
 
 /// App-wide Drift database. Lives for the whole app session (manual providers
 /// do not auto-dispose) and is closed when the root scope tears down.
@@ -23,4 +24,8 @@ final noteLinksDaoProvider = Provider<NoteLinksDao>(
 
 final foldersDaoProvider = Provider<FoldersDao>(
   (ref) => ref.watch(appDatabaseProvider).foldersDao,
+);
+
+final tagsDaoProvider = Provider<TagsDao>(
+  (ref) => ref.watch(appDatabaseProvider).tagsDao,
 );
