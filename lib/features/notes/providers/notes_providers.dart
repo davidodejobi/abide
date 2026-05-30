@@ -5,7 +5,10 @@ import 'package:openbaptisthymnal/features/notes/data/repositories/notes_reposit
 import 'package:openbaptisthymnal/features/notes/data/sources/local/notes_local_source.dart';
 
 final notesLocalSourceProvider = Provider<NotesLocalSource>((ref) {
-  return NotesLocalSource(ref.watch(notesDaoProvider));
+  return NotesLocalSource(
+    ref.watch(notesDaoProvider),
+    ref.watch(noteLinksDaoProvider),
+  );
 });
 
 final notesRepositoryProvider = Provider<NotesRepository>((ref) {
@@ -20,4 +23,16 @@ final notesListProvider = StreamProvider<List<Note>>((ref) {
 /// Live single note for the editor; null while loading or if it doesn't exist.
 final noteByIdProvider = StreamProvider.family<Note?, String>((ref, id) {
   return ref.watch(notesRepositoryProvider).watchNote(id);
+});
+
+/// Outgoing links parsed from a note's markdown.
+final outgoingLinksProvider =
+    StreamProvider.family<List<NoteLink>, String>((ref, noteId) {
+  return ref.watch(notesRepositoryProvider).watchOutgoingLinks(noteId);
+});
+
+/// Active notes that link to the given title (case-insensitive backlinks).
+final backlinksProvider =
+    StreamProvider.family<List<Note>, String>((ref, title) {
+  return ref.watch(notesRepositoryProvider).watchBacklinks(title);
 });

@@ -14,6 +14,12 @@ class NotesRepository {
 
   Future<Note?> getNote(String id) => _local.getNote(id);
 
+  Stream<List<NoteLink>> watchOutgoingLinks(String noteId) =>
+      _local.watchOutgoingLinks(noteId);
+
+  Stream<List<Note>> watchBacklinks(String title) =>
+      _local.watchBacklinks(title);
+
   Future<String> createNote({String title = '', String contentMarkdown = ''}) =>
       _local.createNote(title: title, contentMarkdown: contentMarkdown);
 
