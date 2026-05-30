@@ -33,8 +33,22 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
   Stream<Note?> watchNote(String id) =>
       (select(notes)..where((t) => t.id.equals(id))).watchSingleOrNull();
 
+  /// Live list of non-deleted tablets in a single folder, newest edit first.
+  Stream<List<Note>> watchActiveNotesInFolder(String folderId) {
+    return (select(notes)
+          ..where((t) => t.isDeleted.equals(false) & t.folderId.equals(folderId))
+          ..orderBy([(t) => OrderingTerm.desc(t.updatedAt)]))
+        .watch();
+  }
+
   Future<void> upsertNote(NotesCompanion note) =>
       into(notes).insertOnConflictUpdate(note);
+
+  /// Moves a tablet into [folderId] (or clears it when null). Organizational
+  /// metadata only, so it deliberately does not bump `updatedAt`.
+  Future<void> setFolder(String noteId, String? folderId) =>
+      (update(notes)..where((t) => t.id.equals(noteId)))
+          .write(NotesCompanion(folderId: Value(folderId)));
 
   /// Full-text search over active notes' title + body, best match first.
   /// Returns an empty list for blank input. The snippet is drawn from the body

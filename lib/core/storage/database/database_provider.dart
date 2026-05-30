@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app_database.dart';
+import 'daos/folders_dao.dart';
 import 'daos/note_links_dao.dart';
 import 'daos/notes_dao.dart';
 
@@ -18,4 +19,8 @@ final notesDaoProvider = Provider<NotesDao>(
 
 final noteLinksDaoProvider = Provider<NoteLinksDao>(
   (ref) => ref.watch(appDatabaseProvider).noteLinksDao,
+);
+
+final foldersDaoProvider = Provider<FoldersDao>(
+  (ref) => ref.watch(appDatabaseProvider).foldersDao,
 );
