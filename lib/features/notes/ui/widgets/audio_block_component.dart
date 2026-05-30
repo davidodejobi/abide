@@ -3,17 +3,23 @@ import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:flutter/material.dart';
 import 'package:openbaptisthymnal/core/utils/services/file_storage_service.dart';
 import 'package:openbaptisthymnal/features/notes/domain/note_media.dart';
-import 'package:provider/provider.dart';
 
 /// Audio clips are persisted as ordinary `image` nodes whose url points at an
 /// audio file (see [isAudioPath]). This builder intercepts the standard `image`
 /// type: audio urls render as an inline player, everything else is delegated
 /// back to appflowy's built-in [ImageBlockComponentBuilder] unchanged.
 class MediaBlockComponentBuilder extends BlockComponentBuilder {
-  MediaBlockComponentBuilder({super.configuration});
+  MediaBlockComponentBuilder({
+    required this.editorState,
+    super.configuration,
+  });
 
-  final ImageBlockComponentBuilder _imageBuilder =
-      ImageBlockComponentBuilder();
+  // The editor owns its [EditorState]; we thread it in explicitly rather than
+  // reading appflowy's internal `Provider<EditorState>`, so the notes feature
+  // takes no direct dependency on package:provider.
+  final EditorState editorState;
+
+  final ImageBlockComponentBuilder _imageBuilder = ImageBlockComponentBuilder();
 
   @override
   BlockComponentWidget build(BlockComponentContext blockComponentContext) {
@@ -23,6 +29,7 @@ class MediaBlockComponentBuilder extends BlockComponentBuilder {
       return AudioBlockComponentWidget(
         key: node.key,
         node: node,
+        editorState: editorState,
         configuration: configuration,
         showActions: showActions(node),
         actionBuilder: (context, state) =>
@@ -49,11 +56,14 @@ class AudioBlockComponentWidget extends BlockComponentStatefulWidget {
   const AudioBlockComponentWidget({
     super.key,
     required super.node,
+    required this.editorState,
     super.showActions,
     super.actionBuilder,
     super.actionTrailingBuilder,
     super.configuration = const BlockComponentConfiguration(),
   });
+
+  final EditorState editorState;
 
   @override
   State<AudioBlockComponentWidget> createState() =>
@@ -112,7 +122,7 @@ class _AudioBlockComponentWidgetState extends State<AudioBlockComponentWidget>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final editorState = context.read<EditorState>();
+    final editorState = widget.editorState;
 
     Widget child = Container(
       key: _audioKey,
@@ -147,8 +157,7 @@ class _AudioBlockComponentWidgetState extends State<AudioBlockComponentWidget>
                     enableSeekGesture: true,
                     waveformType: WaveformType.fitWidth,
                     playerWaveStyle: PlayerWaveStyle(
-                      fixedWaveColor:
-                          theme.colorScheme.outlineVariant,
+                      fixedWaveColor: theme.colorScheme.outlineVariant,
                       liveWaveColor: theme.colorScheme.primary,
                       showSeekLine: false,
                     ),

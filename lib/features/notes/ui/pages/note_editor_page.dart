@@ -426,7 +426,8 @@ class _NoteEditorView extends HookConsumerWidget {
                   header: titleField,
                   blockComponentBuilders: {
                     ...standardBlockComponentBuilderMap,
-                    ImageBlockKeys.type: MediaBlockComponentBuilder(),
+                    ImageBlockKeys.type:
+                        MediaBlockComponentBuilder(editorState: editorState),
                   },
                 ),
                 if (linkQuery.value != null)
