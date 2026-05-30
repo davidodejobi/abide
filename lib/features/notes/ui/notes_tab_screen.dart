@@ -4,7 +4,10 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:openbaptisthymnal/core/router/app_router.dart';
 import 'package:openbaptisthymnal/core/storage/database/app_database.dart';
+import 'dart:io';
+
 import 'package:openbaptisthymnal/core/theme/app_text_styles.dart';
+import 'package:openbaptisthymnal/features/notes/domain/note_preview.dart';
 import 'package:openbaptisthymnal/features/notes/providers/notes_providers.dart';
 
 /// Notes tab — the app's default landing screen. Lists the user's notes and
@@ -70,10 +73,8 @@ class _NoteTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final title = note.title.trim().isEmpty ? 'Untitled' : note.title.trim();
-    final preview = note.contentMarkdown.trim().split('\n').firstWhere(
-          (line) => line.trim().isNotEmpty,
-          orElse: () => '',
-        );
+    final preview = notePreviewText(note.contentMarkdown);
+    final imagePath = notePreviewImage(note.contentMarkdown);
 
     return Dismissible(
       key: ValueKey(note.id),
@@ -90,6 +91,7 @@ class _NoteTile extends ConsumerWidget {
       onDismissed: (_) => ref.read(notesRepositoryProvider).deleteNote(note.id),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(vertical: 6),
+        leading: imagePath == null ? null : _NoteThumbnail(path: imagePath),
         title: Text(
           title,
           maxLines: 1,
@@ -101,7 +103,16 @@ class _NoteTile extends ConsumerWidget {
           ),
         ),
         subtitle: preview.isEmpty
-            ? null
+            ? (imagePath == null
+                ? null
+                : Text(
+                    'Photo',
+                    style: TextStyle(
+                      fontFamily: 'EBGaramond',
+                      fontSize: 15,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ))
             : Text(
                 preview,
                 maxLines: 2,
@@ -109,6 +120,41 @@ class _NoteTile extends ConsumerWidget {
                 style: const TextStyle(fontFamily: 'EBGaramond', fontSize: 15),
               ),
         onTap: () => context.router.push(NoteEditorRoute(noteId: note.id)),
+      ),
+    );
+  }
+}
+
+/// Square rounded thumbnail for the first image in a note. Falls back to a
+/// neutral image-broken icon if the file is missing.
+class _NoteThumbnail extends StatelessWidget {
+  const _NoteThumbnail({required this.path});
+
+  final String path;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final isNetwork = path.startsWith('http');
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: SizedBox(
+        width: 48,
+        height: 48,
+        child: isNetwork
+            ? Image.network(path, fit: BoxFit.cover)
+            : Image.file(
+                File(path),
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Container(
+                  color: scheme.surfaceContainerHighest,
+                  child: Icon(
+                    Icons.broken_image_outlined,
+                    size: 22,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
       ),
     );
   }

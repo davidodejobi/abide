@@ -1,4 +1,3 @@
-import 'package:appflowy_editor/appflowy_editor.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:openbaptisthymnal/features/notes/domain/note_markdown_codec.dart';
 import 'package:openbaptisthymnal/features/notes/domain/parse_links.dart';
@@ -33,6 +32,20 @@ void main() {
     expect(roundTrip(once), once, reason: 'encode must be idempotent');
     expect(once, contains('[[Grace]]'));
     expect(once, contains('# Sermon notes'));
+  });
+
+  test('empty markdown seeds an editable blank body', () {
+    final doc = noteMarkdownToDocument('');
+    expect(doc.root.children, hasLength(1),
+        reason: 'a blank paragraph gives the editor a body to type into');
+    expect(noteDocumentToMarkdown(doc), '');
+  });
+
+  test('relative image paths round-trip untouched', () {
+    // Without FileStorageService.init() the documents dir is unset, so paths
+    // pass through unchanged — the relative form must survive the round-trip.
+    const md = '![](note_images/abc.png)';
+    expect(roundTrip(md), md);
   });
 
   test('wikilinks stay parseable by the link graph after a round-trip', () {
