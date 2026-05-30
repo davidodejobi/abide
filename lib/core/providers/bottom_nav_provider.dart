@@ -3,11 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// Provider that tracks the currently selected bottom navigation tab index
 final bottomNavProvider = StateProvider<int>((ref) => 0);
 
-/// Enum representing the available bottom navigation tabs
+/// Enum representing the available bottom navigation tabs.
+/// Tablets (notes) is the default landing tab; the old Home/hymn tab is now "Songs".
 enum BottomNavTab {
-  home(0, 'Home'),
-  favorites(1, 'Favorites'),
-  settings(2, 'Settings');
+  tablets(0, 'Tablets'),
+  songs(1, 'Songs'),
+  favorites(2, 'Favorites'),
+  settings(3, 'Settings');
 
   const BottomNavTab(this.tabIndex, this.label);
 
@@ -17,7 +19,7 @@ enum BottomNavTab {
   static BottomNavTab fromIndex(int index) {
     return BottomNavTab.values.firstWhere(
       (tab) => tab.tabIndex == index,
-      orElse: () => BottomNavTab.home,
+      orElse: () => BottomNavTab.tablets,
     );
   }
 }
