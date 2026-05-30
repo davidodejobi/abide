@@ -7,6 +7,7 @@ import 'package:openbaptisthymnal/core/providers/bottom_nav_provider.dart';
 import 'package:openbaptisthymnal/features/dashboard/ui/widgets/bottom_nav_bar/bottom_nav_bar.dart';
 import 'package:openbaptisthymnal/features/hymn/ui/favorites_tab_screen.dart';
 import 'package:openbaptisthymnal/features/hymn/ui/home_tab_screen.dart';
+import 'package:openbaptisthymnal/features/notes/ui/notes_tab_screen.dart';
 import 'package:openbaptisthymnal/features/settings/ui/settings_tab_screen.dart';
 
 @RoutePage()
@@ -25,6 +26,7 @@ class DashboardScreen extends HookConsumerWidget {
             child: IndexedStack(
               index: currentIndex,
               children: const [
+                NotesTabScreen(),
                 HomeTabScreen(),
                 FavoritesTabScreen(),
                 SettingsTabScreen(),
@@ -74,8 +76,13 @@ class _BottomNavigation extends StatelessWidget {
         ),
         tabs: const [
           AdaptiveBottomNavTab(
-            label: 'Home',
-            icon: CupertinoIcons.home,
+            label: 'Tablets',
+            icon: CupertinoIcons.doc_text,
+            selectedIcon: CupertinoIcons.doc_text_fill,
+          ),
+          AdaptiveBottomNavTab(
+            label: 'Songs',
+            icon: CupertinoIcons.music_note_list,
           ),
           AdaptiveBottomNavTab(
             label: 'Favorites',

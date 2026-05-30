@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:toastification/toastification.dart';
@@ -12,7 +11,7 @@ import 'theme/theme_provider.dart';
 /// shows on every launch so it can be reviewed; release builds show it once.
 final appRouterProvider = Provider<AppRouter>((ref) {
   final storage = ref.watch(storageServiceProvider);
-  final showOnboarding = kDebugMode || !storage.isOnboardingComplete();
+  final showOnboarding = !storage.isOnboardingComplete();
   return AppRouter(showOnboarding: showOnboarding);
 });
 
