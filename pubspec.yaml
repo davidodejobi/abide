@@ -57,6 +57,8 @@ flutter:
   assets:
     - assets/hymnal/
     - assets/hymnal/languages/
+    - assets/bible/en-kjv/
+    - assets/bible/yo-bmy/
     - assets/images/lottie/
     - assets/audio/
     - path: assets/images/icons/
