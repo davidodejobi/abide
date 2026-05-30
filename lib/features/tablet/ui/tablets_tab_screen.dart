@@ -6,11 +6,13 @@ import 'package:openbaptisthymnal/core/router/app_router.dart';
 import 'package:openbaptisthymnal/core/storage/database/app_database.dart';
 import 'dart:io';
 
+import 'package:openbaptisthymnal/core/storage/database/daos/notes_dao.dart';
 import 'package:openbaptisthymnal/core/theme/app_text_styles.dart';
+import 'package:openbaptisthymnal/features/hymn/ui/widgets/search_bar_widget.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/tablet_preview.dart';
 import 'package:openbaptisthymnal/features/tablet/providers/tablets_providers.dart';
 
-/// Notes tab — the app's default landing screen. Lists the user's notes and
+/// Tablets tab — the app's default landing screen. Lists the user's tablets and
 /// opens the editor for create/edit.
 @RoutePage()
 class TabletsTabScreen extends HookConsumerWidget {
@@ -20,12 +22,14 @@ class TabletsTabScreen extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     useAutomaticKeepAlive();
 
-    final notesAsync = ref.watch(tabletsListProvider);
+    final searchController = useTextEditingController();
+    final searchQuery = useState('');
+    final query = searchQuery.value.trim();
 
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 8, 24),
+          padding: const EdgeInsets.fromLTRB(16, 16, 8, 12),
           child: Row(
             children: [
               Expanded(
@@ -44,41 +48,156 @@ class TabletsTabScreen extends HookConsumerWidget {
             ],
           ),
         ),
-        Expanded(
-          child: notesAsync.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (err, _) =>
-                Center(child: Text('Could not load notes: $err')),
-            data: (notes) {
-              if (notes.isEmpty) return const _EmptyNotes();
-              return ListView.separated(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
-                itemCount: notes.length,
-                separatorBuilder: (_, __) => const Divider(height: 1),
-                itemBuilder: (context, index) => _NoteTile(note: notes[index]),
-              );
-            },
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          child: SearchBarWidget(
+            controller: searchController,
+            hintText: 'Search tablets...',
+            onChanged: (value) => searchQuery.value = value,
           ),
+        ),
+        Expanded(
+          child: query.isEmpty
+              ? const _TabletsList()
+              : _SearchResults(query: query),
         ),
       ],
     );
   }
 }
 
-class _NoteTile extends ConsumerWidget {
-  const _NoteTile({required this.note});
-
-  final Note note;
+/// Live list of all tablets, shown when the search box is empty.
+class _TabletsList extends ConsumerWidget {
+  const _TabletsList();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final tabletsAsync = ref.watch(tabletsListProvider);
+    return tabletsAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (err, _) => Center(child: Text('Could not load tablets: $err')),
+      data: (tablets) {
+        if (tablets.isEmpty) return const _EmptyTablets();
+        return ListView.separated(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
+          itemCount: tablets.length,
+          separatorBuilder: (_, __) => const Divider(height: 1),
+          itemBuilder: (context, index) => _TabletTile(tablet: tablets[index]),
+        );
+      },
+    );
+  }
+}
+
+/// Debounced full-text search results for the current query.
+class _SearchResults extends ConsumerWidget {
+  const _SearchResults({required this.query});
+
+  final String query;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final resultsAsync = ref.watch(tabletSearchProvider(query));
+    return resultsAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (err, _) => Center(child: Text('Search failed: $err')),
+      data: (hits) {
+        if (hits.isEmpty) return _NoResults(query: query);
+        return ListView.separated(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
+          itemCount: hits.length,
+          separatorBuilder: (_, __) => const Divider(height: 1),
+          itemBuilder: (context, index) => _SearchResultTile(hit: hits[index]),
+        );
+      },
+    );
+  }
+}
+
+/// A single search hit: tablet title plus the highlighted snippet returned by
+/// FTS5. Tapping opens the editor for that tablet.
+class _SearchResultTile extends StatelessWidget {
+  const _SearchResultTile({required this.hit});
+
+  final NoteSearchHit hit;
+
+  @override
+  Widget build(BuildContext context) {
+    final note = hit.note;
     final title = note.title.trim().isEmpty ? 'Untitled' : note.title.trim();
-    final preview = notePreviewText(note.contentMarkdown);
-    final imagePath = notePreviewImage(note.contentMarkdown);
-    final hasAudio = imagePath == null && noteHasAudio(note.contentMarkdown);
+    final snippet = hit.snippet.replaceAll(RegExp(r'\s+'), ' ').trim();
+
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(vertical: 6),
+      title: Text(
+        title,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(
+          fontFamily: 'Geist',
+          fontWeight: FontWeight.w600,
+          fontSize: 16,
+        ),
+      ),
+      subtitle: snippet.isEmpty
+          ? null
+          : Text(
+              snippet,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontFamily: 'EBGaramond', fontSize: 15),
+            ),
+      onTap: () => context.router.push(TabletEditorRoute(noteId: note.id)),
+    );
+  }
+}
+
+/// Empty state shown when a non-empty query matches no tablets.
+class _NoResults extends StatelessWidget {
+  const _NoResults({required this.query});
+
+  final String query;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme.onSurfaceVariant;
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.search_off, size: 64, color: color),
+          const SizedBox(height: 12),
+          Text(
+            'No tablets match "$query"',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontFamily: 'Geist',
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TabletTile extends ConsumerWidget {
+  const _TabletTile({required this.tablet});
+
+  final Note tablet;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final title =
+        tablet.title.trim().isEmpty ? 'Untitled' : tablet.title.trim();
+    final preview = notePreviewText(tablet.contentMarkdown);
+    final imagePath = notePreviewImage(tablet.contentMarkdown);
+    final hasAudio = imagePath == null && noteHasAudio(tablet.contentMarkdown);
 
     return Dismissible(
-      key: ValueKey(note.id),
+      key: ValueKey(tablet.id),
       direction: DismissDirection.endToStart,
       background: Container(
         alignment: Alignment.centerRight,
@@ -89,11 +208,12 @@ class _NoteTile extends ConsumerWidget {
           color: Theme.of(context).colorScheme.onErrorContainer,
         ),
       ),
-      onDismissed: (_) => ref.read(tabletsRepositoryProvider).deleteNote(note.id),
+      onDismissed: (_) =>
+          ref.read(tabletsRepositoryProvider).deleteNote(tablet.id),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(vertical: 6),
         leading: imagePath != null
-            ? _NoteThumbnail(path: imagePath)
+            ? _TabletThumbnail(path: imagePath)
             : hasAudio
                 ? Container(
                     width: 48,
@@ -122,7 +242,7 @@ class _NoteTile extends ConsumerWidget {
             ? ((imagePath == null && !hasAudio)
                 ? null
                 : Text(
-                    hasAudio ? 'Voice note' : 'Photo',
+                    hasAudio ? 'Voice tablet' : 'Photo',
                     style: TextStyle(
                       fontFamily: 'EBGaramond',
                       fontSize: 15,
@@ -135,16 +255,16 @@ class _NoteTile extends ConsumerWidget {
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(fontFamily: 'EBGaramond', fontSize: 15),
               ),
-        onTap: () => context.router.push(TabletEditorRoute(noteId: note.id)),
+        onTap: () => context.router.push(TabletEditorRoute(noteId: tablet.id)),
       ),
     );
   }
 }
 
-/// Square rounded thumbnail for the first image in a note. Falls back to a
+/// Square rounded thumbnail for the first image in a tablet. Falls back to a
 /// neutral image-broken icon if the file is missing.
-class _NoteThumbnail extends StatelessWidget {
-  const _NoteThumbnail({required this.path});
+class _TabletThumbnail extends StatelessWidget {
+  const _TabletThumbnail({required this.path});
 
   final String path;
 
@@ -176,8 +296,8 @@ class _NoteThumbnail extends StatelessWidget {
   }
 }
 
-class _EmptyNotes extends StatelessWidget {
-  const _EmptyNotes();
+class _EmptyTablets extends StatelessWidget {
+  const _EmptyTablets();
 
   @override
   Widget build(BuildContext context) {
