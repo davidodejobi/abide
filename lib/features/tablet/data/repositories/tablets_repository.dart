@@ -1,4 +1,5 @@
 import 'package:openbaptisthymnal/core/storage/database/app_database.dart';
+import 'package:openbaptisthymnal/core/storage/database/daos/notes_dao.dart';
 import 'package:openbaptisthymnal/features/tablet/data/sources/local/tablets_local_source.dart';
 
 /// Offline-first entry point for note data. For now it delegates to the local
@@ -19,6 +20,9 @@ class TabletsRepository {
 
   Stream<List<Note>> watchBacklinks(String title) =>
       _local.watchBacklinks(title);
+
+  Future<List<NoteSearchHit>> searchNotes(String query) =>
+      _local.searchNotes(query);
 
   Future<String> createNote({String title = '', String contentMarkdown = ''}) =>
       _local.createNote(title: title, contentMarkdown: contentMarkdown);
