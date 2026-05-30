@@ -49,8 +49,7 @@ class TabletsRepository {
 
   Future<String> createTag(String name) => _local.createTag(name);
 
-  Future<void> renameTag(String id, String name) =>
-      _local.renameTag(id, name);
+  Future<void> renameTag(String id, String name) => _local.renameTag(id, name);
 
   Future<void> deleteTag(String id) => _local.deleteTag(id);
 
