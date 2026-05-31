@@ -1,8 +1,12 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:openbaptisthymnal/core/router/app_router.dart';
 import 'package:openbaptisthymnal/core/theme/app_text_styles.dart';
+import 'package:openbaptisthymnal/core/theme/font_scale_provider.dart';
+import 'package:openbaptisthymnal/features/bible/domain/verse_reference_format.dart';
 import 'package:openbaptisthymnal/features/bible/model/bible_chapter.dart';
 import 'package:openbaptisthymnal/features/bible/model/bible_manifest.dart';
 import 'package:openbaptisthymnal/features/bible/providers/bible_providers.dart';
@@ -12,6 +16,10 @@ import 'package:openbaptisthymnal/features/bible/ui/widgets/chapter_picker_sheet
 /// The Bible reading tab: a header that opens book/chapter pickers and an
 /// edition switch, with the current chapter rendered below. The reading
 /// position is persisted, so the tab reopens where the reader left off.
+///
+/// Long-pressing a verse starts a selection; further taps add or remove verses.
+/// While a selection is active the header becomes a share bar. Verse text size
+/// follows the app-wide [fontScaleProvider] set in Settings.
 @RoutePage()
 class BibleTabScreen extends HookConsumerWidget {
   const BibleTabScreen({super.key});
@@ -21,9 +29,35 @@ class BibleTabScreen extends HookConsumerWidget {
     useAutomaticKeepAlive();
 
     final position = ref.watch(bibleReadingPositionProvider);
-    final manifestAsync =
-        ref.watch(bibleManifestProvider(position.editionId));
+    final manifestAsync = ref.watch(bibleManifestProvider(position.editionId));
+    final textScale = ref.watch(fontScaleProvider).scale;
     final colorScheme = Theme.of(context).colorScheme;
+
+    // Selected verse numbers for the chapter currently in view. Reset whenever
+    // the reader moves to a different edition, book, or chapter.
+    final selected = useState<Set<int>>(<int>{});
+    useEffect(() {
+      selected.value = <int>{};
+      return null;
+    }, [position.editionId, position.ordinal, position.chapter]);
+
+    void toggleVerse(int number) {
+      final next = {...selected.value};
+      if (!next.remove(number)) next.add(number);
+      selected.value = next;
+    }
+
+    void onTapVerse(int number) {
+      if (selected.value.isEmpty) return; // normal reading when not selecting
+      toggleVerse(number);
+    }
+
+    void onLongPressVerse(int number) {
+      HapticFeedback.selectionClick();
+      if (!selected.value.contains(number)) {
+        selected.value = {...selected.value, number};
+      }
+    }
 
     return manifestAsync.when(
       loading: () => Center(
@@ -41,15 +75,29 @@ class BibleTabScreen extends HookConsumerWidget {
         );
         return Column(
           children: [
-            _ReaderHeader(manifest: manifest, book: book),
+            if (selected.value.isEmpty)
+              _ReaderHeader(manifest: manifest, book: book)
+            else
+              _SelectionBar(
+                editionId: position.editionId,
+                book: book,
+                chapter: position.chapter,
+                selected: selected.value,
+                onClear: () => selected.value = <int>{},
+              ),
             Expanded(
               child: _ChapterView(
                 editionId: position.editionId,
                 book: book,
                 chapter: position.chapter,
+                selected: selected.value,
+                textScale: textScale,
+                onTapVerse: onTapVerse,
+                onLongPressVerse: onLongPressVerse,
               ),
             ),
-            _ChapterNav(manifest: manifest, book: book, chapter: position.chapter),
+            _ChapterNav(
+                manifest: manifest, book: book, chapter: position.chapter),
           ],
         );
       },
@@ -82,8 +130,7 @@ class _ReaderHeader extends ConsumerWidget {
         context,
         bookName: picked.name,
         chapterCount: picked.chapterCount,
-        currentChapter:
-            ordinal == book.ordinal ? position.chapter : 1,
+        currentChapter: ordinal == book.ordinal ? position.chapter : 1,
       );
       if (chapter == null) return;
       ref
@@ -140,20 +187,99 @@ class _ReaderHeader extends ConsumerWidget {
   }
 }
 
-class _ChapterView extends ConsumerWidget {
-  const _ChapterView({
+/// Shown in place of the header while verses are selected: a count plus share
+/// and clear actions. Builds the citation + joined verse text on share.
+class _SelectionBar extends ConsumerWidget {
+  const _SelectionBar({
     required this.editionId,
     required this.book,
     required this.chapter,
+    required this.selected,
+    required this.onClear,
   });
 
   final String editionId;
   final BibleBookInfo book;
   final int chapter;
+  final Set<int> selected;
+  final VoidCallback onClear;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final query = (editionId: editionId, ordinal: book.ordinal, chapter: chapter);
+    final colorScheme = Theme.of(context).colorScheme;
+
+    void share() {
+      final query =
+          (editionId: editionId, ordinal: book.ordinal, chapter: chapter);
+      final data = ref.read(bibleChapterProvider(query)).valueOrNull;
+      if (data == null) return;
+      final picked = data.verses
+          .where((v) => selected.contains(v.number))
+          .toList()
+        ..sort((a, b) => a.number.compareTo(b.number));
+      if (picked.isEmpty) return;
+      final body = picked.map((v) => v.text).join(' ');
+      final reference = '${book.name} ${formatVerseRange(chapter, selected)}';
+      context.router.push(
+        ScriptureShareCardRoute(reference: reference, body: body),
+      );
+    }
+
+    return Material(
+      color: colorScheme.primaryContainer,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(4, 8, 8, 8),
+        child: Row(
+          children: [
+            IconButton(
+              tooltip: 'Clear selection',
+              icon: const Icon(Icons.close),
+              onPressed: onClear,
+            ),
+            Expanded(
+              child: Text(
+                '${selected.length} selected',
+                style: AppTextStyles.titleMedium.copyWith(
+                  color: colorScheme.onPrimaryContainer,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            FilledButton.icon(
+              onPressed: share,
+              icon: const Icon(Icons.ios_share, size: 18),
+              label: const Text('Share'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ChapterView extends ConsumerWidget {
+  const _ChapterView({
+    required this.editionId,
+    required this.book,
+    required this.chapter,
+    required this.selected,
+    required this.textScale,
+    required this.onTapVerse,
+    required this.onLongPressVerse,
+  });
+
+  final String editionId;
+  final BibleBookInfo book;
+  final int chapter;
+  final Set<int> selected;
+  final double textScale;
+  final ValueChanged<int> onTapVerse;
+  final ValueChanged<int> onLongPressVerse;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final query =
+        (editionId: editionId, ordinal: book.ordinal, chapter: chapter);
     final chapterAsync = ref.watch(bibleChapterProvider(query));
     final colorScheme = Theme.of(context).colorScheme;
 
@@ -165,15 +291,31 @@ class _ChapterView extends ConsumerWidget {
         message: 'Failed to load this chapter',
         onRetry: () => ref.invalidate(bibleChapterProvider(query)),
       ),
-      data: (data) => _VerseList(chapter: data),
+      data: (data) => _VerseList(
+        chapter: data,
+        selected: selected,
+        textScale: textScale,
+        onTapVerse: onTapVerse,
+        onLongPressVerse: onLongPressVerse,
+      ),
     );
   }
 }
 
 class _VerseList extends StatelessWidget {
-  const _VerseList({required this.chapter});
+  const _VerseList({
+    required this.chapter,
+    required this.selected,
+    required this.textScale,
+    required this.onTapVerse,
+    required this.onLongPressVerse,
+  });
 
   final BibleChapter chapter;
+  final Set<int> selected;
+  final double textScale;
+  final ValueChanged<int> onTapVerse;
+  final ValueChanged<int> onLongPressVerse;
 
   @override
   Widget build(BuildContext context) {
@@ -182,30 +324,44 @@ class _VerseList extends StatelessWidget {
       // Keying on the chapter resets the scroll offset to the top on every
       // chapter change, so the reader always starts at verse 1.
       key: ValueKey('${chapter.book}.${chapter.chapter}'),
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 120),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
       itemCount: chapter.verses.length,
       itemBuilder: (context, index) {
         final verse = chapter.verses[index];
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: RichText(
-            text: TextSpan(
-              style: const TextStyle(
-                fontFamily: AppTextStyles.fontFamilyEBGaramond,
-                fontSize: 20,
-                height: 1.5,
-              ).copyWith(color: colorScheme.onSurface),
-              children: [
-                TextSpan(
-                  text: '${verse.number}  ',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: colorScheme.primary,
-                    fontWeight: FontWeight.w700,
-                  ),
+        final isSelected = selected.contains(verse.number);
+        return GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => onTapVerse(verse.number),
+          onLongPress: () => onLongPressVerse(verse.number),
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? colorScheme.primary.withValues(alpha: 0.14)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: RichText(
+              text: TextSpan(
+                style: TextStyle(
+                  fontFamily: AppTextStyles.fontFamilyEBGaramond,
+                  fontSize: 20 * textScale,
+                  height: 1.5,
+                  color: colorScheme.onSurface,
                 ),
-                TextSpan(text: verse.text),
-              ],
+                children: [
+                  TextSpan(
+                    text: '${verse.number}  ',
+                    style: TextStyle(
+                      fontSize: 13 * textScale,
+                      color: colorScheme.primary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  TextSpan(text: verse.text),
+                ],
+              ),
             ),
           ),
         );
