@@ -9,6 +9,8 @@ final tabletsLocalSourceProvider = Provider<TabletsLocalSource>((ref) {
   return TabletsLocalSource(
     ref.watch(notesDaoProvider),
     ref.watch(noteLinksDaoProvider),
+    ref.watch(foldersDaoProvider),
+    ref.watch(tagsDaoProvider),
   );
 });
 
@@ -36,6 +38,40 @@ final outgoingLinksProvider =
 final backlinksProvider =
     StreamProvider.family<List<Note>, String>((ref, title) {
   return ref.watch(tabletsRepositoryProvider).watchBacklinks(title);
+});
+
+/// All folders, sorted by name, for the filter chips and the move picker.
+final foldersProvider = StreamProvider<List<Folder>>((ref) {
+  return ref.watch(tabletsRepositoryProvider).watchFolders();
+});
+
+/// The folder currently selected on the tablets tab; null means "All".
+final activeFolderProvider = StateProvider<String?>((ref) => null);
+
+/// Live list of tablets in a single folder, newest edit first.
+final tabletsInFolderProvider =
+    StreamProvider.family<List<Note>, String>((ref, folderId) {
+  return ref.watch(tabletsRepositoryProvider).watchNotesInFolder(folderId);
+});
+
+/// All tags, sorted by name, for the tag picker and filter.
+final tagsProvider = StreamProvider<List<Tag>>((ref) {
+  return ref.watch(tabletsRepositoryProvider).watchTags();
+});
+
+/// The tag currently selected on the tablets tab; null means no tag filter.
+final activeTagProvider = StateProvider<String?>((ref) => null);
+
+/// Tags currently attached to a single tablet.
+final tagsForNoteProvider =
+    StreamProvider.family<List<Tag>, String>((ref, noteId) {
+  return ref.watch(tabletsRepositoryProvider).watchTagsForNote(noteId);
+});
+
+/// Live list of tablets carrying a single tag, newest edit first.
+final notesWithTagProvider =
+    StreamProvider.family<List<Note>, String>((ref, tagId) {
+  return ref.watch(tabletsRepositoryProvider).watchNotesWithTag(tagId);
 });
 
 /// Debounced full-text search over tablets, keyed by the raw query string.

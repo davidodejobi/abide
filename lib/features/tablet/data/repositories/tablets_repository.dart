@@ -24,6 +24,41 @@ class TabletsRepository {
   Future<List<NoteSearchHit>> searchNotes(String query) =>
       _local.searchNotes(query);
 
+  Stream<List<Folder>> watchFolders() => _local.watchFolders();
+
+  Stream<List<Note>> watchNotesInFolder(String folderId) =>
+      _local.watchNotesInFolder(folderId);
+
+  Future<String> createFolder(String name) => _local.createFolder(name);
+
+  Future<void> renameFolder(String id, String name) =>
+      _local.renameFolder(id, name);
+
+  Future<void> deleteFolder(String id) => _local.deleteFolder(id);
+
+  Future<void> moveNoteToFolder(String noteId, String? folderId) =>
+      _local.moveNoteToFolder(noteId, folderId);
+
+  Stream<List<Tag>> watchTags() => _local.watchTags();
+
+  Stream<List<Tag>> watchTagsForNote(String noteId) =>
+      _local.watchTagsForNote(noteId);
+
+  Stream<List<Note>> watchNotesWithTag(String tagId) =>
+      _local.watchNotesWithTag(tagId);
+
+  Future<String> createTag(String name) => _local.createTag(name);
+
+  Future<void> renameTag(String id, String name) => _local.renameTag(id, name);
+
+  Future<void> deleteTag(String id) => _local.deleteTag(id);
+
+  Future<void> addTagToNote(String noteId, String tagId) =>
+      _local.addTagToNote(noteId, tagId);
+
+  Future<void> removeTagFromNote(String noteId, String tagId) =>
+      _local.removeTagFromNote(noteId, tagId);
+
   Future<String> createNote({String title = '', String contentMarkdown = ''}) =>
       _local.createNote(title: title, contentMarkdown: contentMarkdown);
 
