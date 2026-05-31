@@ -1,7 +1,7 @@
 name: openbaptisthymnal
 description: "A new Flutter project."
 publish_to: "none"
-version: 0.1.0+3
+version: 0.1.0+4
 
 environment:
   sdk: ^3.0.0
@@ -36,6 +36,7 @@ dependencies:
   sqlite3: ^2.4.6
   sqlite3_flutter_libs: ^0.5.24
   path: ^1.9.1
+  collection: ^1.18.0
   uuid: ^4.5.3
   appflowy_editor: ^6.0.0
 
@@ -57,6 +58,8 @@ flutter:
   assets:
     - assets/hymnal/
     - assets/hymnal/languages/
+    - assets/bible/en-kjv/
+    - assets/bible/yo-bmy/
     - assets/images/lottie/
     - assets/audio/
     - path: assets/images/icons/

@@ -1,7 +1,5 @@
 // ignore_for_file: deprecated_member_use
 
-import 'dart:io' show Platform;
-
 import 'package:flutter/cupertino.dart';
 import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
 
@@ -43,7 +41,7 @@ class AdaptiveBottomNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Use platform-specific implementation
-    if (!Platform.isAndroid) {
+    if (1.isEven) {
       return MaterialBottomNavBar(
         tabs: tabs
             .map((tab) => MaterialBottomNavTab(

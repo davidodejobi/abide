@@ -11,6 +11,22 @@
 part of 'app_router.dart';
 
 /// generated route for
+/// [BibleTabScreen]
+class BibleTabRoute extends PageRouteInfo<void> {
+  const BibleTabRoute({List<PageRouteInfo>? children})
+      : super(BibleTabRoute.name, initialChildren: children);
+
+  static const String name = 'BibleTabRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const BibleTabScreen();
+    },
+  );
+}
+
+/// generated route for
 /// [DashboardScreen]
 class DashboardRoute extends PageRouteInfo<void> {
   const DashboardRoute({List<PageRouteInfo>? children})
@@ -119,6 +135,72 @@ class OnboardingRoute extends PageRouteInfo<void> {
       return const OnboardingPage();
     },
   );
+}
+
+/// generated route for
+/// [ScriptureShareCardPage]
+class ScriptureShareCardRoute
+    extends PageRouteInfo<ScriptureShareCardRouteArgs> {
+  ScriptureShareCardRoute({
+    Key? key,
+    required String reference,
+    required List<({int number, String text})> verses,
+    List<PageRouteInfo>? children,
+  }) : super(
+          ScriptureShareCardRoute.name,
+          args: ScriptureShareCardRouteArgs(
+            key: key,
+            reference: reference,
+            verses: verses,
+          ),
+          initialChildren: children,
+        );
+
+  static const String name = 'ScriptureShareCardRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      final args = data.argsAs<ScriptureShareCardRouteArgs>();
+      return ScriptureShareCardPage(
+        key: args.key,
+        reference: args.reference,
+        verses: args.verses,
+      );
+    },
+  );
+}
+
+class ScriptureShareCardRouteArgs {
+  const ScriptureShareCardRouteArgs({
+    this.key,
+    required this.reference,
+    required this.verses,
+  });
+
+  final Key? key;
+
+  final String reference;
+
+  final List<({int number, String text})> verses;
+
+  @override
+  String toString() {
+    return 'ScriptureShareCardRouteArgs{key: $key, reference: $reference, verses: $verses}';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! ScriptureShareCardRouteArgs) return false;
+    return key == other.key &&
+        reference == other.reference &&
+        const ListEquality().equals(verses, other.verses);
+  }
+
+  @override
+  int get hashCode =>
+      key.hashCode ^ reference.hashCode ^ const ListEquality().hash(verses);
 }
 
 /// generated route for
