@@ -207,13 +207,13 @@ class _SelectionBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
+    final query =
+        (editionId: editionId, ordinal: book.ordinal, chapter: chapter);
+    final chapterData = ref.watch(bibleChapterProvider(query)).valueOrNull;
 
     void share() {
-      final query =
-          (editionId: editionId, ordinal: book.ordinal, chapter: chapter);
-      final data = ref.read(bibleChapterProvider(query)).valueOrNull;
-      if (data == null) return;
-      final picked = data.verses
+      if (chapterData == null) return;
+      final picked = chapterData.verses
           .where((v) => selected.contains(v.number))
           .toList()
         ..sort((a, b) => a.number.compareTo(b.number));
@@ -246,7 +246,7 @@ class _SelectionBar extends ConsumerWidget {
               ),
             ),
             FilledButton.icon(
-              onPressed: share,
+              onPressed: chapterData == null ? null : share,
               icon: const Icon(Icons.ios_share, size: 18),
               label: const Text('Share'),
             ),
