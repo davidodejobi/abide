@@ -1,4 +1,5 @@
 import 'package:auto_route/auto_route.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -7,7 +8,6 @@ import 'package:openbaptisthymnal/core/router/app_router.dart';
 import 'package:openbaptisthymnal/core/theme/app_colors.dart';
 import 'package:openbaptisthymnal/core/theme/app_text_styles.dart';
 import 'package:openbaptisthymnal/core/utils/extensions/string_extensions.dart';
-import 'package:openbaptisthymnal/core/utils/time_greeting.dart';
 import 'package:openbaptisthymnal/core/utils/toast_helper.dart';
 import 'package:openbaptisthymnal/features/hymn/model/stanza.dart';
 import 'package:openbaptisthymnal/features/hymn/providers/hymnal_provider.dart';
@@ -16,8 +16,6 @@ import 'package:openbaptisthymnal/features/hymn/ui/widgets/hymn_list_tile.dart';
 import 'package:openbaptisthymnal/features/hymn/ui/widgets/language_toggle.dart';
 import 'package:openbaptisthymnal/features/hymn/ui/widgets/search_bar_widget.dart';
 import 'package:openbaptisthymnal/features/onboarding/providers/onboarding_provider.dart';
-import 'package:openbaptisthymnal/features/onboarding/ui/widgets/hand_drawn_moon.dart';
-import 'package:openbaptisthymnal/features/onboarding/ui/widgets/hand_drawn_sun.dart';
 
 /// Home tab screen - Shows the main hymn list
 @RoutePage()
@@ -91,8 +89,11 @@ class HomeTabScreen extends HookConsumerWidget {
                       children: [
                         Padding(
                           padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                          child:
-                              _HomeHeader(name: ref.watch(userNameProvider)),
+                          child: _HomeHeader(
+                            name: ref.watch(userNameProvider),
+                            onFavorites: () =>
+                                context.router.push(const FavoritesTabRoute()),
+                          ),
                         ),
                         Padding(
                           padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
@@ -132,10 +133,11 @@ class HomeTabScreen extends HookConsumerWidget {
                             /// make the lyrics and stanzas searchable
                             final chorus =
                                 (hymn.lyrics.chorus)?.toLowerCase() ?? '';
-                            final stanzas = (hymn.lyrics.stanzas
-                                        as List<Stanza>?)
-                                    ?.map((stanza) => stanza.text.toLowerCase()) ??
-                                [];
+                            final stanzas =
+                                (hymn.lyrics.stanzas as List<Stanza>?)?.map(
+                                        (stanza) =>
+                                            stanza.text.toLowerCase()) ??
+                                    [];
                             return title.contains(query) ||
                                 number.contains(query) ||
                                 chorus.contains(query) ||
@@ -316,65 +318,30 @@ class _ScrollFab extends StatelessWidget {
 /// line, and a small self-drawing sun (day) or moon (night) doodle — carrying
 /// the onboarding's warmth onto the home screen.
 class _HomeHeader extends StatelessWidget {
-  const _HomeHeader({required this.name});
+  const _HomeHeader({required this.name, required this.onFavorites});
 
   final String? name;
+  final VoidCallback onFavorites;
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final greeting = TimeGreeting.now();
-    final salutation =
-        name == null ? '${greeting.greeting}.' : '${greeting.greeting}, $name';
-    // Bright gold reads well on dark charcoal; a deep gold keeps the accent and
-    // doodle legible on the light cream background instead of washing out.
-    final accentColor = isDark ? AppColors.secondary : AppColors.secondaryDark;
-
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                salutation,
-                style: AppTextStyles.headlineLarge.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 4),
-              // Hand-written accent — the subtle onboarding voice on home.
-              Text(
-                greeting.accent,
-                style: AppTextStyles.doodleLabel(color: accentColor),
-              ),
-            ],
+          child: Text(
+            'Hymns',
+            style: AppTextStyles.headlineLarge.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
-        const SizedBox(width: 12),
-        // Self-drawing celestial doodle — a quiet day/night accent.
-        SizedBox(
-          width: 64,
-          height: 48,
-          child: greeting.isNight
-              ? HandDrawnMoon(
-                  size: const Size(64, 48),
-                  color: accentColor,
-                  strokeWidth: 1.8,
-                  duration: const Duration(milliseconds: 1200),
-                  startDelay: const Duration(milliseconds: 200),
-                )
-              : HandDrawnSun(
-                  size: const Size(64, 48),
-                  color: accentColor,
-                  strokeWidth: 1.8,
-                  duration: const Duration(milliseconds: 1200),
-                  startDelay: const Duration(milliseconds: 200),
-                ),
+        IconButton(
+          tooltip: 'Favorites',
+          onPressed: onFavorites,
+          icon: const Icon(CupertinoIcons.heart),
         ),
+        const SizedBox(width: 4),
       ],
     );
   }

@@ -9,6 +9,11 @@ final favoritesLocalSourceProvider = Provider<FavoritesLocalSource>((ref) {
   return FavoritesLocalSource(prefs);
 });
 
+/// Builds the language-scoped storage key for a favorite. Favorites are tied to
+/// the language they were saved in, so the same hymn number can be favorited
+/// independently in each language (e.g. `yo:hymn_0005` vs `en:hymn_0005`).
+String favoriteKey(String language, String hymnId) => '$language:$hymnId';
+
 final favoritesProvider =
     NotifierProvider<FavoritesNotifier, Set<String>>(FavoritesNotifier.new);
 
@@ -16,77 +21,67 @@ class FavoritesNotifier extends Notifier<Set<String>> {
   @override
   Set<String> build() {
     final source = ref.read(favoritesLocalSourceProvider);
-    return source.getFavoriteIds();
+    // 'yo' is the app's default language, so pre-existing favorites are
+    // assumed Yoruba when upgrading from the old language-agnostic format.
+    return source.migrateLegacyKeys('yo');
   }
 
-  Future<void> toggle(String hymnId) async {
+  Future<void> toggle(String hymnId, String language) async {
     final source = ref.read(favoritesLocalSourceProvider);
-    await source.toggleFavorite(hymnId);
+    await source.toggleFavorite(favoriteKey(language, hymnId));
     state = source.getFavoriteIds();
   }
 
-  bool isFavorite(String hymnId) => state.contains(hymnId);
+  bool isFavorite(String hymnId, String language) =>
+      state.contains(favoriteKey(language, hymnId));
 
-  Future<void> addFavorite(String hymnId) async {
+  Future<void> addFavorite(String hymnId, String language) async {
     final source = ref.read(favoritesLocalSourceProvider);
-    await source.addFavorite(hymnId);
+    await source.addFavorite(favoriteKey(language, hymnId));
     state = source.getFavoriteIds();
   }
 
-  Future<void> removeFavorite(String hymnId) async {
+  Future<void> removeFavorite(String hymnId, String language) async {
     final source = ref.read(favoritesLocalSourceProvider);
-    await source.removeFavorite(hymnId);
+    await source.removeFavorite(favoriteKey(language, hymnId));
     state = source.getFavoriteIds();
   }
 }
 
-/// Derived provider — returns all HymnTranslations that are currently favorited.
-///
-/// Language-agnostic: each hymn is resolved using the current language first,
-/// falling back to any available language if the hymn has no translation in
-/// the current language. This prevents favorited hymns from disappearing when
-/// the user switches languages.
-final favoriteHymnsProvider = FutureProvider<List<HymnTranslation>>((ref) async {
-  final favoriteIds = ref.watch(favoritesProvider);
-  if (favoriteIds.isEmpty) return [];
+/// A favorited hymn paired with the language it was saved in.
+typedef FavoriteHymn = ({HymnTranslation hymn, String language});
 
-  final currentLang = ref.watch(languageProvider);
+/// Derived provider — returns all favorited hymns, each resolved in the exact
+/// language it was saved in. Switching the app's current language no longer
+/// changes which translation a favorite shows.
+final favoriteHymnsProvider = FutureProvider<List<FavoriteHymn>>((ref) async {
+  final keys = ref.watch(favoritesProvider);
+  if (keys.isEmpty) return [];
+
   final repo = ref.read(hymnalRepositoryProvider);
 
-  final index = await repo.getHymnalIndex();
-  final allLanguages = index.orders.keys.toList();
+  // Group favorited hymn IDs by the language they were saved in so each pack
+  // is loaded at most once.
+  final idsByLanguage = <String, List<String>>{};
+  for (final key in keys) {
+    final sep = key.indexOf(':');
+    if (sep < 0) continue;
+    final language = key.substring(0, sep);
+    final hymnId = key.substring(sep + 1);
+    idsByLanguage.putIfAbsent(language, () => []).add(hymnId);
+  }
 
-  final currentPack = await repo.getLanguagePack(currentLang);
-
-  // Determine which favorited hymns are missing from the current language pack.
-  final missingIds =
-      favoriteIds.where((id) => !currentPack.hymns.containsKey(id)).toSet();
-
-  // For missing hymns, load only the language packs that actually contain them.
-  final fallbackPacks = <String, LanguagePack>{};
-  if (missingIds.isNotEmpty) {
-    for (final lang in allLanguages) {
-      if (lang == currentLang) continue;
-      final langIds = Set<String>.from(index.orders[lang] ?? const []);
-      if (missingIds.any(langIds.contains)) {
-        fallbackPacks[lang] = await repo.getLanguagePack(lang);
+  final result = <FavoriteHymn>[];
+  for (final entry in idsByLanguage.entries) {
+    final pack = await repo.getLanguagePack(entry.key);
+    for (final id in entry.value) {
+      final hymn = pack.hymns[id];
+      if (hymn != null) {
+        result.add((hymn: hymn.copyWith(id: id), language: entry.key));
       }
     }
   }
 
-  final result = <HymnTranslation>[];
-  for (final id in favoriteIds) {
-    if (currentPack.hymns.containsKey(id)) {
-      result.add(currentPack.hymns[id]!.copyWith(id: id));
-    } else {
-      for (final pack in fallbackPacks.values) {
-        if (pack.hymns.containsKey(id)) {
-          result.add(pack.hymns[id]!.copyWith(id: id));
-          break;
-        }
-      }
-    }
-  }
-
+  result.sort((a, b) => a.hymn.number.compareTo(b.hymn.number));
   return result;
 });

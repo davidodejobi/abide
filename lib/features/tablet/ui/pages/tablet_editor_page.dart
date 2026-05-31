@@ -12,8 +12,8 @@ import 'package:openbaptisthymnal/core/theme/app_colors.dart';
 import 'package:openbaptisthymnal/core/theme/font_scale_provider.dart';
 import 'package:openbaptisthymnal/core/utils/services/file_storage_service.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/link_autocomplete.dart';
-import 'package:openbaptisthymnal/features/tablet/domain/tablet_markdown_codec.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/parse_links.dart';
+import 'package:openbaptisthymnal/features/tablet/domain/tablet_markdown_codec.dart';
 import 'package:openbaptisthymnal/features/tablet/providers/tablets_providers.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/widgets/audio_block_component.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/widgets/audio_recorder_sheet.dart';
@@ -382,10 +382,6 @@ class _NoteEditorView extends HookConsumerWidget {
           elevation: 0,
           scrolledUnderElevation: 0,
           backgroundColor: theme.scaffoldBackgroundColor,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => context.router.maybePop(),
-          ),
           actions: [
             IconButton(
               icon: const Icon(Icons.folder_outlined),

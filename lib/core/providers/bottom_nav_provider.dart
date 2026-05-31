@@ -9,8 +9,7 @@ enum BottomNavTab {
   tablets(0, 'Tablets'),
   songs(1, 'Songs'),
   bible(2, 'Bible'),
-  favorites(3, 'Favorites'),
-  settings(4, 'Settings');
+  settings(3, 'Settings');
 
   const BottomNavTab(this.tabIndex, this.label);
 

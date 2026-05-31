@@ -33,11 +33,11 @@ class AppRouter extends RootStackRouter {
             AutoRoute(page: TabletsTabRoute.page),
             AutoRoute(page: HomeTabRoute.page),
             AutoRoute(page: BibleTabRoute.page),
-            AutoRoute(page: FavoritesTabRoute.page),
             AutoRoute(page: SettingsTabRoute.page),
           ],
         ),
         // Standalone routes (pushed on top of dashboard)
+        AutoRoute(page: FavoritesTabRoute.page),
         AutoRoute(page: TabletEditorRoute.page),
         AutoRoute(page: HymnDetailRoute.page),
         AutoRoute(page: ShareCardRoute.page),

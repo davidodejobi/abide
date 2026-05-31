@@ -13,6 +13,7 @@ import 'package:openbaptisthymnal/core/utils/extensions/string_extensions.dart';
 import 'package:openbaptisthymnal/core/utils/toast_helper.dart';
 import 'package:openbaptisthymnal/features/hymn/model/language_pack.dart';
 import 'package:openbaptisthymnal/features/hymn/providers/favorites_provider.dart';
+import 'package:openbaptisthymnal/features/hymn/providers/hymnal_provider.dart';
 import 'package:openbaptisthymnal/features/hymn/ui/viewmodels/hymns_viewmodel.dart';
 import 'package:openbaptisthymnal/features/hymn/ui/widgets/stanza_card.dart';
 import 'package:openbaptisthymnal/features/settings/ui/widgets/font_size_control.dart';
@@ -28,8 +29,11 @@ class HymnDetailPage extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // Watch hymn details
     final detailAsync = ref.watch(hymnDetailProvider(hymnId));
+    final language = ref.watch(languageProvider);
     final isFavorited = ref.watch(
-      favoritesProvider.select((ids) => ids.contains(hymnId)),
+      favoritesProvider.select(
+        (ids) => ids.contains(favoriteKey(language, hymnId)),
+      ),
     );
     final textScale = ref.watch(fontScaleProvider).scale;
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -245,7 +249,7 @@ class HymnDetailPage extends HookConsumerWidget {
                                         : 'heart'.iconSvg,
                                     onTap: () => ref
                                         .read(favoritesProvider.notifier)
-                                        .toggle(hymnId),
+                                        .toggle(hymnId, language),
                                     isDark: isDark,
                                     isActive: isFavorited,
                                   ),

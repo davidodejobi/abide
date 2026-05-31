@@ -36,6 +36,20 @@ class FavoritesLocalSource {
 
   bool isFavorite(String hymnId) => getFavoriteIds().contains(hymnId);
 
+  /// Upgrades legacy language-agnostic favorites ("hymn_0005") to language-
+  /// scoped keys ("yo:hymn_0005") so a favorite stays tied to the language it
+  /// was saved in. Idempotent — keys that already carry a language are left
+  /// untouched. Returns the (possibly migrated) set.
+  Set<String> migrateLegacyKeys(String defaultLanguage) {
+    final ids = getFavoriteIds();
+    if (ids.every((k) => k.contains(':'))) return ids;
+    final migrated = {
+      for (final k in ids) k.contains(':') ? k : '$defaultLanguage:$k',
+    };
+    _persist(migrated);
+    return migrated;
+  }
+
   Future<void> clearAll() async {
     await _prefs.remove(_key);
   }
