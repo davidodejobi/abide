@@ -9,6 +9,7 @@ import 'package:openbaptisthymnal/features/tablet/ui/tablets_tab_screen.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/pages/tablet_editor_page.dart';
 import 'package:openbaptisthymnal/features/onboarding/ui/onboarding_page.dart';
 import 'package:openbaptisthymnal/features/settings/ui/settings_tab_screen.dart';
+import 'package:openbaptisthymnal/features/share_card/ui/scripture_share_card_page.dart';
 import 'package:openbaptisthymnal/features/share_card/ui/share_card_page.dart';
 
 part 'app_router.gr.dart';
@@ -39,6 +40,7 @@ class AppRouter extends RootStackRouter {
         AutoRoute(page: TabletEditorRoute.page),
         AutoRoute(page: HymnDetailRoute.page),
         AutoRoute(page: ShareCardRoute.page),
+        AutoRoute(page: ScriptureShareCardRoute.page),
         AutoRoute(page: OnboardingRoute.page),
       ];
 

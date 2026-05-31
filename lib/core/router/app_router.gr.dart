@@ -138,6 +138,71 @@ class OnboardingRoute extends PageRouteInfo<void> {
 }
 
 /// generated route for
+/// [ScriptureShareCardPage]
+class ScriptureShareCardRoute
+    extends PageRouteInfo<ScriptureShareCardRouteArgs> {
+  ScriptureShareCardRoute({
+    Key? key,
+    required String reference,
+    required String body,
+    List<PageRouteInfo>? children,
+  }) : super(
+          ScriptureShareCardRoute.name,
+          args: ScriptureShareCardRouteArgs(
+            key: key,
+            reference: reference,
+            body: body,
+          ),
+          initialChildren: children,
+        );
+
+  static const String name = 'ScriptureShareCardRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      final args = data.argsAs<ScriptureShareCardRouteArgs>();
+      return ScriptureShareCardPage(
+        key: args.key,
+        reference: args.reference,
+        body: args.body,
+      );
+    },
+  );
+}
+
+class ScriptureShareCardRouteArgs {
+  const ScriptureShareCardRouteArgs({
+    this.key,
+    required this.reference,
+    required this.body,
+  });
+
+  final Key? key;
+
+  final String reference;
+
+  final String body;
+
+  @override
+  String toString() {
+    return 'ScriptureShareCardRouteArgs{key: $key, reference: $reference, body: $body}';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! ScriptureShareCardRouteArgs) return false;
+    return key == other.key &&
+        reference == other.reference &&
+        body == other.body;
+  }
+
+  @override
+  int get hashCode => key.hashCode ^ reference.hashCode ^ body.hashCode;
+}
+
+/// generated route for
 /// [SettingsTabScreen]
 class SettingsTabRoute extends PageRouteInfo<void> {
   const SettingsTabRoute({List<PageRouteInfo>? children})
