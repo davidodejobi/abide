@@ -218,10 +218,12 @@ class _SelectionBar extends ConsumerWidget {
           .toList()
         ..sort((a, b) => a.number.compareTo(b.number));
       if (picked.isEmpty) return;
-      final body = picked.map((v) => v.text).join(' ');
+      final verses = [
+        for (final v in picked) (number: v.number, text: v.text),
+      ];
       final reference = '${book.name} ${formatVerseRange(chapter, selected)}';
       context.router.push(
-        ScriptureShareCardRoute(reference: reference, body: body),
+        ScriptureShareCardRoute(reference: reference, verses: verses),
       );
     }
 

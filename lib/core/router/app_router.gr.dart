@@ -144,14 +144,14 @@ class ScriptureShareCardRoute
   ScriptureShareCardRoute({
     Key? key,
     required String reference,
-    required String body,
+    required List<({int number, String text})> verses,
     List<PageRouteInfo>? children,
   }) : super(
           ScriptureShareCardRoute.name,
           args: ScriptureShareCardRouteArgs(
             key: key,
             reference: reference,
-            body: body,
+            verses: verses,
           ),
           initialChildren: children,
         );
@@ -165,7 +165,7 @@ class ScriptureShareCardRoute
       return ScriptureShareCardPage(
         key: args.key,
         reference: args.reference,
-        body: args.body,
+        verses: args.verses,
       );
     },
   );
@@ -175,18 +175,18 @@ class ScriptureShareCardRouteArgs {
   const ScriptureShareCardRouteArgs({
     this.key,
     required this.reference,
-    required this.body,
+    required this.verses,
   });
 
   final Key? key;
 
   final String reference;
 
-  final String body;
+  final List<({int number, String text})> verses;
 
   @override
   String toString() {
-    return 'ScriptureShareCardRouteArgs{key: $key, reference: $reference, body: $body}';
+    return 'ScriptureShareCardRouteArgs{key: $key, reference: $reference, verses: $verses}';
   }
 
   @override
@@ -195,11 +195,12 @@ class ScriptureShareCardRouteArgs {
     if (other is! ScriptureShareCardRouteArgs) return false;
     return key == other.key &&
         reference == other.reference &&
-        body == other.body;
+        const ListEquality().equals(verses, other.verses);
   }
 
   @override
-  int get hashCode => key.hashCode ^ reference.hashCode ^ body.hashCode;
+  int get hashCode =>
+      key.hashCode ^ reference.hashCode ^ const ListEquality().hash(verses);
 }
 
 /// generated route for
