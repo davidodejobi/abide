@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:openbaptisthymnal/core/audio/audio_quality.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
@@ -20,13 +21,27 @@ String _format(Duration d) {
 /// recording, which the caller persists via `FileStorageService`. Cancelling
 /// (or dismissing) discards the take and pops `null`.
 class AudioRecorderSheet extends HookWidget {
-  const AudioRecorderSheet({super.key});
+  const AudioRecorderSheet({super.key, this.quality = AudioQuality.medium});
+
+  /// Recording quality (bitrate/sample-rate) chosen in settings.
+  final AudioQuality quality;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    final controller = useMemoized(RecorderController.new);
+    final controller = useMemoized(() {
+      // Without an explicit bitRate the native recorder falls back to a low
+      // default (~32-64 kbps), which makes voice notes sound muffled. We set an
+      // explicit AAC profile from the user's chosen quality (defaults to the
+      // clear-voice "medium" preset).
+      return RecorderController()
+        ..androidEncoder = AndroidEncoder.aac
+        ..androidOutputFormat = AndroidOutputFormat.mpeg4
+        ..iosEncoder = IosEncoder.kAudioFormatMPEG4AAC
+        ..sampleRate = quality.sampleRate
+        ..bitRate = quality.bitRate;
+    }, [quality]);
     useEffect(() => controller.dispose, [controller]);
 
     final path = useRef<String?>(null);
@@ -91,10 +106,10 @@ class AudioRecorderSheet extends HookWidget {
               ),
             ] else ...[
               StreamBuilder<Duration>(
-                stream: Stream.periodic(
-                  const Duration(milliseconds: 200),
-                  (_) => controller.recordedDuration,
-                ),
+                // `recordedDuration` stays at zero until recording stops, so it
+                // can't drive a live timer. `onCurrentDuration` emits the
+                // running elapsed time (every 50ms) while recording.
+                stream: controller.onCurrentDuration,
                 builder: (context, snapshot) => Text(
                   _format(snapshot.data ?? Duration.zero),
                   style: const TextStyle(
@@ -120,7 +135,13 @@ class AudioRecorderSheet extends HookWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   TextButton(
+                    // The global TextButton theme hardcodes a dark navy
+                    // foreground, which is illegible on the dark sheet surface.
+                    // Use a theme-aware color so it reads in both modes.
                     onPressed: cancel,
+                    style: TextButton.styleFrom(
+                      foregroundColor: theme.colorScheme.onSurface,
+                    ),
                     child: const Text('Cancel'),
                   ),
                   FilledButton.icon(

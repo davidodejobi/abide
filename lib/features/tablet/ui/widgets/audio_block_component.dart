@@ -82,25 +82,53 @@ class _AudioBlockComponentWidgetState extends State<AudioBlockComponentWidget>
   RenderBox? get _renderBox => context.findRenderObject() as RenderBox?;
 
   final _player = PlayerController();
+
+  // `fitWidth` spans the container only when the extracted sample count equals
+  // `width / spacing`, so the same spacing must drive both `getSamplesForWidth`
+  // (at prepare time) and the rendered style (at build time).
+  static const _waveSpacing = 5.0;
+
+  PlayerWaveStyle _buildWaveStyle(ThemeData theme) => PlayerWaveStyle(
+        spacing: _waveSpacing,
+        showSeekLine: false,
+        fixedWaveColor: theme.colorScheme.outlineVariant,
+        liveWaveColor: theme.colorScheme.primary,
+      );
+
   bool _prepared = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _prepare();
-  }
+  /// Preparation is deferred until [LayoutBuilder] hands us the real waveform
+  /// width: `WaveformType.fitWidth` only spans the container when the extracted
+  /// sample count matches `width / spacing`. Preparing in `initState` (before
+  /// layout) would fall back to the default 100 samples and render at a fixed
+  /// width unrelated to the tile, which looked like a half-length waveform.
+  bool _preparing = false;
 
-  Future<void> _prepare() async {
+  Future<void> _prepare(double width) async {
+    if (_preparing || _prepared) return;
+    _preparing = true;
     final url = node.attributes[ImageBlockKeys.url] as String? ?? '';
     try {
       await _player.preparePlayer(
         path: FileStorageService.absolutePath(url),
         shouldExtractWaveform: true,
+        noOfSamples: width ~/ _waveSpacing,
       );
       if (mounted) setState(() => _prepared = true);
     } catch (_) {
       // Leave _prepared false; the tile shows a disabled control.
+    } finally {
+      _preparing = false;
     }
+  }
+
+  String _formatRemaining(int positionMs) {
+    final total = _player.maxDuration;
+    final remainingMs = total <= 0 ? 0 : (total - positionMs).clamp(0, total);
+    final d = Duration(milliseconds: remainingMs);
+    final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
+    return '$m:$s';
   }
 
   @override
@@ -150,30 +178,52 @@ class _AudioBlockComponentWidgetState extends State<AudioBlockComponentWidget>
           ),
           const SizedBox(width: 8),
           Expanded(
-            child: _prepared
-                ? AudioFileWaveforms(
-                    size: const Size(double.infinity, 40),
-                    playerController: _player,
-                    enableSeekGesture: true,
-                    waveformType: WaveformType.fitWidth,
-                    playerWaveStyle: PlayerWaveStyle(
-                      fixedWaveColor: theme.colorScheme.outlineVariant,
-                      liveWaveColor: theme.colorScheme.primary,
-                      showSeekLine: false,
-                    ),
-                  )
-                : SizedBox(
-                    height: 40,
-                    child: Center(
-                      child: Text(
-                        'Voice tablet',
-                        style: TextStyle(
-                          fontFamily: 'Geist',
-                          color: theme.colorScheme.onSurfaceVariant,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                // A finite width is required both to fit the waveform to the
+                // tile and to make the seek gesture map taps correctly
+                // (the package divides by `size.width`, so `infinity` breaks it).
+                final width = constraints.maxWidth.isFinite
+                    ? constraints.maxWidth
+                    : MediaQuery.of(context).size.width;
+                if (!_prepared) _prepare(width);
+                return _prepared
+                    ? AudioFileWaveforms(
+                        size: Size(width, 40),
+                        playerController: _player,
+                        enableSeekGesture: true,
+                        waveformType: WaveformType.fitWidth,
+                        playerWaveStyle: _buildWaveStyle(theme),
+                      )
+                    : SizedBox(
+                        height: 40,
+                        child: Center(
+                          child: Text(
+                            'Voice note',
+                            style: TextStyle(
+                              fontFamily: 'Geist',
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                  ),
+                      );
+              },
+            ),
+          ),
+          const SizedBox(width: 8),
+          // Time remaining counts down as the clip plays; shows total length
+          // while paused/at-rest so the user knows the clip duration up front.
+          StreamBuilder<int>(
+            stream: _player.onCurrentDurationChanged,
+            builder: (context, snapshot) => Text(
+              _prepared ? _formatRemaining(snapshot.data ?? 0) : '--:--',
+              style: TextStyle(
+                fontFamily: 'Geist',
+                fontSize: 13,
+                color: theme.colorScheme.onSurfaceVariant,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
           ),
         ],
       ),

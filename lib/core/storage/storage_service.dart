@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:openbaptisthymnal/core/audio/audio_quality.dart';
 import 'package:openbaptisthymnal/core/theme/font_scale.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -11,6 +12,7 @@ class StorageService {
   static const String _onboardingCompleteKey = 'onboarding_complete';
   static const String _userNameKey = 'user_name';
   static const String _fontScaleKey = 'font_scale';
+  static const String _audioQualityKey = 'audio_quality';
 
   /// Save theme mode
   Future<void> saveThemeMode(ThemeMode mode) async {
@@ -56,5 +58,15 @@ class StorageService {
   /// Get the reading font-size preference (defaults to medium)
   FontScale getFontScale() {
     return FontScale.fromName(_prefs.getString(_fontScaleKey));
+  }
+
+  /// Save the voice-note recording quality preference
+  Future<void> saveAudioQuality(AudioQuality quality) async {
+    await _prefs.setString(_audioQualityKey, quality.name);
+  }
+
+  /// Get the voice-note recording quality preference (defaults to medium)
+  AudioQuality getAudioQuality() {
+    return AudioQuality.fromName(_prefs.getString(_audioQualityKey));
   }
 }

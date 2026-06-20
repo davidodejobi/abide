@@ -6,11 +6,13 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:openbaptisthymnal/core/audio/audio_quality_provider.dart';
 import 'package:openbaptisthymnal/core/providers/service_providers.dart';
 import 'package:openbaptisthymnal/core/router/app_router.dart';
 import 'package:openbaptisthymnal/core/theme/app_colors.dart';
 import 'package:openbaptisthymnal/core/theme/font_scale_provider.dart';
 import 'package:openbaptisthymnal/core/utils/services/file_storage_service.dart';
+import 'package:openbaptisthymnal/features/tablet/domain/insert_audio_node.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/link_autocomplete.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/parse_links.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/tablet_markdown_codec.dart';
@@ -240,7 +242,9 @@ class _NoteEditorView extends HookConsumerWidget {
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
-        builder: (_) => const AudioRecorderSheet(),
+        builder: (_) => AudioRecorderSheet(
+          quality: ref.read(audioQualityProvider),
+        ),
       );
       if (tempPath == null) return;
       // Audio clips live as image nodes pointing at an audio file; the custom
@@ -248,9 +252,13 @@ class _NoteEditorView extends HookConsumerWidget {
       final relativePath = await ref
           .read(fileStorageServiceProvider)
           .persistFile(tempPath, bucket: 'note_audio');
-      if (sel != null) editorState.selection = sel;
-      await editorState.insertImageNode(
-        FileStorageService.absolutePath(relativePath),
+
+      final anchorPath = (sel ?? editorState.selection)?.end.path ??
+          editorState.document.root.children.last.path;
+      await insertAudioNode(
+        editorState,
+        absoluteUrl: FileStorageService.absolutePath(relativePath),
+        anchorPath: anchorPath,
       );
     }
 

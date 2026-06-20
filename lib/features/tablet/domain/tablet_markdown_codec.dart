@@ -21,6 +21,25 @@ import 'package:openbaptisthymnal/core/utils/services/file_storage_service.dart'
 /// Matches a markdown image: `![alt](url)`.
 final _imageMarkdown = RegExp(r'!\[([^\]]*)\]\(([^)]+)\)');
 
+/// Matches an image line that is glued to the next/previous line by a single
+/// newline (no blank line between). CommonMark folds `![](url)\ntext` into one
+/// paragraph, which makes the parser drop the image block entirely (the clip
+/// "disappears" / renders as raw `![](id)` text). We re-insert the blank line
+/// so the image stays its own block.
+final _gluedImageBefore = RegExp(r'(\S)\n(!\[[^\]]*\]\([^)]+\))');
+final _gluedImageAfter = RegExp(r'(!\[[^\]]*\]\([^)]+\))\n(?!\n|$)');
+
+/// Guarantees a blank line on both sides of every image line so it parses as a
+/// standalone block. Idempotent: lines already blank-separated are untouched.
+String _isolateImageBlocks(String markdown) {
+  var out = markdown.replaceAllMapped(
+    _gluedImageBefore,
+    (m) => '${m[1]}\n\n${m[2]}',
+  );
+  out = out.replaceAllMapped(_gluedImageAfter, (m) => '${m[1]}\n\n');
+  return out;
+}
+
 bool _isExternal(String url) =>
     url.startsWith('http://') ||
     url.startsWith('https://') ||
@@ -32,7 +51,11 @@ Document noteMarkdownToDocument(String markdown) {
   if (markdown.trim().isEmpty) {
     return Document.blank(withInitialText: true);
   }
-  final resolved = markdown.replaceAllMapped(_imageMarkdown, (m) {
+  // Repair notes saved with an image glued to adjacent text (older audio notes
+  // were stored this way and lose the clip on load); then resolve relative
+  // image paths to absolute for the live document.
+  final isolated = _isolateImageBlocks(markdown);
+  final resolved = isolated.replaceAllMapped(_imageMarkdown, (m) {
     final url = m[2]!;
     if (_isExternal(url)) return m[0]!;
     return '![${m[1]}](${FileStorageService.absolutePath(url)})';
@@ -46,7 +69,11 @@ Document noteMarkdownToDocument(String markdown) {
 /// idempotent.
 String noteDocumentToMarkdown(Document document) {
   final markdown = documentToMarkdown(document, lineBreak: '\n').trimRight();
-  return markdown.replaceAllMapped(_imageMarkdown, (m) {
+  // `documentToMarkdown` emits only single newlines, which glues an image to
+  // adjacent text and drops the clip on the next parse. Isolate image blocks so
+  // what we persist always reloads losslessly.
+  final isolated = _isolateImageBlocks(markdown);
+  return isolated.replaceAllMapped(_imageMarkdown, (m) {
     final url = m[2]!;
     if (_isExternal(url)) return m[0]!;
     return '![${m[1]}](${FileStorageService.relativePath(url)})';
