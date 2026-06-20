@@ -1,6 +1,8 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:openbaptisthymnal/core/audio/audio_quality.dart';
+import 'package:openbaptisthymnal/core/audio/audio_quality_provider.dart';
 import 'package:openbaptisthymnal/core/providers/app_info_provider.dart';
 import 'package:openbaptisthymnal/core/providers/service_providers.dart';
 import 'package:openbaptisthymnal/core/theme/app_text_styles.dart';
@@ -57,6 +59,13 @@ class _SettingsTabScreenState extends ConsumerState<SettingsTabScreen>
                     },
                   ),
                   const _FontSizeSelector(),
+                ],
+              ),
+              const SizedBox(height: 24),
+              const _SettingsSection(
+                title: 'Voice Notes',
+                children: [
+                  _AudioQualitySelector(),
                 ],
               ),
               const SizedBox(height: 24),
@@ -248,6 +257,95 @@ class _FontSizeSelector extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           const FontSizeControl(),
+        ],
+      ),
+    );
+  }
+}
+
+/// Voice-note recording-quality selector: a segmented button plus a line
+/// explaining the quality/file-size trade-off for the current choice.
+class _AudioQualitySelector extends ConsumerWidget {
+  const _AudioQualitySelector();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final quality = ref.watch(audioQualityProvider);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.mic_none,
+                color: colorScheme.onSurface,
+                size: 24,
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Text(
+                  'Recording Quality',
+                  style: AppTextStyles.bodyLarge.copyWith(
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: SegmentedButton<AudioQuality>(
+              segments: [
+                for (final q in AudioQuality.values)
+                  ButtonSegment<AudioQuality>(
+                    value: q,
+                    label: Text(q.label),
+                  ),
+              ],
+              selected: {quality},
+              onSelectionChanged: (selection) {
+                ref
+                    .read(audioQualityProvider.notifier)
+                    .setQuality(selection.first);
+              },
+              style: ButtonStyle(
+                backgroundColor: WidgetStateProperty.resolveWith((states) {
+                  if (states.contains(WidgetState.selected)) {
+                    return colorScheme.primary;
+                  }
+                  return colorScheme.surfaceContainerHighest;
+                }),
+                foregroundColor: WidgetStateProperty.resolveWith((states) {
+                  if (states.contains(WidgetState.selected)) {
+                    return colorScheme.onPrimary;
+                  }
+                  return colorScheme.onSurface;
+                }),
+                side: WidgetStateProperty.all(
+                  BorderSide(color: colorScheme.outlineVariant),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            // Higher quality means clearer audio but larger files; spell out the
+            // trade-off so the choice is informed.
+            'Higher quality sounds clearer but uses more storage. '
+            '${quality.sizeHint}.',
+            style: AppTextStyles.bodySmall.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ),
         ],
       ),
     );
