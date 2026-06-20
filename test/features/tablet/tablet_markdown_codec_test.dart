@@ -1,3 +1,4 @@
+import 'package:appflowy_editor/appflowy_editor.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/tablet_markdown_codec.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/parse_links.dart';
@@ -51,6 +52,31 @@ void main() {
   test('audio clips (image nodes pointing at audio) round-trip untouched', () {
     const md = '![](note_audio/abc.m4a)';
     expect(roundTrip(md), md);
+  });
+
+  group('image node survives when glued to adjacent text', () {
+    List<String> nodeTypes(String md) =>
+        noteMarkdownToDocument(md).root.children.map((n) => n.type).toList();
+
+    test('image followed by text on the next line keeps the image block', () {
+      // This is exactly how a note was stored after recording then typing:
+      // a single newline between the clip and the following paragraph. Without
+      // the blank-line repair the parser folds it into one paragraph and the
+      // clip vanishes ("shows the id").
+      const glued = '![](note_audio/x.m4a)\ntyping after the clip';
+      expect(nodeTypes(glued), contains(ImageBlockKeys.type),
+          reason: 'audio clip must not disappear on reload');
+    });
+
+    test('text immediately before an image keeps the image block', () {
+      const glued = 'intro line\n![](note_audio/x.m4a)';
+      expect(nodeTypes(glued), contains(ImageBlockKeys.type));
+    });
+
+    test('already blank-separated content is left untouched', () {
+      const clean = '![](note_audio/x.m4a)\n\ntyping after the clip';
+      expect(roundTrip(clean), clean, reason: 'repair must be idempotent');
+    });
   });
 
   test('wikilinks stay parseable by the link graph after a round-trip', () {
