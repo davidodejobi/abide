@@ -74,9 +74,9 @@ class _FeaturesScreenState extends State<FeaturesScreen> {
                     TypewriterText(
                       text: 'sing the hymns you love,\n'
                           'with the words right in front of you.\n'
-                          'study the Bible at your own pace.\n'
-                          'take notes as the sermon unfolds,\n'
-                          'and keep them in one quiet place.',
+                          'read the Bible in your own tongue,\n'
+                          'side by side with another, at your own pace.\n'
+                          'and keep your notes in one quiet place.',
                       style: AppTextStyles.doodleBody(color: ink),
                       perCharacter: const Duration(milliseconds: 28),
                       onComplete: () => setState(() => _showMore = true),
@@ -84,11 +84,9 @@ class _FeaturesScreenState extends State<FeaturesScreen> {
                   const SizedBox(height: 20),
                   if (_showMore)
                     TypewriterText(
-                      text: 'soon, share those notes with friends,\n'
-                          'study devotionals together,\n'
-                          'keep one another accountable,\n'
-                          'and grow — not on your own,\n'
-                          'but as a small, faithful community.',
+                      text: 'and soon, pray together as a family —\n'
+                          'morning and evening,\n'
+                          'wherever each of you happens to be.',
                       style: AppTextStyles.doodleBody(color: ink),
                       perCharacter: const Duration(milliseconds: 28),
                       onComplete: () => setState(() => _showButton = true),

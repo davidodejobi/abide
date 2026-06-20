@@ -28,7 +28,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
         children: [
           const Spacer(flex: 3),
           TypewriterText(
-            text: 'welcome to abide.',
+            text: 'kaabo. welcome to abide.',
             style: AppTextStyles.doodleHeadline(color: ink),
             startDelay: const Duration(milliseconds: 350),
             onComplete: () => setState(() => _showLine2 = true),
@@ -39,7 +39,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               text: 'a quiet corner for your faith —\n'
                   'a place to sing, to study,\n'
                   'to write, and to abide.\n'
-                  'not alone, but together.',
+                  'with you, morning and evening.',
               style: AppTextStyles.doodleBody(color: ink),
               perCharacter: const Duration(milliseconds: 30),
               startDelay: const Duration(milliseconds: 250),

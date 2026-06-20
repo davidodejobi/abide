@@ -107,36 +107,28 @@ class _SceneCopy {
           isNight: false,
           headline: 'good morning.',
           body: 'his mercies are new with the light.\n'
-              'before the day fills up, pause here.\n'
-              'open a hymn, read a little of his word,\n'
-              'and let your first thoughts be grateful ones.',
+              'before the day fills up, pause here.',
         );
       case DayPart.afternoon:
         return const _SceneCopy(
           isNight: false,
           headline: 'good afternoon.',
           body: 'the day is loud and full.\n'
-              'step aside for just a moment —\n'
-              'breathe, read a verse, and let\n'
-              'the noise grow quiet within you.',
+              'step aside for just a moment.',
         );
       case DayPart.evening:
         return const _SceneCopy(
           isNight: true,
           headline: 'good evening.',
           body: 'as the light grows soft,\n'
-              'look back and give thanks for the day.\n'
-              'lay down what was heavy to carry,\n'
-              'and let your heart be still.',
+              'lay down what was heavy to carry.',
         );
       case DayPart.night:
         return const _SceneCopy(
           isNight: true,
           headline: 'abide with me.',
           body: 'fast falls the eventide.\n'
-              'the day is done, and you are kept.\n'
-              'he gives his beloved sleep —\n'
-              'rest now, and abide through the night.',
+              'he gives his beloved sleep.',
         );
     }
   }
