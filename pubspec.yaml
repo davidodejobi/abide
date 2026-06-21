@@ -62,6 +62,7 @@ flutter:
     - assets/bible/yo-bmy/
     - assets/images/lottie/
     - assets/audio/
+    - assets/audio/onboarding/
     - path: assets/images/icons/
       transformers:
         - package: vector_graphics_compiler

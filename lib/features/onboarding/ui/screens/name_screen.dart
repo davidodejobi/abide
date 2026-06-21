@@ -1,43 +1,35 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:openbaptisthymnal/core/theme/app_text_styles.dart';
+import 'package:openbaptisthymnal/features/onboarding/audio/onboarding_sfx.dart';
 import 'package:openbaptisthymnal/features/onboarding/providers/onboarding_provider.dart';
 import 'package:openbaptisthymnal/features/onboarding/ui/widgets/hand_drawn_button.dart';
 import 'package:openbaptisthymnal/features/onboarding/ui/widgets/hand_drawn_field.dart';
 import 'package:openbaptisthymnal/features/onboarding/ui/widgets/typewriter_text.dart';
 
 /// Final onboarding screen — asks for the user's name, saves it, finishes.
-class NameScreen extends ConsumerStatefulWidget {
-  const NameScreen({super.key, required this.onDone});
+class NameScreen extends HookConsumerWidget {
+  const NameScreen({super.key, required this.onDone, required this.sfx});
 
   final VoidCallback onDone;
+  final OnboardingSfx sfx;
 
   @override
-  ConsumerState<NameScreen> createState() => _NameScreenState();
-}
-
-class _NameScreenState extends ConsumerState<NameScreen> {
-  final _controller = TextEditingController();
-  bool _showInput = false;
-  bool _submitting = false;
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  Future<void> _finish() async {
-    if (_submitting) return;
-    setState(() => _submitting = true);
-    ref.read(onboardingProvider.notifier).setName(_controller.text);
-    await ref.read(onboardingProvider.notifier).complete();
-    widget.onDone();
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final ink = Theme.of(context).colorScheme.onSurface;
+    final controller = useTextEditingController();
+    final showInput = useState(false);
+    final submitting = useState(false);
+
+    Future<void> finish() async {
+      if (submitting.value) return;
+      sfx.paperTap();
+      submitting.value = true;
+      ref.read(onboardingProvider.notifier).setName(controller.text);
+      await ref.read(onboardingProvider.notifier).complete();
+      onDone();
+    }
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(28, 0, 28, 48),
@@ -49,7 +41,12 @@ class _NameScreenState extends ConsumerState<NameScreen> {
             text: 'one last thing —\nwhat should we call you?',
             style: AppTextStyles.doodleHeadline(color: ink),
             startDelay: const Duration(milliseconds: 300),
-            onComplete: () => setState(() => _showInput = true),
+            onTypingStart: sfx.penTickStart,
+            onComplete: () {
+              sfx.penTickStop();
+              sfx.revealWhoosh();
+              showInput.value = true;
+            },
           ),
           const SizedBox(height: 12),
           Text(
@@ -57,25 +54,25 @@ class _NameScreenState extends ConsumerState<NameScreen> {
             style: AppTextStyles.doodleBody(color: ink.withValues(alpha: 0.7)),
           ),
           const SizedBox(height: 32),
-          if (_showInput)
+          if (showInput.value)
             AnimatedOpacity(
-              opacity: _showInput ? 1 : 0,
+              opacity: showInput.value ? 1 : 0,
               duration: const Duration(milliseconds: 300),
               child: HandDrawnField(
-                controller: _controller,
+                controller: controller,
                 hintText: 'your name',
-                onSubmitted: (_) => _finish(),
+                onSubmitted: (_) => finish(),
               ),
             ),
           const Spacer(flex: 4),
           Center(
             child: AnimatedOpacity(
-              opacity: _showInput ? 1 : 0,
+              opacity: showInput.value ? 1 : 0,
               duration: const Duration(milliseconds: 400),
-              child: _showInput
+              child: showInput.value
                   ? HandDrawnButton(
                       label: "let's go",
-                      onTap: _finish,
+                      onTap: finish,
                       startDelay: const Duration(milliseconds: 400),
                     )
                   : const SizedBox(height: 74),
