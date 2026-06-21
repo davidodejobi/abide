@@ -26,7 +26,7 @@ void main() {
       );
 
       expect(calls, hasLength(1));
-      expect(calls.single.title, 'Welcome to your notes');
+      expect(calls.single.title, 'Welcome to your tablets');
       expect(storage.isWelcomeNoteSeeded(), isTrue);
     });
 
@@ -67,7 +67,7 @@ void main() {
         userName: 'David Odejobi',
       );
 
-      expect(body, contains('Hi David'));
+      expect(body, contains('Hi David,'));
     });
 
     test('falls back to a neutral greeting when no name is given', () async {
@@ -83,7 +83,7 @@ void main() {
         userName: null,
       );
 
-      expect(body, contains('Hi there'));
+      expect(body, contains('Hi there,'));
     });
 
     test('includes the hymn + bible wikilinks as a discovery hint', () async {
@@ -103,6 +103,44 @@ void main() {
       expect(body, contains('[[bible:JHN.3.16]]'));
       expect(body, contains('[[hymn:hymn_0004]]'));
       expect(body, contains('[[bible:PSA.23.1]]'));
+    });
+
+    test('uses the "tablet" wording, never "note" (matches in-app terminology)',
+        () async {
+      final storage = await _makeStorage();
+      String? body;
+      String? capturedTitle;
+
+      await seedWelcomeNoteIfNeeded(
+        storage: storage,
+        createNote: ({String title = '', String contentMarkdown = ''}) async {
+          capturedTitle = title;
+          body = contentMarkdown;
+          return 'id';
+        },
+        userName: 'Tester',
+      );
+
+      expect(capturedTitle, equals('Welcome to your tablets'));
+      // "note" is a substring of "notebook", so check for the whole word.
+      final wordNote = RegExp(r'\bnote\b', caseSensitive: false);
+      expect(wordNote.hasMatch(body!), isFalse,
+          reason: 'body should use "tablet", not "note"');
+    });
+
+    test('contains no em dashes (per user writing preference)', () async {
+      final storage = await _makeStorage();
+      String? body;
+      await seedWelcomeNoteIfNeeded(
+        storage: storage,
+        createNote: ({String title = '', String contentMarkdown = ''}) async {
+          body = contentMarkdown;
+          return 'id';
+        },
+        userName: 'Tester',
+      );
+
+      expect(body, isNot(contains('—')));
     });
 
     test('a thrown createNote leaves the seeded flag false so we retry next run',
