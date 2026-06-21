@@ -12,7 +12,8 @@ import 'package:openbaptisthymnal/features/bible/providers/pending_verse_highlig
 ///
 /// Honours a one-shot [pendingVerseHighlightProvider]: if the active request
 /// matches this view's edition+chapter, the verses in its range get a soft
-/// glow on first build, then the request is cleared so it doesn't re-flash.
+/// glow on first mount and the view scrolls to them, then the request is
+/// cleared after the first frame so a later rebuild won't re-trigger it.
 class BibleChapterView extends ConsumerWidget {
   const BibleChapterView({
     super.key,
@@ -41,12 +42,16 @@ class BibleChapterView extends ConsumerWidget {
     final chapterAsync = ref.watch(bibleChapterProvider(query));
     final colorScheme = Theme.of(context).colorScheme;
 
-    // Consume any pending highlight for this exact chapter. Reading the
-    // notifier (not the value) keeps this widget from rebuilding when the
-    // highlight is cleared.
-    final pending = ref
-        .read(pendingVerseHighlightProvider.notifier)
-        .takeFor(editionId: editionId, ordinal: ordinal, chapter: chapter);
+    // Read-only peek at any pending highlight. Clearing happens in the
+    // stateful child's post-frame callback so we never mutate a provider
+    // while the widget tree is building.
+    final pending = ref.watch(pendingVerseHighlightProvider);
+    final matches = pending != null &&
+        pending.matches(
+          editionId: editionId,
+          ordinal: ordinal,
+          chapter: chapter,
+        );
 
     return chapterAsync.when(
       loading: () => Center(
@@ -61,14 +66,14 @@ class BibleChapterView extends ConsumerWidget {
         onTapVerse: onTapVerse,
         onLongPressVerse: onLongPressVerse,
         padding: padding,
-        highlightFrom: pending?.fromVerse,
-        highlightTo: pending?.toVerse,
+        highlightFrom: matches ? pending.fromVerse : null,
+        highlightTo: matches ? pending.toVerse : null,
       ),
     );
   }
 }
 
-class _VerseList extends StatefulWidget {
+class _VerseList extends ConsumerStatefulWidget {
   const _VerseList({
     required this.chapter,
     required this.textScale,
@@ -90,35 +95,38 @@ class _VerseList extends StatefulWidget {
   final int? highlightTo;
 
   @override
-  State<_VerseList> createState() => _VerseListState();
+  ConsumerState<_VerseList> createState() => _VerseListState();
 }
 
-class _VerseListState extends State<_VerseList> {
+class _VerseListState extends ConsumerState<_VerseList> {
   late final ScrollController _controller;
-  bool _hasScrolledToHighlight = false;
+  bool _hasConsumedHighlight = false;
 
   @override
   void initState() {
     super.initState();
     _controller = ScrollController();
     if (widget.highlightFrom != null) {
-      // Scroll so the highlighted verse is roughly centered. We use a rough
-      // 56px-per-verse estimate which is close enough for short chapters;
-      // long chapters are scrolled to the proportional offset.
+      // Scroll + clear after the first frame so we don't modify the provider
+      // mid-build. The rough 64px-per-verse estimate is close enough for short
+      // chapters; longer chapters land at the proportional offset.
       SchedulerBinding.instance.addPostFrameCallback((_) {
-        if (!mounted || !_controller.hasClients) return;
-        if (_hasScrolledToHighlight) return;
-        _hasScrolledToHighlight = true;
-        final index = widget.highlightFrom! - 1;
-        final estimated = (index * 64.0).clamp(
-          0.0,
-          _controller.position.maxScrollExtent,
-        );
-        _controller.animateTo(
-          estimated,
-          duration: const Duration(milliseconds: 280),
-          curve: Curves.easeOutCubic,
-        );
+        if (!mounted) return;
+        if (_hasConsumedHighlight) return;
+        _hasConsumedHighlight = true;
+        if (_controller.hasClients) {
+          final index = widget.highlightFrom! - 1;
+          final estimated = (index * 64.0).clamp(
+            0.0,
+            _controller.position.maxScrollExtent,
+          );
+          _controller.animateTo(
+            estimated,
+            duration: const Duration(milliseconds: 280),
+            curve: Curves.easeOutCubic,
+          );
+        }
+        ref.read(pendingVerseHighlightProvider.notifier).clear();
       });
     }
   }

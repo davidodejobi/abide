@@ -72,8 +72,15 @@ class HymnLinkResolver {
 
   /// The set of hymn editions the app currently ships. Today this is just
   /// the two language packs; when hymnal ids enter the model, return them
-  /// here instead.
+  /// here instead. English leads so it acts as the final fallback when no
+  /// preference is set.
   List<String> _installedEditions() => const ['en', 'yo'];
+
+  /// The language we open unpinned hymn links in when the user has no
+  /// preference set and no current reading position to follow. We
+  /// intentionally use English here: a tablet shared between users (or read
+  /// months later) opens in the most widely understood pack by default.
+  static const _hymnLinkDefault = 'en';
 
   String? _matchEdition(List<String> installed, String id) {
     final needle = id.toLowerCase();
@@ -89,9 +96,15 @@ class HymnLinkResolver {
     final defaulted = _matchEdition(installed, defaultId ?? '');
     if (defaulted != null) return defaulted;
 
+    // When the user has no explicit preference, English wins over the current
+    // reading language. Tablet links should be portable: a hymn quoted today
+    // should open in the most widely understood pack tomorrow.
+    final englishMatch = _matchEdition(installed, _hymnLinkDefault);
+    if (englishMatch != null) return englishMatch;
+
     final reading = _ref.read(languageProvider);
-    final match = _matchEdition(installed, reading);
-    if (match != null) return match;
+    final readingMatch = _matchEdition(installed, reading);
+    if (readingMatch != null) return readingMatch;
 
     return installed.first;
   }
