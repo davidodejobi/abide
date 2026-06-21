@@ -1,3 +1,4 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:openbaptisthymnal/core/theme/app_text_styles.dart';
 import 'package:openbaptisthymnal/features/share_card/ui/scripture_share_card_page.dart'
@@ -50,31 +51,30 @@ class ScriptureCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    return FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: Alignment.topLeft,
-                      child: SizedBox(
-                        width: constraints.maxWidth,
-                        child: Text.rich(
+                child: SizedBox(
+                  width: double.infinity,
+                  child: AutoSizeText.rich(
+                    TextSpan(
+                      children: [
+                        for (var i = 0; i < verses.length; i++) ...[
+                          if (i > 0) const TextSpan(text: '  '),
                           TextSpan(
-                            children: [
-                              for (var i = 0; i < verses.length; i++) ...[
-                                if (i > 0) const TextSpan(text: '  '),
-                                TextSpan(
-                                  text: '${verses[i].number} ',
-                                  style: numberStyle,
-                                ),
-                                TextSpan(text: verses[i].text),
-                              ],
-                            ],
+                            text: '${verses[i].number} ',
+                            style: numberStyle,
                           ),
-                          style: bodyStyle,
-                        ),
-                      ),
-                    );
-                  },
+                          TextSpan(text: verses[i].text),
+                        ],
+                      ],
+                    ),
+                    style: bodyStyle,
+                    // Shrinks the FONT size to fit (not the layout), so the
+                    // text always fills the full card width — no more text
+                    // hugging the left edge with empty space on the right.
+                    minFontSize: 12,
+                    maxFontSize: 24,
+                    stepGranularity: 0.5,
+                    textAlign: TextAlign.left,
+                  ),
                 ),
               ),
               const SizedBox(height: 20),

@@ -1,3 +1,4 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:openbaptisthymnal/core/theme/app_text_styles.dart';
 import 'package:openbaptisthymnal/features/share_card/ui/share_card_style.dart';
@@ -56,19 +57,22 @@ class LyricCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
                   Expanded(
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: Alignment.topLeft,
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 320),
-                        child: Text(
-                          body,
-                          style: style.bodyStyle.copyWith(
-                            color: style.ink,
-                            fontSize: 22,
-                            height: 1.55,
-                          ),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: AutoSizeText(
+                        body,
+                        style: style.bodyStyle.copyWith(
+                          color: style.ink,
+                          fontSize: 22,
+                          height: 1.55,
                         ),
+                        // Shrinks the FONT to fit, not the layout — so long
+                        // lyrics fill the full card width instead of hugging
+                        // the left edge.
+                        minFontSize: 12,
+                        maxFontSize: 22,
+                        stepGranularity: 0.5,
+                        textAlign: TextAlign.left,
                       ),
                     ),
                   ),
