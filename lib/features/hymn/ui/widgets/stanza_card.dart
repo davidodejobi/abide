@@ -15,6 +15,10 @@ class StanzaCard extends StatelessWidget {
   /// double-tap, or the highlighted selection from the "Share" toolbar action.
   final void Function(String text)? onShare;
 
+  /// When true, strips the giant watermark number, tightens padding, and
+  /// rounds less. Used by the split-view panes where space is tight.
+  final bool compact;
+
   const StanzaCard({
     super.key,
     required this.text,
@@ -22,6 +26,7 @@ class StanzaCard extends StatelessWidget {
     this.isChorus = false,
     this.textScale = 1.0,
     this.onShare,
+    this.compact = false,
   });
 
   @override
@@ -53,50 +58,58 @@ class StanzaCard extends StatelessWidget {
       }
     }
 
+    final cardPadding = compact ? 12.0 : 16.0;
+    final cardRadius = compact ? 16.0 : 32.0;
+    final bottomGap = compact ? 8.0 : 16.0;
+    final lyricRightInset = compact ? 8.0 : 40.0;
+
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: EdgeInsets.only(bottom: bottomGap),
       child: GestureDetector(
         // Double-tapping anywhere on the card shares the whole stanza. Taps on
         // the lyric text are handled by SelectableText's own double-tap below.
         onDoubleTap: onShare == null ? null : () => onShare!(text),
         child: Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(cardPadding),
         decoration: BoxDecoration(
           color: cardBg,
-          borderRadius: BorderRadius.circular(32),
+          borderRadius: BorderRadius.circular(cardRadius),
           border: isChorus
               ? Border.all(color: cardText.withValues(alpha: 0.2), width: 1)
               : null,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 5,
-              offset: const Offset(0, 5),
-            ),
-          ],
+          boxShadow: compact
+              ? null
+              : [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 5,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
         ),
         child: Stack(
           children: [
-            // Big Watermark Number/Label inside card
-            Positioned(
-              right: 0,
-              top: -30,
-              bottom: 0,
-              child: Center(
-                child: Text(
-                  isChorus ? 'C' : '$displayIndex',
-                  style: AppTextStyles.displayLarge.copyWith(
-                    fontSize: isChorus ? 64 : 98,
-                    height: .7,
-                    color: cardNumColor,
+            // Big Watermark Number/Label — hidden in compact (split) mode.
+            if (!compact)
+              Positioned(
+                right: 0,
+                top: -30,
+                bottom: 0,
+                child: Center(
+                  child: Text(
+                    isChorus ? 'C' : '$displayIndex',
+                    style: AppTextStyles.displayLarge.copyWith(
+                      fontSize: isChorus ? 64 : 98,
+                      height: .7,
+                      color: cardNumColor,
+                    ),
                   ),
                 ),
               ),
-            ),
             // Text Content
             Padding(
-              padding: const EdgeInsets.only(right: 40),
+              padding: EdgeInsets.only(right: lyricRightInset),
               child: SelectableText(
                 text,
                 style: AppTextStyles.bodyLarge.copyWith(
