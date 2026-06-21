@@ -3,11 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openbaptisthymnal/core/audio/audio_quality.dart';
 import 'package:openbaptisthymnal/core/audio/audio_quality_provider.dart';
+import 'package:openbaptisthymnal/core/preferences/linking_preferences.dart';
 import 'package:openbaptisthymnal/core/providers/app_info_provider.dart';
 import 'package:openbaptisthymnal/core/providers/service_providers.dart';
 import 'package:openbaptisthymnal/core/theme/app_text_styles.dart';
 import 'package:openbaptisthymnal/core/theme/theme_provider.dart';
 import 'package:openbaptisthymnal/core/utils/toast_helper.dart';
+import 'package:openbaptisthymnal/features/bible/model/bible_edition.dart';
+import 'package:openbaptisthymnal/features/bible/providers/bible_providers.dart';
 import 'package:openbaptisthymnal/features/settings/ui/widgets/font_size_control.dart';
 
 /// Settings tab screen - App settings and preferences
@@ -59,6 +62,14 @@ class _SettingsTabScreenState extends ConsumerState<SettingsTabScreen>
                     },
                   ),
                   const _FontSizeSelector(),
+                ],
+              ),
+              const SizedBox(height: 24),
+              const _SettingsSection(
+                title: 'Linking',
+                children: [
+                  _DefaultBibleLinkEditionTile(),
+                  _DefaultHymnLinkEditionTile(),
                 ],
               ),
               const SizedBox(height: 24),
@@ -347,6 +358,181 @@ class _AudioQualitySelector extends ConsumerWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Picker for the default Bible edition `[[bible:...]]` links open in when
+/// the link itself doesn't pin one. "Follow my reading" (null) lets tablets
+/// stay neutral, so the link opens whatever the user is currently reading.
+class _DefaultBibleLinkEditionTile extends ConsumerWidget {
+  const _DefaultBibleLinkEditionTile();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final prefs = ref.watch(linkingPreferencesProvider);
+    final editions = ref.watch(bibleEditionsProvider);
+    final selected = prefs.defaultBibleEditionId;
+    final subtitle = _editionLabel(editions, selected);
+
+    return _SettingsTile(
+      icon: Icons.menu_book_outlined,
+      title: 'Default Bible for links',
+      subtitle: subtitle,
+      onTap: () async {
+        final picked = await _showEditionPicker(
+          context,
+          title: 'Default Bible for links',
+          editions: editions,
+          selected: selected,
+        );
+        if (picked == null) return;
+        await ref
+            .read(linkingPreferencesProvider.notifier)
+            .setDefaultBibleEdition(picked.editionId);
+      },
+    );
+  }
+
+  String _editionLabel(List<BibleEdition> editions, String? id) {
+    if (id == null) return 'Follow my reading';
+    for (final e in editions) {
+      if (e.id == id) return e.displayName;
+    }
+    return id;
+  }
+}
+
+/// Picker for the default hymn edition `[[hymn:...]]` links open in. Today an
+/// "edition" is a language pack; the future hymnal axis (Baptist, Methodist,
+/// CCC, etc.) will slot into the same setting without changing tablets.
+class _DefaultHymnLinkEditionTile extends ConsumerWidget {
+  const _DefaultHymnLinkEditionTile();
+
+  // Mirror the resolver's installed list. Move to a provider once hymnal ids
+  // land in the model.
+  static const _options = <({String id, String label})>[
+    (id: 'en', label: 'English'),
+    (id: 'yo', label: 'Yorùbá'),
+  ];
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final prefs = ref.watch(linkingPreferencesProvider);
+    final selected = prefs.defaultHymnEditionId;
+    final subtitle = selected == null
+        ? 'Follow my reading'
+        : (_options.firstWhere(
+            (o) => o.id == selected,
+            orElse: () => (id: selected, label: selected),
+          )).label;
+
+    return _SettingsTile(
+      icon: Icons.music_note_outlined,
+      title: 'Default hymnal for links',
+      subtitle: subtitle,
+      onTap: () async {
+        final picked = await showModalBottomSheet<_LinkEditionChoice>(
+          context: context,
+          showDragHandle: true,
+          backgroundColor: Theme.of(context).colorScheme.surface,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          builder: (_) => _LinkEditionPickerSheet(
+            title: 'Default hymnal for links',
+            options: [
+              const _LinkEditionChoice(editionId: null, label: 'Follow my reading'),
+              for (final o in _options)
+                _LinkEditionChoice(editionId: o.id, label: o.label),
+            ],
+            selected: selected,
+          ),
+        );
+        if (picked == null) return;
+        await ref
+            .read(linkingPreferencesProvider.notifier)
+            .setDefaultHymnEdition(picked.editionId);
+      },
+    );
+  }
+}
+
+class _LinkEditionChoice {
+  const _LinkEditionChoice({required this.editionId, required this.label});
+
+  final String? editionId;
+  final String label;
+}
+
+Future<_LinkEditionChoice?> _showEditionPicker(
+  BuildContext context, {
+  required String title,
+  required List<BibleEdition> editions,
+  required String? selected,
+}) {
+  return showModalBottomSheet<_LinkEditionChoice>(
+    context: context,
+    showDragHandle: true,
+    backgroundColor: Theme.of(context).colorScheme.surface,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (_) => _LinkEditionPickerSheet(
+      title: title,
+      options: [
+        const _LinkEditionChoice(editionId: null, label: 'Follow my reading'),
+        for (final e in editions)
+          _LinkEditionChoice(editionId: e.id, label: e.displayName),
+      ],
+      selected: selected,
+    ),
+  );
+}
+
+class _LinkEditionPickerSheet extends StatelessWidget {
+  const _LinkEditionPickerSheet({
+    required this.title,
+    required this.options,
+    required this.selected,
+  });
+
+  final String title;
+  final List<_LinkEditionChoice> options;
+  final String? selected;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(8, 0, 8, 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
+              child: Text(
+                title,
+                style: AppTextStyles.titleMedium
+                    .copyWith(fontWeight: FontWeight.w700),
+              ),
+            ),
+            for (final option in options)
+              // ignore: deprecated_member_use
+              RadioListTile<String?>(
+                value: option.editionId,
+                // ignore: deprecated_member_use
+                groupValue: selected,
+                title: Text(option.label),
+                activeColor: colorScheme.primary,
+                // ignore: deprecated_member_use
+                onChanged: (_) => Navigator.of(context).pop(option),
+              ),
+          ],
+        ),
       ),
     );
   }

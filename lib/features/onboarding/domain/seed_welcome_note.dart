@@ -52,15 +52,17 @@ String? _firstName(String? full) {
 String _welcomeBody(String greeting) => '''
 Hi $greeting, welcome to your tablets.
 
-A tablet is a single page you can write on. Sermon notes go here. Quiet thoughts. Quotes you want to keep. Anything you'd jot down in a paper notebook lives here, with the difference that you can tap a phrase and Abide takes you straight to it. Everything stays on your device, online or offline.
+A tablet is a single page you can write on. Sermon notes go here. Quiet thoughts. Quotes you want to keep. Anything you would jot down in a paper notebook lives here, except you can tap a phrase and Abide takes you right to it. Everything stays on your device, online or offline.
 
-**Link to a hymn or a verse.** Type two square brackets and write what you want to point at. Try a hymn like [[hymn:hymn_0001]] (Holy, Holy, Holy), or a verse like [[bible:JHN.3.16]]. Tap any link and Abide jumps right to it. You can also link to another tablet by writing its title in brackets, like [[Sunday reflections]]. Open the linked tablet and this one shows up in its backlinks.
+**Link to a hymn or a verse.** Type two square brackets and write what you want to point at. Try a hymn like [[hymn:hymn_0001]] (Holy, Holy, Holy), or a verse like [[bible:JHN.3.16]]. You can quote a longer passage with a range, like [[bible:JHN.3.16-18]], or pin a specific edition, like [[bible:JHN.3.16:en-kjv]]. Tap any link and Abide jumps right to it.
+
+You can also link to another tablet by writing its title in brackets, like [[Sunday reflections]]. Open the linked tablet and this one shows up in its backlinks.
 
 **Record a voice memo.** While the keyboard is up, tap the mic. The clip records right inside the tablet and plays back inline next time you open it. Handy for sermons when typing is too slow.
 
 **Add a picture.** Snap or paste an image. A page from a book, a slide, a whiteboard from a service. It saves with the tablet and shows up the same way next time you open it.
 
-**Organize with folders and tags.** Open the Tablets tab menu to create a folder, say "Sermons", "Hymns I love", "Prayer requests", then drop tablets into it. Tags work alongside folders. Add a tag like #grace or #thanksgiving and you can find every tablet with that thread later. A tablet sits in one folder and carries as many tags as you want.
+**Organize with folders and tags.** Open the Tablets tab menu to create a folder, say "Sermons", "Hymns I love", or "Prayer requests", then drop tablets into it. Tags work alongside folders. Add a tag like #grace or #thanksgiving and you can find every tablet with that thread later. A tablet sits in one folder and carries as many tags as you want.
 
-When you're ready to make this your own, delete this tablet and start a fresh one. We left a couple more links to try: [[hymn:hymn_0004]] (All People That on Earth Do Dwell) and [[bible:PSA.23.1]] (Psalm 23). Welcome in.
+When you are ready to make this your own, delete this tablet and start a fresh one. Here are a couple more links to try: [[hymn:hymn_0004]] (All People That on Earth Do Dwell) and [[bible:PSA.23.1]] (Psalm 23). Glad to have you.
 ''';

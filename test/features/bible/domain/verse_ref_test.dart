@@ -37,4 +37,51 @@ void main() {
     );
     expect(const VerseRef('JHN', 3, 16), isNot(const VerseRef('JHN', 3, 17)));
   });
+
+  group('VerseRange.tryParse', () {
+    test('parses a single verse as a degenerate range', () {
+      final r = VerseRange.tryParse('JHN.3.16')!;
+      expect(r.isRange, isFalse);
+      expect(r.start, const VerseRef('JHN', 3, 16));
+      expect(r.end, const VerseRef('JHN', 3, 16));
+      expect(r.toString(), 'JHN.3.16');
+    });
+
+    test('parses a within-chapter range', () {
+      final r = VerseRange.tryParse('JHN.3.16-18')!;
+      expect(r.isRange, isTrue);
+      expect(r.start, const VerseRef('JHN', 3, 16));
+      expect(r.end, const VerseRef('JHN', 3, 18));
+      expect(r.toString(), 'JHN.3.16-18');
+    });
+
+    test('parses a cross-chapter range with chapter.verse end', () {
+      final r = VerseRange.tryParse('JHN.3.16-4.5')!;
+      expect(r.start, const VerseRef('JHN', 3, 16));
+      expect(r.end, const VerseRef('JHN', 4, 5));
+      expect(r.toString(), 'JHN.3.16-4.5');
+    });
+
+    test('tolerates a redundant book code on the end', () {
+      final r = VerseRange.tryParse('JHN.3.16-JHN.4.5')!;
+      expect(r.start, const VerseRef('JHN', 3, 16));
+      expect(r.end, const VerseRef('JHN', 4, 5));
+    });
+
+    test('rejects cross-book ranges', () {
+      expect(VerseRange.tryParse('JHN.3.16-MAT.1.1'), isNull);
+    });
+
+    test('rejects reversed ranges', () {
+      expect(VerseRange.tryParse('JHN.3.18-16'), isNull);
+      expect(VerseRange.tryParse('JHN.4.5-3.16'), isNull);
+    });
+
+    test('rejects malformed input', () {
+      expect(VerseRange.tryParse('JHN.3.16-'), isNull);
+      expect(VerseRange.tryParse('-JHN.3.16'), isNull);
+      expect(VerseRange.tryParse('JHN.3.16-x'), isNull);
+      expect(VerseRange.tryParse(''), isNull);
+    });
+  });
 }

@@ -1,24 +1,29 @@
 /// The kind of thing a `[[wikilink]]` points at.
 enum NoteLinkType { note, hymn, bible }
 
-/// A single `[[...]]` token parsed out of a note's markdown.
+/// A single `[[...]]` token parsed out of a tablet's markdown.
 ///
 /// [targetKey] is the stable lookup value: a hymn id (`hymn_0001`), an OSIS
-/// verse ref (`JHN.3.16`), or — for note links — the referenced title.
-/// [display] is what should be shown inline (title for notes, the key for the
-/// typed forms until resolved against real data).
+/// verse ref or range (`JHN.3.16`, `JHN.3.16-18`), or for tablet links the
+/// referenced title.
+/// [editionPin] is an optional explicit edition the author wants to open this
+/// link in, written as `[[bible:JHN.3.16:en-niv]]` or `[[hymn:hymn_0001:yo]]`.
+/// Most links leave it null and let the resolver pick at click time.
+/// [display] is what should be shown inline.
 class ParsedLink {
   const ParsedLink({
     required this.type,
     required this.targetKey,
     required this.rawToken,
     required this.display,
+    this.editionPin,
   });
 
   final NoteLinkType type;
   final String targetKey;
   final String rawToken;
   final String display;
+  final String? editionPin;
 
   @override
   bool operator ==(Object other) =>
@@ -26,26 +31,58 @@ class ParsedLink {
       other.type == type &&
       other.targetKey == targetKey &&
       other.rawToken == rawToken &&
-      other.display == display;
+      other.display == display &&
+      other.editionPin == editionPin;
 
   @override
-  int get hashCode => Object.hash(type, targetKey, rawToken, display);
+  int get hashCode =>
+      Object.hash(type, targetKey, rawToken, display, editionPin);
 
   @override
-  String toString() =>
-      'ParsedLink($type, key: $targetKey, raw: $rawToken, display: $display)';
+  String toString() => 'ParsedLink($type, key: $targetKey, '
+      'pin: $editionPin, raw: $rawToken, display: $display)';
 }
 
 final _linkPattern = RegExp(r'\[\[([^\[\]]*)\]\]');
 
+/// Splits the body of a typed link (after `hymn:` or `bible:`) into a
+/// `(targetKey, editionPin)` pair. Treats the rightmost colon as the pin
+/// separator only when the suffix looks like an edition id (letters, digits,
+/// and dashes — not a chapter/verse number).
+///
+/// `JHN.3.16` -> ('JHN.3.16', null)
+/// `JHN.3.16:en-niv` -> ('JHN.3.16', 'en-niv')
+/// `hymn_0001:yo` -> ('hymn_0001', 'yo')
+({String targetKey, String? editionPin}) _splitEditionPin(String body) {
+  final colon = body.lastIndexOf(':');
+  if (colon == -1) return (targetKey: body, editionPin: null);
+  final suffix = body.substring(colon + 1).trim();
+  if (!_looksLikeEditionId(suffix)) {
+    return (targetKey: body, editionPin: null);
+  }
+  final key = body.substring(0, colon).trim();
+  if (key.isEmpty) return (targetKey: body, editionPin: null);
+  return (targetKey: key, editionPin: suffix.toLowerCase());
+}
+
+final _editionIdPattern = RegExp(r'^[a-z][a-z0-9-]*$', caseSensitive: false);
+
+bool _looksLikeEditionId(String s) {
+  if (s.isEmpty) return false;
+  return _editionIdPattern.hasMatch(s);
+}
+
 /// Scans [markdown] for `[[...]]` tokens and returns the typed links in order
 /// of appearance. Duplicates are removed (first occurrence wins). Tokens:
 ///
-/// * `[[hymn:hymn_0001]]` → a hymn link
-/// * `[[bible:JHN.3.16]]` → a scripture link
-/// * `[[Some Note Title]]` → a note link (resolved by title later)
+/// * `[[hymn:hymn_0001]]`              hymn link, resolves at click time
+/// * `[[hymn:hymn_0001:yo]]`           hymn link pinned to a language pack
+/// * `[[bible:JHN.3.16]]`              single verse
+/// * `[[bible:JHN.3.16-18]]`           verse range
+/// * `[[bible:JHN.3.16:en-niv]]`       verse pinned to an edition
+/// * `[[Some Tablet Title]]`           tablet link (resolved by title later)
 ///
-/// Empty or whitespace-only tokens (`[[]]`, `[[hymn:]]`) are skipped.
+/// Empty or whitespace-only tokens are skipped.
 List<ParsedLink> parseLinks(String markdown) {
   final seen = <String>{};
   final result = <ParsedLink>[];
@@ -63,19 +100,23 @@ List<ParsedLink> parseLinks(String markdown) {
     switch (prefix) {
       case 'hymn':
         if (rest.isEmpty) continue;
+        final split = _splitEditionPin(rest);
         link = ParsedLink(
           type: NoteLinkType.hymn,
-          targetKey: rest,
+          targetKey: split.targetKey,
           rawToken: rawToken,
-          display: rest,
+          display: split.targetKey,
+          editionPin: split.editionPin,
         );
       case 'bible':
         if (rest.isEmpty) continue;
+        final split = _splitEditionPin(rest);
         link = ParsedLink(
           type: NoteLinkType.bible,
-          targetKey: rest,
+          targetKey: split.targetKey,
           rawToken: rawToken,
-          display: rest,
+          display: split.targetKey,
+          editionPin: split.editionPin,
         );
       default:
         link = ParsedLink(
@@ -86,7 +127,9 @@ List<ParsedLink> parseLinks(String markdown) {
         );
     }
 
-    if (seen.add('${link.type}:${link.targetKey.toLowerCase()}')) {
+    final dedupeKey =
+        '${link.type}:${link.targetKey.toLowerCase()}:${link.editionPin ?? ''}';
+    if (seen.add(dedupeKey)) {
       result.add(link);
     }
   }

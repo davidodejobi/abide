@@ -81,7 +81,7 @@ class FeaturesScreen extends HookWidget {
                   const SizedBox(height: 20),
                   if (showMore.value)
                     TypewriterText(
-                      text: 'and soon, pray together as a family —\n'
+                      text: 'and soon, pray together as a family,\n'
                           'morning and evening,\n'
                           'wherever each of you happens to be.',
                       style: AppTextStyles.doodleBody(color: ink),
