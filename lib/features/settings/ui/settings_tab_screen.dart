@@ -105,7 +105,7 @@ class _SettingsTabScreenState extends ConsumerState<SettingsTabScreen>
                     title: 'Privacy Policy',
                     onTap: () {
                       ref.read(urlLauncherServiceProvider).openUrl(
-                          'https://openbaptisthymnal.vercel.app/privacy.html');
+                          'https://abide-app-open.vercel.app/privacy.html');
                     },
                   ),
                   _SettingsTile(
@@ -113,7 +113,7 @@ class _SettingsTabScreenState extends ConsumerState<SettingsTabScreen>
                     title: 'Terms of Service',
                     onTap: () {
                       ref.read(urlLauncherServiceProvider).openUrl(
-                          'https://openbaptisthymnal.vercel.app/terms.html');
+                          'https://abide-app-open.vercel.app/terms.html');
                     },
                   ),
                 ],

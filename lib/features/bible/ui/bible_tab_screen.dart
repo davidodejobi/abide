@@ -347,8 +347,8 @@ class _VerseList extends StatelessWidget {
             child: RichText(
               text: TextSpan(
                 style: TextStyle(
-                  fontFamily: AppTextStyles.fontFamilyEBGaramond,
-                  fontSize: 20 * textScale,
+                  fontFamily: AppTextStyles.fontFamilyGeist,
+                  fontSize: 16 * textScale,
                   height: 1.5,
                   color: colorScheme.onSurface,
                 ),
