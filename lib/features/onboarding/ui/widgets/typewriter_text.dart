@@ -15,6 +15,7 @@ class TypewriterText extends StatefulWidget {
     this.keepCursorWhenDone = false,
     this.textAlign = TextAlign.start,
     this.onComplete,
+    this.onTypingStart,
   });
 
   final String text;
@@ -25,6 +26,10 @@ class TypewriterText extends StatefulWidget {
   final bool keepCursorWhenDone;
   final TextAlign textAlign;
   final VoidCallback? onComplete;
+
+  /// Fires once when typing begins (after [startDelay]). Use to start a
+  /// looping typewriter SFX; pair with [onComplete] to stop it.
+  final VoidCallback? onTypingStart;
 
   @override
   State<TypewriterText> createState() => _TypewriterTextState();
@@ -69,7 +74,9 @@ class _TypewriterTextState extends State<TypewriterText>
     if (widget.startDelay > Duration.zero) {
       await Future.delayed(widget.startDelay);
     }
-    if (mounted) _typeController.forward();
+    if (!mounted) return;
+    widget.onTypingStart?.call();
+    _typeController.forward();
   }
 
   void _onTick() {
@@ -84,37 +91,111 @@ class _TypewriterTextState extends State<TypewriterText>
     super.dispose();
   }
 
-  bool get _cursorVisible {
-    if (_done) return widget.keepCursorWhenDone;
-    return widget.showCursorWhileTyping;
-  }
-
   @override
   Widget build(BuildContext context) {
     final visible = widget.text.substring(0, _charCount.value);
-    final cursorColor = widget.style.color ?? Theme.of(context).colorScheme.onSurface;
+    final inkColor =
+        widget.style.color ?? Theme.of(context).colorScheme.onSurface;
 
     return AnimatedBuilder(
       animation: _cursorController,
       builder: (context, _) {
-        final showCursor =
-            _cursorVisible && _cursorController.value < 0.5;
+        final indicator = _buildTrailingIndicator(inkColor);
         return Text.rich(
           TextSpan(
             text: visible,
             style: widget.style,
             children: [
-              TextSpan(
-                text: '|',
-                style: widget.style.copyWith(
-                  color: showCursor ? cursorColor : Colors.transparent,
+              if (indicator != null)
+                WidgetSpan(
+                  alignment: PlaceholderAlignment.middle,
+                  child: indicator,
                 ),
-              ),
             ],
           ),
           textAlign: widget.textAlign,
         );
       },
     );
+  }
+
+  /// While typing — three small bouncing dots in the current ink color.
+  /// When done — optional steady `|` cursor if [keepCursorWhenDone].
+  Widget? _buildTrailingIndicator(Color inkColor) {
+    if (!_done && widget.showCursorWhileTyping) {
+      return _TypingDots(
+        animation: _cursorController,
+        color: inkColor,
+        fontSize: widget.style.fontSize ?? 16,
+      );
+    }
+    if (_done && widget.keepCursorWhenDone) {
+      final showCursor = _cursorController.value < 0.5;
+      return Text(
+        '|',
+        style: widget.style.copyWith(
+          color: showCursor ? inkColor : Colors.transparent,
+        ),
+      );
+    }
+    return null;
+  }
+}
+
+/// Three small ink dots that pulse in sequence — the "is typing" indicator.
+/// Driven by the same 1.1s cursor controller so it stays in sync with the
+/// blink heartbeat already on screen.
+class _TypingDots extends StatelessWidget {
+  const _TypingDots({
+    required this.animation,
+    required this.color,
+    required this.fontSize,
+  });
+
+  final Animation<double> animation;
+  final Color color;
+  final double fontSize;
+
+  static const int _count = 3;
+  static const double _stagger = 0.18; // phase offset per dot, in [0,1]
+
+  @override
+  Widget build(BuildContext context) {
+    // Scale dot size + spacing to the host text size so it reads as part of
+    // the line in both headline and body styles.
+    final dotSize = (fontSize * 0.22).clamp(4.0, 9.0);
+    final gap = dotSize * 0.55;
+    final leading = fontSize * 0.30;
+
+    final t = animation.value;
+    final children = <Widget>[SizedBox(width: leading)];
+    for (var i = 0; i < _count; i++) {
+      // Per-dot phase in [0,1).
+      final phase = (((t - i * _stagger) % 1.0) + 1.0) % 1.0;
+      // Triangle wave 0->1->0 over the cycle, then ease.
+      final tri = 1 - (phase - 0.5).abs() * 2;
+      final eased = Curves.easeInOut.transform(tri.clamp(0.0, 1.0));
+      final opacity = 0.25 + 0.75 * eased;
+      final scale = 0.75 + 0.35 * eased;
+      children.add(
+        Opacity(
+          opacity: opacity,
+          child: Transform.scale(
+            scale: scale,
+            child: Container(
+              width: dotSize,
+              height: dotSize,
+              decoration: BoxDecoration(
+                color: color,
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+        ),
+      );
+      if (i != _count - 1) children.add(SizedBox(width: gap));
+    }
+
+    return Row(mainAxisSize: MainAxisSize.min, children: children);
   }
 }
