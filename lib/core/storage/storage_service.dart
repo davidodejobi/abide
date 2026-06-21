@@ -13,6 +13,7 @@ class StorageService {
   static const String _userNameKey = 'user_name';
   static const String _fontScaleKey = 'font_scale';
   static const String _audioQualityKey = 'audio_quality';
+  static const String _welcomeNoteSeededKey = 'welcome_note_seeded';
 
   /// Save theme mode
   Future<void> saveThemeMode(ThemeMode mode) async {
@@ -68,5 +69,16 @@ class StorageService {
   /// Get the voice-note recording quality preference (defaults to medium)
   AudioQuality getAudioQuality() {
     return AudioQuality.fromName(_prefs.getString(_audioQualityKey));
+  }
+
+  /// Mark that the example welcome note has been created for this install.
+  /// One-shot idempotency guard so we never re-seed the note on later runs.
+  Future<void> saveWelcomeNoteSeeded(bool seeded) async {
+    await _prefs.setBool(_welcomeNoteSeededKey, seeded);
+  }
+
+  /// Whether the example welcome note has already been seeded.
+  bool isWelcomeNoteSeeded() {
+    return _prefs.getBool(_welcomeNoteSeededKey) ?? false;
   }
 }
