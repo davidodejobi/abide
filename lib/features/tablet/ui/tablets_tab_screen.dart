@@ -33,7 +33,8 @@ class TabletsTabScreen extends HookConsumerWidget {
     Widget body() {
       if (query.isNotEmpty) return _SearchResults(query: query);
       if (activeTag != null) return _TagTabletsList(tagId: activeTag);
-      if (activeFolder != null) return _FolderTabletsList(folderId: activeFolder);
+      if (activeFolder != null)
+        return _FolderTabletsList(folderId: activeFolder);
       return const _TabletsList();
     }
 
@@ -408,14 +409,16 @@ class _TabletSubtitle extends ConsumerWidget {
         preview,
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
-        style: const TextStyle(fontFamily: 'EBGaramond', fontSize: 15),
+        style: AppTextStyles.bodyMedium.copyWith(
+          fontFamily: AppTextStyles.fontFamilyGeist,
+          color: scheme.onSurfaceVariant,
+        ),
       );
     } else if (hasAudio || hasImage) {
       primary = Text(
         hasAudio ? 'Voice tablet' : 'Photo',
-        style: TextStyle(
-          fontFamily: 'EBGaramond',
-          fontSize: 15,
+        style: AppTextStyles.bodyMedium.copyWith(
+          fontFamily: AppTextStyles.fontFamilyGeist,
           color: scheme.onSurfaceVariant,
         ),
       );
