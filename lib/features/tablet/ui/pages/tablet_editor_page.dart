@@ -4,6 +4,7 @@ import 'package:appflowy_editor/appflowy_editor.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:openbaptisthymnal/core/audio/audio_quality_provider.dart';
@@ -155,9 +156,7 @@ class _NoteEditorView extends HookConsumerWidget {
               SnackBar(content: Text(target.toastMessage!)),
             );
           }
-          await context.router.navigate(
-            const DashboardRoute(children: [BibleTabRoute()]),
-          );
+          context.router.push(const BibleReaderRoute());
         case NoteLinkType.note:
           final notes = ref.read(tabletsListProvider).valueOrNull ?? [];
           final match = notes
@@ -278,6 +277,22 @@ class _NoteEditorView extends HookConsumerWidget {
       await editorState.insertImageNode(
         FileStorageService.absolutePath(relativePath),
       );
+    }
+
+    Future<void> insertPasteText() async {
+      final data = await Clipboard.getData(Clipboard.kTextPlain);
+      final text = data?.text;
+      if (text == null || text.isEmpty) return;
+      if (editorState.selection == null) {
+        final end = editorState.document.root.children.lastOrNull;
+        if (end != null) {
+          final offset = end.delta?.toPlainText().length ?? 0;
+          editorState.selection = Selection.collapsed(
+            Position(path: end.path, offset: offset),
+          );
+        }
+      }
+      await editorState.insertTextAtCurrentSelection(text);
     }
 
     Future<void> insertAudio() async {
@@ -426,6 +441,7 @@ class _NoteEditorView extends HookConsumerWidget {
       actionItem(Icons.link, insertLinkToken),
       actionItem(Icons.image_outlined, insertImage),
       actionItem(Icons.mic_none, insertAudio),
+      actionItem(Icons.content_paste_go, insertPasteText),
     ];
 
     return PopScope(

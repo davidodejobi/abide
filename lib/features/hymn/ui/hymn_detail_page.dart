@@ -27,8 +27,11 @@ import 'package:vector_graphics/vector_graphics_compat.dart';
 /// ever grows beyond two, swap this for a lookup against `HymnalIndex.orders`.
 const List<String> _availableLanguages = ['en', 'yo'];
 
-String _otherLanguage(String current) =>
-    current == 'yo' ? 'en' : current == 'en' ? 'yo' : 'en';
+String _otherLanguage(String current) => current == 'yo'
+    ? 'en'
+    : current == 'en'
+        ? 'yo'
+        : 'en';
 
 /// Local split state for the hymn detail page. Ephemeral — gone on navigation.
 class _HymnSplitState {
@@ -194,8 +197,7 @@ class HymnDetailPage extends HookConsumerWidget {
             onShare: shareText,
             languageLabel: isSplit ? language : null,
             bottomExtraSpace: isSplit ? 16 : 100,
-            titleRightInset:
-                isSplit ? 0 : context.screenSize.width * 0.4,
+            titleRightInset: isSplit ? 0 : context.screenSize.width * 0.4,
             compact: isSplit,
           );
 
@@ -208,8 +210,8 @@ class HymnDetailPage extends HookConsumerWidget {
               primary: primaryView,
               secondary: _SecondaryHymnPane(
                 hymnId: split.value.secondaryHymnId,
-                language: split.value.secondaryLanguage ??
-                    _otherLanguage(language),
+                language:
+                    split.value.secondaryLanguage ?? _otherLanguage(language),
                 textScale: textScale,
                 onShare: shareText,
                 onPickHymn: onPickSecondary,
@@ -245,8 +247,8 @@ class HymnDetailPage extends HookConsumerWidget {
                     if (primary.lyrics.chorus?.isNotEmpty ?? false)
                       primary.lyrics.chorus!,
                   ].join('\n\n')),
-                  onLanguageSwitch: () => ToastHelper.info(context,
-                      'Language switch will be available soon'),
+                  onLanguageSwitch: () => ToastHelper.info(
+                      context, 'Language switch will be available soon'),
                   onSplit: openSplit,
                   onFontSize: () => _showFontSizeSheet(context),
                   onToggleFavorite: () => ref
@@ -296,11 +298,10 @@ class _SecondaryHymnPane extends ConsumerWidget {
         onSelected: onPickHymn,
       );
     }
-    final translationAsync = ref.watch(
-        hymnInLanguageProvider(HymnInLanguageKey(hymnId!, language)));
+    final translationAsync =
+        ref.watch(hymnInLanguageProvider(HymnInLanguageKey(hymnId!, language)));
     return translationAsync.when(
-      loading: () =>
-          const Center(child: CircularProgressIndicator()),
+      loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => Center(child: Text('Could not load hymn: $e')),
       data: (translation) {
         if (translation == null) {
@@ -395,8 +396,7 @@ class _BottomBar extends StatelessWidget {
           filter: ImageFilter.blur(sigmaX: 2.0, sigmaY: 2.0),
           child: Container(
             height: 64,
-            padding:
-                const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
             decoration: BoxDecoration(
               color: (isDark ? AppColors.surfaceContainerDark : Colors.white)
                   .withValues(alpha: 0.8),

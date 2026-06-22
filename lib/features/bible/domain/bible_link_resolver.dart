@@ -32,6 +32,11 @@ class BibleNavigationTarget {
 /// to a concrete navigation target. The verse-range syntax is accepted but
 /// missing-verse degradation only surfaces a toast — the link still opens the
 /// chapter so the user never lands on a dead end.
+///
+/// We intentionally default to English KJV when no user preference or reading
+/// position is set, matching the hymn link resolver — tablet links should be
+/// portable: a verse quoted today opens in the most widely understood edition
+/// tomorrow.
 class BibleLinkResolver {
   BibleLinkResolver(this._ref);
 
@@ -130,6 +135,10 @@ class BibleLinkResolver {
     return null;
   }
 
+  /// The edition we open unpinned Bible links in when no preference or reading
+  /// position is set. English KJV is the most widely understood shipped edition.
+  static const _bibleLinkDefault = 'en-kjv';
+
   BibleEdition _pickFallbackEdition(List<BibleEdition> editions) {
     final prefs = _ref.read(linkingPreferencesProvider);
     final defaultId = prefs.defaultBibleEditionId;
@@ -139,6 +148,13 @@ class BibleLinkResolver {
     final readingId = _ref.read(primaryEditionProvider);
     final reading = _findEdition(editions, readingId);
     if (reading != null) return reading;
+
+    // When the user has no explicit preference and no current reading
+    // position, English wins over the app language. Tablet links should
+    // be portable: a verse quoted today should open in the most widely
+    // understood edition tomorrow.
+    final englishMatch = _findEdition(editions, _bibleLinkDefault);
+    if (englishMatch != null) return englishMatch;
 
     final language = _ref.read(languageProvider);
     for (final e in editions) {
