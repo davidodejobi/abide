@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import 'package:audioplayers/audioplayers.dart';
 
 /// One-stop sound-effects service for the onboarding flow.
@@ -46,12 +48,25 @@ class OnboardingSfx {
     bool loop = false,
   }) async {
     try {
+      await player.setAudioContext(AudioContext(
+        iOS: AudioContextIOS(
+          category: AVAudioSessionCategory.playback,
+        ),
+        android: AudioContextAndroid(
+          usageType: AndroidUsageType.media,
+        ),
+      ));
       await player.setReleaseMode(loop ? ReleaseMode.loop : ReleaseMode.release);
       await player.setVolume(volume);
       await player.stop();
       await player.play(AssetSource(asset));
-    } catch (_) {
-      // Asset missing or playback failed — keep the visual flow alive.
+    } catch (e, st) {
+      developer.log(
+        'SFX playback failed: $asset — $e',
+        name: 'onboarding',
+        error: e,
+        stackTrace: st,
+      );
     }
   }
 
