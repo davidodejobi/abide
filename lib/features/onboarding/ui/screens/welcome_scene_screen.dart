@@ -8,10 +8,11 @@ import 'package:openbaptisthymnal/features/onboarding/ui/widgets/hand_drawn_moon
 import 'package:openbaptisthymnal/features/onboarding/ui/widgets/hand_drawn_sun.dart';
 import 'package:openbaptisthymnal/features/onboarding/ui/widgets/typewriter_text.dart';
 
-/// Second onboarding screen — a sun (day) or moon (evening/night) draws itself
-/// based on the current time, then a greeting + devotional line type out.
-class SceneScreen extends HookWidget {
-  const SceneScreen({
+/// First onboarding screen — types the welcome greeting, draws a sun or moon
+/// based on the time of day, types a time-based greeting with a short
+/// devotional line, then shows a "continue" button.
+class WelcomeSceneScreen extends HookWidget {
+  const WelcomeSceneScreen({
     super.key,
     required this.onNext,
     required this.sfx,
@@ -31,11 +32,20 @@ class SceneScreen extends HookWidget {
       () => _SceneCopy.forHour((now ?? DateTime.now()).hour),
       [now],
     );
+    final showScene = useState(false);
     final showText = useState(false);
     final showButton = useState(false);
 
-    // Pencil scratch under the celestial body's stroke (aligned with its
-    // 300ms startDelay), then a day/night bloom + reveal text on completion.
+    useEffect(() {
+      final timer = Future.delayed(
+        const Duration(milliseconds: 200),
+        sfx.welcomeChime,
+      );
+      return () {
+        timer.ignore();
+      };
+    }, const []);
+
     useEffect(() {
       final start = Future.delayed(
         const Duration(milliseconds: 300),
@@ -63,32 +73,46 @@ class SceneScreen extends HookWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Spacer(flex: 2),
-          Center(
-            child: copy.isNight
-                ? const HandDrawnMoon(startDelay: Duration(milliseconds: 300))
-                : const HandDrawnSun(startDelay: Duration(milliseconds: 300)),
+          TypewriterText(
+            text: 'kaabo. welcome to abide.',
+            style: AppTextStyles.doodleHeadline(color: ink),
+            startDelay: const Duration(milliseconds: 350),
+            onTypingStart: sfx.penTickStart,
+            onComplete: () {
+              sfx.penTickStop();
+              sfx.revealWhoosh();
+              showScene.value = true;
+            },
           ),
-          const SizedBox(height: 36),
-          if (showText.value) ...[
-            TypewriterText(
-              text: copy.headline,
-              style: AppTextStyles.doodleHeadline(color: ink),
-              onTypingStart: sfx.penTickStart,
-              onComplete: sfx.penTickStop,
+          if (showScene.value) ...[
+            const SizedBox(height: 28),
+            Center(
+              child: copy.isNight
+                  ? const HandDrawnMoon(startDelay: Duration.zero)
+                  : const HandDrawnSun(startDelay: Duration.zero),
             ),
-            const SizedBox(height: 16),
-            TypewriterText(
-              text: copy.body,
-              style: AppTextStyles.doodleBody(color: ink),
-              perCharacter: const Duration(milliseconds: 30),
-              startDelay: const Duration(milliseconds: 900),
-              onTypingStart: sfx.penTickStart,
-              onComplete: () {
-                sfx.penTickStop();
-                sfx.revealWhoosh();
-                showButton.value = true;
-              },
-            ),
+            const SizedBox(height: 28),
+            if (showText.value) ...[
+              TypewriterText(
+                text: copy.headline,
+                style: AppTextStyles.doodleHeadline(color: ink),
+                onTypingStart: sfx.penTickStart,
+                onComplete: sfx.penTickStop,
+              ),
+              const SizedBox(height: 16),
+              TypewriterText(
+                text: copy.body,
+                style: AppTextStyles.doodleBody(color: ink),
+                perCharacter: const Duration(milliseconds: 30),
+                startDelay: const Duration(milliseconds: 900),
+                onTypingStart: sfx.penTickStart,
+                onComplete: () {
+                  sfx.penTickStop();
+                  sfx.revealWhoosh();
+                  showButton.value = true;
+                },
+              ),
+            ],
           ],
           const Spacer(flex: 2),
           Center(
@@ -126,8 +150,6 @@ class _SceneCopy {
   final bool isNight;
 
   factory _SceneCopy.forHour(int hour) {
-    // Day-part boundaries live in [TimeGreeting]; the onboarding scene keeps its
-    // own longer, lowercase devotional copy but shares the same clock logic.
     final part = TimeGreeting.forHour(hour).part;
     switch (part) {
       case DayPart.morning:
