@@ -47,24 +47,7 @@ class WelcomeSceneScreen extends HookWidget {
     }, const []);
 
     useEffect(() {
-      final start = Future.delayed(
-        const Duration(milliseconds: 300),
-        sfx.pencilDrawStart,
-      );
-      final finish = Future.delayed(const Duration(milliseconds: 1900), () {
-        sfx.pencilDrawStop();
-        if (copy.isNight) {
-          sfx.nightBloom();
-        } else {
-          sfx.dayBloom();
-        }
-        showText.value = true;
-      });
-      return () {
-        start.ignore();
-        finish.ignore();
-        sfx.pencilDrawStop();
-      };
+      return sfx.pencilDrawStop;
     }, [copy]);
 
     return Padding(
@@ -74,14 +57,24 @@ class WelcomeSceneScreen extends HookWidget {
         children: [
           const Spacer(flex: 2),
           TypewriterText(
-            text: 'kaabo. welcome to abide.',
+            text: 'Kaabo. Welcome to Abide.',
             style: AppTextStyles.doodleHeadline(color: ink),
             startDelay: const Duration(milliseconds: 350),
             onTypingStart: sfx.penTickStart,
             onComplete: () {
               sfx.penTickStop();
+              sfx.pencilDrawStart();
               sfx.revealWhoosh();
               showScene.value = true;
+              Future.delayed(const Duration(milliseconds: 1600), () {
+                sfx.pencilDrawStop();
+                if (copy.isNight) {
+                  sfx.nightBloom();
+                } else {
+                  sfx.dayBloom();
+                }
+                showText.value = true;
+              });
             },
           ),
           if (showScene.value) ...[
@@ -108,7 +101,6 @@ class WelcomeSceneScreen extends HookWidget {
                 onTypingStart: sfx.penTickStart,
                 onComplete: () {
                   sfx.penTickStop();
-                  sfx.revealWhoosh();
                   showButton.value = true;
                 },
               ),
@@ -121,7 +113,7 @@ class WelcomeSceneScreen extends HookWidget {
               duration: const Duration(milliseconds: 200),
               child: showButton.value
                   ? HandDrawnButton(
-                      label: 'continue',
+                      label: 'Continue',
                       onTap: () {
                         sfx.paperTap();
                         onNext();
@@ -155,30 +147,30 @@ class _SceneCopy {
       case DayPart.morning:
         return const _SceneCopy(
           isNight: false,
-          headline: 'good morning.',
-          body: 'his mercies are new with the light.\n'
-              'before the day fills up, pause here.',
+          headline: 'Good morning.',
+          body: 'The Word is waiting for you.\n'
+              'Start your day with a passage that speaks.',
         );
       case DayPart.afternoon:
         return const _SceneCopy(
           isNight: false,
-          headline: 'good afternoon.',
-          body: 'the day is loud and full.\n'
-              'step aside for just a moment.',
+          headline: 'Good afternoon.',
+          body: 'Your spirit needs lifting.\n'
+              'A familiar hymn can find you where you are.',
         );
       case DayPart.evening:
         return const _SceneCopy(
           isNight: true,
-          headline: 'good evening.',
-          body: 'as the light grows soft,\n'
-              'lay down what was heavy to carry.',
+          headline: 'Good evening.',
+          body: 'The day has taught you something.\n'
+              'Take a moment to write it down.',
         );
       case DayPart.night:
         return const _SceneCopy(
           isNight: true,
-          headline: 'abide with me.',
-          body: 'fast falls the eventide.\n'
-              'he gives his beloved sleep.',
+          headline: 'Abide in Christ.',
+          body: 'The hours are still.\n'
+              'Rest in the vine.',
         );
     }
   }

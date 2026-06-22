@@ -38,7 +38,7 @@ class NameScreen extends HookConsumerWidget {
         children: [
           const Spacer(flex: 3),
           TypewriterText(
-            text: 'one last thing,\nwhat should we call you?',
+            text: 'One last thing.\nWhat is your name?',
             style: AppTextStyles.doodleHeadline(color: ink),
             startDelay: const Duration(milliseconds: 300),
             onTypingStart: sfx.penTickStart,
@@ -50,7 +50,7 @@ class NameScreen extends HookConsumerWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'so this place can feel like yours.',
+            'So Abide can feel like yours.',
             style: AppTextStyles.doodleBody(color: ink.withValues(alpha: 0.7)),
           ),
           const SizedBox(height: 32),
@@ -60,7 +60,7 @@ class NameScreen extends HookConsumerWidget {
               duration: const Duration(milliseconds: 300),
               child: HandDrawnField(
                 controller: controller,
-                hintText: 'your name',
+                hintText: 'Your name',
                 onSubmitted: (_) => finish(),
               ),
             ),
@@ -71,7 +71,7 @@ class NameScreen extends HookConsumerWidget {
               duration: const Duration(milliseconds: 400),
               child: showInput.value
                   ? HandDrawnButton(
-                      label: "let's go",
+                      label: "Let's go",
                       onTap: finish,
                       startDelay: const Duration(milliseconds: 400),
                     )

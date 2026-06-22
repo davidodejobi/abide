@@ -48,10 +48,10 @@ void main() {
 
   testWidgets('three ink dots appear while typing and vanish on completion',
       (tester) async {
-    await tester.pumpWidget(host(TypewriterText(
+    await tester.pumpWidget(host(const TypewriterText(
       text: 'kaabo',
-      style: const TextStyle(fontSize: 16),
-      perCharacter: const Duration(milliseconds: 30),
+      style: TextStyle(fontSize: 16),
+      perCharacter: Duration(milliseconds: 30),
     )));
 
     // Mid-stream: dots are mounted as three Container circles inside a Row.
@@ -67,10 +67,10 @@ void main() {
 
   testWidgets('keepCursorWhenDone keeps a blinking | after typing finishes',
       (tester) async {
-    await tester.pumpWidget(host(TypewriterText(
+    await tester.pumpWidget(host(const TypewriterText(
       text: 'amen',
-      style: const TextStyle(fontSize: 16),
-      perCharacter: const Duration(milliseconds: 10),
+      style: TextStyle(fontSize: 16),
+      perCharacter: Duration(milliseconds: 10),
       keepCursorWhenDone: true,
     )));
 
