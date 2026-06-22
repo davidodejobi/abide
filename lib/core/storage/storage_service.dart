@@ -14,6 +14,8 @@ class StorageService {
   static const String _fontScaleKey = 'font_scale';
   static const String _audioQualityKey = 'audio_quality';
   static const String _welcomeNoteSeededKey = 'welcome_note_seeded';
+  static const String _defaultBibleLinkEditionKey = 'default_bible_link_edition';
+  static const String _defaultHymnLinkEditionKey = 'default_hymn_link_edition';
 
   /// Save theme mode
   Future<void> saveThemeMode(ThemeMode mode) async {
@@ -80,5 +82,38 @@ class StorageService {
   /// Whether the example welcome note has already been seeded.
   bool isWelcomeNoteSeeded() {
     return _prefs.getBool(_welcomeNoteSeededKey) ?? false;
+  }
+
+  /// The user's preferred Bible edition to open when tapping a `[[bible:...]]`
+  /// link that doesn't pin one. `null` means "follow my current reading
+  /// position", which is what almost everyone wants.
+  String? getDefaultBibleLinkEdition() {
+    final value = _prefs.getString(_defaultBibleLinkEditionKey);
+    return (value == null || value.isEmpty) ? null : value;
+  }
+
+  Future<void> saveDefaultBibleLinkEdition(String? editionId) async {
+    if (editionId == null || editionId.isEmpty) {
+      await _prefs.remove(_defaultBibleLinkEditionKey);
+    } else {
+      await _prefs.setString(_defaultBibleLinkEditionKey, editionId);
+    }
+  }
+
+  /// The user's preferred hymn edition (today: a language code like `en` or
+  /// `yo`; later: a hymnal-language pair) to open when tapping a `[[hymn:...]]`
+  /// link that doesn't pin one. `null` means "follow my current reading
+  /// language".
+  String? getDefaultHymnLinkEdition() {
+    final value = _prefs.getString(_defaultHymnLinkEditionKey);
+    return (value == null || value.isEmpty) ? null : value;
+  }
+
+  Future<void> saveDefaultHymnLinkEdition(String? editionId) async {
+    if (editionId == null || editionId.isEmpty) {
+      await _prefs.remove(_defaultHymnLinkEditionKey);
+    } else {
+      await _prefs.setString(_defaultHymnLinkEditionKey, editionId);
+    }
   }
 }

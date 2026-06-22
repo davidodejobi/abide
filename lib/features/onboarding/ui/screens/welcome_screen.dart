@@ -48,7 +48,7 @@ class WelcomeScreen extends HookWidget {
           const SizedBox(height: 18),
           if (showLine2.value)
             TypewriterText(
-              text: 'a quiet corner for your faith —\n'
+              text: 'a quiet corner for your faith,\n'
                   'a place to sing, to study,\n'
                   'to write, and to abide.\n'
                   'with you, morning and evening.',

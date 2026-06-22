@@ -38,7 +38,7 @@ class NameScreen extends HookConsumerWidget {
         children: [
           const Spacer(flex: 3),
           TypewriterText(
-            text: 'one last thing —\nwhat should we call you?',
+            text: 'one last thing,\nwhat should we call you?',
             style: AppTextStyles.doodleHeadline(color: ink),
             startDelay: const Duration(milliseconds: 300),
             onTypingStart: sfx.penTickStart,

@@ -73,5 +73,49 @@ void main() {
       expect(links[0].type, NoteLinkType.note);
       expect(links[1].type, NoteLinkType.hymn);
     });
+
+    test('parses a bible link with a verse range as targetKey', () {
+      final link = parseLinks('see [[bible:JHN.3.16-18]]').single;
+      expect(link.type, NoteLinkType.bible);
+      expect(link.targetKey, 'JHN.3.16-18');
+      expect(link.editionPin, isNull);
+    });
+
+    test('parses a bible link pinned to an edition', () {
+      final link = parseLinks('see [[bible:JHN.3.16:en-niv]]').single;
+      expect(link.type, NoteLinkType.bible);
+      expect(link.targetKey, 'JHN.3.16');
+      expect(link.editionPin, 'en-niv');
+    });
+
+    test('parses a hymn link pinned to a language', () {
+      final link = parseLinks('sing [[hymn:hymn_0001:yo]]').single;
+      expect(link.type, NoteLinkType.hymn);
+      expect(link.targetKey, 'hymn_0001');
+      expect(link.editionPin, 'yo');
+    });
+
+    test('lowercases the edition pin', () {
+      final link = parseLinks('[[bible:JHN.3.16:EN-KJV]]').single;
+      expect(link.editionPin, 'en-kjv');
+    });
+
+    test('treats numeric suffix after colon as part of the key, not a pin', () {
+      // `JHN.3:16` shouldn't be misread as a pinned link of `JHN.3` to edition
+      // `16` — the suffix has to look like an edition id (letters first).
+      final link = parseLinks('[[bible:JHN.3:16]]').single;
+      expect(link.targetKey, 'JHN.3:16');
+      expect(link.editionPin, isNull);
+    });
+
+    test('dedupes pinned and unpinned variants of the same target separately',
+        () {
+      final links = parseLinks(
+        '[[bible:JHN.3.16]] [[bible:JHN.3.16:en-kjv]] [[bible:JHN.3.16]]',
+      );
+      expect(links, hasLength(2));
+      expect(links[0].editionPin, isNull);
+      expect(links[1].editionPin, 'en-kjv');
+    });
   });
 }

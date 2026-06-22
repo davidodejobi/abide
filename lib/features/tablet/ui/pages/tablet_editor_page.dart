@@ -4,6 +4,7 @@ import 'package:appflowy_editor/appflowy_editor.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:openbaptisthymnal/core/audio/audio_quality_provider.dart';
@@ -12,6 +13,11 @@ import 'package:openbaptisthymnal/core/router/app_router.dart';
 import 'package:openbaptisthymnal/core/theme/app_colors.dart';
 import 'package:openbaptisthymnal/core/theme/font_scale_provider.dart';
 import 'package:openbaptisthymnal/core/utils/services/file_storage_service.dart';
+import 'package:openbaptisthymnal/features/bible/domain/bible_link_resolver.dart';
+import 'package:openbaptisthymnal/features/bible/providers/bible_providers.dart';
+import 'package:openbaptisthymnal/features/bible/providers/pending_verse_highlight_provider.dart';
+import 'package:openbaptisthymnal/features/hymn/domain/hymn_link_resolver.dart';
+import 'package:openbaptisthymnal/features/hymn/providers/hymnal_provider.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/insert_audio_node.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/link_autocomplete.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/parse_links.dart';
@@ -106,11 +112,51 @@ class _NoteEditorView extends HookConsumerWidget {
     Future<void> navigateToLink(ParsedLink link) async {
       switch (link.type) {
         case NoteLinkType.hymn:
-          context.router.push(HymnDetailRoute(hymnId: link.targetKey));
+          final target = ref
+              .read(hymnLinkResolverProvider)
+              .resolve(link.targetKey, editionPin: link.editionPin);
+          if (target == null) return;
+          // The hymn detail page reads `languageProvider`, so set it before
+          // pushing so the resolved edition is the one that opens.
+          ref.read(languageProvider.notifier).state = target.editionId;
+          if (!context.mounted) return;
+          if (target.toastMessage != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(target.toastMessage!)),
+            );
+          }
+          context.router.push(HymnDetailRoute(hymnId: target.hymnId));
         case NoteLinkType.bible:
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Bible reading is coming soon.')),
-          );
+          final target = await ref
+              .read(bibleLinkResolverProvider)
+              .resolve(link.targetKey, editionPin: link.editionPin);
+          if (target == null || !context.mounted) return;
+          final positionNotifier =
+              ref.read(bibleReadingPositionProvider.notifier);
+          final currentEdition =
+              ref.read(bibleReadingPositionProvider).editionId;
+          if (target.editionId != currentEdition) {
+            positionNotifier.setEdition(target.editionId);
+          }
+          positionNotifier.openChapter(target.ordinal, target.chapter);
+          if (target.highlightFromVerse != null) {
+            ref.read(pendingVerseHighlightProvider.notifier).request(
+                  PendingVerseHighlight(
+                    editionId: target.editionId,
+                    ordinal: target.ordinal,
+                    chapter: target.chapter,
+                    fromVerse: target.highlightFromVerse!,
+                    toVerse:
+                        target.highlightToVerse ?? target.highlightFromVerse!,
+                  ),
+                );
+          }
+          if (target.toastMessage != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(target.toastMessage!)),
+            );
+          }
+          context.router.push(const BibleReaderRoute());
         case NoteLinkType.note:
           final notes = ref.read(tabletsListProvider).valueOrNull ?? [];
           final match = notes
@@ -231,6 +277,22 @@ class _NoteEditorView extends HookConsumerWidget {
       await editorState.insertImageNode(
         FileStorageService.absolutePath(relativePath),
       );
+    }
+
+    Future<void> insertPasteText() async {
+      final data = await Clipboard.getData(Clipboard.kTextPlain);
+      final text = data?.text;
+      if (text == null || text.isEmpty) return;
+      if (editorState.selection == null) {
+        final end = editorState.document.root.children.lastOrNull;
+        if (end != null) {
+          final offset = end.delta?.toPlainText().length ?? 0;
+          editorState.selection = Selection.collapsed(
+            Position(path: end.path, offset: offset),
+          );
+        }
+      }
+      await editorState.insertTextAtCurrentSelection(text);
     }
 
     Future<void> insertAudio() async {
@@ -379,6 +441,7 @@ class _NoteEditorView extends HookConsumerWidget {
       actionItem(Icons.link, insertLinkToken),
       actionItem(Icons.image_outlined, insertImage),
       actionItem(Icons.mic_none, insertAudio),
+      actionItem(Icons.content_paste_go, insertPasteText),
     ];
 
     return PopScope(

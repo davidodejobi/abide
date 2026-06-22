@@ -7,9 +7,9 @@ typedef CreateNoteFn = Future<String> Function({
   String contentMarkdown,
 });
 
-/// Creates the example "Welcome to your notes" note the first time a user
-/// completes onboarding, so the notes tab isn't empty and the user has a
-/// concrete demo of `[[hymn:...]]` and `[[bible:...]]` wikilinks they can tap.
+/// Creates the example "Welcome to your tablets" tablet the first time the
+/// app starts up, so the Tablets tab opens with something concrete to read
+/// and a working demo of `[[hymn:...]]` and `[[bible:...]]` wikilinks.
 ///
 /// Idempotent and safe to call more than once: a `welcome_note_seeded` flag in
 /// shared-prefs guards against duplicates. Failures are swallowed — if the
@@ -36,7 +36,7 @@ Future<void> seedWelcomeNoteIfNeeded({
   }
 }
 
-const _welcomeTitle = 'Welcome to your notes';
+const _welcomeTitle = 'Welcome to your tablets';
 
 String? _firstName(String? full) {
   final trimmed = full?.trim();
@@ -50,15 +50,19 @@ String? _firstName(String? full) {
 /// hymn_0004 = All People That on Earth Do Dwell) and in both Bible editions
 /// (JHN.3.16, PSA.23.1).
 String _welcomeBody(String greeting) => '''
-Hi $greeting — this is where your notes live. Use this page for a sermon, a quiet thought, a quote you want to keep, or anything in between. Everything you write stays on your device and goes with you, online or offline.
+Hi $greeting, welcome to your tablets.
 
-**Link to a hymn or a verse.** Type two square brackets and write what you want to point at: a hymn like [[hymn:hymn_0001]] (Holy, Holy, Holy) or a verse like [[bible:JHN.3.16]]. Tap any link and Abide jumps right to it. You can also link to another note by writing its title in brackets, like [[Sunday reflections]] — open the linked note and you'll see this one in its backlinks.
+A tablet is a single page you can write on. Sermon notes go here. Quiet thoughts. Quotes you want to keep. Anything you would jot down in a paper notebook lives here, except you can tap a phrase and Abide takes you right to it. Everything stays on your device, online or offline.
 
-**Record a voice memo.** While the keyboard is up, tap the mic to record audio right inside the note — useful for sermons when typing is too slow. The clip plays back inline whenever you reopen the note.
+**Link to a hymn or a verse.** Type two square brackets and write what you want to point at. Try a hymn like [[hymn:hymn_0001]] (Holy, Holy, Holy), or a verse like [[bible:JHN.3.16]]. You can quote a longer passage with a range, like [[bible:JHN.3.16-18]], or pin a specific edition, like [[bible:JHN.3.16:en-kjv]]. Tap any link and Abide jumps right to it.
 
-**Add a picture.** Snap or paste an image to attach a photo of a page, a slide, or a whiteboard from a service. It saves with the note and shows up the same way next time you open it.
+You can also link to another tablet by writing its title in brackets, like [[Sunday reflections]]. Open the linked tablet and this one shows up in its backlinks.
 
-**Organize with folders and tags.** Open the notes tab menu to create a folder for "Sermons", "Hymns I love", or "Prayer requests", then drop notes into it. Tags work alongside folders — give a note tags like #grace or #thanksgiving and you'll find every note with that thread later. A note can sit in one folder and carry as many tags as you want.
+**Record a voice memo.** While the keyboard is up, tap the mic. The clip records right inside the tablet and plays back inline next time you open it. Handy for sermons when typing is too slow.
 
-When you're ready to make this your own, delete this note and start a fresh one. We left a couple more links to try: [[hymn:hymn_0004]] (All People That on Earth Do Dwell) and [[bible:PSA.23.1]] (Psalm 23). Welcome in.
+**Add a picture.** Snap or paste an image. A page from a book, a slide, a whiteboard from a service. It saves with the tablet and shows up the same way next time you open it.
+
+**Organize with folders and tags.** Open the Tablets tab menu to create a folder, say "Sermons", "Hymns I love", or "Prayer requests", then drop tablets into it. Tags work alongside folders. Add a tag like #grace or #thanksgiving and you can find every tablet with that thread later. A tablet sits in one folder and carries as many tags as you want.
+
+When you are ready to make this your own, delete this tablet and start a fresh one. Here are a couple more links to try: [[hymn:hymn_0004]] (All People That on Earth Do Dwell) and [[bible:PSA.23.1]] (Psalm 23). Glad to have you.
 ''';
