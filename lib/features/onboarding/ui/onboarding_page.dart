@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import 'package:audioplayers/audioplayers.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
@@ -34,11 +36,31 @@ class _OnboardingPageState extends State<OnboardingPage> {
 
   Future<void> _startAudio() async {
     try {
+      // Configure so the piano plays even when the device is in silent mode.
+      await _player.setAudioContext(AudioContext(
+        iOS: AudioContextIOS(
+          category: AVAudioSessionCategory.playback,
+        ),
+        android: AudioContextAndroid(
+          usageType: AndroidUsageType.media,
+        ),
+      ));
       await _player.setReleaseMode(ReleaseMode.loop);
       await _player.setVolume(_bedVolume);
+
+      _player.onPlayerStateChanged.listen((state) {
+        developer.log('Background audio state: $state', name: 'onboarding');
+      });
+
       await _player.play(AssetSource(_audioAsset));
-    } catch (_) {
-      // No audio asset yet — flow continues silently.
+      developer.log('Background audio started', name: 'onboarding');
+    } catch (e, st) {
+      developer.log(
+        'Background audio failed: $e',
+        name: 'onboarding',
+        error: e,
+        stackTrace: st,
+      );
     }
   }
 
