@@ -5,8 +5,7 @@ import 'package:openbaptisthymnal/core/router/app_router.dart';
 import 'package:openbaptisthymnal/features/onboarding/audio/onboarding_sfx.dart';
 import 'package:openbaptisthymnal/features/onboarding/ui/screens/features_screen.dart';
 import 'package:openbaptisthymnal/features/onboarding/ui/screens/name_screen.dart';
-import 'package:openbaptisthymnal/features/onboarding/ui/screens/scene_screen.dart';
-import 'package:openbaptisthymnal/features/onboarding/ui/screens/welcome_screen.dart';
+import 'package:openbaptisthymnal/features/onboarding/ui/screens/welcome_scene_screen.dart';
 
 /// Hosts the hand-drawn onboarding flow and owns the background audio.
 @RoutePage()
@@ -72,26 +71,20 @@ class _OnboardingPageState extends State<OnboardingPage> {
   Widget _buildPage() {
     switch (_page) {
       case 0:
-        return WelcomeScreen(
+        return WelcomeSceneScreen(
           key: const ValueKey(0),
           sfx: _sfx,
           onNext: () => _goTo(1),
         );
       case 1:
-        return SceneScreen(
+        return FeaturesScreen(
           key: const ValueKey(1),
           sfx: _sfx,
           onNext: () => _goTo(2),
         );
-      case 2:
-        return FeaturesScreen(
-          key: const ValueKey(2),
-          sfx: _sfx,
-          onNext: () => _goTo(3),
-        );
       default:
         return NameScreen(
-          key: const ValueKey(3),
+          key: const ValueKey(2),
           sfx: _sfx,
           onDone: _finish,
         );

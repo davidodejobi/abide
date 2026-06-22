@@ -52,7 +52,7 @@ class FeaturesScreen extends HookWidget {
                 children: [
                   const SizedBox(height: 64),
                   TypewriterText(
-                    text: 'a home for your faith.',
+                    text: 'A home for your faith.',
                     style: AppTextStyles.doodleHeadline(color: ink),
                     startDelay: const Duration(milliseconds: 300),
                     onTypingStart: sfx.penTickStart,
@@ -64,11 +64,23 @@ class FeaturesScreen extends HookWidget {
                   const SizedBox(height: 24),
                   if (showBody.value)
                     TypewriterText(
-                      text: 'sing the hymns you love,\n'
-                          'with the words right in front of you.\n'
-                          'read the Bible in your own tongue,\n'
-                          'side by side with another, at your own pace.\n'
-                          'and keep your notes in one quiet place.',
+                    text: 'Each hour calls for something different.\n'
+                        'Abide is here for all of them.\n'
+                        '\n'
+                        'On your tablets you can write\n'
+                        'whatever God is teaching you.\n'
+                        'Link your notes to the Bible and the hymns.\n'
+                        'Connect them to each other.\n'
+                        'Tag them by preacher or topic.\n'
+                        '\n'
+                        'Sing the hymns that shaped your faith.\n'
+                        'Every verse. Every chorus.\n'
+                        'In whatever language moves you,\n'
+                        'with another beside it for a deeper view.\n'
+                        '\n'
+                        'Read the Bible in the words you know best.\n'
+                        'Bring a second translation alongside\n'
+                        'to see more of what is there.',
                       style: AppTextStyles.doodleBody(color: ink),
                       perCharacter: const Duration(milliseconds: 28),
                       onTypingStart: sfx.penTickStart,
@@ -81,9 +93,9 @@ class FeaturesScreen extends HookWidget {
                   const SizedBox(height: 20),
                   if (showMore.value)
                     TypewriterText(
-                      text: 'and soon, pray together as a family,\n'
-                          'morning and evening,\n'
-                          'wherever each of you happens to be.',
+                    text: 'And soon, gather your household for prayer\n'
+                        'morning and evening,\n'
+                        'no matter where each of you may be.',
                       style: AppTextStyles.doodleBody(color: ink),
                       perCharacter: const Duration(milliseconds: 28),
                       onTypingStart: sfx.penTickStart,
@@ -106,7 +118,7 @@ class FeaturesScreen extends HookWidget {
               child: IgnorePointer(
                 ignoring: !showButton.value,
                 child: HandDrawnButton(
-                  label: 'continue',
+                  label: 'Continue',
                   onTap: () {
                     sfx.paperTap();
                     onNext();
