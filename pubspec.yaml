@@ -62,6 +62,12 @@ flutter:
     - assets/bible/en-kjv/books/
     - assets/bible/yo-bmy/
     - assets/bible/yo-bmy/books/
+    - assets/bible/en-bsb/
+    - assets/bible/en-bsb/books/
+    - assets/bible/en-asv/
+    - assets/bible/en-asv/books/
+    - assets/bible/en-ylt/
+    - assets/bible/en-ylt/books/
     - assets/images/lottie/
     - assets/audio/
     - assets/audio/onboarding/

@@ -34,4 +34,22 @@ const List<BibleEdition> kBibleEditions = [
     versionCode: 'bmy',
     displayName: 'Yorùbá (Bíbélì Mímọ́)',
   ),
+  BibleEdition(
+    id: 'en-bsb',
+    languageCode: 'en',
+    versionCode: 'bsb',
+    displayName: 'English (BSB)',
+  ),
+  BibleEdition(
+    id: 'en-asv',
+    languageCode: 'en',
+    versionCode: 'asv',
+    displayName: 'English (ASV)',
+  ),
+  BibleEdition(
+    id: 'en-ylt',
+    languageCode: 'en',
+    versionCode: 'ylt',
+    displayName: 'English (YLT)',
+  ),
 ];
