@@ -11,6 +11,22 @@
 part of 'app_router.dart';
 
 /// generated route for
+/// [BibleCreditsPage]
+class BibleCreditsRoute extends PageRouteInfo<void> {
+  const BibleCreditsRoute({List<PageRouteInfo>? children})
+      : super(BibleCreditsRoute.name, initialChildren: children);
+
+  static const String name = 'BibleCreditsRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const BibleCreditsPage();
+    },
+  );
+}
+
+/// generated route for
 /// [BibleReaderPage]
 class BibleReaderRoute extends PageRouteInfo<void> {
   const BibleReaderRoute({List<PageRouteInfo>? children})
