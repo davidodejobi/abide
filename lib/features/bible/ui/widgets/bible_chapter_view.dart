@@ -24,6 +24,8 @@ class BibleChapterView extends ConsumerWidget {
     this.selected = const <int>{},
     this.onTapVerse,
     this.onLongPressVerse,
+    this.backlinkVerses = const <int>{},
+    this.onTapBacklink,
     this.padding = const EdgeInsets.fromLTRB(16, 8, 16, 120),
   });
 
@@ -34,6 +36,11 @@ class BibleChapterView extends ConsumerWidget {
   final Set<int> selected;
   final ValueChanged<int>? onTapVerse;
   final ValueChanged<int>? onLongPressVerse;
+
+  /// Verse numbers that have at least one linking tablet; each renders a small
+  /// tappable indicator next to its number.
+  final Set<int> backlinkVerses;
+  final ValueChanged<int>? onTapBacklink;
   final EdgeInsetsGeometry padding;
 
   @override
@@ -65,6 +72,8 @@ class BibleChapterView extends ConsumerWidget {
         selected: selected,
         onTapVerse: onTapVerse,
         onLongPressVerse: onLongPressVerse,
+        backlinkVerses: backlinkVerses,
+        onTapBacklink: onTapBacklink,
         padding: padding,
         highlightFrom: matches ? pending.fromVerse : null,
         highlightTo: matches ? pending.toVerse : null,
@@ -80,6 +89,8 @@ class _VerseList extends ConsumerStatefulWidget {
     required this.selected,
     required this.onTapVerse,
     required this.onLongPressVerse,
+    required this.backlinkVerses,
+    required this.onTapBacklink,
     required this.padding,
     required this.highlightFrom,
     required this.highlightTo,
@@ -90,6 +101,8 @@ class _VerseList extends ConsumerStatefulWidget {
   final Set<int> selected;
   final ValueChanged<int>? onTapVerse;
   final ValueChanged<int>? onLongPressVerse;
+  final Set<int> backlinkVerses;
+  final ValueChanged<int>? onTapBacklink;
   final EdgeInsetsGeometry padding;
   final int? highlightFrom;
   final int? highlightTo;
@@ -153,6 +166,7 @@ class _VerseListState extends ConsumerState<_VerseList> {
       itemBuilder: (context, index) {
         final verse = widget.chapter.verses[index];
         final isSelected = widget.selected.contains(verse.number);
+        final hasBacklink = widget.backlinkVerses.contains(verse.number);
         final isHighlighted = hiFrom != null &&
             verse.number >= hiFrom &&
             verse.number <= (hiTo ?? hiFrom);
@@ -192,6 +206,24 @@ class _VerseListState extends ConsumerState<_VerseList> {
                       fontWeight: FontWeight.w700,
                     ),
                   ),
+                  if (hasBacklink)
+                    WidgetSpan(
+                      alignment: PlaceholderAlignment.middle,
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: widget.onTapBacklink == null
+                            ? null
+                            : () => widget.onTapBacklink!(verse.number),
+                        child: Padding(
+                          padding: const EdgeInsets.only(right: 4),
+                          child: Icon(
+                            Icons.chat_bubble_outline,
+                            size: 13 * widget.textScale,
+                            color: colorScheme.secondary,
+                          ),
+                        ),
+                      ),
+                    ),
                   TextSpan(text: verse.text),
                 ],
               ),

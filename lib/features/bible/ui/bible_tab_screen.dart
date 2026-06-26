@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:openbaptisthymnal/core/router/app_router.dart';
+import 'package:openbaptisthymnal/core/storage/database/daos/note_links_dao.dart';
 import 'package:openbaptisthymnal/core/theme/app_text_styles.dart';
 import 'package:openbaptisthymnal/core/theme/font_scale_provider.dart';
 import 'package:openbaptisthymnal/core/widgets/split_orientation_toggle.dart';
@@ -11,6 +12,7 @@ import 'package:openbaptisthymnal/core/widgets/split_pane.dart';
 import 'package:openbaptisthymnal/features/bible/domain/verse_reference_format.dart';
 import 'package:openbaptisthymnal/features/bible/model/bible_manifest.dart';
 import 'package:openbaptisthymnal/features/bible/providers/bible_providers.dart';
+import 'package:openbaptisthymnal/features/bible/providers/verse_backlinks_provider.dart';
 import 'package:openbaptisthymnal/features/bible/ui/widgets/bible_chapter_view.dart';
 import 'package:openbaptisthymnal/features/bible/ui/widgets/bible_picker_inline.dart';
 import 'package:openbaptisthymnal/features/bible/ui/widgets/book_picker_sheet.dart';
@@ -172,6 +174,26 @@ class BibleTabScreen extends HookConsumerWidget {
           orElse: () => manifest.books.first,
         );
 
+        final backlinks = ref
+                .watch(verseBacklinksProvider(
+                  (bookCode: book.code, chapter: position.chapter),
+                ))
+                .valueOrNull ??
+            const <int, List<BibleBacklink>>{};
+
+        void openBacklinks(int verse) {
+          final items = backlinks[verse];
+          if (items == null || items.isEmpty) return;
+          showModalBottomSheet<void>(
+            context: context,
+            showDragHandle: true,
+            builder: (_) => _BacklinksSheet(
+              reference: '${book.name} ${position.chapter}:$verse',
+              items: items,
+            ),
+          );
+        }
+
         final primaryView = BibleChapterView(
           editionId: position.editionId,
           bookCode: book.code,
@@ -180,6 +202,8 @@ class BibleTabScreen extends HookConsumerWidget {
           selected: selected.value,
           onTapVerse: onTapVerse,
           onLongPressVerse: onLongPressVerse,
+          backlinkVerses: backlinks.keys.toSet(),
+          onTapBacklink: openBacklinks,
         );
 
         Widget body;
@@ -616,6 +640,51 @@ class _ErrorView extends StatelessWidget {
           Text(message, style: AppTextStyles.bodyLarge),
           const SizedBox(height: 8),
           TextButton(onPressed: onRetry, child: const Text('Retry')),
+        ],
+      ),
+    );
+  }
+}
+
+/// Lists the tablets that link to a given verse; tapping a row opens that
+/// tablet in the editor.
+class _BacklinksSheet extends StatelessWidget {
+  const _BacklinksSheet({required this.reference, required this.items});
+
+  final String reference;
+  final List<BibleBacklink> items;
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
+            child: Text(
+              'Linked from $reference',
+              style: AppTextStyles.titleMedium
+                  .copyWith(fontWeight: FontWeight.w600),
+            ),
+          ),
+          for (final item in items)
+            ListTile(
+              leading: const Icon(Icons.sticky_note_2_outlined),
+              title: Text(
+                item.noteTitle.trim().isEmpty
+                    ? 'Untitled tablet'
+                    : item.noteTitle,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              onTap: () {
+                Navigator.of(context).pop();
+                context.router.push(TabletEditorRoute(noteId: item.noteId));
+              },
+            ),
+          const SizedBox(height: 8),
         ],
       ),
     );
