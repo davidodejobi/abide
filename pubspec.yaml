@@ -1,7 +1,7 @@
 name: openbaptisthymnal
 description: "A new Flutter project."
 publish_to: "none"
-version: 0.1.0+6
+version: 0.1.0+7
 
 environment:
   sdk: ^3.0.0
@@ -59,7 +59,21 @@ flutter:
     - assets/hymnal/
     - assets/hymnal/languages/
     - assets/bible/en-kjv/
+    - assets/bible/en-kjv/books/
     - assets/bible/yo-bmy/
+    - assets/bible/yo-bmy/books/
+    - assets/bible/en-bsb/
+    - assets/bible/en-bsb/books/
+    - assets/bible/en-asv/
+    - assets/bible/en-asv/books/
+    - assets/bible/en-ylt/
+    - assets/bible/en-ylt/books/
+    - assets/bible/ha-biblica/
+    - assets/bible/ha-biblica/books/
+    - assets/bible/ig-biblica/
+    - assets/bible/ig-biblica/books/
+    - assets/bible/yo-biblica/
+    - assets/bible/yo-biblica/books/
     - assets/images/lottie/
     - assets/audio/
     - assets/audio/onboarding/

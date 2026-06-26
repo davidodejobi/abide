@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:openbaptisthymnal/features/bible/domain/book_codes.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// The last place the reader left off: which edition, book, and chapter. Stored
@@ -7,29 +8,41 @@ import 'package:shared_preferences/shared_preferences.dart';
 class ReadingPosition {
   const ReadingPosition({
     required this.editionId,
-    required this.ordinal,
+    required this.bookCode,
     required this.chapter,
   });
 
   final String editionId;
-  final int ordinal;
+  final String bookCode;
   final int chapter;
 
-  ReadingPosition copyWith({String? editionId, int? ordinal, int? chapter}) {
+  ReadingPosition copyWith({String? editionId, String? bookCode, int? chapter}) {
     return ReadingPosition(
       editionId: editionId ?? this.editionId,
-      ordinal: ordinal ?? this.ordinal,
+      bookCode: bookCode ?? this.bookCode,
       chapter: chapter ?? this.chapter,
     );
   }
 
   Map<String, dynamic> toJson() =>
-      {'edition': editionId, 'ordinal': ordinal, 'chapter': chapter};
+      {'edition': editionId, 'bookCode': bookCode, 'chapter': chapter};
 
+  /// Accepts both the current `bookCode` shape and the legacy `ordinal` shape so
+  /// a persisted position written before the bookCode migration still loads.
   factory ReadingPosition.fromJson(Map<String, dynamic> json) {
+    final String bookCode;
+    if (json.containsKey('bookCode')) {
+      bookCode = json['bookCode'] as String;
+    } else {
+      final code = bookCodeForOrdinal(json['ordinal'] as int);
+      if (code == null) {
+        throw const FormatException('legacy ReadingPosition: invalid ordinal');
+      }
+      bookCode = code;
+    }
     return ReadingPosition(
       editionId: json['edition'] as String,
-      ordinal: json['ordinal'] as int,
+      bookCode: bookCode,
       chapter: json['chapter'] as int,
     );
   }

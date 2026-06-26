@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app_database.dart';
+import 'daos/bible_annotations_dao.dart';
 import 'daos/folders_dao.dart';
 import 'daos/note_links_dao.dart';
 import 'daos/notes_dao.dart';
@@ -28,4 +29,8 @@ final foldersDaoProvider = Provider<FoldersDao>(
 
 final tagsDaoProvider = Provider<TagsDao>(
   (ref) => ref.watch(appDatabaseProvider).tagsDao,
+);
+
+final bibleAnnotationsDaoProvider = Provider<BibleAnnotationsDao>(
+  (ref) => ref.watch(appDatabaseProvider).bibleAnnotationsDao,
 );

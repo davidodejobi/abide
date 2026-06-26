@@ -4,13 +4,19 @@ import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:openbaptisthymnal/core/router/app_router.dart';
+import 'package:openbaptisthymnal/core/storage/database/app_database.dart';
+import 'package:openbaptisthymnal/core/storage/database/daos/note_links_dao.dart';
+import 'package:openbaptisthymnal/core/storage/database/database_provider.dart';
 import 'package:openbaptisthymnal/core/theme/app_text_styles.dart';
 import 'package:openbaptisthymnal/core/theme/font_scale_provider.dart';
 import 'package:openbaptisthymnal/core/widgets/split_orientation_toggle.dart';
 import 'package:openbaptisthymnal/core/widgets/split_pane.dart';
+import 'package:openbaptisthymnal/features/bible/domain/highlight_palette.dart';
 import 'package:openbaptisthymnal/features/bible/domain/verse_reference_format.dart';
 import 'package:openbaptisthymnal/features/bible/model/bible_manifest.dart';
 import 'package:openbaptisthymnal/features/bible/providers/bible_providers.dart';
+import 'package:openbaptisthymnal/features/bible/providers/verse_backlinks_provider.dart';
+import 'package:openbaptisthymnal/features/bible/providers/verse_highlights_provider.dart';
 import 'package:openbaptisthymnal/features/bible/ui/widgets/bible_chapter_view.dart';
 import 'package:openbaptisthymnal/features/bible/ui/widgets/bible_picker_inline.dart';
 import 'package:openbaptisthymnal/features/bible/ui/widgets/book_picker_sheet.dart';
@@ -24,26 +30,26 @@ class _BibleSplitState {
     required this.isOpen,
     required this.orientation,
     required this.secondaryEditionId,
-    required this.secondaryOrdinal,
+    required this.secondaryBookCode,
     required this.secondaryChapter,
   });
 
   final bool isOpen;
   final SplitOrientation orientation;
   final String? secondaryEditionId;
-  final int? secondaryOrdinal;
+  final String? secondaryBookCode;
   final int? secondaryChapter;
 
   bool get hasSecondaryChapter =>
       secondaryEditionId != null &&
-      secondaryOrdinal != null &&
+      secondaryBookCode != null &&
       secondaryChapter != null;
 
   static const initial = _BibleSplitState(
     isOpen: false,
     orientation: SplitOrientation.vertical,
     secondaryEditionId: null,
-    secondaryOrdinal: null,
+    secondaryBookCode: null,
     secondaryChapter: null,
   );
 
@@ -51,7 +57,7 @@ class _BibleSplitState {
     bool? isOpen,
     SplitOrientation? orientation,
     String? secondaryEditionId,
-    int? secondaryOrdinal,
+    String? secondaryBookCode,
     int? secondaryChapter,
     bool clearSecondaryChapter = false,
   }) =>
@@ -59,9 +65,9 @@ class _BibleSplitState {
         isOpen: isOpen ?? this.isOpen,
         orientation: orientation ?? this.orientation,
         secondaryEditionId: secondaryEditionId ?? this.secondaryEditionId,
-        secondaryOrdinal: clearSecondaryChapter
+        secondaryBookCode: clearSecondaryChapter
             ? null
-            : (secondaryOrdinal ?? this.secondaryOrdinal),
+            : (secondaryBookCode ?? this.secondaryBookCode),
         secondaryChapter: clearSecondaryChapter
             ? null
             : (secondaryChapter ?? this.secondaryChapter),
@@ -96,7 +102,7 @@ class BibleTabScreen extends HookConsumerWidget {
     useEffect(() {
       selected.value = <int>{};
       return null;
-    }, [position.editionId, position.ordinal, position.chapter]);
+    }, [position.editionId, position.bookCode, position.chapter]);
 
     void toggleVerse(int number) {
       final next = {...selected.value};
@@ -131,7 +137,7 @@ class BibleTabScreen extends HookConsumerWidget {
         isOpen: true,
         orientation: SplitOrientation.vertical,
         secondaryEditionId: secondaryEdition,
-        secondaryOrdinal: position.ordinal,
+        secondaryBookCode: position.bookCode,
         secondaryChapter: position.chapter,
       );
     }
@@ -144,10 +150,10 @@ class BibleTabScreen extends HookConsumerWidget {
       split.value = split.value.copyWith(clearSecondaryChapter: true);
     }
 
-    void onSecondaryPicked(String editionId, int ordinal, int chapter) {
+    void onSecondaryPicked(String editionId, String bookCode, int chapter) {
       split.value = split.value.copyWith(
         secondaryEditionId: editionId,
-        secondaryOrdinal: ordinal,
+        secondaryBookCode: bookCode,
         secondaryChapter: chapter,
       );
     }
@@ -168,18 +174,48 @@ class BibleTabScreen extends HookConsumerWidget {
       ),
       data: (manifest) {
         final book = manifest.books.firstWhere(
-          (b) => b.ordinal == position.ordinal,
+          (b) => b.code == position.bookCode,
           orElse: () => manifest.books.first,
         );
 
+        final backlinks = ref
+                .watch(verseBacklinksProvider(
+                  (bookCode: book.code, chapter: position.chapter),
+                ))
+                .valueOrNull ??
+            const <int, List<BibleBacklink>>{};
+
+        final highlights = ref
+                .watch(verseHighlightsProvider(
+                  (bookCode: book.code, chapter: position.chapter),
+                ))
+                .valueOrNull ??
+            const <int, BibleAnnotation>{};
+
+        void openBacklinks(int verse) {
+          final items = backlinks[verse];
+          if (items == null || items.isEmpty) return;
+          showModalBottomSheet<void>(
+            context: context,
+            showDragHandle: true,
+            builder: (_) => _BacklinksSheet(
+              reference: '${book.name} ${position.chapter}:$verse',
+              items: items,
+            ),
+          );
+        }
+
         final primaryView = BibleChapterView(
           editionId: position.editionId,
-          ordinal: book.ordinal,
+          bookCode: book.code,
           chapter: position.chapter,
           textScale: textScale,
           selected: selected.value,
           onTapVerse: onTapVerse,
           onLongPressVerse: onLongPressVerse,
+          backlinkVerses: backlinks.keys.toSet(),
+          onTapBacklink: openBacklinks,
+          highlights: highlights,
         );
 
         Widget body;
@@ -277,7 +313,7 @@ class _ReaderHeader extends ConsumerWidget {
       if (chapter == null) return;
       ref
           .read(bibleReadingPositionProvider.notifier)
-          .openChapter(ordinal, chapter);
+          .openChapter(picked.code, chapter);
     }
 
     return Padding(
@@ -396,7 +432,7 @@ class _SecondaryBiblePane extends ConsumerWidget {
 
   final _BibleSplitState state;
   final double textScale;
-  final void Function(String editionId, int ordinal, int chapter) onPicked;
+  final void Function(String editionId, String bookCode, int chapter) onPicked;
   final ValueChanged<String> onEditionChanged;
   final VoidCallback onChange;
 
@@ -420,7 +456,7 @@ class _SecondaryBiblePane extends ConsumerWidget {
       error: (e, _) => Center(child: Text('Could not load edition: $e')),
       data: (manifest) {
         final book = manifest.books.firstWhere(
-          (b) => b.ordinal == state.secondaryOrdinal,
+          (b) => b.code == state.secondaryBookCode,
           orElse: () => manifest.books.first,
         );
         return Column(
@@ -450,9 +486,16 @@ class _SecondaryBiblePane extends ConsumerWidget {
             Expanded(
               child: BibleChapterView(
                 editionId: editionId,
-                ordinal: book.ordinal,
+                bookCode: book.code,
                 chapter: state.secondaryChapter!,
                 textScale: textScale,
+                highlights: ref
+                        .watch(verseHighlightsProvider((
+                          bookCode: book.code,
+                          chapter: state.secondaryChapter!,
+                        )))
+                        .valueOrNull ??
+                    const <int, BibleAnnotation>{},
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
               ),
             ),
@@ -484,8 +527,52 @@ class _SelectionBar extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
     final query =
-        (editionId: editionId, ordinal: book.ordinal, chapter: chapter);
+        (editionId: editionId, bookCode: book.code, chapter: chapter);
     final chapterData = ref.watch(bibleChapterProvider(query)).valueOrNull;
+    final highlights = ref
+            .watch(verseHighlightsProvider(
+              (bookCode: book.code, chapter: chapter),
+            ))
+            .valueOrNull ??
+        const <int, BibleAnnotation>{};
+    final anyHighlighted = selected.any(highlights.containsKey);
+
+    String verseRef(int v) => '${book.code}.$chapter.$v';
+    int anchorVerse() => selected.reduce((a, b) => a < b ? a : b);
+
+    Future<void> applyColor(HighlightColor c) async {
+      final dao = ref.read(bibleAnnotationsDaoProvider);
+      for (final v in selected) {
+        await dao.setHighlight(verseRef(v), c.key);
+      }
+      onClear();
+    }
+
+    Future<void> clearHighlight() async {
+      final dao = ref.read(bibleAnnotationsDaoProvider);
+      for (final v in selected) {
+        await dao.removeHighlight(verseRef(v));
+      }
+      onClear();
+    }
+
+    // Tie the verse(s) to a new tablet: default-highlight them yellow (an
+    // explicit verse->note link deserves a visible mark) and open the editor
+    // pre-filled with the bible link, which note_links picks up on save so the
+    // Phase C backlink indicator surfaces this tablet.
+    Future<void> addNote() async {
+      if (selected.isEmpty) return;
+      final dao = ref.read(bibleAnnotationsDaoProvider);
+      final anchor = anchorVerse();
+      for (final v in selected) {
+        await dao.setHighlight(verseRef(v), HighlightColor.yellow.key);
+      }
+      if (!context.mounted) return;
+      onClear();
+      context.router.push(
+        TabletEditorRoute(initialMarkdown: '[[bible:${verseRef(anchor)}]]\n\n'),
+      );
+    }
 
     void share() {
       if (chapterData == null) return;
@@ -506,27 +593,69 @@ class _SelectionBar extends ConsumerWidget {
     return Material(
       color: colorScheme.primaryContainer,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(4, 8, 8, 8),
-        child: Row(
+        padding: const EdgeInsets.fromLTRB(4, 8, 8, 6),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            IconButton(
-              tooltip: 'Clear selection',
-              icon: const Icon(Icons.close),
-              onPressed: onClear,
-            ),
-            Expanded(
-              child: Text(
-                '${selected.length} selected',
-                style: AppTextStyles.titleMedium.copyWith(
-                  color: colorScheme.onPrimaryContainer,
-                  fontWeight: FontWeight.w600,
+            Row(
+              children: [
+                IconButton(
+                  tooltip: 'Clear selection',
+                  icon: const Icon(Icons.close),
+                  onPressed: onClear,
                 ),
-              ),
+                Expanded(
+                  child: Text(
+                    '${selected.length} selected',
+                    style: AppTextStyles.titleMedium.copyWith(
+                      color: colorScheme.onPrimaryContainer,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                FilledButton.icon(
+                  onPressed: chapterData == null ? null : share,
+                  icon: const Icon(Icons.ios_share, size: 18),
+                  label: const Text('Share'),
+                ),
+              ],
             ),
-            FilledButton.icon(
-              onPressed: chapterData == null ? null : share,
-              icon: const Icon(Icons.ios_share, size: 18),
-              label: const Text('Share'),
+            const SizedBox(height: 2),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Row(
+                children: [
+                  for (final c in HighlightColor.values)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 10),
+                      child: GestureDetector(
+                        onTap: () => applyColor(c),
+                        child: Container(
+                          width: 28,
+                          height: 28,
+                          decoration: BoxDecoration(
+                            color: c.swatch,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: colorScheme.outlineVariant,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  IconButton(
+                    tooltip: 'Remove highlight',
+                    onPressed: anyHighlighted ? clearHighlight : null,
+                    icon: const Icon(Icons.format_color_reset_outlined),
+                  ),
+                  TextButton.icon(
+                    onPressed: addNote,
+                    icon: const Icon(Icons.note_add_outlined, size: 18),
+                    label: const Text('Add note'),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -555,19 +684,19 @@ class _ChapterNav extends ConsumerWidget {
 
     void goPrev() {
       if (chapter > 1) {
-        notifier.openChapter(book.ordinal, chapter - 1);
+        notifier.openChapter(book.code, chapter - 1);
       } else if (bookIndex > 0) {
         final prev = books[bookIndex - 1];
-        notifier.openChapter(prev.ordinal, prev.chapterCount);
+        notifier.openChapter(prev.code, prev.chapterCount);
       }
     }
 
     void goNext() {
       if (chapter < book.chapterCount) {
-        notifier.openChapter(book.ordinal, chapter + 1);
+        notifier.openChapter(book.code, chapter + 1);
       } else if (bookIndex < books.length - 1) {
         final next = books[bookIndex + 1];
-        notifier.openChapter(next.ordinal, 1);
+        notifier.openChapter(next.code, 1);
       }
     }
 
@@ -616,6 +745,51 @@ class _ErrorView extends StatelessWidget {
           Text(message, style: AppTextStyles.bodyLarge),
           const SizedBox(height: 8),
           TextButton(onPressed: onRetry, child: const Text('Retry')),
+        ],
+      ),
+    );
+  }
+}
+
+/// Lists the tablets that link to a given verse; tapping a row opens that
+/// tablet in the editor.
+class _BacklinksSheet extends StatelessWidget {
+  const _BacklinksSheet({required this.reference, required this.items});
+
+  final String reference;
+  final List<BibleBacklink> items;
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
+            child: Text(
+              'Linked from $reference',
+              style: AppTextStyles.titleMedium
+                  .copyWith(fontWeight: FontWeight.w600),
+            ),
+          ),
+          for (final item in items)
+            ListTile(
+              leading: const Icon(Icons.sticky_note_2_outlined),
+              title: Text(
+                item.noteTitle.trim().isEmpty
+                    ? 'Untitled tablet'
+                    : item.noteTitle,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              onTap: () {
+                Navigator.of(context).pop();
+                context.router.push(TabletEditorRoute(noteId: item.noteId));
+              },
+            ),
+          const SizedBox(height: 8),
         ],
       ),
     );

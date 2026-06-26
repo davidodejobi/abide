@@ -1,4 +1,5 @@
 import 'package:auto_route/auto_route.dart';
+import 'package:openbaptisthymnal/core/router/app_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openbaptisthymnal/core/audio/audio_quality.dart';
@@ -110,6 +111,13 @@ class _SettingsTabScreenState extends ConsumerState<SettingsTabScreen>
                       ToastHelper.info(
                           context, 'About dialog will be available soon');
                     },
+                  ),
+                  _SettingsTile(
+                    icon: Icons.menu_book_outlined,
+                    title: 'Bible translations',
+                    subtitle: 'Sources & licenses',
+                    onTap: () =>
+                        context.router.push(const BibleCreditsRoute()),
                   ),
                   _SettingsTile(
                     icon: Icons.privacy_tip_outlined,

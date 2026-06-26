@@ -100,4 +100,27 @@ void main() {
 
     expect(await linksDao.watchBacklinks('hymn_0001').first, isEmpty);
   });
+
+  test('watchBibleBacklinksForBook returns bible links for the book only',
+      () async {
+    await insertNote(id: 'src', title: 'On John');
+    await linksDao.replaceLinksForNote('src', [
+      link('src', 'bible', 'JHN.3.16'),
+      link('src', 'bible', 'JHN.1.1'),
+      link('src', 'bible', '1JN.4.8'), // different book, must not leak
+      link('src', 'hymn', 'hymn_0001'), // wrong type
+    ]);
+
+    final out = await linksDao.watchBibleBacklinksForBook('JHN').first;
+    expect(out.map((b) => b.targetKey), containsAll(['JHN.3.16', 'JHN.1.1']));
+    expect(out.map((b) => b.targetKey), isNot(contains('1JN.4.8')));
+    expect(out.every((b) => b.noteTitle == 'On John'), isTrue);
+  });
+
+  test('watchBibleBacklinksForBook excludes deleted source notes', () async {
+    await insertNote(id: 'gone', title: 'Gone', isDeleted: true);
+    await linksDao.replaceLinksForNote('gone', [link('gone', 'bible', 'JHN.3.16')]);
+
+    expect(await linksDao.watchBibleBacklinksForBook('JHN').first, isEmpty);
+  });
 }

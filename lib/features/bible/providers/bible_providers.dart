@@ -34,7 +34,7 @@ final bibleReadingPositionProvider =
 
 class BibleReadingPositionNotifier extends Notifier<ReadingPosition> {
   static const _default =
-      ReadingPosition(editionId: 'en-kjv', ordinal: 43, chapter: 1);
+      ReadingPosition(editionId: 'en-kjv', bookCode: 'JHN', chapter: 1);
 
   @override
   ReadingPosition build() {
@@ -47,8 +47,8 @@ class BibleReadingPositionNotifier extends Notifier<ReadingPosition> {
   }
 
   /// Jumps to a chapter within the current edition, resetting nothing else.
-  void openChapter(int ordinal, int chapter) =>
-      _set(state.copyWith(ordinal: ordinal, chapter: chapter));
+  void openChapter(String bookCode, int chapter) =>
+      _set(state.copyWith(bookCode: bookCode, chapter: chapter));
 
   /// Switches the primary edition, keeping the same book/chapter so the reader
   /// stays put when toggling translations.
@@ -69,12 +69,12 @@ final bibleManifestProvider =
 
 /// Identifies one chapter request. A record gives value-equality for free, so
 /// the family caches per (edition, book, chapter).
-typedef ChapterQuery = ({String editionId, int ordinal, int chapter});
+typedef ChapterQuery = ({String editionId, String bookCode, int chapter});
 
 /// A single chapter of text for the given query.
 final bibleChapterProvider =
     FutureProvider.family<BibleChapter, ChapterQuery>((ref, q) {
   return ref
       .watch(bibleRepositoryProvider)
-      .chapter(q.editionId, q.ordinal, q.chapter);
+      .chapter(q.editionId, q.bookCode, q.chapter);
 });

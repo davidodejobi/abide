@@ -2,6 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:openbaptisthymnal/core/router/app_router.dart';
+import 'package:openbaptisthymnal/features/bible/ui/open_bible_link.dart';
 import 'package:openbaptisthymnal/features/hymn/ui/viewmodels/hymns_viewmodel.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/parse_links.dart';
 import 'package:openbaptisthymnal/features/tablet/providers/tablets_providers.dart';
@@ -82,11 +83,12 @@ class _OutgoingTile extends ConsumerWidget {
         return _LinkTile(
           icon: Icons.menu_book_outlined,
           label: link.targetKey,
-          onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Bible reading is coming soon.')),
-            );
-          },
+          onTap: () => openBibleLink(
+            context,
+            ref,
+            targetKey: link.targetKey,
+            editionPin: link.editionPin,
+          ),
         );
       case NoteLinkType.note:
         final notes = ref.watch(tabletsListProvider).valueOrNull;

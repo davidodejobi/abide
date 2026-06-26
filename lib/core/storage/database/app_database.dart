@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:sqlite3/sqlite3.dart';
 import 'package:sqlite3_flutter_libs/sqlite3_flutter_libs.dart';
 
+import 'daos/bible_annotations_dao.dart';
 import 'daos/folders_dao.dart';
 import 'daos/note_links_dao.dart';
 import 'daos/notes_dao.dart';
@@ -25,7 +26,7 @@ part 'app_database.g.dart';
     Attachments,
     BibleAnnotations,
   ],
-  daos: [NotesDao, NoteLinksDao, FoldersDao, TagsDao],
+  daos: [NotesDao, NoteLinksDao, FoldersDao, TagsDao, BibleAnnotationsDao],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
@@ -34,7 +35,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -46,6 +47,9 @@ class AppDatabase extends _$AppDatabase {
           if (from < 2) {
             await _createNotesSearchIndex();
             await _backfillNotesSearchIndex();
+          }
+          if (from < 3) {
+            await _ensureBibleAnnotations(m);
           }
         },
         beforeOpen: (details) async {
@@ -85,6 +89,21 @@ class AppDatabase extends _$AppDatabase {
       'INSERT INTO notes_fts(note_id, title, content) '
       'SELECT id, title, content_markdown FROM notes',
     );
+  }
+
+  /// Creates `bible_annotations` on upgrade, but only if it isn't already there.
+  /// The table was registered in the Dart schema before it had a migration, so
+  /// some installs already have it (via an earlier `createAll`) while others
+  /// don't. The existence check keeps this idempotent either way, and using the
+  /// generated [createTable] guarantees the column types match the schema.
+  Future<void> _ensureBibleAnnotations(Migrator m) async {
+    final existing = await customSelect(
+      "SELECT name FROM sqlite_master WHERE type = 'table' "
+      "AND name = 'bible_annotations'",
+    ).get();
+    if (existing.isEmpty) {
+      await m.createTable(bibleAnnotations);
+    }
   }
 }
 

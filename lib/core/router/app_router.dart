@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:openbaptisthymnal/features/bible/ui/bible_credits_page.dart';
 import 'package:openbaptisthymnal/features/bible/ui/bible_reader_page.dart';
 import 'package:openbaptisthymnal/features/bible/ui/bible_tab_screen.dart';
 import 'package:openbaptisthymnal/features/dashboard/ui/dashboard_screen.dart';
@@ -44,6 +45,7 @@ class AppRouter extends RootStackRouter {
         AutoRoute(page: HymnDetailRoute.page),
         AutoRoute(page: ShareCardRoute.page),
         AutoRoute(page: ScriptureShareCardRoute.page),
+        AutoRoute(page: BibleCreditsRoute.page),
         AutoRoute(page: OnboardingRoute.page),
       ];
 
