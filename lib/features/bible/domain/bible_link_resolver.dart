@@ -13,7 +13,7 @@ import 'package:openbaptisthymnal/features/hymn/providers/hymnal_provider.dart';
 class BibleNavigationTarget {
   const BibleNavigationTarget({
     required this.editionId,
-    required this.ordinal,
+    required this.bookCode,
     required this.chapter,
     this.highlightFromVerse,
     this.highlightToVerse,
@@ -21,7 +21,7 @@ class BibleNavigationTarget {
   });
 
   final String editionId;
-  final int ordinal;
+  final String bookCode;
   final int chapter;
   final int? highlightFromVerse;
   final int? highlightToVerse;
@@ -59,8 +59,7 @@ class BibleLinkResolver {
     final range = VerseRange.tryParse(targetKey);
     if (range == null) return null;
     final start = range.start;
-    final ordinal = start.ordinal;
-    if (ordinal == null) return null;
+    final bookCode = start.book;
 
     final editions = _ref.read(bibleEditionsProvider);
     if (editions.isEmpty) return null;
@@ -83,7 +82,7 @@ class BibleLinkResolver {
     int chapter = start.chapter;
     try {
       final manifest = await _ref.read(bibleManifestProvider(chosen.id).future);
-      final book = _findBook(manifest, ordinal);
+      final book = _findBook(manifest, bookCode);
       if (book == null) {
         toast ??= '${start.book} isn\'t in ${chosen.displayName} yet. '
             'Showing the closest available chapter.';
@@ -112,7 +111,7 @@ class BibleLinkResolver {
 
     return BibleNavigationTarget(
       editionId: chosen.id,
-      ordinal: ordinal,
+      bookCode: bookCode,
       chapter: chapter,
       highlightFromVerse: hiFrom,
       highlightToVerse: hiTo,
@@ -128,9 +127,9 @@ class BibleLinkResolver {
     return null;
   }
 
-  BibleBookInfo? _findBook(BibleManifest manifest, int ordinal) {
+  BibleBookInfo? _findBook(BibleManifest manifest, String code) {
     for (final b in manifest.books) {
-      if (b.ordinal == ordinal) return b;
+      if (b.code == code) return b;
     }
     return null;
   }

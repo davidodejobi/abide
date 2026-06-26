@@ -138,12 +138,12 @@ class _NoteEditorView extends HookConsumerWidget {
           if (target.editionId != currentEdition) {
             positionNotifier.setEdition(target.editionId);
           }
-          positionNotifier.openChapter(target.ordinal, target.chapter);
+          positionNotifier.openChapter(target.bookCode, target.chapter);
           if (target.highlightFromVerse != null) {
             ref.read(pendingVerseHighlightProvider.notifier).request(
                   PendingVerseHighlight(
                     editionId: target.editionId,
-                    ordinal: target.ordinal,
+                    bookCode: target.bookCode,
                     chapter: target.chapter,
                     fromVerse: target.highlightFromVerse!,
                     toVerse:

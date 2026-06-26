@@ -17,7 +17,7 @@ class BiblePickerInline extends ConsumerWidget {
   });
 
   final String editionId;
-  final void Function(String editionId, int ordinal, int chapter) onPicked;
+  final void Function(String editionId, String bookCode, int chapter) onPicked;
   final ValueChanged<String> onEditionChanged;
 
   @override
@@ -41,7 +41,7 @@ class BiblePickerInline extends ConsumerWidget {
         currentChapter: 1,
       );
       if (chapter == null) return;
-      onPicked(editionId, ordinal, chapter);
+      onPicked(editionId, book.code, chapter);
     }
 
     return Padding(

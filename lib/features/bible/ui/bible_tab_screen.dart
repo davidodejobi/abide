@@ -24,26 +24,26 @@ class _BibleSplitState {
     required this.isOpen,
     required this.orientation,
     required this.secondaryEditionId,
-    required this.secondaryOrdinal,
+    required this.secondaryBookCode,
     required this.secondaryChapter,
   });
 
   final bool isOpen;
   final SplitOrientation orientation;
   final String? secondaryEditionId;
-  final int? secondaryOrdinal;
+  final String? secondaryBookCode;
   final int? secondaryChapter;
 
   bool get hasSecondaryChapter =>
       secondaryEditionId != null &&
-      secondaryOrdinal != null &&
+      secondaryBookCode != null &&
       secondaryChapter != null;
 
   static const initial = _BibleSplitState(
     isOpen: false,
     orientation: SplitOrientation.vertical,
     secondaryEditionId: null,
-    secondaryOrdinal: null,
+    secondaryBookCode: null,
     secondaryChapter: null,
   );
 
@@ -51,7 +51,7 @@ class _BibleSplitState {
     bool? isOpen,
     SplitOrientation? orientation,
     String? secondaryEditionId,
-    int? secondaryOrdinal,
+    String? secondaryBookCode,
     int? secondaryChapter,
     bool clearSecondaryChapter = false,
   }) =>
@@ -59,9 +59,9 @@ class _BibleSplitState {
         isOpen: isOpen ?? this.isOpen,
         orientation: orientation ?? this.orientation,
         secondaryEditionId: secondaryEditionId ?? this.secondaryEditionId,
-        secondaryOrdinal: clearSecondaryChapter
+        secondaryBookCode: clearSecondaryChapter
             ? null
-            : (secondaryOrdinal ?? this.secondaryOrdinal),
+            : (secondaryBookCode ?? this.secondaryBookCode),
         secondaryChapter: clearSecondaryChapter
             ? null
             : (secondaryChapter ?? this.secondaryChapter),
@@ -96,7 +96,7 @@ class BibleTabScreen extends HookConsumerWidget {
     useEffect(() {
       selected.value = <int>{};
       return null;
-    }, [position.editionId, position.ordinal, position.chapter]);
+    }, [position.editionId, position.bookCode, position.chapter]);
 
     void toggleVerse(int number) {
       final next = {...selected.value};
@@ -131,7 +131,7 @@ class BibleTabScreen extends HookConsumerWidget {
         isOpen: true,
         orientation: SplitOrientation.vertical,
         secondaryEditionId: secondaryEdition,
-        secondaryOrdinal: position.ordinal,
+        secondaryBookCode: position.bookCode,
         secondaryChapter: position.chapter,
       );
     }
@@ -144,10 +144,10 @@ class BibleTabScreen extends HookConsumerWidget {
       split.value = split.value.copyWith(clearSecondaryChapter: true);
     }
 
-    void onSecondaryPicked(String editionId, int ordinal, int chapter) {
+    void onSecondaryPicked(String editionId, String bookCode, int chapter) {
       split.value = split.value.copyWith(
         secondaryEditionId: editionId,
-        secondaryOrdinal: ordinal,
+        secondaryBookCode: bookCode,
         secondaryChapter: chapter,
       );
     }
@@ -168,13 +168,13 @@ class BibleTabScreen extends HookConsumerWidget {
       ),
       data: (manifest) {
         final book = manifest.books.firstWhere(
-          (b) => b.ordinal == position.ordinal,
+          (b) => b.code == position.bookCode,
           orElse: () => manifest.books.first,
         );
 
         final primaryView = BibleChapterView(
           editionId: position.editionId,
-          ordinal: book.ordinal,
+          bookCode: book.code,
           chapter: position.chapter,
           textScale: textScale,
           selected: selected.value,
@@ -277,7 +277,7 @@ class _ReaderHeader extends ConsumerWidget {
       if (chapter == null) return;
       ref
           .read(bibleReadingPositionProvider.notifier)
-          .openChapter(ordinal, chapter);
+          .openChapter(picked.code, chapter);
     }
 
     return Padding(
@@ -396,7 +396,7 @@ class _SecondaryBiblePane extends ConsumerWidget {
 
   final _BibleSplitState state;
   final double textScale;
-  final void Function(String editionId, int ordinal, int chapter) onPicked;
+  final void Function(String editionId, String bookCode, int chapter) onPicked;
   final ValueChanged<String> onEditionChanged;
   final VoidCallback onChange;
 
@@ -420,7 +420,7 @@ class _SecondaryBiblePane extends ConsumerWidget {
       error: (e, _) => Center(child: Text('Could not load edition: $e')),
       data: (manifest) {
         final book = manifest.books.firstWhere(
-          (b) => b.ordinal == state.secondaryOrdinal,
+          (b) => b.code == state.secondaryBookCode,
           orElse: () => manifest.books.first,
         );
         return Column(
@@ -450,7 +450,7 @@ class _SecondaryBiblePane extends ConsumerWidget {
             Expanded(
               child: BibleChapterView(
                 editionId: editionId,
-                ordinal: book.ordinal,
+                bookCode: book.code,
                 chapter: state.secondaryChapter!,
                 textScale: textScale,
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
@@ -484,7 +484,7 @@ class _SelectionBar extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
     final query =
-        (editionId: editionId, ordinal: book.ordinal, chapter: chapter);
+        (editionId: editionId, bookCode: book.code, chapter: chapter);
     final chapterData = ref.watch(bibleChapterProvider(query)).valueOrNull;
 
     void share() {
@@ -555,19 +555,19 @@ class _ChapterNav extends ConsumerWidget {
 
     void goPrev() {
       if (chapter > 1) {
-        notifier.openChapter(book.ordinal, chapter - 1);
+        notifier.openChapter(book.code, chapter - 1);
       } else if (bookIndex > 0) {
         final prev = books[bookIndex - 1];
-        notifier.openChapter(prev.ordinal, prev.chapterCount);
+        notifier.openChapter(prev.code, prev.chapterCount);
       }
     }
 
     void goNext() {
       if (chapter < book.chapterCount) {
-        notifier.openChapter(book.ordinal, chapter + 1);
+        notifier.openChapter(book.code, chapter + 1);
       } else if (bookIndex < books.length - 1) {
         final next = books[bookIndex + 1];
-        notifier.openChapter(next.ordinal, 1);
+        notifier.openChapter(next.code, 1);
       }
     }
 

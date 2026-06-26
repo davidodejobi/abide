@@ -22,6 +22,10 @@ class BibleRepository {
   Future<BibleManifest> manifest(String editionId) =>
       _local.loadManifest(editionId);
 
-  Future<BibleChapter> chapter(String editionId, int ordinal, int chapter) =>
-      _local.loadChapter(editionId, ordinal, chapter);
+  Future<BibleChapter> chapter(
+    String editionId,
+    String bookCode,
+    int chapter,
+  ) =>
+      _local.loadChapter(editionId, bookCode, chapter);
 }

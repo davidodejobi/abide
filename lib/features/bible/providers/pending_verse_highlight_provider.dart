@@ -7,25 +7,25 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 class PendingVerseHighlight {
   const PendingVerseHighlight({
     required this.editionId,
-    required this.ordinal,
+    required this.bookCode,
     required this.chapter,
     required this.fromVerse,
     required this.toVerse,
   });
 
   final String editionId;
-  final int ordinal;
+  final String bookCode;
   final int chapter;
   final int fromVerse;
   final int toVerse;
 
   bool matches({
     required String editionId,
-    required int ordinal,
+    required String bookCode,
     required int chapter,
   }) =>
       this.editionId == editionId &&
-      this.ordinal == ordinal &&
+      this.bookCode == bookCode &&
       this.chapter == chapter;
 }
 
@@ -44,14 +44,14 @@ class PendingVerseHighlightNotifier extends Notifier<PendingVerseHighlight?> {
   /// it in the same call so the next render won't re-trigger it.
   PendingVerseHighlight? takeFor({
     required String editionId,
-    required int ordinal,
+    required String bookCode,
     required int chapter,
   }) {
     final value = state;
     if (value == null) return null;
     if (!value.matches(
       editionId: editionId,
-      ordinal: ordinal,
+      bookCode: bookCode,
       chapter: chapter,
     )) {
       return null;

@@ -18,7 +18,7 @@ class BibleChapterView extends ConsumerWidget {
   const BibleChapterView({
     super.key,
     required this.editionId,
-    required this.ordinal,
+    required this.bookCode,
     required this.chapter,
     required this.textScale,
     this.selected = const <int>{},
@@ -28,7 +28,7 @@ class BibleChapterView extends ConsumerWidget {
   });
 
   final String editionId;
-  final int ordinal;
+  final String bookCode;
   final int chapter;
   final double textScale;
   final Set<int> selected;
@@ -38,7 +38,7 @@ class BibleChapterView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final query = (editionId: editionId, ordinal: ordinal, chapter: chapter);
+    final query = (editionId: editionId, bookCode: bookCode, chapter: chapter);
     final chapterAsync = ref.watch(bibleChapterProvider(query));
     final colorScheme = Theme.of(context).colorScheme;
 
@@ -49,7 +49,7 @@ class BibleChapterView extends ConsumerWidget {
     final matches = pending != null &&
         pending.matches(
           editionId: editionId,
-          ordinal: ordinal,
+          bookCode: bookCode,
           chapter: chapter,
         );
 

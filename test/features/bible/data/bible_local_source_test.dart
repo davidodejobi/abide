@@ -37,7 +37,7 @@ void main() {
   });
 
   test('loads a chapter with verses in canonical order', () async {
-    final chapter = await source.loadChapter('en-kjv', 43, 3);
+    final chapter = await source.loadChapter('en-kjv', 'JHN', 3);
     expect(chapter.book, 'JHN');
     expect(chapter.chapter, 3);
     expect(chapter.verses, isNotEmpty);

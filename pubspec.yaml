@@ -59,7 +59,9 @@ flutter:
     - assets/hymnal/
     - assets/hymnal/languages/
     - assets/bible/en-kjv/
+    - assets/bible/en-kjv/books/
     - assets/bible/yo-bmy/
+    - assets/bible/yo-bmy/books/
     - assets/images/lottie/
     - assets/audio/
     - assets/audio/onboarding/
