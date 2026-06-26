@@ -13,9 +13,7 @@ import 'package:openbaptisthymnal/core/router/app_router.dart';
 import 'package:openbaptisthymnal/core/theme/app_colors.dart';
 import 'package:openbaptisthymnal/core/theme/font_scale_provider.dart';
 import 'package:openbaptisthymnal/core/utils/services/file_storage_service.dart';
-import 'package:openbaptisthymnal/features/bible/domain/bible_link_resolver.dart';
-import 'package:openbaptisthymnal/features/bible/providers/bible_providers.dart';
-import 'package:openbaptisthymnal/features/bible/providers/pending_verse_highlight_provider.dart';
+import 'package:openbaptisthymnal/features/bible/ui/open_bible_link.dart';
 import 'package:openbaptisthymnal/features/hymn/domain/hymn_link_resolver.dart';
 import 'package:openbaptisthymnal/features/hymn/providers/hymnal_provider.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/insert_audio_node.dart';
@@ -131,36 +129,12 @@ class _NoteEditorView extends HookConsumerWidget {
           }
           context.router.push(HymnDetailRoute(hymnId: target.hymnId));
         case NoteLinkType.bible:
-          final target = await ref
-              .read(bibleLinkResolverProvider)
-              .resolve(link.targetKey, editionPin: link.editionPin);
-          if (target == null || !context.mounted) return;
-          final positionNotifier =
-              ref.read(bibleReadingPositionProvider.notifier);
-          final currentEdition =
-              ref.read(bibleReadingPositionProvider).editionId;
-          if (target.editionId != currentEdition) {
-            positionNotifier.setEdition(target.editionId);
-          }
-          positionNotifier.openChapter(target.bookCode, target.chapter);
-          if (target.highlightFromVerse != null) {
-            ref.read(pendingVerseHighlightProvider.notifier).request(
-                  PendingVerseHighlight(
-                    editionId: target.editionId,
-                    bookCode: target.bookCode,
-                    chapter: target.chapter,
-                    fromVerse: target.highlightFromVerse!,
-                    toVerse:
-                        target.highlightToVerse ?? target.highlightFromVerse!,
-                  ),
-                );
-          }
-          if (target.toastMessage != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(target.toastMessage!)),
-            );
-          }
-          context.router.push(const BibleReaderRoute());
+          await openBibleLink(
+            context,
+            ref,
+            targetKey: link.targetKey,
+            editionPin: link.editionPin,
+          );
         case NoteLinkType.note:
           final notes = ref.read(tabletsListProvider).valueOrNull ?? [];
           final match = notes
