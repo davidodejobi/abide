@@ -4,15 +4,19 @@ import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:openbaptisthymnal/core/router/app_router.dart';
+import 'package:openbaptisthymnal/core/storage/database/app_database.dart';
 import 'package:openbaptisthymnal/core/storage/database/daos/note_links_dao.dart';
+import 'package:openbaptisthymnal/core/storage/database/database_provider.dart';
 import 'package:openbaptisthymnal/core/theme/app_text_styles.dart';
 import 'package:openbaptisthymnal/core/theme/font_scale_provider.dart';
 import 'package:openbaptisthymnal/core/widgets/split_orientation_toggle.dart';
 import 'package:openbaptisthymnal/core/widgets/split_pane.dart';
+import 'package:openbaptisthymnal/features/bible/domain/highlight_palette.dart';
 import 'package:openbaptisthymnal/features/bible/domain/verse_reference_format.dart';
 import 'package:openbaptisthymnal/features/bible/model/bible_manifest.dart';
 import 'package:openbaptisthymnal/features/bible/providers/bible_providers.dart';
 import 'package:openbaptisthymnal/features/bible/providers/verse_backlinks_provider.dart';
+import 'package:openbaptisthymnal/features/bible/providers/verse_highlights_provider.dart';
 import 'package:openbaptisthymnal/features/bible/ui/widgets/bible_chapter_view.dart';
 import 'package:openbaptisthymnal/features/bible/ui/widgets/bible_picker_inline.dart';
 import 'package:openbaptisthymnal/features/bible/ui/widgets/book_picker_sheet.dart';
@@ -181,6 +185,13 @@ class BibleTabScreen extends HookConsumerWidget {
                 .valueOrNull ??
             const <int, List<BibleBacklink>>{};
 
+        final highlights = ref
+                .watch(verseHighlightsProvider(
+                  (bookCode: book.code, chapter: position.chapter),
+                ))
+                .valueOrNull ??
+            const <int, BibleAnnotation>{};
+
         void openBacklinks(int verse) {
           final items = backlinks[verse];
           if (items == null || items.isEmpty) return;
@@ -204,6 +215,7 @@ class BibleTabScreen extends HookConsumerWidget {
           onLongPressVerse: onLongPressVerse,
           backlinkVerses: backlinks.keys.toSet(),
           onTapBacklink: openBacklinks,
+          highlights: highlights,
         );
 
         Widget body;
@@ -477,6 +489,13 @@ class _SecondaryBiblePane extends ConsumerWidget {
                 bookCode: book.code,
                 chapter: state.secondaryChapter!,
                 textScale: textScale,
+                highlights: ref
+                        .watch(verseHighlightsProvider((
+                          bookCode: book.code,
+                          chapter: state.secondaryChapter!,
+                        )))
+                        .valueOrNull ??
+                    const <int, BibleAnnotation>{},
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
               ),
             ),
@@ -510,6 +529,50 @@ class _SelectionBar extends ConsumerWidget {
     final query =
         (editionId: editionId, bookCode: book.code, chapter: chapter);
     final chapterData = ref.watch(bibleChapterProvider(query)).valueOrNull;
+    final highlights = ref
+            .watch(verseHighlightsProvider(
+              (bookCode: book.code, chapter: chapter),
+            ))
+            .valueOrNull ??
+        const <int, BibleAnnotation>{};
+    final anyHighlighted = selected.any(highlights.containsKey);
+
+    String verseRef(int v) => '${book.code}.$chapter.$v';
+    int anchorVerse() => selected.reduce((a, b) => a < b ? a : b);
+
+    Future<void> applyColor(HighlightColor c) async {
+      final dao = ref.read(bibleAnnotationsDaoProvider);
+      for (final v in selected) {
+        await dao.setHighlight(verseRef(v), c.key);
+      }
+      onClear();
+    }
+
+    Future<void> clearHighlight() async {
+      final dao = ref.read(bibleAnnotationsDaoProvider);
+      for (final v in selected) {
+        await dao.removeHighlight(verseRef(v));
+      }
+      onClear();
+    }
+
+    // Tie the verse(s) to a new tablet: default-highlight them yellow (an
+    // explicit verse->note link deserves a visible mark) and open the editor
+    // pre-filled with the bible link, which note_links picks up on save so the
+    // Phase C backlink indicator surfaces this tablet.
+    Future<void> addNote() async {
+      if (selected.isEmpty) return;
+      final dao = ref.read(bibleAnnotationsDaoProvider);
+      final anchor = anchorVerse();
+      for (final v in selected) {
+        await dao.setHighlight(verseRef(v), HighlightColor.yellow.key);
+      }
+      if (!context.mounted) return;
+      onClear();
+      context.router.push(
+        TabletEditorRoute(initialMarkdown: '[[bible:${verseRef(anchor)}]]\n\n'),
+      );
+    }
 
     void share() {
       if (chapterData == null) return;
@@ -530,27 +593,69 @@ class _SelectionBar extends ConsumerWidget {
     return Material(
       color: colorScheme.primaryContainer,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(4, 8, 8, 8),
-        child: Row(
+        padding: const EdgeInsets.fromLTRB(4, 8, 8, 6),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            IconButton(
-              tooltip: 'Clear selection',
-              icon: const Icon(Icons.close),
-              onPressed: onClear,
-            ),
-            Expanded(
-              child: Text(
-                '${selected.length} selected',
-                style: AppTextStyles.titleMedium.copyWith(
-                  color: colorScheme.onPrimaryContainer,
-                  fontWeight: FontWeight.w600,
+            Row(
+              children: [
+                IconButton(
+                  tooltip: 'Clear selection',
+                  icon: const Icon(Icons.close),
+                  onPressed: onClear,
                 ),
-              ),
+                Expanded(
+                  child: Text(
+                    '${selected.length} selected',
+                    style: AppTextStyles.titleMedium.copyWith(
+                      color: colorScheme.onPrimaryContainer,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                FilledButton.icon(
+                  onPressed: chapterData == null ? null : share,
+                  icon: const Icon(Icons.ios_share, size: 18),
+                  label: const Text('Share'),
+                ),
+              ],
             ),
-            FilledButton.icon(
-              onPressed: chapterData == null ? null : share,
-              icon: const Icon(Icons.ios_share, size: 18),
-              label: const Text('Share'),
+            const SizedBox(height: 2),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Row(
+                children: [
+                  for (final c in HighlightColor.values)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 10),
+                      child: GestureDetector(
+                        onTap: () => applyColor(c),
+                        child: Container(
+                          width: 28,
+                          height: 28,
+                          decoration: BoxDecoration(
+                            color: c.swatch,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: colorScheme.outlineVariant,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  IconButton(
+                    tooltip: 'Remove highlight',
+                    onPressed: anyHighlighted ? clearHighlight : null,
+                    icon: const Icon(Icons.format_color_reset_outlined),
+                  ),
+                  TextButton.icon(
+                    onPressed: addNote,
+                    icon: const Icon(Icons.note_add_outlined, size: 18),
+                    label: const Text('Add note'),
+                  ),
+                ],
+              ),
             ),
           ],
         ),

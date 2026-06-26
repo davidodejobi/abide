@@ -2212,6 +2212,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final NoteLinksDao noteLinksDao = NoteLinksDao(this as AppDatabase);
   late final FoldersDao foldersDao = FoldersDao(this as AppDatabase);
   late final TagsDao tagsDao = TagsDao(this as AppDatabase);
+  late final BibleAnnotationsDao bibleAnnotationsDao =
+      BibleAnnotationsDao(this as AppDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();

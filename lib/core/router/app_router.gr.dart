@@ -310,10 +310,18 @@ class ShareCardRouteArgs {
 /// generated route for
 /// [TabletEditorPage]
 class TabletEditorRoute extends PageRouteInfo<TabletEditorRouteArgs> {
-  TabletEditorRoute({Key? key, String? noteId, List<PageRouteInfo>? children})
-      : super(
+  TabletEditorRoute({
+    Key? key,
+    String? noteId,
+    String? initialMarkdown,
+    List<PageRouteInfo>? children,
+  }) : super(
           TabletEditorRoute.name,
-          args: TabletEditorRouteArgs(key: key, noteId: noteId),
+          args: TabletEditorRouteArgs(
+            key: key,
+            noteId: noteId,
+            initialMarkdown: initialMarkdown,
+          ),
           initialChildren: children,
         );
 
@@ -325,32 +333,40 @@ class TabletEditorRoute extends PageRouteInfo<TabletEditorRouteArgs> {
       final args = data.argsAs<TabletEditorRouteArgs>(
         orElse: () => const TabletEditorRouteArgs(),
       );
-      return TabletEditorPage(key: args.key, noteId: args.noteId);
+      return TabletEditorPage(
+        key: args.key,
+        noteId: args.noteId,
+        initialMarkdown: args.initialMarkdown,
+      );
     },
   );
 }
 
 class TabletEditorRouteArgs {
-  const TabletEditorRouteArgs({this.key, this.noteId});
+  const TabletEditorRouteArgs({this.key, this.noteId, this.initialMarkdown});
 
   final Key? key;
 
   final String? noteId;
 
+  final String? initialMarkdown;
+
   @override
   String toString() {
-    return 'TabletEditorRouteArgs{key: $key, noteId: $noteId}';
+    return 'TabletEditorRouteArgs{key: $key, noteId: $noteId, initialMarkdown: $initialMarkdown}';
   }
 
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
     if (other is! TabletEditorRouteArgs) return false;
-    return key == other.key && noteId == other.noteId;
+    return key == other.key &&
+        noteId == other.noteId &&
+        initialMarkdown == other.initialMarkdown;
   }
 
   @override
-  int get hashCode => key.hashCode ^ noteId.hashCode;
+  int get hashCode => key.hashCode ^ noteId.hashCode ^ initialMarkdown.hashCode;
 }
 
 /// generated route for

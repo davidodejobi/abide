@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:openbaptisthymnal/core/storage/database/app_database.dart';
 import 'package:openbaptisthymnal/core/theme/app_text_styles.dart';
+import 'package:openbaptisthymnal/features/bible/domain/highlight_palette.dart';
 import 'package:openbaptisthymnal/features/bible/model/bible_chapter.dart';
 import 'package:openbaptisthymnal/features/bible/providers/bible_providers.dart';
 import 'package:openbaptisthymnal/features/bible/providers/pending_verse_highlight_provider.dart';
@@ -26,6 +28,7 @@ class BibleChapterView extends ConsumerWidget {
     this.onLongPressVerse,
     this.backlinkVerses = const <int>{},
     this.onTapBacklink,
+    this.highlights = const <int, BibleAnnotation>{},
     this.padding = const EdgeInsets.fromLTRB(16, 8, 16, 120),
   });
 
@@ -41,6 +44,9 @@ class BibleChapterView extends ConsumerWidget {
   /// tappable indicator next to its number.
   final Set<int> backlinkVerses;
   final ValueChanged<int>? onTapBacklink;
+
+  /// Verse number -> saved highlight annotation. Edition-independent.
+  final Map<int, BibleAnnotation> highlights;
   final EdgeInsetsGeometry padding;
 
   @override
@@ -74,6 +80,7 @@ class BibleChapterView extends ConsumerWidget {
         onLongPressVerse: onLongPressVerse,
         backlinkVerses: backlinkVerses,
         onTapBacklink: onTapBacklink,
+        highlights: highlights,
         padding: padding,
         highlightFrom: matches ? pending.fromVerse : null,
         highlightTo: matches ? pending.toVerse : null,
@@ -91,6 +98,7 @@ class _VerseList extends ConsumerStatefulWidget {
     required this.onLongPressVerse,
     required this.backlinkVerses,
     required this.onTapBacklink,
+    required this.highlights,
     required this.padding,
     required this.highlightFrom,
     required this.highlightTo,
@@ -103,6 +111,7 @@ class _VerseList extends ConsumerStatefulWidget {
   final ValueChanged<int>? onLongPressVerse;
   final Set<int> backlinkVerses;
   final ValueChanged<int>? onTapBacklink;
+  final Map<int, BibleAnnotation> highlights;
   final EdgeInsetsGeometry padding;
   final int? highlightFrom;
   final int? highlightTo;
@@ -167,6 +176,9 @@ class _VerseListState extends ConsumerState<_VerseList> {
         final verse = widget.chapter.verses[index];
         final isSelected = widget.selected.contains(verse.number);
         final hasBacklink = widget.backlinkVerses.contains(verse.number);
+        final highlightSwatch =
+            HighlightColor.fromKey(widget.highlights[verse.number]?.color)
+                ?.swatch;
         final isHighlighted = hiFrom != null &&
             verse.number >= hiFrom &&
             verse.number <= (hiTo ?? hiFrom);
@@ -186,7 +198,9 @@ class _VerseListState extends ConsumerState<_VerseList> {
                   ? colorScheme.primary.withValues(alpha: 0.14)
                   : isHighlighted
                       ? colorScheme.secondary.withValues(alpha: 0.18)
-                      : Colors.transparent,
+                      : highlightSwatch != null
+                          ? highlightSwatch.withValues(alpha: 0.35)
+                          : Colors.transparent,
               borderRadius: BorderRadius.circular(8),
             ),
             child: RichText(

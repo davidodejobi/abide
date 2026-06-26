@@ -40,17 +40,21 @@ import 'package:openbaptisthymnal/features/tablet/ui/widgets/tag_picker_sheet.da
 /// [EditorState]'s document is final and must be seeded once, up front.
 @RoutePage()
 class TabletEditorPage extends HookConsumerWidget {
-  const TabletEditorPage({super.key, this.noteId});
+  const TabletEditorPage({super.key, this.noteId, this.initialMarkdown});
 
   final String? noteId;
+
+  /// Seed body for a brand-new tablet (e.g. a pre-filled `[[bible:...]]` link
+  /// from the Bible reader's "Add note"). Ignored when [noteId] is non-null.
+  final String? initialMarkdown;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (noteId == null) {
-      return const _NoteEditorView(
+      return _NoteEditorView(
         noteId: null,
         initialTitle: '',
-        initialMarkdown: '',
+        initialMarkdown: initialMarkdown ?? '',
         initialCreatedAt: null,
       );
     }
