@@ -23,50 +23,59 @@ class HymnListTile extends StatelessWidget {
     // Warm charcoal + gold in dark mode (no navy); the existing cream card in
     // light mode is already warm, so we only retune the dark palette here.
     final cardColor = isDark ? AppColors.neutral800 : AppColors.secondary100;
-    // Faint gold wash behind the number, gold numerals — replaces the old
-    // light-blue number that read as "too much blue".
+    // A hairline border gives each row a defined edge instead of letting the
+    // cards melt into the cream canvas — the main "professional" lift.
+    final cardBorder =
+        isDark ? AppColors.neutral700 : AppColors.secondary200;
+    // Number badge: a single gold-keyed squircle (was a white pill nested in a
+    // cream pill, which read as visually noisy). Gold numerals are the brand.
     final badgeColor = isDark
-        ? AppColors.secondary.withValues(alpha: 0.14)
+        ? AppColors.secondary.withValues(alpha: 0.16)
         : AppColors.surfaceLight;
+    final badgeBorder = AppColors.secondary.withValues(alpha: 0.32);
     const numberColor = AppColors.secondary;
     final titleColor = isDark ? AppColors.neutral100 : AppColors.primary;
-    final trailingColor = isDark ? AppColors.neutral500 : AppColors.primary;
+    // Muted trailing chevron — a navigation affordance, not a focal point.
+    final trailingColor = isDark ? AppColors.neutral500 : AppColors.primary300;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 0),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(33),
-          child: Ink(
-            height: 65,
-            decoration: BoxDecoration(
-              color: cardColor,
-              borderRadius: BorderRadius.circular(33),
-            ),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: Ink(
+          height: 64,
+          decoration: BoxDecoration(
+            color: cardColor,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: cardBorder, width: 1),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 9),
             child: Row(
               children: [
-                const SizedBox(width: 8),
-                // Hymn number badge
+                // Hymn number badge — fixed square so 3- and 4-digit numbers
+                // stay vertically aligned down the list.
                 Container(
-                  height: 48,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  width: 46,
+                  height: 46,
                   decoration: BoxDecoration(
                     color: badgeColor,
-                    borderRadius: BorderRadius.circular(24),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: badgeBorder, width: 1),
                   ),
-                  child: Center(
-                    child: Text(
-                      number.padLeft(3, '0'),
-                      style: AppTextStyles.titleMedium.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: numberColor,
-                      ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    number.padLeft(3, '0'),
+                    style: AppTextStyles.titleSmall.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: numberColor,
+                      letterSpacing: 0.5,
+                      fontFeatures: const [FontFeature.tabularFigures()],
                     ),
                   ),
                 ),
-                const SizedBox(width: 22),
+                const SizedBox(width: 16),
                 // Hymn title
                 Expanded(
                   child: Text(
@@ -80,19 +89,21 @@ class HymnListTile extends StatelessWidget {
                   ),
                 ),
                 // Favorite indicator
-                if (isFavorited)
+                if (isFavorited) ...[
                   const Icon(
                     Icons.favorite,
-                    size: 18,
+                    size: 16,
                     color: AppColors.secondary,
                   ),
+                  const SizedBox(width: 8),
+                ],
                 // Arrow icon
                 Icon(
-                  Icons.chevron_right,
-                  size: 24,
+                  Icons.chevron_right_rounded,
+                  size: 22,
                   color: trailingColor,
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 6),
               ],
             ),
           ),

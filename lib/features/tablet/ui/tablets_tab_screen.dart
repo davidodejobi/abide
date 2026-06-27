@@ -7,6 +7,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:openbaptisthymnal/core/router/app_router.dart';
 import 'package:openbaptisthymnal/core/storage/database/app_database.dart';
 import 'package:openbaptisthymnal/core/storage/database/daos/notes_dao.dart';
+import 'package:openbaptisthymnal/core/theme/app_colors.dart';
 import 'package:openbaptisthymnal/core/theme/app_text_styles.dart';
 import 'package:openbaptisthymnal/features/hymn/ui/widgets/search_bar_widget.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/tablet_preview.dart';
@@ -33,63 +34,84 @@ class TabletsTabScreen extends HookConsumerWidget {
     Widget body() {
       if (query.isNotEmpty) return _SearchResults(query: query);
       if (activeTag != null) return _TagTabletsList(tagId: activeTag);
-      if (activeFolder != null)
+      if (activeFolder != null) {
         return _FolderTabletsList(folderId: activeFolder);
+      }
       return const _TabletsList();
     }
 
-    return Column(
+    // Lift the "new tablet" action off the top bar and into a thumb-reachable
+    // FAB that floats just above the bottom navigation bar.
+    final navClearance = MediaQuery.of(context).padding.bottom + 100;
+
+    return Stack(
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 8, 12),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'Tablets',
-                  style: AppTextStyles.headlineLarge.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              if (query.isEmpty)
-                IconButton(
-                  icon: Icon(
-                    hasFilter ? Icons.filter_list : Icons.filter_list_outlined,
-                    color: hasFilter
-                        ? Theme.of(context).colorScheme.primary
-                        : null,
-                  ),
-                  tooltip: 'Filter tablets',
-                  onPressed: () => showModalBottomSheet<void>(
-                    context: context,
-                    showDragHandle: true,
-                    isScrollControlled: true,
-                    useSafeArea: true,
-                    constraints: BoxConstraints(
-                      maxHeight: MediaQuery.of(context).size.height * 0.9,
+        Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 8, 12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Tablets',
+                      style: AppTextStyles.headlineLarge.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                    builder: (_) => const TabletFilterSheet(),
                   ),
-                ),
-              IconButton(
-                icon: const Icon(Icons.add),
-                tooltip: 'New tablet',
-                onPressed: () => context.router.push(TabletEditorRoute()),
+                  if (query.isEmpty)
+                    IconButton(
+                      icon: Icon(
+                        hasFilter
+                            ? Icons.filter_list
+                            : Icons.filter_list_outlined,
+                        color: hasFilter
+                            ? Theme.of(context).colorScheme.primary
+                            : null,
+                      ),
+                      tooltip: 'Filter tablets',
+                      onPressed: () => showModalBottomSheet<void>(
+                        context: context,
+                        showDragHandle: true,
+                        isScrollControlled: true,
+                        useSafeArea: true,
+                        constraints: BoxConstraints(
+                          maxHeight: MediaQuery.of(context).size.height * 0.9,
+                        ),
+                        builder: (_) => const TabletFilterSheet(),
+                      ),
+                    ),
+                  const SizedBox(width: 4),
+                ],
               ),
-            ],
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: SearchBarWidget(
+                controller: searchController,
+                hintText: 'Search tablets...',
+                onChanged: (value) => searchQuery.value = value,
+              ),
+            ),
+            if (query.isEmpty && hasFilter) const _ActiveFilterBar(),
+            Expanded(child: body()),
+          ],
+        ),
+        // Thumb-reachable primary action, floating clear of the bottom nav.
+        Positioned(
+          right: 20,
+          bottom: navClearance,
+          child: FloatingActionButton(
+            heroTag: 'new_tablet_fab',
+            backgroundColor: AppColors.secondary,
+            foregroundColor: AppColors.primaryDark,
+            elevation: 4,
+            tooltip: 'New tablet',
+            onPressed: () => context.router.push(TabletEditorRoute()),
+            child: const Icon(Icons.add_rounded, size: 28),
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-          child: SearchBarWidget(
-            controller: searchController,
-            hintText: 'Search tablets...',
-            onChanged: (value) => searchQuery.value = value,
-          ),
-        ),
-        if (query.isEmpty && hasFilter) const _ActiveFilterBar(),
-        Expanded(child: body()),
       ],
     );
   }
@@ -352,7 +374,7 @@ class _TabletTile extends ConsumerWidget {
                     decoration: BoxDecoration(
                       color:
                           Theme.of(context).colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
                       Icons.mic_none,
@@ -473,7 +495,7 @@ class _TabletThumbnail extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final isNetwork = path.startsWith('http');
     return ClipRRect(
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(12),
       child: SizedBox(
         width: 48,
         height: 48,

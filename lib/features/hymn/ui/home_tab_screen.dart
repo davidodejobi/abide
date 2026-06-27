@@ -15,7 +15,6 @@ import 'package:openbaptisthymnal/features/hymn/ui/viewmodels/hymns_viewmodel.da
 import 'package:openbaptisthymnal/features/hymn/ui/widgets/hymn_list_tile.dart';
 import 'package:openbaptisthymnal/features/hymn/ui/widgets/language_toggle.dart';
 import 'package:openbaptisthymnal/features/hymn/ui/widgets/search_bar_widget.dart';
-import 'package:openbaptisthymnal/features/onboarding/providers/onboarding_provider.dart';
 
 /// Home tab screen - Shows the main hymn list
 @RoutePage()
@@ -90,7 +89,7 @@ class HomeTabScreen extends HookConsumerWidget {
                         Padding(
                           padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
                           child: _HomeHeader(
-                            name: ref.watch(userNameProvider),
+                            count: hymnsAsync.valueOrNull?.length,
                             onFavorites: () =>
                                 context.router.push(const FavoritesTabRoute()),
                           ),
@@ -314,35 +313,92 @@ class _ScrollFab extends StatelessWidget {
   }
 }
 
-/// Greets the user by name with a clock-aware salutation, a hand-written accent
-/// line, and a small self-drawing sun (day) or moon (night) doodle — carrying
-/// the onboarding's warmth onto the home screen.
+/// Screen title with a quiet count subtitle, plus a circular tonal shortcut to
+/// favorites — a small, contained affordance rather than a bare floating icon.
 class _HomeHeader extends StatelessWidget {
-  const _HomeHeader({required this.name, required this.onFavorites});
+  const _HomeHeader({required this.count, required this.onFavorites});
 
-  final String? name;
+  final int? count;
   final VoidCallback onFavorites;
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final subtitleColor =
+        isDark ? AppColors.neutral500 : AppColors.primary400;
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Expanded(
-          child: Text(
-            'Hymns',
-            style: AppTextStyles.headlineLarge.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Hymns',
+                style: AppTextStyles.headlineLarge.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              if (count != null && count! > 0)
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Text(
+                    '$count hymns',
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: subtitleColor,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+            ],
           ),
         ),
-        IconButton(
+        _CircleIconButton(
           tooltip: 'Favorites',
-          onPressed: onFavorites,
-          icon: const Icon(CupertinoIcons.heart),
+          icon: CupertinoIcons.heart,
+          onTap: onFavorites,
         ),
-        const SizedBox(width: 4),
       ],
+    );
+  }
+}
+
+/// Small circular tonal icon button used in the home header.
+class _CircleIconButton extends StatelessWidget {
+  const _CircleIconButton({
+    required this.icon,
+    required this.onTap,
+    required this.tooltip,
+  });
+
+  final IconData icon;
+  final VoidCallback onTap;
+  final String tooltip;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? AppColors.neutral800 : AppColors.secondary100;
+    final border = isDark ? AppColors.neutral700 : AppColors.secondary200;
+    final iconColor = isDark ? AppColors.secondary : AppColors.primary;
+
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: bg,
+        shape: CircleBorder(side: BorderSide(color: border, width: 1)),
+        child: InkWell(
+          onTap: onTap,
+          customBorder: const CircleBorder(),
+          child: SizedBox(
+            width: 44,
+            height: 44,
+            child: Icon(icon, size: 20, color: iconColor),
+          ),
+        ),
+      ),
     );
   }
 }
