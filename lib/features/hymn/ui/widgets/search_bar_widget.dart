@@ -23,10 +23,10 @@ class SearchBarWidget extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
-      height: 56,
+      height: 54,
       decoration: BoxDecoration(
         color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(30),
+        borderRadius: BorderRadius.circular(27),
         // A subtle warm hairline so the field doesn't float on the dark canvas.
         border: Border.all(
           color: isDark ? AppColors.neutral700 : AppColors.secondary200,
@@ -37,8 +37,8 @@ class SearchBarWidget extends StatelessWidget {
         children: [
           18.w,
           Icon(
-            Icons.search,
-            size: 32,
+            Icons.search_rounded,
+            size: 22,
             color: colorScheme.onSurfaceVariant,
           ),
           12.w,
@@ -46,12 +46,13 @@ class SearchBarWidget extends StatelessWidget {
             child: TextField(
               controller: controller,
               onChanged: onChanged,
-              style: AppTextStyles.bodyLarge.copyWith(
+              textInputAction: TextInputAction.search,
+              style: AppTextStyles.bodyMedium.copyWith(
                 color: colorScheme.onSurface,
               ),
               decoration: InputDecoration(
                 hintText: hintText,
-                hintStyle: AppTextStyles.bodyLarge.copyWith(
+                hintStyle: AppTextStyles.bodyMedium.copyWith(
                   color: colorScheme.outline,
                 ),
                 border: InputBorder.none,
@@ -62,6 +63,36 @@ class SearchBarWidget extends StatelessWidget {
               ),
             ),
           ),
+          // Clear button — only present once there's something to clear, so the
+          // resting state stays clean.
+          if (controller != null)
+            ValueListenableBuilder<TextEditingValue>(
+              valueListenable: controller!,
+              builder: (context, value, _) {
+                if (value.text.isEmpty) return 12.w;
+                return Row(
+                  children: [
+                    IconButton(
+                      visualDensity: VisualDensity.compact,
+                      iconSize: 18,
+                      splashRadius: 20,
+                      tooltip: 'Clear',
+                      icon: Icon(
+                        Icons.close_rounded,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                      onPressed: () {
+                        controller!.clear();
+                        onChanged?.call('');
+                      },
+                    ),
+                    6.w,
+                  ],
+                );
+              },
+            )
+          else
+            12.w,
         ],
       ),
     );

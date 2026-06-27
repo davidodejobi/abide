@@ -1,5 +1,4 @@
 import 'package:auto_route/auto_route.dart';
-import 'package:openbaptisthymnal/core/router/app_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openbaptisthymnal/core/audio/audio_quality.dart';
@@ -7,6 +6,8 @@ import 'package:openbaptisthymnal/core/audio/audio_quality_provider.dart';
 import 'package:openbaptisthymnal/core/preferences/linking_preferences.dart';
 import 'package:openbaptisthymnal/core/providers/app_info_provider.dart';
 import 'package:openbaptisthymnal/core/providers/service_providers.dart';
+import 'package:openbaptisthymnal/core/router/app_router.dart';
+import 'package:openbaptisthymnal/core/theme/app_colors.dart';
 import 'package:openbaptisthymnal/core/theme/app_text_styles.dart';
 import 'package:openbaptisthymnal/core/theme/theme_provider.dart';
 import 'package:openbaptisthymnal/core/utils/toast_helper.dart';
@@ -116,8 +117,7 @@ class _SettingsTabScreenState extends ConsumerState<SettingsTabScreen>
                     icon: Icons.menu_book_outlined,
                     title: 'Bible translations',
                     subtitle: 'Sources & licenses',
-                    onTap: () =>
-                        context.router.push(const BibleCreditsRoute()),
+                    onTap: () => context.router.push(const BibleCreditsRoute()),
                   ),
                   _SettingsTile(
                     icon: Icons.privacy_tip_outlined,
@@ -145,6 +145,18 @@ class _SettingsTabScreenState extends ConsumerState<SettingsTabScreen>
   }
 }
 
+/// Settings row surface. Same shape as before — only the light-mode fill is
+/// warmed from cool gray to the cream used by the Songs cards so the page reads
+/// as the same world. Dark mode keeps its existing surface tone.
+BoxDecoration _settingsCardDecoration(BuildContext context) {
+  final isDark = Theme.of(context).brightness == Brightness.dark;
+  return BoxDecoration(
+    color:
+        isDark ? Theme.of(context).colorScheme.surface : AppColors.secondary100,
+    borderRadius: BorderRadius.circular(16),
+  );
+}
+
 class _SettingsSection extends StatelessWidget {
   const _SettingsSection({
     required this.title,
@@ -157,11 +169,15 @@ class _SettingsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        color: colorScheme.surfaceContainerHighest,
+        // Only the light-mode group fill changes: cool gray -> warm cream wash.
+        color: isDark
+            ? colorScheme.surfaceContainerHighest
+            : AppColors.secondary200,
       ),
       padding: const EdgeInsets.all(4),
       child: Column(
@@ -172,7 +188,7 @@ class _SettingsSection extends StatelessWidget {
             child: Text(
               title,
               style: AppTextStyles.labelLarge.copyWith(
-                color: colorScheme.onSurfaceVariant,
+                // color: colorScheme.onSurfaceVariant,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -205,10 +221,7 @@ class _SettingsTile extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-      ),
+      decoration: _settingsCardDecoration(context),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
         leading: Icon(
@@ -248,10 +261,7 @@ class _FontSizeSelector extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-      ),
+      decoration: _settingsCardDecoration(context),
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -293,10 +303,7 @@ class _AudioQualitySelector extends ConsumerWidget {
     final quality = ref.watch(audioQualityProvider);
 
     return Container(
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-      ),
+      decoration: _settingsCardDecoration(context),
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -451,7 +458,8 @@ class _DefaultHymnLinkEditionTile extends ConsumerWidget {
           builder: (_) => _LinkEditionPickerSheet(
             title: 'Default hymnal for links',
             options: [
-              const _LinkEditionChoice(editionId: null, label: 'Follow my reading'),
+              const _LinkEditionChoice(
+                  editionId: null, label: 'Follow my reading'),
               for (final o in _options)
                 _LinkEditionChoice(editionId: o.id, label: o.label),
             ],
@@ -528,17 +536,25 @@ class _LinkEditionPickerSheet extends StatelessWidget {
                     .copyWith(fontWeight: FontWeight.w700),
               ),
             ),
-            for (final option in options)
-              // ignore: deprecated_member_use
-              RadioListTile<String?>(
-                value: option.editionId,
-                // ignore: deprecated_member_use
-                groupValue: selected,
-                title: Text(option.label),
-                activeColor: colorScheme.primary,
-                // ignore: deprecated_member_use
-                onChanged: (_) => Navigator.of(context).pop(option),
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    for (final option in options)
+                      // ignore: deprecated_member_use
+                      RadioListTile<String?>(
+                        value: option.editionId,
+                        // ignore: deprecated_member_use
+                        groupValue: selected,
+                        title: Text(option.label),
+                        activeColor: colorScheme.primary,
+                        // ignore: deprecated_member_use
+                        onChanged: (_) => Navigator.of(context).pop(option),
+                      ),
+                  ],
+                ),
               ),
+            )
           ],
         ),
       ),
@@ -561,10 +577,7 @@ class _ThemeSelector extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-      ),
+      decoration: _settingsCardDecoration(context),
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
