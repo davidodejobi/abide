@@ -1,5 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openbaptisthymnal/core/audio/audio_quality.dart';
 import 'package:openbaptisthymnal/core/audio/audio_quality_provider.dart';
@@ -86,7 +87,7 @@ class _SettingsTabScreenState extends ConsumerState<SettingsTabScreen>
                 title: 'General',
                 children: [
                   _SettingsTile(
-                    icon: Icons.language_outlined,
+                    icon: PhosphorIcons.translate(),
                     title: 'Default Language',
                     subtitle: 'English',
                     onTap: () {
@@ -101,7 +102,7 @@ class _SettingsTabScreenState extends ConsumerState<SettingsTabScreen>
                 title: 'About',
                 children: [
                   _SettingsTile(
-                    icon: Icons.info_outline,
+                    icon: PhosphorIcons.info(),
                     title: 'About',
                     subtitle: ref.watch(appVersionProvider).when(
                           data: (version) => 'Version $version',
@@ -114,13 +115,13 @@ class _SettingsTabScreenState extends ConsumerState<SettingsTabScreen>
                     },
                   ),
                   _SettingsTile(
-                    icon: Icons.menu_book_outlined,
+                    icon: PhosphorIcons.bookOpenText(),
                     title: 'Bible translations',
                     subtitle: 'Sources & licenses',
                     onTap: () => context.router.push(const BibleCreditsRoute()),
                   ),
                   _SettingsTile(
-                    icon: Icons.privacy_tip_outlined,
+                    icon: PhosphorIcons.shieldCheck(),
                     title: 'Privacy Policy',
                     onTap: () {
                       ref.read(urlLauncherServiceProvider).openUrl(
@@ -128,7 +129,7 @@ class _SettingsTabScreenState extends ConsumerState<SettingsTabScreen>
                     },
                   ),
                   _SettingsTile(
-                    icon: Icons.description_outlined,
+                    icon: PhosphorIcons.fileText(),
                     title: 'Terms of Service',
                     onTap: () {
                       ref.read(urlLauncherServiceProvider).openUrl(
@@ -243,7 +244,7 @@ class _SettingsTile extends StatelessWidget {
               )
             : null,
         trailing: Icon(
-          Icons.chevron_right,
+          PhosphorIcons.caretRight(),
           color: colorScheme.outline,
         ),
         onTap: onTap,
@@ -269,7 +270,7 @@ class _FontSizeSelector extends StatelessWidget {
           Row(
             children: [
               Icon(
-                Icons.text_fields,
+                PhosphorIcons.textAa(),
                 color: colorScheme.onSurface,
                 size: 24,
               ),
@@ -311,7 +312,7 @@ class _AudioQualitySelector extends ConsumerWidget {
           Row(
             children: [
               Icon(
-                Icons.mic_none,
+                PhosphorIcons.microphone(),
                 color: colorScheme.onSurface,
                 size: 24,
               ),
@@ -392,7 +393,7 @@ class _DefaultBibleLinkEditionTile extends ConsumerWidget {
     final subtitle = _editionLabel(editions, selected);
 
     return _SettingsTile(
-      icon: Icons.menu_book_outlined,
+      icon: PhosphorIcons.bookOpenText(),
       title: 'Default Bible for links',
       subtitle: subtitle,
       onTap: () async {
@@ -444,7 +445,7 @@ class _DefaultHymnLinkEditionTile extends ConsumerWidget {
           )).label;
 
     return _SettingsTile(
-      icon: Icons.music_note_outlined,
+      icon: PhosphorIcons.musicNote(),
       title: 'Default hymnal for links',
       subtitle: subtitle,
       onTap: () async {
@@ -585,7 +586,7 @@ class _ThemeSelector extends StatelessWidget {
           Row(
             children: [
               Icon(
-                Icons.palette_outlined,
+                PhosphorIcons.palette(),
                 color: colorScheme.onSurface,
                 size: 24,
               ),
@@ -604,21 +605,21 @@ class _ThemeSelector extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: SegmentedButton<ThemeMode>(
-              segments: const [
+              segments: [
                 ButtonSegment<ThemeMode>(
                   value: ThemeMode.light,
-                  label: Text('Light'),
-                  icon: Icon(Icons.light_mode_outlined),
+                  label: const Text('Light'),
+                  icon: Icon(PhosphorIcons.sun()),
                 ),
                 ButtonSegment<ThemeMode>(
                   value: ThemeMode.dark,
-                  label: Text('Dark'),
-                  icon: Icon(Icons.dark_mode_outlined),
+                  label: const Text('Dark'),
+                  icon: Icon(PhosphorIcons.moon()),
                 ),
                 ButtonSegment<ThemeMode>(
                   value: ThemeMode.system,
-                  label: Text('System'),
-                  icon: Icon(Icons.brightness_auto_outlined),
+                  label: const Text('System'),
+                  icon: Icon(PhosphorIcons.circleHalf()),
                 ),
               ],
               selected: {currentTheme},

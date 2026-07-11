@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:openbaptisthymnal/core/theme/app_colors.dart';
 import 'package:openbaptisthymnal/core/theme/app_text_styles.dart';
 
@@ -90,8 +91,8 @@ class HymnListTile extends StatelessWidget {
                 ),
                 // Favorite indicator
                 if (isFavorited) ...[
-                  const Icon(
-                    Icons.favorite,
+                  Icon(
+                    PhosphorIcons.heart(PhosphorIconsStyle.fill),
                     size: 16,
                     color: AppColors.secondary,
                   ),
@@ -99,7 +100,7 @@ class HymnListTile extends StatelessWidget {
                 ],
                 // Arrow icon
                 Icon(
-                  Icons.chevron_right_rounded,
+                  PhosphorIcons.caretRight(),
                   size: 22,
                   color: trailingColor,
                 ),

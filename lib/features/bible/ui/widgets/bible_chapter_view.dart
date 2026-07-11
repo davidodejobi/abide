@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:openbaptisthymnal/core/storage/database/app_database.dart';
@@ -268,7 +269,7 @@ class _VerseListState extends ConsumerState<_VerseList> {
                         child: Padding(
                           padding: const EdgeInsets.only(right: 4),
                           child: Icon(
-                            Icons.chat_bubble_outline,
+                            PhosphorIcons.chatTeardropText(),
                             size: 13 * widget.textScale,
                             color: colorScheme.secondary,
                           ),
@@ -304,6 +305,11 @@ class _ChapterNavFooter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    // Gold reads on both grounds; primary sinks into the dark background.
+    final disabled = colorScheme.onSurface.withValues(alpha: 0.3);
+    final prevColor = onPrev != null ? colorScheme.secondary : disabled;
+    final nextColor = onNext != null ? colorScheme.secondary : disabled;
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 16),
       child: Row(
@@ -315,13 +321,11 @@ class _ChapterNavFooter extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.chevron_left, color: colorScheme.primary),
+                Icon(PhosphorIcons.caretLeft(), color: prevColor),
                 4.w,
                 Text(
                   'Previous',
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: colorScheme.primary,
-                  ),
+                  style: AppTextStyles.bodyMedium.copyWith(color: prevColor),
                 ),
               ],
             ).padSymmetric(
@@ -346,12 +350,10 @@ class _ChapterNavFooter extends StatelessWidget {
               children: [
                 Text(
                   'Next',
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: colorScheme.primary,
-                  ),
+                  style: AppTextStyles.bodyMedium.copyWith(color: nextColor),
                 ),
                 4.w,
-                Icon(Icons.chevron_right, color: colorScheme.primary),
+                Icon(PhosphorIcons.caretRight(), color: nextColor),
               ],
             ).padSymmetric(
               vertical: 4,

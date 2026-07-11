@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:openbaptisthymnal/core/router/app_router.dart';
@@ -64,8 +65,8 @@ class TabletsTabScreen extends HookConsumerWidget {
                     IconButton(
                       icon: Icon(
                         hasFilter
-                            ? Icons.filter_list
-                            : Icons.filter_list_outlined,
+                            ? PhosphorIcons.funnel(PhosphorIconsStyle.fill)
+                            : PhosphorIcons.funnel(),
                         color: hasFilter
                             ? Theme.of(context).colorScheme.primary
                             : null,
@@ -109,7 +110,7 @@ class TabletsTabScreen extends HookConsumerWidget {
             elevation: 4,
             tooltip: 'New tablet',
             onPressed: () => context.router.push(TabletEditorRoute()),
-            child: const Icon(Icons.add_rounded, size: 28),
+            child: Icon(PhosphorIcons.plus(), size: 28),
           ),
         ),
       ],
@@ -149,7 +150,7 @@ class _ActiveFilterBar extends ConsumerWidget {
         child: InputChip(
           label: Text(label),
           avatar: Icon(
-            activeTag != null ? Icons.label_outline : Icons.folder_outlined,
+            activeTag != null ? PhosphorIcons.tag() : PhosphorIcons.folder(),
             size: 18,
           ),
           backgroundColor: scheme.primaryContainer,
@@ -318,7 +319,7 @@ class _NoResults extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.search_off, size: 64, color: color),
+          Icon(PhosphorIcons.magnifyingGlass(), size: 64, color: color),
           const SizedBox(height: 12),
           Text(
             'No tablets match "$query"',
@@ -357,7 +358,7 @@ class _TabletTile extends ConsumerWidget {
         padding: const EdgeInsets.only(right: 24),
         color: Theme.of(context).colorScheme.errorContainer,
         child: Icon(
-          Icons.delete_outline,
+          PhosphorIcons.trash(),
           color: Theme.of(context).colorScheme.onErrorContainer,
         ),
       ),
@@ -377,7 +378,7 @@ class _TabletTile extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
-                      Icons.mic_none,
+                      PhosphorIcons.microphone(),
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   )
@@ -507,7 +508,7 @@ class _TabletThumbnail extends StatelessWidget {
                 errorBuilder: (_, __, ___) => Container(
                   color: scheme.surfaceContainerHighest,
                   child: Icon(
-                    Icons.broken_image_outlined,
+                    PhosphorIcons.imageBroken(),
                     size: 22,
                     color: scheme.onSurfaceVariant,
                   ),
@@ -529,7 +530,7 @@ class _EmptyFolder extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.folder_open_outlined, size: 64, color: color),
+          Icon(PhosphorIcons.folderOpen(), size: 64, color: color),
           const SizedBox(height: 12),
           Text(
             'This folder is empty',
@@ -563,7 +564,7 @@ class _EmptyTag extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.label_off_outlined, size: 64, color: color),
+          Icon(PhosphorIcons.tag(), size: 64, color: color),
           const SizedBox(height: 12),
           Text(
             'Nothing tagged here',
@@ -596,7 +597,7 @@ class _EmptyTablets extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.edit_note, size: 64, color: color),
+          Icon(PhosphorIcons.notePencil(), size: 64, color: color),
           const SizedBox(height: 12),
           Text(
             'No tablets yet',

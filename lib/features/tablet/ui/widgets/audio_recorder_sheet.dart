@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:openbaptisthymnal/core/audio/audio_quality.dart';
 import 'package:path/path.dart' as p;
@@ -146,7 +147,7 @@ class AudioRecorderSheet extends HookWidget {
                   ),
                   FilledButton.icon(
                     onPressed: starting.value ? null : stopAndSave,
-                    icon: const Icon(Icons.stop),
+                    icon: Icon(PhosphorIcons.stop(PhosphorIconsStyle.fill)),
                     label: const Text('Stop & insert'),
                   ),
                 ],

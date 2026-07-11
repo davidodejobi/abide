@@ -1,5 +1,5 @@
 import 'package:auto_route/auto_route.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -230,7 +230,7 @@ class HomeTabScreen extends HookConsumerWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(
-                            Icons.error_outline,
+                            PhosphorIcons.warningCircle(),
                             size: 48,
                             color: colorScheme.error,
                           ),
@@ -301,7 +301,7 @@ class _ScrollFab extends StatelessWidget {
             transitionBuilder: (child, animation) =>
                 ScaleTransition(scale: animation, child: child),
             child: Icon(
-              atTop ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_up,
+              atTop ? PhosphorIcons.caretDown() : PhosphorIcons.caretUp(),
               key: ValueKey(atTop),
               color: AppColors.primaryDark,
               size: 26,
@@ -357,7 +357,7 @@ class _HomeHeader extends StatelessWidget {
         ),
         _CircleIconButton(
           tooltip: 'Favorites',
-          icon: CupertinoIcons.heart,
+          icon: PhosphorIcons.heart(),
           onTap: onFavorites,
         ),
       ],

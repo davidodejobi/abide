@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:openbaptisthymnal/core/storage/database/app_database.dart';
 import 'package:openbaptisthymnal/features/tablet/providers/tablets_providers.dart';
@@ -94,20 +95,20 @@ class TabletFilterSheet extends ConsumerWidget {
           _SectionHeader(label: 'Folders', theme: theme),
           _FilterOption(
             label: 'All tablets',
-            icon: Icons.inbox_outlined,
+            icon: PhosphorIcons.tray(),
             selected: activeFolder == null && activeTag == null,
             onTap: () => selectFolder(null),
           ),
           for (final folder in folders)
             _FilterOption(
               label: folder.name,
-              icon: Icons.folder_outlined,
+              icon: PhosphorIcons.folder(),
               selected: activeFolder == folder.id,
               onTap: () => selectFolder(folder.id),
               onManage: () => manageFolder(folder),
             ),
           ListTile(
-            leading: const Icon(Icons.create_new_folder_outlined),
+            leading: Icon(PhosphorIcons.folderPlus()),
             title: const Text('New folder'),
             onTap: createFolder,
           ),
@@ -117,7 +118,7 @@ class TabletFilterSheet extends ConsumerWidget {
             for (final tag in tags)
               _FilterOption(
                 label: '#${tag.name}',
-                icon: Icons.label_outline,
+                icon: PhosphorIcons.tag(),
                 selected: activeTag == tag.id,
                 onTap: () => selectTag(tag.id),
                 onManage: () => manageTag(tag),
@@ -161,10 +162,10 @@ class _FilterOption extends StatelessWidget {
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (selected) Icon(Icons.check, color: scheme.primary),
+          if (selected) Icon(PhosphorIcons.check(), color: scheme.primary),
           if (onManage != null)
             IconButton(
-              icon: const Icon(Icons.more_horiz),
+              icon: Icon(PhosphorIcons.dotsThree()),
               tooltip: 'Manage',
               onPressed: onManage,
             ),
@@ -187,12 +188,12 @@ Future<_ManageAction?> _showManageSheet(
         mainAxisSize: MainAxisSize.min,
         children: [
           ListTile(
-            leading: const Icon(Icons.drive_file_rename_outline),
+            leading: Icon(PhosphorIcons.pencilSimple()),
             title: const Text('Rename'),
             onTap: () => Navigator.of(context).pop(_ManageAction.rename),
           ),
           ListTile(
-            leading: const Icon(Icons.delete_outline),
+            leading: Icon(PhosphorIcons.trash()),
             title: Text(deleteLabel),
             subtitle: Text(deleteSubtitle),
             onTap: () => Navigator.of(context).pop(_ManageAction.delete),

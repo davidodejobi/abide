@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:openbaptisthymnal/core/theme/app_colors.dart';
 import 'package:openbaptisthymnal/core/widgets/split_pane.dart';
 
@@ -56,12 +57,12 @@ class SplitOrientationToggle extends StatelessWidget {
         children: [
           segment(
             value: SplitOrientation.vertical,
-            icon: Icons.vertical_split_rounded,
+            icon: PhosphorIcons.columns(),
             tooltip: 'Side by side',
           ),
           segment(
             value: SplitOrientation.horizontal,
-            icon: Icons.horizontal_split_rounded,
+            icon: PhosphorIcons.rows(),
             tooltip: 'Stacked',
           ),
         ],
