@@ -1,0 +1,24 @@
+# Mirrors the CI gate in .github/workflows/flutter.yml. If these two disagree,
+# the badge and the build tell different stories and nobody trusts either.
+#
+# Generated code is excluded (drift, auto_route and freezed emit thousands of
+# untested lines), and so is the UI layer: widget and golden tests verify it by
+# behaviour and by pixels, not by line count, so counting UI lines here would
+# just make the number sag for no signal.
+ignore:
+  - "**/*.g.dart"
+  - "**/*.gr.dart"
+  - "**/*.freezed.dart"
+  - "lib/**/ui/**"
+
+coverage:
+  status:
+    project:
+      default:
+        target: 42%
+        threshold: 1%
+    patch:
+      default:
+        # Reports how well the diff is covered, but never blocks a merge. A
+        # patch gate turns every one-line hotfix into a coverage argument.
+        informational: true

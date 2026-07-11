@@ -1,0 +1,4 @@
+# Declares the tag Alchemist puts on golden tests (goldenTest defaults to
+# tags: ['golden']). Without this, `--tags golden` warns about an unknown tag.
+tags:
+  golden:

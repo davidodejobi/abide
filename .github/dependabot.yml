@@ -1,0 +1,14 @@
+version: 2
+updates:
+  # Third-party actions are pinned to commit SHAs, not tags: a tag like @v2 is
+  # mutable and can be repointed at any commit by its owner, which would inherit
+  # whatever the job holds (here: CODECOV_TOKEN, and contents: write on the
+  # golden-regeneration job). Pinning stops that — but a pinned SHA never picks
+  # up security fixes on its own, so Dependabot bumps them and records the new
+  # version in the trailing comment.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: "chore(ci)"

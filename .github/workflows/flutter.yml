@@ -1,0 +1,116 @@
+name: flutter
+
+# Third-party actions are pinned to commit SHAs rather than tags. A tag like @v2
+# is mutable — its owner can repoint it at any commit, which would then inherit
+# whatever the job holds: CODECOV_TOKEN below, and contents: write on the golden
+# job. Dependabot (.github/dependabot.yml) keeps the pinned SHAs current.
+
+on:
+  pull_request:
+  push:
+    branches: [dev, main]
+
+env:
+  FLUTTER_VERSION: "3.38.4" # keep in step with .fvmrc
+  # A floor, not a target. Set ~5 points under actual so it fails on regression
+  # rather than nagging. Scoped to the logic layers (see the gate step): UI line
+  # coverage is deliberately out, so adding a widget test never moves this
+  # number and nobody is punished for writing one.
+  MIN_COVERAGE: "42"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Analyze
+        run: flutter analyze
+
+      # Goldens run here too. flutter_test_config.dart disables platform goldens
+      # and keeps only CI goldens (Ahem font, no shadows), which render
+      # identically on macOS and ubuntu — that is what makes them safe to gate.
+      - name: Test
+        run: flutter test --coverage
+
+      # Must run BEFORE the threshold gate, and with if: always(), so the badge
+      # still updates on the runs where coverage drops. Otherwise a failing gate
+      # also silently freezes the badge, hiding exactly the number you want.
+      - name: Upload coverage to Codecov
+        if: always()
+        uses: codecov/codecov-action@0fb7174895f61a3b6b78fc075e0cd60383518dac # v5.5.5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: coverage/lcov.info
+          fail_ci_if_error: false
+
+      # Two exclusions, both load-bearing:
+      #   - generated files (*.g.dart, *.gr.dart, *.freezed.dart): drift,
+      #     auto_route and freezed emit thousands of untested lines that would
+      #     drown the real number (they sit at ~22% and are nobody's fault).
+      #   - lib/**/ui/**: widget and golden tests cover these, but they cover
+      #     behaviour and pixels, not lines. Counting UI lines here would mean
+      #     that adding a widget test for a 797-line screen DROPS coverage and
+      #     fails CI — punishing the test author.
+      - name: Enforce coverage threshold (logic layers only)
+        run: |
+          pct=$(awk '
+            /^SF:/  { skip = ($0 ~ /\.g\.dart$/ || $0 ~ /\.gr\.dart$/ || $0 ~ /\.freezed\.dart$/ || $0 ~ /\/ui\//) }
+            /^LF:/  { split($0, a, ":"); lf = a[2] }
+            /^LH:/  { split($0, a, ":"); lh = a[2]; if (!skip) { tlf += lf; tlh += lh } }
+            END     { if (tlf > 0) printf "%.1f", 100 * tlh / tlf; else print "0" }
+          ' coverage/lcov.info)
+          echo "Line coverage (logic layers): ${pct}%  (minimum: ${MIN_COVERAGE}%)"
+          if awk -v p="$pct" -v m="$MIN_COVERAGE" 'BEGIN { exit (p + 0 < m + 0) ? 0 : 1 }'; then
+            echo "::error::Coverage ${pct}% is below the ${MIN_COVERAGE}% threshold"
+            exit 1
+          fi
+
+  # Escape hatch: goldens seeded on macOS can still drift from ubuntu's render.
+  # Label a PR `update-goldens` and CI reseeds them onto the branch for you.
+  #
+  # Same-repo only. This job holds `contents: write` and pushes a commit to
+  # `github.head_ref`, which a fork controls — so it must never run for one.
+  update-goldens:
+    if: >-
+      contains(github.event.pull_request.labels.*.name, 'update-goldens') &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - run: flutter pub get
+
+      - name: Regenerate goldens
+        run: flutter test --tags golden --update-goldens
+
+      - name: Commit goldens back to the PR
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet -- test/goldens; then
+            echo "Goldens already match; nothing to commit."
+            exit 0
+          fi
+          git add test/goldens
+          git commit -m "chore(test): regenerate goldens on CI [skip ci]"
+          git push
