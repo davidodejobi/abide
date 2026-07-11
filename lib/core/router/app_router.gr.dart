@@ -400,3 +400,19 @@ class TabletsTabRoute extends PageRouteInfo<void> {
     },
   );
 }
+
+/// generated route for
+/// [TodayTabScreen]
+class TodayTabRoute extends PageRouteInfo<void> {
+  const TodayTabRoute({List<PageRouteInfo>? children})
+      : super(TodayTabRoute.name, initialChildren: children);
+
+  static const String name = 'TodayTabRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const TodayTabScreen();
+    },
+  );
+}

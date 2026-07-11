@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:openbaptisthymnal/features/bible/ui/bible_credits_page.dart';
 import 'package:openbaptisthymnal/features/bible/ui/bible_reader_page.dart';
 import 'package:openbaptisthymnal/features/bible/ui/bible_tab_screen.dart';
+import 'package:openbaptisthymnal/features/daily/ui/today_tab_screen.dart';
 import 'package:openbaptisthymnal/features/dashboard/ui/dashboard_screen.dart';
 import 'package:openbaptisthymnal/features/hymn/ui/favorites_tab_screen.dart';
 import 'package:openbaptisthymnal/features/hymn/ui/home_tab_screen.dart';
@@ -32,6 +33,7 @@ class AppRouter extends RootStackRouter {
           page: DashboardRoute.page,
           initial: true,
           children: [
+            AutoRoute(page: TodayTabRoute.page),
             AutoRoute(page: TabletsTabRoute.page),
             AutoRoute(page: HomeTabRoute.page),
             AutoRoute(page: BibleTabRoute.page),
