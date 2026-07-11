@@ -52,11 +52,12 @@ class OnboardingSfx {
         iOS: AudioContextIOS(
           category: AVAudioSessionCategory.playback,
         ),
-        android: AudioContextAndroid(
+        android: const AudioContextAndroid(
           usageType: AndroidUsageType.media,
         ),
       ));
-      await player.setReleaseMode(loop ? ReleaseMode.loop : ReleaseMode.release);
+      await player
+          .setReleaseMode(loop ? ReleaseMode.loop : ReleaseMode.release);
       await player.setVolume(volume);
       await player.stop();
       await player.play(AssetSource(asset));
@@ -96,8 +97,7 @@ class OnboardingSfx {
   Future<void> revealWhoosh() =>
       _safePlay(_whooshPlayer, _revealWhoosh, volume: _volWhoosh);
 
-  Future<void> paperTap() =>
-      _safePlay(_tapPlayer, _paperTap, volume: _volTap);
+  Future<void> paperTap() => _safePlay(_tapPlayer, _paperTap, volume: _volTap);
 
   /// Start the pencil scratch loop under a hand-drawn stroke.
   Future<void> pencilDrawStart() =>
