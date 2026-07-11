@@ -33,13 +33,15 @@ void main() {
         test('Then v$from migrates to v3 and the schema matches', () async {
           final connection = await verifier.startAt(from);
           final db = AppDatabase.forTesting(connection);
+          // Registered before the assertion: migrateAndValidate throws on a bad
+          // migration, and a bare close() after it would be skipped, leaking the
+          // native connection into the next test.
+          addTearDown(db.close);
 
           // Runs the real onUpgrade, then compares the resulting schema against
           // the v3 reference. A migration branch that forgets a createTable
           // fails here rather than on a user's phone.
           await verifier.migrateAndValidate(db, 3);
-
-          await db.close();
         });
       });
     }
