@@ -101,12 +101,10 @@ class ReadingPlansDao extends DatabaseAccessor<AppDatabase>
     });
   }
 
-  /// Stops the active plan without deleting its progress, so restarting it
-  /// later resumes rather than starting from zero.
-  Future<void> deactivateAllPlans() {
-    return (update(planSubscriptions)..where((t) => t.isActive.equals(true)))
-        .write(const PlanSubscriptionsCompanion(isActive: Value(false)));
-  }
+  // No deactivateAllPlans() here yet. Settings will want "stop my plan", but
+  // nothing calls it today, and an untested method that ships ahead of its
+  // caller is just a code path nobody has run. It is four lines; it comes back
+  // with its test when the UI needs it.
 
   // --- Plan progress --------------------------------------------------------
 
