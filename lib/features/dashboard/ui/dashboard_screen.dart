@@ -17,6 +17,7 @@ class DashboardScreen extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final currentIndex = ref.watch(bottomNavProvider);
+    final navVisible = ref.watch(bottomNavVisibleProvider);
 
     return Scaffold(
       body: Stack(
@@ -37,11 +38,19 @@ class DashboardScreen extends HookConsumerWidget {
             left: 0,
             right: 0,
             bottom: 0,
-            child: _BottomNavigation(
-              currentIndex: currentIndex,
-              onTabSelected: (index) {
-                ref.read(bottomNavProvider.notifier).state = index;
-              },
+            child: AnimatedSlide(
+              offset: navVisible ? Offset.zero : const Offset(0, 1.5),
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeOut,
+              child: IgnorePointer(
+                ignoring: !navVisible,
+                child: _BottomNavigation(
+                  currentIndex: currentIndex,
+                  onTabSelected: (index) {
+                    ref.read(bottomNavProvider.notifier).state = index;
+                  },
+                ),
+              ),
             ),
           ),
         ],

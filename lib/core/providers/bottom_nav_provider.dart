@@ -3,6 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// Provider that tracks the currently selected bottom navigation tab index
 final bottomNavProvider = StateProvider<int>((ref) => 0);
 
+/// Whether the floating glass bottom nav bar is visible. Reading surfaces
+/// (e.g. the Bible tab) set this false while the user scrolls down and true
+/// again on scroll up, so chrome gets out of the way during immersive reading.
+final bottomNavVisibleProvider = StateProvider<bool>((ref) => true);
+
 /// Enum representing the available bottom navigation tabs.
 /// Tablets (notes) is the default landing tab; the old Home/hymn tab is now "Songs".
 enum BottomNavTab {
