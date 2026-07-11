@@ -92,13 +92,12 @@ StreakResult computeStreak(
     cursor = previousDay(cursor);
   }
 
-  // A day forgiven below the earliest completed day props up nothing -- it is
-  // an artifact of the walk, not a rest day the user took.
-  final used = forgiven.where((d) => dayKey(d).compareTo(earliest) >= 0).length;
-
   return StreakResult(
     current: current,
     completedToday: completedToday,
-    graceDaysUsed: current == 0 ? 0 : used,
+    // With no completed day there is no run, so nothing was rested from -- any
+    // day the walk forgave on the way down is an artifact of the walk, not a
+    // rest day the user took.
+    graceDaysUsed: current == 0 ? 0 : forgiven.length,
   );
 }
