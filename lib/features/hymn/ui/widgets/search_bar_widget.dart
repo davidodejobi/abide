@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:openbaptisthymnal/core/theme/app_colors.dart';
 import 'package:openbaptisthymnal/core/theme/app_text_styles.dart';
 import 'package:openbaptisthymnal/core/utils/extensions/num_extensions.dart';
@@ -37,7 +38,7 @@ class SearchBarWidget extends StatelessWidget {
         children: [
           18.w,
           Icon(
-            Icons.search_rounded,
+            PhosphorIcons.magnifyingGlass(),
             size: 22,
             color: colorScheme.onSurfaceVariant,
           ),
@@ -78,7 +79,7 @@ class SearchBarWidget extends StatelessWidget {
                       splashRadius: 20,
                       tooltip: 'Clear',
                       icon: Icon(
-                        Icons.close_rounded,
+                        PhosphorIcons.x(),
                         color: colorScheme.onSurfaceVariant,
                       ),
                       onPressed: () {

@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:openbaptisthymnal/core/router/app_router.dart';
@@ -147,13 +148,13 @@ class HymnDetailPage extends HookConsumerWidget {
             ? [
                 IconButton(
                   tooltip: 'Lyric size',
-                  icon: const Icon(Icons.format_size),
+                  icon: Icon(PhosphorIcons.textAa()),
                   onPressed: () => _showFontSizeSheet(context),
                 ),
                 IconButton(
                   tooltip: isFavorited ? 'Unfavorite' : 'Favorite',
                   icon: Icon(
-                    isFavorited ? Icons.favorite : Icons.favorite_border,
+                    isFavorited ? PhosphorIcons.heart(PhosphorIconsStyle.fill) : PhosphorIcons.heart(),
                     color: isFavorited ? Colors.red : null,
                   ),
                   onPressed: () => ref
@@ -162,7 +163,7 @@ class HymnDetailPage extends HookConsumerWidget {
                 ),
                 IconButton(
                   tooltip: 'Close split',
-                  icon: const Icon(Icons.close_rounded),
+                  icon: Icon(PhosphorIcons.x()),
                   onPressed: closeSplit,
                 ),
                 const SizedBox(width: 4),
@@ -325,7 +326,7 @@ class _SecondaryHymnPane extends ConsumerWidget {
               children: [
                 TextButton.icon(
                   onPressed: onChange,
-                  icon: const Icon(Icons.swap_horiz_rounded, size: 18),
+                  icon: Icon(PhosphorIcons.arrowsLeftRight(), size: 18),
                   label: const Text('Change'),
                 ),
               ],
@@ -503,7 +504,7 @@ class _FontSizeBarButton extends StatelessWidget {
           shape: BoxShape.circle,
         ),
         child: Icon(
-          Icons.format_size,
+          PhosphorIcons.textAa(),
           size: 22,
           color: isDark ? AppColors.neutral100 : AppColors.primaryDark,
         ),

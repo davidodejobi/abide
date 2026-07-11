@@ -1,6 +1,7 @@
 import 'package:appflowy_editor/appflowy_editor.dart';
 import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:openbaptisthymnal/core/utils/services/file_storage_service.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/tablet_media.dart';
 
@@ -169,7 +170,7 @@ class _AudioBlockComponentWidgetState extends State<AudioBlockComponentWidget>
               return IconButton(
                 onPressed: _toggle,
                 icon: Icon(
-                  playing ? Icons.pause_circle : Icons.play_circle,
+                  playing ? PhosphorIcons.pauseCircle(PhosphorIconsStyle.fill) : PhosphorIcons.playCircle(PhosphorIconsStyle.fill),
                   size: 36,
                   color: theme.colorScheme.primary,
                 ),

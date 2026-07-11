@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:openbaptisthymnal/features/tablet/providers/tablets_providers.dart';
 
@@ -78,7 +79,7 @@ class TagPickerSheet extends ConsumerWidget {
               ),
             const Divider(height: 8),
             ListTile(
-              leading: const Icon(Icons.add),
+              leading: Icon(PhosphorIcons.plus()),
               title: const Text('New tag'),
               onTap: createAndAttach,
             ),

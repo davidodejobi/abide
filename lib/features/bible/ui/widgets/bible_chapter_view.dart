@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:openbaptisthymnal/core/storage/database/app_database.dart';
 import 'package:openbaptisthymnal/core/theme/app_text_styles.dart';
+import 'package:openbaptisthymnal/core/utils/extensions/num_extensions.dart';
+import 'package:openbaptisthymnal/core/utils/extensions/widget_extensions.dart';
 import 'package:openbaptisthymnal/features/bible/domain/highlight_palette.dart';
 import 'package:openbaptisthymnal/features/bible/model/bible_chapter.dart';
 import 'package:openbaptisthymnal/features/bible/providers/bible_providers.dart';
@@ -30,6 +33,11 @@ class BibleChapterView extends ConsumerWidget {
     this.onTapBacklink,
     this.highlights = const <int, BibleAnnotation>{},
     this.padding = const EdgeInsets.fromLTRB(16, 8, 16, 120),
+    this.onPrev,
+    this.onNext,
+    this.hasPrev = false,
+    this.hasNext = false,
+    this.bookName,
   });
 
   final String editionId;
@@ -48,6 +56,13 @@ class BibleChapterView extends ConsumerWidget {
   /// Verse number -> saved highlight annotation. Edition-independent.
   final Map<int, BibleAnnotation> highlights;
   final EdgeInsetsGeometry padding;
+
+  /// Chapter navigation callbacks (shown at the bottom of the verse list).
+  final VoidCallback? onPrev;
+  final VoidCallback? onNext;
+  final bool hasPrev;
+  final bool hasNext;
+  final String? bookName;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -70,8 +85,7 @@ class BibleChapterView extends ConsumerWidget {
       loading: () => Center(
         child: CircularProgressIndicator(color: colorScheme.primary),
       ),
-      error: (e, _) =>
-          const Center(child: Text('Failed to load this chapter')),
+      error: (e, _) => const Center(child: Text('Failed to load this chapter')),
       data: (data) => _VerseList(
         chapter: data,
         textScale: textScale,
@@ -84,6 +98,11 @@ class BibleChapterView extends ConsumerWidget {
         padding: padding,
         highlightFrom: matches ? pending.fromVerse : null,
         highlightTo: matches ? pending.toVerse : null,
+        onPrev: onPrev,
+        onNext: onNext,
+        hasPrev: hasPrev,
+        hasNext: hasNext,
+        bookName: bookName,
       ),
     );
   }
@@ -102,6 +121,11 @@ class _VerseList extends ConsumerStatefulWidget {
     required this.padding,
     required this.highlightFrom,
     required this.highlightTo,
+    this.onPrev,
+    this.onNext,
+    this.hasPrev = false,
+    this.hasNext = false,
+    this.bookName,
   });
 
   final BibleChapter chapter;
@@ -115,6 +139,11 @@ class _VerseList extends ConsumerStatefulWidget {
   final EdgeInsetsGeometry padding;
   final int? highlightFrom;
   final int? highlightTo;
+  final VoidCallback? onPrev;
+  final VoidCallback? onNext;
+  final bool hasPrev;
+  final bool hasNext;
+  final String? bookName;
 
   @override
   ConsumerState<_VerseList> createState() => _VerseListState();
@@ -165,14 +194,23 @@ class _VerseListState extends ConsumerState<_VerseList> {
     final hiFrom = widget.highlightFrom;
     final hiTo = widget.highlightTo;
 
+    final showNav = widget.onNext != null || widget.onPrev != null;
+
     return ListView.builder(
       controller: _controller,
-      // Keying on the chapter resets the scroll offset on every chapter change,
-      // so the reader always starts at verse 1.
       key: ValueKey('${widget.chapter.book}.${widget.chapter.chapter}'),
       padding: widget.padding,
-      itemCount: widget.chapter.verses.length,
+      itemCount: widget.chapter.verses.length + (showNav ? 1 : 0),
       itemBuilder: (context, index) {
+        if (showNav && index == widget.chapter.verses.length) {
+          return _ChapterNavFooter(
+            onPrev: widget.hasPrev ? widget.onPrev : null,
+            onNext: widget.hasNext ? widget.onNext : null,
+            bookName: widget.bookName,
+            chapter: widget.chapter.chapter,
+          );
+        }
+
         final verse = widget.chapter.verses[index];
         final isSelected = widget.selected.contains(verse.number);
         final hasBacklink = widget.backlinkVerses.contains(verse.number);
@@ -231,7 +269,7 @@ class _VerseListState extends ConsumerState<_VerseList> {
                         child: Padding(
                           padding: const EdgeInsets.only(right: 4),
                           child: Icon(
-                            Icons.chat_bubble_outline,
+                            PhosphorIcons.chatTeardropText(),
                             size: 13 * widget.textScale,
                             color: colorScheme.secondary,
                           ),
@@ -245,6 +283,85 @@ class _VerseListState extends ConsumerState<_VerseList> {
           ),
         );
       },
+    );
+  }
+}
+
+/// Inline prev/next buttons rendered at the bottom of the verse list so
+/// readers can advance without scrolling back to the header or the bottom bar.
+class _ChapterNavFooter extends StatelessWidget {
+  const _ChapterNavFooter({
+    required this.onPrev,
+    required this.onNext,
+    required this.bookName,
+    required this.chapter,
+  });
+
+  final VoidCallback? onPrev;
+  final VoidCallback? onNext;
+  final String? bookName;
+  final int chapter;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    // Gold reads on both grounds; primary sinks into the dark background.
+    final disabled = colorScheme.onSurface.withValues(alpha: 0.3);
+    final prevColor = onPrev != null ? colorScheme.secondary : disabled;
+    final nextColor = onNext != null ? colorScheme.secondary : disabled;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: onPrev,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(PhosphorIcons.caretLeft(), color: prevColor),
+                4.w,
+                Text(
+                  'Previous',
+                  style: AppTextStyles.bodyMedium.copyWith(color: prevColor),
+                ),
+              ],
+            ).padSymmetric(
+              vertical: 4,
+              horizontal: 8,
+            ),
+          ),
+          Flexible(
+            child: Text(
+              '${bookName ?? ''} $chapter',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: colorScheme.onSurface.withValues(alpha: 0.5),
+              ),
+            ),
+          ),
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: onNext,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Next',
+                  style: AppTextStyles.bodyMedium.copyWith(color: nextColor),
+                ),
+                4.w,
+                Icon(PhosphorIcons.caretRight(), color: nextColor),
+              ],
+            ).padSymmetric(
+              vertical: 4,
+              horizontal: 8,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

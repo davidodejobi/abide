@@ -1,5 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:openbaptisthymnal/features/bible/model/bible_edition.dart';
 
 /// Lists every bundled Bible edition with its source + license credit. This is
@@ -29,7 +30,7 @@ class BibleCreditsPage extends StatelessWidget {
           for (final e in kBibleEditions) ...[
             ListTile(
               contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.menu_book_outlined),
+              leading: Icon(PhosphorIcons.bookOpenText()),
               title: Text(
                 e.displayName,
                 style: const TextStyle(fontWeight: FontWeight.w600),
