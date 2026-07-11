@@ -14,6 +14,7 @@ class StorageService {
   static const String _fontScaleKey = 'font_scale';
   static const String _audioQualityKey = 'audio_quality';
   static const String _welcomeNoteSeededKey = 'welcome_note_seeded';
+  static const String _seededReleaseNotesKey = 'seeded_release_note_ids';
   static const String _defaultBibleLinkEditionKey = 'default_bible_link_edition';
   static const String _defaultHymnLinkEditionKey = 'default_hymn_link_edition';
 
@@ -82,6 +83,20 @@ class StorageService {
   /// Whether the example welcome note has already been seeded.
   bool isWelcomeNoteSeeded() {
     return _prefs.getBool(_welcomeNoteSeededKey) ?? false;
+  }
+
+  /// Release notes already dropped into the user's tablets, by release id.
+  ///
+  /// This list is the ONLY thing that decides whether a release note is created,
+  /// and it is written the moment one is. That is what makes a deleted note stay
+  /// deleted: the app never asks "is the note still there?", so tidying it away
+  /// cannot bring it back on the next launch.
+  List<String> getSeededReleaseNoteIds() {
+    return _prefs.getStringList(_seededReleaseNotesKey) ?? const [];
+  }
+
+  Future<void> saveSeededReleaseNoteIds(List<String> ids) async {
+    await _prefs.setStringList(_seededReleaseNotesKey, ids);
   }
 
   /// The user's preferred Bible edition to open when tapping a `[[bible:...]]`

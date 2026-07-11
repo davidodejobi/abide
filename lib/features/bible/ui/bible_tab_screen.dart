@@ -86,7 +86,21 @@ class _BibleSplitState {
 /// follows the app-wide [fontScaleProvider] set in Settings.
 @RoutePage()
 class BibleTabScreen extends HookConsumerWidget {
-  const BibleTabScreen({super.key});
+  const BibleTabScreen({super.key, this.controlsAppNav = true});
+
+  /// Whether this instance may hide the app's floating bottom nav bar.
+  ///
+  /// True for the dashboard's Bible tab, which sits *behind* that bar and should
+  /// get it out of the way while reading.
+  ///
+  /// **False for [BibleReaderPage]**, which renders this very same widget as a
+  /// pushed full-screen route. That page has no bottom nav of its own, so hiding
+  /// the dashboard's from here does nothing visible at the time -- and then the
+  /// user pops back to a dashboard whose nav bar is simply gone, with no way to
+  /// bring it back except returning to the Bible tab and scrolling up. They have
+  /// no reason to guess that. Every "Continue reading" tap on the Today tab goes
+  /// through this route, so it hit the bug on the way in.
+  final bool controlsAppNav;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -104,13 +118,27 @@ class BibleTabScreen extends HookConsumerWidget {
     final selected = useState<Set<int>>(<int>{});
     // Bottom chrome (chapter nav + the app's glass tab bar) auto-hides while
     // reading down, returns on scroll up and on every chapter change.
-    final navVisible = ref.watch(bottomNavVisibleProvider);
+    //
+    // The visible/hidden flag is LOCAL. It used to live only in the global
+    // bottomNavVisibleProvider, which meant the pushed reader -- the same widget,
+    // with no nav bar of its own -- was reaching out and hiding the dashboard's.
+    // The global provider is now a mirror this screen writes to only when it
+    // actually owns that bar (see [controlsAppNav]).
+    final chromeVisible = useState(true);
+    final navVisible = chromeVisible.value;
+
+    void setChromeVisible(bool visible) {
+      if (chromeVisible.value == visible) return;
+      chromeVisible.value = visible;
+      if (controlsAppNav) {
+        ref.read(bottomNavVisibleProvider.notifier).state = visible;
+      }
+    }
+
     useEffect(() {
       selected.value = <int>{};
       // Deferred: provider writes are not allowed during build.
-      Future.microtask(
-        () => ref.read(bottomNavVisibleProvider.notifier).state = true,
-      );
+      Future.microtask(() => setChromeVisible(true));
       return null;
     }, [position.editionId, position.bookCode, position.chapter]);
 
@@ -315,10 +343,9 @@ class BibleTabScreen extends HookConsumerWidget {
                   onNotification: (n) {
                     if (n.metrics.axis != Axis.vertical) return false;
                     if (n.direction == ScrollDirection.reverse) {
-                      ref.read(bottomNavVisibleProvider.notifier).state =
-                          false;
+                      setChromeVisible(false);
                     } else if (n.direction == ScrollDirection.forward) {
-                      ref.read(bottomNavVisibleProvider.notifier).state = true;
+                      setChromeVisible(true);
                     }
                     return false;
                   },

@@ -185,6 +185,65 @@ void main() {
     });
   });
 
+  group('Given a history with a broken run behind the current one', () {
+    group('When the streak is computed', () {
+      test('Then the longest run is remembered, not just the current one', () {
+        // The number that matters on the week someone breaks a streak. A run of
+        // 10 that ended, then a fresh run of 2: current is 2, best is 10, and
+        // seeing the 10 is what makes restarting feel possible.
+        final completed = {
+          today, //             day 0     read  -- current run
+          ...daysEnding(1, 1), // day 1    read
+          //                    days 2,3  MISSED -> two in a row, run breaks
+          ...daysEnding(4, 10), // days 4-13 read -- the old run of 10
+        };
+
+        final result = computeStreak(completed, todayKey: today);
+
+        expect(result.current, 2);
+        expect(result.longest, 10);
+        expect(result.totalDays, 12, reason: 'every day ever read');
+      });
+    });
+  });
+
+  group('Given the current run is also the best one', () {
+    group('When the streak is computed', () {
+      test('Then longest equals current rather than lagging behind it', () {
+        final result = computeStreak(daysEnding(0, 5), todayKey: today);
+
+        expect(result.current, 5);
+        expect(result.longest, 5);
+        expect(result.totalDays, 5);
+      });
+    });
+  });
+
+  group('Given nothing has ever been read', () {
+    group('When the streak is computed', () {
+      test('Then every figure is zero', () {
+        final result = computeStreak(const {}, todayKey: today);
+
+        expect(result.longest, 0);
+        expect(result.totalDays, 0);
+      });
+    });
+  });
+
+  group('Given today is unread but yesterday was', () {
+    group('When the longest run is computed', () {
+      test('Then today does not break it -- the day is not over', () {
+        // The forward scan must apply the same "today is never a miss" rule the
+        // backward walk does, or the best run would drop by one every morning
+        // and climb back every evening.
+        final result = computeStreak(daysEnding(1, 4), todayKey: today);
+
+        expect(result.current, 4);
+        expect(result.longest, 4);
+      });
+    });
+  });
+
   group('Given a malformed today key', () {
     group('When the streak is computed', () {
       test('Then it throws rather than silently returning zero', () {

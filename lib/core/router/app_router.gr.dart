@@ -44,18 +44,51 @@ class BibleReaderRoute extends PageRouteInfo<void> {
 
 /// generated route for
 /// [BibleTabScreen]
-class BibleTabRoute extends PageRouteInfo<void> {
-  const BibleTabRoute({List<PageRouteInfo>? children})
-      : super(BibleTabRoute.name, initialChildren: children);
+class BibleTabRoute extends PageRouteInfo<BibleTabRouteArgs> {
+  BibleTabRoute({
+    Key? key,
+    bool controlsAppNav = true,
+    List<PageRouteInfo>? children,
+  }) : super(
+          BibleTabRoute.name,
+          args: BibleTabRouteArgs(key: key, controlsAppNav: controlsAppNav),
+          initialChildren: children,
+        );
 
   static const String name = 'BibleTabRoute';
 
   static PageInfo page = PageInfo(
     name,
     builder: (data) {
-      return const BibleTabScreen();
+      final args = data.argsAs<BibleTabRouteArgs>(
+        orElse: () => const BibleTabRouteArgs(),
+      );
+      return BibleTabScreen(key: args.key, controlsAppNav: args.controlsAppNav);
     },
   );
+}
+
+class BibleTabRouteArgs {
+  const BibleTabRouteArgs({this.key, this.controlsAppNav = true});
+
+  final Key? key;
+
+  final bool controlsAppNav;
+
+  @override
+  String toString() {
+    return 'BibleTabRouteArgs{key: $key, controlsAppNav: $controlsAppNav}';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! BibleTabRouteArgs) return false;
+    return key == other.key && controlsAppNav == other.controlsAppNav;
+  }
+
+  @override
+  int get hashCode => key.hashCode ^ controlsAppNav.hashCode;
 }
 
 /// generated route for
@@ -167,6 +200,53 @@ class OnboardingRoute extends PageRouteInfo<void> {
       return const OnboardingPage();
     },
   );
+}
+
+/// generated route for
+/// [PlanDaysPage]
+class PlanDaysRoute extends PageRouteInfo<PlanDaysRouteArgs> {
+  PlanDaysRoute({
+    Key? key,
+    required String planId,
+    List<PageRouteInfo>? children,
+  }) : super(
+          PlanDaysRoute.name,
+          args: PlanDaysRouteArgs(key: key, planId: planId),
+          initialChildren: children,
+        );
+
+  static const String name = 'PlanDaysRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      final args = data.argsAs<PlanDaysRouteArgs>();
+      return PlanDaysPage(key: args.key, planId: args.planId);
+    },
+  );
+}
+
+class PlanDaysRouteArgs {
+  const PlanDaysRouteArgs({this.key, required this.planId});
+
+  final Key? key;
+
+  final String planId;
+
+  @override
+  String toString() {
+    return 'PlanDaysRouteArgs{key: $key, planId: $planId}';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! PlanDaysRouteArgs) return false;
+    return key == other.key && planId == other.planId;
+  }
+
+  @override
+  int get hashCode => key.hashCode ^ planId.hashCode;
 }
 
 /// generated route for
@@ -324,6 +404,22 @@ class ShareCardRouteArgs {
 }
 
 /// generated route for
+/// [StreakPage]
+class StreakRoute extends PageRouteInfo<void> {
+  const StreakRoute({List<PageRouteInfo>? children})
+      : super(StreakRoute.name, initialChildren: children);
+
+  static const String name = 'StreakRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const StreakPage();
+    },
+  );
+}
+
+/// generated route for
 /// [TabletEditorPage]
 class TabletEditorRoute extends PageRouteInfo<TabletEditorRouteArgs> {
   TabletEditorRoute({
@@ -397,6 +493,22 @@ class TabletsTabRoute extends PageRouteInfo<void> {
     name,
     builder: (data) {
       return const TabletsTabScreen();
+    },
+  );
+}
+
+/// generated route for
+/// [TodayTabScreen]
+class TodayTabRoute extends PageRouteInfo<void> {
+  const TodayTabRoute({List<PageRouteInfo>? children})
+      : super(TodayTabRoute.name, initialChildren: children);
+
+  static const String name = 'TodayTabRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const TodayTabScreen();
     },
   );
 }
