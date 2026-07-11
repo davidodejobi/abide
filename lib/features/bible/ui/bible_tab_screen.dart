@@ -1,8 +1,10 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show ScrollDirection;
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:openbaptisthymnal/core/providers/bottom_nav_provider.dart';
 import 'package:openbaptisthymnal/core/router/app_router.dart';
 import 'package:openbaptisthymnal/core/storage/database/app_database.dart';
 import 'package:openbaptisthymnal/core/storage/database/daos/note_links_dao.dart';
@@ -99,8 +101,15 @@ class BibleTabScreen extends HookConsumerWidget {
     // Selected verse numbers for the chapter currently in view. Reset whenever
     // the reader moves to a different edition, book, or chapter.
     final selected = useState<Set<int>>(<int>{});
+    // Bottom chrome (chapter nav + the app's glass tab bar) auto-hides while
+    // reading down, returns on scroll up and on every chapter change.
+    final navVisible = ref.watch(bottomNavVisibleProvider);
     useEffect(() {
       selected.value = <int>{};
+      // Deferred: provider writes are not allowed during build.
+      Future.microtask(
+        () => ref.read(bottomNavVisibleProvider.notifier).state = true,
+      );
       return null;
     }, [position.editionId, position.bookCode, position.chapter]);
 
@@ -159,8 +168,21 @@ class BibleTabScreen extends HookConsumerWidget {
     }
 
     void onSecondaryEditionChanged(String editionId) {
-      split.value =
-          split.value.copyWith(secondaryEditionId: editionId);
+      split.value = split.value.copyWith(secondaryEditionId: editionId);
+    }
+
+    void swapPanes() {
+      final s = split.value;
+      if (!s.hasSecondaryChapter) return;
+      final oldPrimary = position;
+      ref.read(bibleReadingPositionProvider.notifier)
+        ..setEdition(s.secondaryEditionId!)
+        ..openChapter(s.secondaryBookCode!, s.secondaryChapter!);
+      split.value = s.copyWith(
+        secondaryEditionId: oldPrimary.editionId,
+        secondaryBookCode: oldPrimary.bookCode,
+        secondaryChapter: oldPrimary.chapter,
+      );
     }
 
     return manifestAsync.when(
@@ -205,6 +227,39 @@ class BibleTabScreen extends HookConsumerWidget {
           );
         }
 
+        final books = manifest.books;
+        final bookIndex = books.indexWhere((b) => b.ordinal == book.ordinal);
+
+        void goPrev() {
+          if (position.chapter > 1) {
+            ref
+                .read(bibleReadingPositionProvider.notifier)
+                .openChapter(book.code, position.chapter - 1);
+          } else if (bookIndex > 0) {
+            final prev = books[bookIndex - 1];
+            ref
+                .read(bibleReadingPositionProvider.notifier)
+                .openChapter(prev.code, prev.chapterCount);
+          }
+        }
+
+        void goNext() {
+          if (position.chapter < book.chapterCount) {
+            ref
+                .read(bibleReadingPositionProvider.notifier)
+                .openChapter(book.code, position.chapter + 1);
+          } else if (bookIndex < books.length - 1) {
+            final next = books[bookIndex + 1];
+            ref
+                .read(bibleReadingPositionProvider.notifier)
+                .openChapter(next.code, 1);
+          }
+        }
+
+        final hasPrev = position.chapter > 1 || bookIndex > 0;
+        final hasNext = position.chapter < book.chapterCount ||
+            bookIndex < books.length - 1;
+
         final primaryView = BibleChapterView(
           editionId: position.editionId,
           bookCode: book.code,
@@ -216,7 +271,24 @@ class BibleTabScreen extends HookConsumerWidget {
           backlinkVerses: backlinks.keys.toSet(),
           onTapBacklink: openBacklinks,
           highlights: highlights,
+          onPrev: hasPrev ? goPrev : null,
+          onNext: hasNext ? goNext : null,
+          hasPrev: hasPrev,
+          hasNext: hasNext,
+          bookName: book.name,
         );
+
+        // Flat chapter list across the whole edition so a PageView can swipe
+        // continuously through chapters and across book boundaries.
+        final chapterRefs = [
+          for (final b in books)
+            for (var c = 1; c <= b.chapterCount; c++)
+              (bookCode: b.code, chapter: c),
+        ];
+        var currentIndex = position.chapter - 1;
+        for (var i = 0; i < bookIndex; i++) {
+          currentIndex += books[i].chapterCount;
+        }
 
         Widget body;
         if (!split.value.isOpen) {
@@ -237,9 +309,55 @@ class BibleTabScreen extends HookConsumerWidget {
                   selected: selected.value,
                   onClear: () => selected.value = <int>{},
                 ),
-              Expanded(child: primaryView),
-              _ChapterNav(
-                  manifest: manifest, book: book, chapter: position.chapter),
+              Expanded(
+                child: NotificationListener<UserScrollNotification>(
+                  onNotification: (n) {
+                    if (n.metrics.axis != Axis.vertical) return false;
+                    if (n.direction == ScrollDirection.reverse) {
+                      ref.read(bottomNavVisibleProvider.notifier).state =
+                          false;
+                    } else if (n.direction == ScrollDirection.forward) {
+                      ref.read(bottomNavVisibleProvider.notifier).state = true;
+                    }
+                    return false;
+                  },
+                  child: _ChapterPager(
+                    key: ValueKey(position.editionId),
+                    index: currentIndex,
+                    itemCount: chapterRefs.length,
+                    canSwipe: selected.value.isEmpty,
+                    onIndexChanged: (i) {
+                      HapticFeedback.selectionClick();
+                      final target = chapterRefs[i];
+                      ref
+                          .read(bibleReadingPositionProvider.notifier)
+                          .openChapter(target.bookCode, target.chapter);
+                    },
+                    itemBuilder: (context, i) {
+                      if (i == currentIndex) return primaryView;
+                      final target = chapterRefs[i];
+                      return BibleChapterView(
+                        editionId: position.editionId,
+                        bookCode: target.bookCode,
+                        chapter: target.chapter,
+                        textScale: textScale,
+                      );
+                    },
+                  ),
+                ),
+              ),
+              ClipRect(
+                child: AnimatedAlign(
+                  alignment: Alignment.topCenter,
+                  heightFactor: navVisible ? 1 : 0,
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeOut,
+                  child: _ChapterNav(
+                      manifest: manifest,
+                      book: book,
+                      chapter: position.chapter),
+                ),
+              ),
             ],
           );
         } else {
@@ -251,17 +369,35 @@ class BibleTabScreen extends HookConsumerWidget {
                     split.value = split.value.copyWith(orientation: o),
                 onClose: closeSplit,
                 primaryReference: '${book.name} ${position.chapter}',
+                onPickPrimary: () => _pickPrimaryReference(
+                  context,
+                  ref,
+                  manifest: manifest,
+                  book: book,
+                  currentChapter: position.chapter,
+                ),
+                onSwap: split.value.hasSecondaryChapter ? swapPanes : null,
               ),
               Expanded(
-                child: SplitPane(
-                  orientation: split.value.orientation,
-                  primary: primaryView,
-                  secondary: _SecondaryBiblePane(
-                    state: split.value,
-                    textScale: textScale,
-                    onPicked: onSecondaryPicked,
-                    onEditionChanged: onSecondaryEditionChanged,
-                    onChange: clearSecondaryChapter,
+                child: GestureDetector(
+                  onHorizontalDragEnd: (details) {
+                    if (details.primaryVelocity == null) return;
+                    if (details.primaryVelocity! < -300 && hasNext) {
+                      goNext();
+                    } else if (details.primaryVelocity! > 300 && hasPrev) {
+                      goPrev();
+                    }
+                  },
+                  child: SplitPane(
+                    orientation: split.value.orientation,
+                    primary: primaryView,
+                    secondary: _SecondaryBiblePane(
+                      state: split.value,
+                      textScale: textScale,
+                      onPicked: onSecondaryPicked,
+                      onEditionChanged: onSecondaryEditionChanged,
+                      onChange: clearSecondaryChapter,
+                    ),
                   ),
                 ),
               ),
@@ -272,6 +408,85 @@ class BibleTabScreen extends HookConsumerWidget {
         }
         return body;
       },
+    );
+  }
+}
+
+/// Book -> chapter picker flow for the primary reading position, shared by
+/// the reader header and the split header.
+Future<void> _pickPrimaryReference(
+  BuildContext context,
+  WidgetRef ref, {
+  required BibleManifest manifest,
+  required BibleBookInfo book,
+  required int currentChapter,
+}) async {
+  final ordinal = await showBookPicker(
+    context,
+    manifest: manifest,
+    currentOrdinal: book.ordinal,
+  );
+  if (ordinal == null || !context.mounted) return;
+  final picked = manifest.books.firstWhere((b) => b.ordinal == ordinal);
+  final chapter = await showChapterPicker(
+    context,
+    bookName: picked.name,
+    chapterCount: picked.chapterCount,
+    currentChapter: ordinal == book.ordinal ? currentChapter : 1,
+  );
+  if (chapter == null) return;
+  ref
+      .read(bibleReadingPositionProvider.notifier)
+      .openChapter(picked.code, chapter);
+}
+
+/// Swipeable chapter reader: a [PageView] over every chapter in the edition,
+/// so the next/previous chapter slides in under the finger like any reading
+/// app. Prev/Next buttons and pickers update the reading position instead;
+/// the effect below re-syncs the controller (animating for neighbours,
+/// jumping for far navigations like the book picker).
+class _ChapterPager extends HookWidget {
+  const _ChapterPager({
+    super.key,
+    required this.index,
+    required this.itemCount,
+    required this.canSwipe,
+    required this.onIndexChanged,
+    required this.itemBuilder,
+  });
+
+  final int index;
+  final int itemCount;
+  final bool canSwipe;
+  final ValueChanged<int> onIndexChanged;
+  final IndexedWidgetBuilder itemBuilder;
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = usePageController(initialPage: index);
+
+    useEffect(() {
+      if (!controller.hasClients) return null;
+      final page = controller.page?.round();
+      if (page == null || page == index) return null;
+      if ((page - index).abs() == 1) {
+        controller.animateToPage(
+          index,
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOut,
+        );
+      } else {
+        controller.jumpToPage(index);
+      }
+      return null;
+    }, [index]);
+
+    return PageView.builder(
+      controller: controller,
+      physics: canSwipe ? null : const NeverScrollableScrollPhysics(),
+      onPageChanged: onIndexChanged,
+      itemCount: itemCount,
+      itemBuilder: itemBuilder,
     );
   }
 }
@@ -296,25 +511,13 @@ class _ReaderHeader extends ConsumerWidget {
     final editions = ref.watch(bibleEditionsProvider);
     final colorScheme = Theme.of(context).colorScheme;
 
-    Future<void> pickReference() async {
-      final ordinal = await showBookPicker(
-        context,
-        manifest: manifest,
-        currentOrdinal: book.ordinal,
-      );
-      if (ordinal == null || !context.mounted) return;
-      final picked = manifest.books.firstWhere((b) => b.ordinal == ordinal);
-      final chapter = await showChapterPicker(
-        context,
-        bookName: picked.name,
-        chapterCount: picked.chapterCount,
-        currentChapter: ordinal == book.ordinal ? position.chapter : 1,
-      );
-      if (chapter == null) return;
-      ref
-          .read(bibleReadingPositionProvider.notifier)
-          .openChapter(picked.code, chapter);
-    }
+    Future<void> pickReference() => _pickPrimaryReference(
+          context,
+          ref,
+          manifest: manifest,
+          book: book,
+          currentChapter: position.chapter,
+        );
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
@@ -348,9 +551,7 @@ class _ReaderHeader extends ConsumerWidget {
           IconButton(
             tooltip: 'Split view',
             icon: Icon(
-              splitActive
-                  ? Icons.close_rounded
-                  : Icons.vertical_split_rounded,
+              splitActive ? Icons.close_rounded : Icons.vertical_split_rounded,
               color: colorScheme.primary,
             ),
             onPressed: onSplit,
@@ -383,26 +584,57 @@ class _SplitHeader extends StatelessWidget {
     required this.onOrientationChanged,
     required this.onClose,
     required this.primaryReference,
+    required this.onPickPrimary,
+    required this.onSwap,
   });
 
   final SplitOrientation orientation;
   final ValueChanged<SplitOrientation> onOrientationChanged;
   final VoidCallback onClose;
   final String primaryReference;
+  final VoidCallback onPickPrimary;
+  final VoidCallback? onSwap;
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
       child: Row(
         children: [
           Expanded(
-            child: Text(
-              primaryReference,
-              style: AppTextStyles.titleMedium
-                  .copyWith(fontWeight: FontWeight.w600),
-              overflow: TextOverflow.ellipsis,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(8),
+              onTap: onPickPrimary,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        primaryReference,
+                        style: AppTextStyles.titleMedium
+                            .copyWith(fontWeight: FontWeight.w600),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.expand_more,
+                      size: 20,
+                      color: colorScheme.primary,
+                    ),
+                  ],
+                ),
+              ),
             ),
+          ),
+          IconButton(
+            tooltip: 'Swap panes',
+            icon: const Icon(Icons.swap_horiz_rounded),
+            onPressed: onSwap,
           ),
           SplitOrientationToggle(
             orientation: orientation,
@@ -451,8 +683,7 @@ class _SecondaryBiblePane extends ConsumerWidget {
 
     final manifestAsync = ref.watch(bibleManifestProvider(editionId));
     return manifestAsync.when(
-      loading: () =>
-          const Center(child: CircularProgressIndicator()),
+      loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => Center(child: Text('Could not load edition: $e')),
       data: (manifest) {
         final book = manifest.books.firstWhere(
@@ -526,8 +757,7 @@ class _SelectionBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
-    final query =
-        (editionId: editionId, bookCode: book.code, chapter: chapter);
+    final query = (editionId: editionId, bookCode: book.code, chapter: chapter);
     final chapterData = ref.watch(bibleChapterProvider(query)).valueOrNull;
     final highlights = ref
             .watch(verseHighlightsProvider(
@@ -715,10 +945,16 @@ class _ChapterNav extends ConsumerWidget {
               icon: const Icon(Icons.chevron_left),
               label: const Text('Previous'),
             ),
-            TextButton.icon(
+            TextButton(
               onPressed: hasNext ? goNext : null,
-              icon: const Icon(Icons.chevron_right),
-              label: const Text('Next'),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('Next'),
+                  SizedBox(width: 4),
+                  Icon(Icons.chevron_right),
+                ],
+              ),
             ),
           ],
         ),
