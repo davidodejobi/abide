@@ -15,7 +15,11 @@ class BibleReaderPage extends StatelessWidget {
         scrolledUnderElevation: 0,
         backgroundColor: theme.scaffoldBackgroundColor,
       ),
-      body: const BibleTabScreen(),
+      // controlsAppNav: false -- this is a pushed route with no bottom nav of its
+      // own. Left at the default, scrolling here hides the DASHBOARD's nav bar,
+      // and it is still hidden when the user pops back, with nothing on screen
+      // to explain where it went.
+      body: const BibleTabScreen(controlsAppNav: false),
     );
   }
 }

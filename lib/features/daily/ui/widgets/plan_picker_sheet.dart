@@ -84,7 +84,7 @@ class _PlanPickerSheet extends ConsumerWidget {
   }
 }
 
-class _PlanTile extends StatelessWidget {
+class _PlanTile extends ConsumerWidget {
   const _PlanTile({
     required this.plan,
     required this.isActive,
@@ -96,9 +96,16 @@ class _PlanTile extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    // Progress is kept per plan and is never cleared by switching, so a plan you
+    // put down months ago still knows where you were. Saying so here is the
+    // point: without it, "Change" looks like it might throw away your place, and
+    // nobody risks that to go and look.
+    final done =
+        ref.watch(planProgressProvider(plan.id)).valueOrNull ?? const <int>{};
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -132,6 +139,19 @@ class _PlanTile extends StatelessWidget {
                               colorScheme.onSurface.withValues(alpha: 0.7),
                         ),
                       ),
+                      if (done.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          isActive
+                              ? '${done.length} of ${plan.dayCount} days read'
+                              : 'Resumes at ${done.length} of '
+                                  '${plan.dayCount} days',
+                          style: AppTextStyles.labelSmall.copyWith(
+                            color: AppColors.secondary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),

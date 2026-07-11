@@ -109,20 +109,32 @@ class TodaysReadingCard extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 16),
+            // Short labels, deliberately. "Continue reading" wrapped onto two
+            // lines inside a half-width button and looked broken; the card
+            // already says what is being continued, so the verb is enough.
             Row(
               children: [
                 Expanded(
                   child: FilledButton(
                     onPressed: () => _open(context, ref),
-                    child: const Text('Continue reading'),
+                    child: const Text('Continue'),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: OutlinedButton(
-                    onPressed: isTodayDone ? null : () => _markRead(ref),
-                    child: Text(isTodayDone ? 'Read today' : 'Mark as read'),
-                  ),
+                  // Done is a state, not a second action. Once the day is
+                  // marked, the button stops offering and starts confirming --
+                  // a tick and a past-tense word, disabled.
+                  child: isTodayDone
+                      ? OutlinedButton.icon(
+                          onPressed: null,
+                          icon: const Icon(Icons.check, size: 18),
+                          label: const Text('Done'),
+                        )
+                      : OutlinedButton(
+                          onPressed: () => _markRead(ref),
+                          child: const Text('Mark read'),
+                        ),
                 ),
               ],
             ),

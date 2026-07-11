@@ -44,18 +44,51 @@ class BibleReaderRoute extends PageRouteInfo<void> {
 
 /// generated route for
 /// [BibleTabScreen]
-class BibleTabRoute extends PageRouteInfo<void> {
-  const BibleTabRoute({List<PageRouteInfo>? children})
-      : super(BibleTabRoute.name, initialChildren: children);
+class BibleTabRoute extends PageRouteInfo<BibleTabRouteArgs> {
+  BibleTabRoute({
+    Key? key,
+    bool controlsAppNav = true,
+    List<PageRouteInfo>? children,
+  }) : super(
+          BibleTabRoute.name,
+          args: BibleTabRouteArgs(key: key, controlsAppNav: controlsAppNav),
+          initialChildren: children,
+        );
 
   static const String name = 'BibleTabRoute';
 
   static PageInfo page = PageInfo(
     name,
     builder: (data) {
-      return const BibleTabScreen();
+      final args = data.argsAs<BibleTabRouteArgs>(
+        orElse: () => const BibleTabRouteArgs(),
+      );
+      return BibleTabScreen(key: args.key, controlsAppNav: args.controlsAppNav);
     },
   );
+}
+
+class BibleTabRouteArgs {
+  const BibleTabRouteArgs({this.key, this.controlsAppNav = true});
+
+  final Key? key;
+
+  final bool controlsAppNav;
+
+  @override
+  String toString() {
+    return 'BibleTabRouteArgs{key: $key, controlsAppNav: $controlsAppNav}';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! BibleTabRouteArgs) return false;
+    return key == other.key && controlsAppNav == other.controlsAppNav;
+  }
+
+  @override
+  int get hashCode => key.hashCode ^ controlsAppNav.hashCode;
 }
 
 /// generated route for
@@ -321,6 +354,22 @@ class ShareCardRouteArgs {
   @override
   int get hashCode =>
       key.hashCode ^ hymnNumber.hashCode ^ title.hashCode ^ body.hashCode;
+}
+
+/// generated route for
+/// [StreakPage]
+class StreakRoute extends PageRouteInfo<void> {
+  const StreakRoute({List<PageRouteInfo>? children})
+      : super(StreakRoute.name, initialChildren: children);
+
+  static const String name = 'StreakRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const StreakPage();
+    },
+  );
 }
 
 /// generated route for

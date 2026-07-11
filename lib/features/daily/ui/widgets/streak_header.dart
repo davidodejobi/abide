@@ -12,49 +12,64 @@ import '../../domain/streak.dart';
 /// pretending their week was perfect when it was not is exactly the kind of
 /// small dishonesty that makes someone stop trusting the number.
 class StreakHeader extends StatelessWidget {
-  const StreakHeader({super.key, required this.streak});
+  const StreakHeader({super.key, required this.streak, required this.onTap});
 
   final StreakResult streak;
+
+  /// Opens the streak page. The number alone invites "of what?", and a card that
+  /// states a figure but will not show its working is asking to be distrusted.
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: isDark
-            ? colorScheme.surfaceContainerHighest
-            : AppColors.secondary100,
+    return Material(
+      color: isDark
+          ? colorScheme.surfaceContainerHighest
+          : AppColors.secondary100,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  streak.isActive ? _dayCount(streak.current) : 'No streak yet',
-                  style: AppTextStyles.headlineSmall.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      streak.isActive
+                          ? _dayCount(streak.current)
+                          : 'No streak yet',
+                      style: AppTextStyles.headlineSmall.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _subtitle(streak),
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: colorScheme.onSurface.withValues(alpha: 0.7),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  _subtitle(streak),
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: colorScheme.onSurface.withValues(alpha: 0.7),
-                  ),
-                ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 12),
+              _Flame(active: streak.isActive, done: streak.completedToday),
+              const SizedBox(width: 4),
+              Icon(
+                Icons.chevron_right,
+                size: 20,
+                color: colorScheme.onSurface.withValues(alpha: 0.35),
+              ),
+            ],
           ),
-          const SizedBox(width: 12),
-          _Flame(active: streak.isActive, done: streak.completedToday),
-        ],
+        ),
       ),
     );
   }

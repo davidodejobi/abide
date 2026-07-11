@@ -1,10 +1,12 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:openbaptisthymnal/core/router/app_router.dart';
 import 'package:openbaptisthymnal/core/theme/app_text_styles.dart';
 import 'package:openbaptisthymnal/core/utils/time_greeting.dart';
 import 'package:openbaptisthymnal/features/onboarding/providers/onboarding_provider.dart';
 
+import '../domain/date_key.dart';
 import '../providers/daily_providers.dart';
 import 'widgets/plan_picker_sheet.dart';
 import 'widgets/streak_header.dart';
@@ -56,8 +58,13 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
                   ),
                 ),
                 const SizedBox(height: 4),
+                // The date, not a devotional aside. TimeGreeting.accent ("he
+                // gives his beloved sleep") reads as a fortune cookie under a
+                // name, and a line that says nothing is worse than no line. A
+                // date is short, is true, and is the one thing a tab called
+                // Today should be willing to state.
                 Text(
-                  greeting.accent,
+                  formatToday(DateTime.now()),
                   style: AppTextStyles.bodyMedium.copyWith(
                     color: Theme.of(context)
                         .colorScheme
@@ -75,7 +82,10 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
           sliver: SliverList(
             delegate: SliverChildListDelegate([
-              StreakHeader(streak: streak),
+              StreakHeader(
+                streak: streak,
+                onTap: () => context.router.push(const StreakRoute()),
+              ),
               const SizedBox(height: 16),
 
               // Three states, deliberately distinct. "No plan yet" and "plan
