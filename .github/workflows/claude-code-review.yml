@@ -30,14 +30,29 @@ jobs:
       # Without a toolchain the reviewer can only read code and reason about it.
       # It said so itself on #33: "Couldn't run flutter analyze / flutter test
       # (no fvm/flutter/dart binaries available) -- the logic review above is a
-      # manual trace, not a test run." A reviewer that can execute settles a
-      # question instead of hedging it, so give it the SDK the test job uses.
+      # manual trace, not a test run." The SDK lets it settle a static question
+      # instead of hedging it.
+      #
+      # The SDK is here for `flutter analyze` ONLY, and the prompt forbids
+      # `flutter test`. This job carries CLAUDE_CODE_OAUTH_TOKEN and a token with
+      # pull-requests: write, and it runs on same-repo PRs -- which includes
+      # Dependabot's. Running tests here would execute PR-authored and
+      # third-party package code beside those secrets, turning a routine
+      # dependency bump into a credential-exfiltration path. `analyze` reads the
+      # code without executing it, so it carries none of that.
+      #
+      # Dynamic verification already exists: the `flutter` workflow runs the
+      # full suite on every PR and holds no Claude secret. Do not "just add
+      # tests here" to save a job -- that is the whole hazard.
       - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
 
+      # `dart pub get` resolves and downloads packages but does not execute them
+      # (Dart has no npm-style install scripts), so this is safe here. Analyzing
+      # without it would drown the reviewer in phantom "uri_does_not_exist".
       - name: Install dependencies
         run: flutter pub get
 
@@ -65,16 +80,21 @@ jobs:
             the SDK on their machine; CI has already pinned it, and there is no
             fvm binary here.
 
-            Run things to check your work. If you suspect a bug, prove it:
-            `flutter analyze`, or a targeted `flutter test <path>`. If a claim in
-            the PR description is load-bearing, verify it rather than trusting
-            it. Do NOT re-run the whole suite -- the `flutter` workflow already
-            does that on every PR, and duplicating it just burns minutes.
-            Targeted runs are for confirming or killing a specific finding.
+            You MAY run `flutter analyze` (and `dart analyze`) to settle a
+            question about types, unused code, or analyzer cleanliness.
 
-            A finding you actually reproduced is worth more than five you
-            reasoned your way to. State which findings you verified by running
-            something and which are reasoning only. Do not blur the two.
+            Do NOT run `flutter test`, `dart run`, `dart pub run`, or anything
+            else that executes code from this branch or its dependencies. This
+            job holds a secret, and running tests here would execute PR-authored
+            and third-party package code beside it. The `flutter` workflow
+            already runs the full suite with no such secret on every PR -- read
+            its result instead of reproducing it. If a finding can only be
+            settled by executing code, say so and say what you would run; do not
+            run it.
+
+            State which findings you verified with the analyzer and which are
+            reasoning only. Do not blur the two: a hedge presented as a fact is
+            worse than an honest hedge.
 
             Be concise. Only flag issues that genuinely matter; skip nitpicks.
             Leave inline comments on specific lines where useful.
