@@ -26,9 +26,10 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          # The action hides Claude's output by default, so a failing review is
-          # invisible in the logs. We only ever pass it a public diff, so show it.
-          show_full_output: true
+          # Without this, the review runs to completion and then posts nothing:
+          # the findings only exist in the job log, where nobody reads them.
+          # This forces the tracking comment on pull_request events.
+          track_progress: true
           prompt: |
             Review this pull request for the Abide Flutter app.
             Focus on:
@@ -42,15 +43,36 @@ jobs:
           claude_args: |
             --max-turns 25
 
-      # The action swallows a failed review and still reports the job green, so
-      # every run since 2026-06-26 looked healthy while posting nothing. Fail
-      # loudly instead.
+      # The action does not fail the job when the review itself fails, so a
+      # review that never ran reports a green check. This gate is the fix.
+      #
+      # It reads the execution log rather than a step output: the action exposes
+      # execution_file / session_id / structured_output — there is NO `conclusion`
+      # output, so the previous version of this gate compared against an empty
+      # string and failed every run, including the ones where Claude reviewed
+      # perfectly well.
       - name: Fail if the review did not run
-        if: steps.claude.outputs.conclusion != 'success'
+        if: always()
         env:
-          CONCLUSION: ${{ steps.claude.outputs.conclusion }}
+          EXECUTION_FILE: ${{ steps.claude.outputs.execution_file }}
         run: |
-          echo "::error::Claude review did not complete (conclusion: ${CONCLUSION:-unknown})."
-          echo "Most likely CLAUDE_CODE_OAUTH_TOKEN is expired or out of quota."
-          echo "Refresh it locally with 'claude setup-token' and update the repo secret."
-          exit 1
+          if [ -z "$EXECUTION_FILE" ] || [ ! -f "$EXECUTION_FILE" ]; then
+            echo "::error::Claude produced no execution log — the action was skipped or died before starting."
+            echo "If this PR edits a workflow file, that is expected: the action requires the"
+            echo "workflow to match the default branch, and it resolves once merged."
+            exit 1
+          fi
+
+          # The log is the SDK message stream; the final `result` message carries
+          # is_error and the message text.
+          result=$(jq -c 'if type == "array" then (map(select(.type == "result")) | last) else . end' "$EXECUTION_FILE")
+
+          if [ "$(printf '%s' "$result" | jq -r '.is_error')" = "true" ]; then
+            echo "::error::Claude review errored. Message follows."
+            printf '%s' "$result" | jq -r '.result // .error // "no message in log"'
+            echo "A ~2s, 1-turn failure almost always means CLAUDE_CODE_OAUTH_TOKEN is expired:"
+            echo "run 'claude setup-token' locally and update the repo secret."
+            exit 1
+          fi
+
+          echo "Claude review completed in $(printf '%s' "$result" | jq -r '.num_turns') turns."
