@@ -203,6 +203,53 @@ class OnboardingRoute extends PageRouteInfo<void> {
 }
 
 /// generated route for
+/// [PlanDaysPage]
+class PlanDaysRoute extends PageRouteInfo<PlanDaysRouteArgs> {
+  PlanDaysRoute({
+    Key? key,
+    required String planId,
+    List<PageRouteInfo>? children,
+  }) : super(
+          PlanDaysRoute.name,
+          args: PlanDaysRouteArgs(key: key, planId: planId),
+          initialChildren: children,
+        );
+
+  static const String name = 'PlanDaysRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      final args = data.argsAs<PlanDaysRouteArgs>();
+      return PlanDaysPage(key: args.key, planId: args.planId);
+    },
+  );
+}
+
+class PlanDaysRouteArgs {
+  const PlanDaysRouteArgs({this.key, required this.planId});
+
+  final Key? key;
+
+  final String planId;
+
+  @override
+  String toString() {
+    return 'PlanDaysRouteArgs{key: $key, planId: $planId}';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! PlanDaysRouteArgs) return false;
+    return key == other.key && planId == other.planId;
+  }
+
+  @override
+  int get hashCode => key.hashCode ^ planId.hashCode;
+}
+
+/// generated route for
 /// [ScriptureShareCardPage]
 class ScriptureShareCardRoute
     extends PageRouteInfo<ScriptureShareCardRouteArgs> {

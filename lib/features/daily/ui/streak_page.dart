@@ -63,7 +63,6 @@ class StreakPage extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 24),
-
           Text(
             'Last 6 months',
             style: AppTextStyles.labelLarge.copyWith(
@@ -75,7 +74,6 @@ class StreakPage extends ConsumerWidget {
             completedDayKeys: days,
             today: dateFromKey(todayKey())!,
           ),
-
           const SizedBox(height: 24),
           if (streak.graceDaysUsed > 0)
             Text(
@@ -90,6 +88,7 @@ class StreakPage extends ConsumerWidget {
                     .onSurface
                     .withValues(alpha: 0.6),
               ),
+              textAlign: TextAlign.center,
             )
           else
             Text(
@@ -101,6 +100,7 @@ class StreakPage extends ConsumerWidget {
                     .onSurface
                     .withValues(alpha: 0.6),
               ),
+              textAlign: TextAlign.center,
             ),
         ],
       ),

@@ -233,6 +233,34 @@ void main() {
     });
   });
 
+  group('Given someone ticks off plan days they never read', () {
+    group('When the streak is looked at', () {
+      test('Then it is untouched -- plan progress cannot manufacture a streak',
+          () async {
+        // The anti-gaming invariant, stated where it can be broken. Plan
+        // progress and reading days are separate tables written by separate
+        // calls, so marking 90 plan days produces exactly zero streak days.
+        // If someone ever "tidies" markPlanDayComplete into also writing a
+        // reading day, the streak becomes a thing you can fake in an afternoon
+        // and this test is what stops them.
+        for (var day = 1; day <= 90; day++) {
+          await dao.markPlanDayComplete(
+            planId: 'nt-90',
+            dayIndex: day,
+            completedAt: now,
+          );
+        }
+
+        expect(await dao.watchCompletedDayIndexes('nt-90').first, hasLength(90));
+        expect(
+          await dao.completedDayKeys(),
+          isEmpty,
+          reason: 'not one day of streak was earned by ticking boxes',
+        );
+      });
+    });
+  });
+
   group('Given a completed calendar day and a completed plan day', () {
     group('When they are recorded', () {
       test('Then they are independent -- catching up is not a longer streak',

@@ -1,5 +1,7 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:openbaptisthymnal/core/router/app_router.dart';
 import 'package:openbaptisthymnal/core/storage/database/database_provider.dart';
 import 'package:openbaptisthymnal/core/theme/app_colors.dart';
 import 'package:openbaptisthymnal/core/theme/app_text_styles.dart';
@@ -91,21 +93,58 @@ class TodaysReadingCard extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 6),
-            Text(
-              'Day ${day.dayIndex} of ${reading.plan.dayCount}',
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: colorScheme.onSurface.withValues(alpha: 0.7),
+
+            // The progress line opens the whole plan. Without a way in, the plan
+            // is a keyhole: you see today and nothing else -- you cannot go back
+            // to a passage you liked, re-read a day you rushed, or show anyone
+            // what you have been reading.
+            InkWell(
+              borderRadius: BorderRadius.circular(8),
+              onTap: () => context.router.push(
+                PlanDaysRoute(planId: reading.plan.id),
               ),
-            ),
-            const SizedBox(height: 12),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: LinearProgressIndicator(
-                value: reading.progress,
-                minHeight: 6,
-                backgroundColor: colorScheme.onSurface.withValues(alpha: 0.08),
-                valueColor:
-                    const AlwaysStoppedAnimation(AppColors.secondary),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          'Day ${day.dayIndex} of ${reading.plan.dayCount}',
+                          style: AppTextStyles.bodyMedium.copyWith(
+                            color:
+                                colorScheme.onSurface.withValues(alpha: 0.7),
+                          ),
+                        ),
+                        const Spacer(),
+                        Text(
+                          'All days',
+                          style: AppTextStyles.bodyMedium.copyWith(
+                            color: colorScheme.secondary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Icon(
+                          Icons.chevron_right,
+                          size: 18,
+                          color: colorScheme.secondary,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: reading.progress,
+                        minHeight: 6,
+                        backgroundColor:
+                            colorScheme.onSurface.withValues(alpha: 0.08),
+                        valueColor:
+                            const AlwaysStoppedAnimation(AppColors.secondary),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 16),

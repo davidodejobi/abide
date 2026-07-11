@@ -20,6 +20,7 @@ abstract final class AppTheme {
       appBarTheme: _lightAppBarTheme,
       cardTheme: _lightCardTheme,
       elevatedButtonTheme: _elevatedButtonTheme,
+      filledButtonTheme: _filledButtonTheme,
       outlinedButtonTheme: _outlinedButtonTheme,
       textButtonTheme: _textButtonTheme,
       inputDecorationTheme: _lightInputDecorationTheme,
@@ -48,6 +49,7 @@ abstract final class AppTheme {
       appBarTheme: _darkAppBarTheme,
       cardTheme: _darkCardTheme,
       elevatedButtonTheme: _elevatedButtonTheme,
+      filledButtonTheme: _filledButtonTheme,
       outlinedButtonTheme: _outlinedButtonTheme,
       textButtonTheme: _textButtonTheme,
       inputDecorationTheme: _darkInputDecorationTheme,
@@ -247,6 +249,26 @@ abstract final class AppTheme {
       style: OutlinedButton.styleFrom(
         foregroundColor: AppColors.primary,
         side: const BorderSide(color: AppColors.primary, width: 1.5),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        textStyle: AppTextStyles.labelLarge,
+      ),
+    );
+  }
+
+  /// Every other button in the app is an 8px rounded rectangle. [FilledButton]
+  /// had no theme at all, so it silently fell back to Material 3's default --
+  /// a StadiumBorder pill. That is why a FilledButton and an OutlinedButton side
+  /// by side looked like they came from two different apps.
+  ///
+  /// This is not a Today-tab fix: FilledButton is used in the Bible picker, the
+  /// folder and tag pickers, the audio recorder and the share card, and every
+  /// one of them has been a pill among rectangles. They all straighten out here.
+  static FilledButtonThemeData get _filledButtonTheme {
+    return FilledButtonThemeData(
+      style: FilledButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
