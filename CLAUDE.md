@@ -6,11 +6,14 @@ onboarding, and is growing toward Bible reading and sermon notes.
 
 ## Tooling
 
-- **Flutter via fvm** — version pinned in `.fvmrc` (currently `3.38.4`). Always prefix commands with `fvm`.
+**Locally**, Flutter runs through fvm — version pinned in `.fvmrc` (currently `3.38.4`). Prefix commands with `fvm`:
+
 - Run: `fvm flutter run`
 - Analyze: `fvm flutter analyze`
 - Test: `fvm flutter test`
 - Codegen (auto_route, freezed, json_serializable, riverpod): `fvm dart run build_runner build --delete-conflicting-outputs`
+
+**In CI, drop the prefix.** The workflows install the pinned SDK directly, so `flutter` and `dart` are on PATH and no `fvm` binary exists — `fvm flutter test` there fails with "command not found". The prefix is how a *human machine* selects the right SDK; CI has already selected it.
 
 ## Architecture
 
