@@ -11,6 +11,7 @@ import 'daos/bible_annotations_dao.dart';
 import 'daos/folders_dao.dart';
 import 'daos/note_links_dao.dart';
 import 'daos/notes_dao.dart';
+import 'daos/reading_plans_dao.dart';
 import 'daos/tags_dao.dart';
 import 'tables.dart';
 
@@ -25,8 +26,18 @@ part 'app_database.g.dart';
     NoteLinks,
     Attachments,
     BibleAnnotations,
+    ReadingDays,
+    PlanSubscriptions,
+    PlanDayProgress,
   ],
-  daos: [NotesDao, NoteLinksDao, FoldersDao, TagsDao, BibleAnnotationsDao],
+  daos: [
+    NotesDao,
+    NoteLinksDao,
+    FoldersDao,
+    TagsDao,
+    BibleAnnotationsDao,
+    ReadingPlansDao,
+  ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
@@ -34,8 +45,13 @@ class AppDatabase extends _$AppDatabase {
   /// In-memory connection for tests.
   AppDatabase.forTesting(super.executor);
 
+  // Bumping this without dumping a matching snapshot into drift_schemas/ fails
+  // a guard test in migration_test.dart. Registering a table without bumping it
+  // fails the same test. That pairing is deliberate: a table that reaches
+  // `tables:` but never reaches `onUpgrade` exists on fresh installs (via
+  // createAll) and is silently missing for everyone who upgrades.
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -50,6 +66,15 @@ class AppDatabase extends _$AppDatabase {
           }
           if (from < 3) {
             await _ensureBibleAnnotations(m);
+          }
+          if (from < 4) {
+            // The daily habit loop: completed days, plan subscriptions, and
+            // per-plan-day progress. New tables only -- nothing existing is
+            // touched, so there is no data to carry over and no way for this
+            // step to lose anything.
+            await m.createTable(readingDays);
+            await m.createTable(planSubscriptions);
+            await m.createTable(planDayProgress);
           }
         },
         beforeOpen: (details) async {
