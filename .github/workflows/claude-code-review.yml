@@ -78,9 +78,15 @@ jobs:
 
             Be concise. Only flag issues that genuinely matter; skip nitpicks.
             Leave inline comments on specific lines where useful.
+          # No --allowedTools here on purpose. Bash is already permitted: the
+          # reviewer reported "no fvm/flutter/dart binaries available", which it
+          # could only learn by running something and getting "command not
+          # found". The binaries were the only thing missing, and the step above
+          # supplies them. Passing --allowedTools would add no capability while
+          # risking replacing the action's default allowlist, which is what lets
+          # it post the review in the first place.
           claude_args: |
             --max-turns 35
-            --allowedTools "Bash(flutter analyze),Bash(flutter analyze:*),Bash(flutter test:*),Bash(dart analyze:*),Bash(dart run:*)"
 
       # The action does not fail the job when the review itself fails, so a
       # review that never ran reports a green check. This gate is the fix.
