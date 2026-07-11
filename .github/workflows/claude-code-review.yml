@@ -22,9 +22,13 @@ jobs:
           fetch-depth: 1
 
       - name: Claude review
+        id: claude
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # The action hides Claude's output by default, so a failing review is
+          # invisible in the logs. We only ever pass it a public diff, so show it.
+          show_full_output: true
           prompt: |
             Review this pull request for the Abide Flutter app.
             Focus on:
@@ -36,4 +40,17 @@ jobs:
             Be concise. Only flag issues that genuinely matter; skip nitpicks.
             Leave inline comments on specific lines where useful.
           claude_args: |
-            --max-turns 6
+            --max-turns 25
+
+      # The action swallows a failed review and still reports the job green, so
+      # every run since 2026-06-26 looked healthy while posting nothing. Fail
+      # loudly instead.
+      - name: Fail if the review did not run
+        if: steps.claude.outputs.conclusion != 'success'
+        env:
+          CONCLUSION: ${{ steps.claude.outputs.conclusion }}
+        run: |
+          echo "::error::Claude review did not complete (conclusion: ${CONCLUSION:-unknown})."
+          echo "Most likely CLAUDE_CODE_OAUTH_TOKEN is expired or out of quota."
+          echo "Refresh it locally with 'claude setup-token' and update the repo secret."
+          exit 1
