@@ -98,15 +98,26 @@ jobs:
 
             Be concise. Only flag issues that genuinely matter; skip nitpicks.
             Leave inline comments on specific lines where useful.
-          # No --allowedTools here on purpose. Bash is already permitted: the
-          # reviewer reported "no fvm/flutter/dart binaries available", which it
-          # could only learn by running something and getting "command not
-          # found". The binaries were the only thing missing, and the step above
-          # supplies them. Passing --allowedTools would add no capability while
-          # risking replacing the action's default allowlist, which is what lets
-          # it post the review in the first place.
+          # Analyze is allow-listed; nothing that executes this branch's code is.
+          #
+          # I first left --allowedTools off, reasoning that Bash must already be
+          # permitted because the reviewer knew the binaries were missing -- it
+          # could only have learned that by running something. That inference was
+          # wrong. With the SDK installed it still could not analyze, and said so
+          # on #35: "every invocation was blocked by this run's sandbox requiring
+          # approval that never arrives in this headless context (This command
+          # requires approval)". The commands were being DENIED, not merely
+          # missing, so headless runs need an explicit allowlist.
+          #
+          # Scoped to analyze on purpose. This job carries CLAUDE_CODE_OAUTH_TOKEN
+          # and runs on same-repo PRs, which includes Dependabot's. `analyze`
+          # reads code without running it. `flutter test` / `dart run` would
+          # execute PR-authored and third-party package code beside that secret,
+          # turning a dependency bump into an exfiltration path -- so they stay
+          # out, and the prompt says so too. Do not "just add test" here.
           claude_args: |
             --max-turns 35
+            --allowedTools "Bash(flutter analyze),Bash(flutter analyze:*),Bash(dart analyze),Bash(dart analyze:*)"
 
       # The action does not fail the job when the review itself fails, so a
       # review that never ran reports a green check. This gate is the fix.
