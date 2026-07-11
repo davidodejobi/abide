@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:openbaptisthymnal/features/onboarding/domain/seed_welcome_note.dart';
+import 'package:openbaptisthymnal/features/tablet/domain/seed_release_notes.dart';
 import 'package:openbaptisthymnal/features/tablet/providers/tablets_providers.dart';
 import 'package:toastification/toastification.dart';
 
@@ -27,8 +28,10 @@ class AbideApp extends HookConsumerWidget {
     final themeMode = ref.watch(themeModeProvider);
 
     // One-shot: drop the example "Welcome to your notes" note in the notes
-    // tab the first time this build of the app starts up. Idempotent — a
-    // shared-prefs flag guarantees we never re-create it on later launches.
+    // tab the first time this build of the app starts up, and a "what's new"
+    // note whenever the user upgrades into a release that has one they have not
+    // seen. Both are idempotent — shared-prefs records what has been created, so
+    // neither is ever re-made, and a note the user deletes stays deleted.
     useEffect(() {
       final storage = ref.read(storageServiceProvider);
       final repo = ref.read(tabletsRepositoryProvider);
@@ -36,6 +39,10 @@ class AbideApp extends HookConsumerWidget {
         storage: storage,
         createNote: repo.createNote,
         userName: storage.getUserName(),
+      );
+      seedReleaseNotesIfNeeded(
+        storage: storage,
+        createNote: repo.createNote,
       );
       return null;
     }, const []);
