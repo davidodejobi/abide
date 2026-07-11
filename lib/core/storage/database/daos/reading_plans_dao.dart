@@ -64,6 +64,39 @@ class ReadingPlansDao extends DatabaseAccessor<AppDatabase>
     return (delete(readingDays)..where((t) => t.dateKey.equals(dateKey))).go();
   }
 
+  /// What "Mark read" does: earns today's streak day AND advances the plan, as
+  /// one write or neither.
+  ///
+  /// These were two separate awaits from the UI. If the second failed, the user
+  /// was left having earned a streak day for a plan day that never advanced --
+  /// the card still showing the passage they had just been credited for reading.
+  /// A transaction makes that state unreachable rather than merely unlikely.
+  ///
+  /// Still two rows in two tables, deliberately: marking three plan days in one
+  /// evening writes three plan rows and ONE reading day, because reading_days is
+  /// keyed on the date. You can catch up on the plan; you cannot catch up on
+  /// turning up.
+  Future<void> markReadingComplete({
+    required String dateKey,
+    required String source,
+    required String planId,
+    required int dayIndex,
+    required DateTime completedAt,
+  }) {
+    return transaction(() async {
+      await markDayComplete(
+        dateKey: dateKey,
+        source: source,
+        completedAt: completedAt,
+      );
+      await markPlanDayComplete(
+        planId: planId,
+        dayIndex: dayIndex,
+        completedAt: completedAt,
+      );
+    });
+  }
+
   // --- Plan subscription ----------------------------------------------------
 
   /// The plan the user is currently following, if any.

@@ -215,23 +215,22 @@ class TodaysReadingCard extends ConsumerWidget {
     );
   }
 
-  Future<void> _markRead(WidgetRef ref) async {
-    final dao = ref.read(readingPlansDaoProvider);
+  Future<void> _markRead(WidgetRef ref) {
     final now = DateTime.now();
 
-    // Two writes, deliberately. The calendar day feeds the streak; the plan day
-    // advances the plan. Catching up on three plan days in one sitting is one
-    // day of streak and three of progress, and collapsing them into one row
-    // would let someone binge a 30-day streak in an afternoon.
-    await dao.markDayComplete(
-      dateKey: dayKey(now),
-      source: 'plan',
-      completedAt: now,
-    );
-    await dao.markPlanDayComplete(
-      planId: reading.plan.id,
-      dayIndex: reading.day!.dayIndex,
-      completedAt: now,
-    );
+    // One transaction. These were two separate awaits, and a failure between
+    // them left the user credited with a streak day for a plan day that never
+    // advanced -- the card still offering the passage it had just said they read.
+    //
+    // Still two ROWS in two tables, deliberately: the calendar day feeds the
+    // streak, the plan day advances the plan, and reading_days is keyed on the
+    // date. Three marks in one evening is three days of plan and one of streak.
+    return ref.read(readingPlansDaoProvider).markReadingComplete(
+          dateKey: dayKey(now),
+          source: 'plan',
+          planId: reading.plan.id,
+          dayIndex: reading.day!.dayIndex,
+          completedAt: now,
+        );
   }
 }

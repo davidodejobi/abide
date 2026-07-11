@@ -233,6 +233,42 @@ void main() {
     });
   });
 
+  group('Given "Mark read" is tapped', () {
+    group('When the reading is recorded', () {
+      test('Then the streak day and the plan day land together', () async {
+        // One transaction, not two writes. Recorded separately, a failure
+        // between them credits a streak day for a plan day that never advanced,
+        // and the card goes on offering the passage it just said you had read.
+        await dao.markReadingComplete(
+          dateKey: '2026-01-15',
+          source: 'plan',
+          planId: 'nt-90',
+          dayIndex: 1,
+          completedAt: now,
+        );
+
+        expect(await dao.completedDayKeys(), {'2026-01-15'});
+        expect(await dao.watchCompletedDayIndexes('nt-90').first, {1});
+      });
+
+      test('Then a repeat tap on the same day changes nothing', () async {
+        // Both keys are deterministic, so the double-tap is a no-op twice over.
+        for (var i = 0; i < 3; i++) {
+          await dao.markReadingComplete(
+            dateKey: '2026-01-15',
+            source: 'plan',
+            planId: 'nt-90',
+            dayIndex: 1,
+            completedAt: now,
+          );
+        }
+
+        expect(await db.select(db.readingDays).get(), hasLength(1));
+        expect(await db.select(db.planDayProgress).get(), hasLength(1));
+      });
+    });
+  });
+
   group('Given a reader three days behind catches up in one sitting', () {
     group('When they mark three plan days on the same calendar day', () {
       test('Then the plan advances three days and the streak advances one',
@@ -248,13 +284,11 @@ void main() {
         //
         // The date primary key on reading_days is what enforces the second half:
         // marks two and three are no-ops.
+        // Exactly what tapping "Mark read" three times does.
         for (final planDay in [1, 2, 3]) {
-          await dao.markDayComplete(
+          await dao.markReadingComplete(
             dateKey: '2026-01-15',
             source: 'plan',
-            completedAt: now,
-          );
-          await dao.markPlanDayComplete(
             planId: 'nt-90',
             dayIndex: planDay,
             completedAt: now,
