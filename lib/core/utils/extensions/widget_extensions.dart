@@ -48,7 +48,7 @@ extension WidgetExtensions on Widget {
   // ============================================================================
 
   /// Add tooltip
-  /// Usage: Icon(Icons.info).tooltip('Information')
+  /// Usage: Icon(PhosphorIcons.info()).tooltip('Information')
   Widget tooltip(String message) {
     return Tooltip(
       message: message,

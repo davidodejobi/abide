@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:openbaptisthymnal/features/bible/providers/bible_providers.dart';
 import 'package:openbaptisthymnal/features/hymn/ui/viewmodels/hymns_viewmodel.dart';
@@ -63,23 +64,23 @@ class LinkSuggestions extends ConsumerWidget {
           children: [
             for (final n in notes)
               _Row(
-                icon: Icons.description_outlined,
+                icon: PhosphorIcons.fileText(),
                 label: n.title,
                 onTap: () => onSelected(n.title),
               ),
             for (final h in hymns)
               _Row(
-                icon: Icons.library_music_outlined,
+                icon: PhosphorIcons.musicNotes(),
                 label: '#${h.number}  ${h.title}',
                 onTap: () => onSelected('hymn:${h.id}'),
               ),
             for (final b in bible)
               _Row(
                 icon: b.isVerse
-                    ? Icons.format_quote_outlined
+                    ? PhosphorIcons.quotes()
                     : b.isChapter
-                        ? Icons.chrome_reader_mode_outlined
-                        : Icons.menu_book_outlined,
+                        ? PhosphorIcons.bookOpen()
+                        : PhosphorIcons.bookOpenText(),
                 label: b.label,
                 onTap: () => onSelected(b.token),
               ),

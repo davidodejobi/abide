@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openbaptisthymnal/core/storage/storage_provider.dart';
 
@@ -35,11 +36,11 @@ extension ThemeModeExtension on ThemeMode {
   IconData get icon {
     switch (this) {
       case ThemeMode.light:
-        return Icons.light_mode_outlined;
+        return PhosphorIcons.sun();
       case ThemeMode.dark:
-        return Icons.dark_mode_outlined;
+        return PhosphorIcons.moon();
       case ThemeMode.system:
-        return Icons.brightness_auto_outlined;
+        return PhosphorIcons.circleHalf();
     }
   }
 }

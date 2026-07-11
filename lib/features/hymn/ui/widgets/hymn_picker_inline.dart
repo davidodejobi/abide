@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:openbaptisthymnal/core/theme/app_colors.dart';
@@ -91,7 +92,7 @@ class HymnPickerInline extends HookConsumerWidget {
             style: AppTextStyles.bodyMedium.copyWith(color: ink),
             decoration: InputDecoration(
               hintText: 'Search by number or title',
-              prefixIcon: const Icon(Icons.search, size: 20),
+              prefixIcon: Icon(PhosphorIcons.magnifyingGlass(), size: 20),
               filled: true,
               fillColor:
                   isDark ? AppColors.neutral850 : AppColors.secondary50,

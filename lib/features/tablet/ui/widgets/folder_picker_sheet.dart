@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:openbaptisthymnal/features/tablet/providers/tablets_providers.dart';
 
@@ -55,20 +56,20 @@ class FolderPickerSheet extends ConsumerWidget {
             ),
             _FolderOption(
               label: 'Unfiled',
-              icon: Icons.inbox_outlined,
+              icon: PhosphorIcons.tray(),
               selected: currentFolderId == null,
               onTap: () => move(null),
             ),
             for (final folder in folders)
               _FolderOption(
                 label: folder.name,
-                icon: Icons.folder_outlined,
+                icon: PhosphorIcons.folder(),
                 selected: folder.id == currentFolderId,
                 onTap: () => move(folder.id),
               ),
             const Divider(height: 8),
             ListTile(
-              leading: const Icon(Icons.create_new_folder_outlined),
+              leading: Icon(PhosphorIcons.folderPlus()),
               title: const Text('New folder'),
               onTap: createAndMove,
             ),
@@ -106,7 +107,7 @@ class _FolderOption extends StatelessWidget {
           color: selected ? scheme.primary : null,
         ),
       ),
-      trailing: selected ? Icon(Icons.check, color: scheme.primary) : null,
+      trailing: selected ? Icon(PhosphorIcons.check(), color: scheme.primary) : null,
       onTap: onTap,
     );
   }

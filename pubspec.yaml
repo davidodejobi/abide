@@ -19,6 +19,7 @@ dependencies:
   logging: ^1.2.0
   toastification: ^3.0.3
   vector_graphics: ^1.1.19
+  phosphor_flutter: ^2.1.0
   auto_size_text: ^3.0.0
   lottie: ^3.3.2
   liquid_glass_renderer: ^0.2.0-dev.3

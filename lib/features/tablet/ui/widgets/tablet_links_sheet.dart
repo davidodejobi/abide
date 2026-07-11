@@ -1,5 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:openbaptisthymnal/core/router/app_router.dart';
 import 'package:openbaptisthymnal/features/bible/ui/open_bible_link.dart';
@@ -74,14 +75,14 @@ class _OutgoingTile extends ConsumerWidget {
             ? link.targetKey
             : '#${hymn.number}  ${hymn.title}';
         return _LinkTile(
-          icon: Icons.library_music_outlined,
+          icon: PhosphorIcons.musicNotes(),
           label: label,
           onTap: () =>
               context.router.push(HymnDetailRoute(hymnId: link.targetKey)),
         );
       case NoteLinkType.bible:
         return _LinkTile(
-          icon: Icons.menu_book_outlined,
+          icon: PhosphorIcons.bookOpenText(),
           label: link.targetKey,
           onTap: () => openBibleLink(
             context,
@@ -96,7 +97,7 @@ class _OutgoingTile extends ConsumerWidget {
             ?.where((n) => n.title.toLowerCase() == link.targetKey.toLowerCase())
             .firstOrNull;
         return _LinkTile(
-          icon: Icons.description_outlined,
+          icon: PhosphorIcons.fileText(),
           label: link.display,
           trailing: match == null
               ? const Text('not found', style: TextStyle(fontSize: 12))
@@ -129,7 +130,7 @@ class _BacklinksSection extends ConsumerWidget {
         else
           ...backlinks.map(
             (n) => _LinkTile(
-              icon: Icons.subdirectory_arrow_left,
+              icon: PhosphorIcons.arrowElbowDownLeft(),
               label: n.title.isEmpty ? 'Untitled' : n.title,
               onTap: () =>
                   context.router.push(TabletEditorRoute(noteId: n.id)),

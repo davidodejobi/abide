@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:appflowy_editor/appflowy_editor.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/gestures.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -416,10 +417,10 @@ class _NoteEditorView extends HookConsumerWidget {
       listMobileToolbarItem,
       quoteMobileToolbarItem,
       dividerMobileToolbarItem,
-      actionItem(Icons.link, insertLinkToken),
-      actionItem(Icons.image_outlined, insertImage),
-      actionItem(Icons.mic_none, insertAudio),
-      actionItem(Icons.content_paste_go, insertPasteText),
+      actionItem(PhosphorIcons.linkSimple(), insertLinkToken),
+      actionItem(PhosphorIcons.image(), insertImage),
+      actionItem(PhosphorIcons.microphone(), insertAudio),
+      actionItem(PhosphorIcons.clipboardText(), insertPasteText),
     ];
 
     return PopScope(
@@ -433,7 +434,7 @@ class _NoteEditorView extends HookConsumerWidget {
           backgroundColor: theme.scaffoldBackgroundColor,
           actions: [
             IconButton(
-              icon: const Icon(Icons.folder_outlined),
+              icon: Icon(PhosphorIcons.folder()),
               tooltip: 'Move to folder',
               onPressed: () async {
                 await save();
@@ -452,7 +453,7 @@ class _NoteEditorView extends HookConsumerWidget {
               },
             ),
             IconButton(
-              icon: const Icon(Icons.label_outline),
+              icon: Icon(PhosphorIcons.tag()),
               tooltip: 'Tags',
               onPressed: () async {
                 await save();
@@ -471,7 +472,7 @@ class _NoteEditorView extends HookConsumerWidget {
               },
             ),
             IconButton(
-              icon: const Icon(Icons.account_tree_outlined),
+              icon: Icon(PhosphorIcons.treeStructure()),
               tooltip: 'Links & backlinks',
               onPressed: () async {
                 await save();

@@ -1,5 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter/rendering.dart' show ScrollDirection;
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -542,7 +543,7 @@ class _ReaderHeader extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(width: 4),
-                    Icon(Icons.expand_more, color: colorScheme.primary),
+                    Icon(PhosphorIcons.caretDown(), color: colorScheme.primary),
                   ],
                 ),
               ),
@@ -551,7 +552,7 @@ class _ReaderHeader extends ConsumerWidget {
           IconButton(
             tooltip: 'Split view',
             icon: Icon(
-              splitActive ? Icons.close_rounded : Icons.vertical_split_rounded,
+              splitActive ? PhosphorIcons.x() : PhosphorIcons.columns(),
               color: colorScheme.primary,
             ),
             onPressed: onSplit,
@@ -567,7 +568,7 @@ class _ReaderHeader extends ConsumerWidget {
             ],
             child: Chip(
               label: Text(position.editionId.toUpperCase()),
-              avatar: const Icon(Icons.translate, size: 18),
+              avatar: Icon(PhosphorIcons.translate(), size: 18),
             ),
           ),
         ],
@@ -622,7 +623,7 @@ class _SplitHeader extends StatelessWidget {
                     ),
                     const SizedBox(width: 4),
                     Icon(
-                      Icons.expand_more,
+                      PhosphorIcons.caretDown(),
                       size: 20,
                       color: colorScheme.primary,
                     ),
@@ -633,7 +634,7 @@ class _SplitHeader extends StatelessWidget {
           ),
           IconButton(
             tooltip: 'Swap panes',
-            icon: const Icon(Icons.swap_horiz_rounded),
+            icon: Icon(PhosphorIcons.arrowsLeftRight()),
             onPressed: onSwap,
           ),
           SplitOrientationToggle(
@@ -642,7 +643,7 @@ class _SplitHeader extends StatelessWidget {
           ),
           IconButton(
             tooltip: 'Close split',
-            icon: const Icon(Icons.close_rounded),
+            icon: Icon(PhosphorIcons.x()),
             onPressed: onClose,
           ),
         ],
@@ -708,7 +709,11 @@ class _SecondaryBiblePane extends ConsumerWidget {
                   ),
                   TextButton.icon(
                     onPressed: onChange,
-                    icon: const Icon(Icons.swap_horiz_rounded, size: 18),
+                    style: TextButton.styleFrom(
+                      foregroundColor:
+                          Theme.of(context).colorScheme.secondary,
+                    ),
+                    icon: Icon(PhosphorIcons.arrowsLeftRight(), size: 18),
                     label: const Text('Change'),
                   ),
                 ],
@@ -831,7 +836,7 @@ class _SelectionBar extends ConsumerWidget {
               children: [
                 IconButton(
                   tooltip: 'Clear selection',
-                  icon: const Icon(Icons.close),
+                  icon: Icon(PhosphorIcons.x()),
                   onPressed: onClear,
                 ),
                 Expanded(
@@ -845,7 +850,7 @@ class _SelectionBar extends ConsumerWidget {
                 ),
                 FilledButton.icon(
                   onPressed: chapterData == null ? null : share,
-                  icon: const Icon(Icons.ios_share, size: 18),
+                  icon: Icon(PhosphorIcons.export(), size: 18),
                   label: const Text('Share'),
                 ),
               ],
@@ -877,11 +882,11 @@ class _SelectionBar extends ConsumerWidget {
                   IconButton(
                     tooltip: 'Remove highlight',
                     onPressed: anyHighlighted ? clearHighlight : null,
-                    icon: const Icon(Icons.format_color_reset_outlined),
+                    icon: Icon(PhosphorIcons.highlighter()),
                   ),
                   TextButton.icon(
                     onPressed: addNote,
-                    icon: const Icon(Icons.note_add_outlined, size: 18),
+                    icon: Icon(PhosphorIcons.notePencil(), size: 18),
                     label: const Text('Add note'),
                   ),
                 ],
@@ -932,6 +937,7 @@ class _ChapterNav extends ConsumerWidget {
 
     final hasPrev = chapter > 1 || bookIndex > 0;
     final hasNext = chapter < book.chapterCount || bookIndex < books.length - 1;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return SafeArea(
       top: false,
@@ -942,17 +948,23 @@ class _ChapterNav extends ConsumerWidget {
           children: [
             TextButton.icon(
               onPressed: hasPrev ? goPrev : null,
-              icon: const Icon(Icons.chevron_left),
+              style: TextButton.styleFrom(
+                foregroundColor: colorScheme.secondary,
+              ),
+              icon: Icon(PhosphorIcons.caretLeft()),
               label: const Text('Previous'),
             ),
             TextButton(
               onPressed: hasNext ? goNext : null,
-              child: const Row(
+              style: TextButton.styleFrom(
+                foregroundColor: colorScheme.secondary,
+              ),
+              child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('Next'),
-                  SizedBox(width: 4),
-                  Icon(Icons.chevron_right),
+                  const Text('Next'),
+                  const SizedBox(width: 4),
+                  Icon(PhosphorIcons.caretRight()),
                 ],
               ),
             ),
@@ -976,7 +988,7 @@ class _ErrorView extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.error_outline, size: 48, color: colorScheme.error),
+          Icon(PhosphorIcons.warningCircle(), size: 48, color: colorScheme.error),
           const SizedBox(height: 16),
           Text(message, style: AppTextStyles.bodyLarge),
           const SizedBox(height: 8),
@@ -1012,7 +1024,7 @@ class _BacklinksSheet extends StatelessWidget {
           ),
           for (final item in items)
             ListTile(
-              leading: const Icon(Icons.sticky_note_2_outlined),
+              leading: Icon(PhosphorIcons.note()),
               title: Text(
                 item.noteTitle.trim().isEmpty
                     ? 'Untitled tablet'
