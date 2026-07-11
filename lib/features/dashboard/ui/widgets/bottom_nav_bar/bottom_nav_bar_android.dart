@@ -152,9 +152,14 @@ class _MaterialNavItem extends StatelessWidget {
                   },
                   child: VectorGraphic(
                     loader: AssetBytesLoader(
-                      label.iconSvg,
+                      (selected ? '${label}_fill' : label).iconSvg,
                     ),
                     key: ValueKey(selected),
+                    // Sized here, not from the SVG: the icons are authored on
+                    // different grids (24/29/256) so their intrinsic sizes
+                    // disagree.
+                    width: 26,
+                    height: 26,
                     colorFilter: ColorFilter.mode(
                       color,
                       BlendMode.srcIn,

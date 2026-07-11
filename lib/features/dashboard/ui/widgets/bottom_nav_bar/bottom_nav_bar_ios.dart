@@ -262,9 +262,16 @@ class _BottomBarTab extends StatelessWidget {
                       duration: const Duration(milliseconds: 150),
                       child: VectorGraphic(
                         loader: AssetBytesLoader(
-                          tab.label.toLowerCase().iconSvg,
+                          selected
+                              ? '${tab.label.toLowerCase()}_fill'.iconSvg
+                              : tab.label.toLowerCase().iconSvg,
                         ),
                         key: ValueKey(selected),
+                        // Sized here, not from the SVG: the icons are authored
+                        // on different grids (24/29/256) so their intrinsic
+                        // sizes disagree.
+                        width: 26,
+                        height: 26,
                         colorFilter: ColorFilter.mode(
                           selected
                               ? Theme.of(context).colorScheme.primary
