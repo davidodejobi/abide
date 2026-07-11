@@ -40,7 +40,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
         iOS: AudioContextIOS(
           category: AVAudioSessionCategory.playback,
         ),
-        android: AudioContextAndroid(
+        android: const AudioContextAndroid(
           usageType: AndroidUsageType.media,
         ),
       ));
