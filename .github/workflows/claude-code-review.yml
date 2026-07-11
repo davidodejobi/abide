@@ -4,6 +4,12 @@ on:
   pull_request:
     types: [opened, synchronize]
 
+env:
+  # Keep in step with .fvmrc and flutter.yml. The reviewer must analyze against
+  # the same SDK the test job uses, or it will report analyzer errors nobody
+  # else can reproduce.
+  FLUTTER_VERSION: "3.38.4"
+
 jobs:
   claude-review:
     # Only review same-repo PRs. Fork PRs don't receive the secret anyway, so
@@ -21,6 +27,20 @@ jobs:
         with:
           fetch-depth: 1
 
+      # Without a toolchain the reviewer can only read code and reason about it.
+      # It said so itself on #33: "Couldn't run flutter analyze / flutter test
+      # (no fvm/flutter/dart binaries available) -- the logic review above is a
+      # manual trace, not a test run." A reviewer that can execute settles a
+      # question instead of hedging it, so give it the SDK the test job uses.
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
       - name: Claude review
         id: claude
         uses: anthropics/claude-code-action@v1
@@ -36,12 +56,31 @@ jobs:
             - Bugs, logic errors, and edge cases
             - Security issues
             - Adherence to the conventions in CLAUDE.md (Riverpod plain-Notifier
-              pattern, auto_route usage, fvm tooling, theme/font tokens)
+              pattern, auto_route usage, theme/font tokens)
             - Flutter/Dart best practices and analyzer cleanliness
+
+            The Flutter SDK is installed, `flutter` and `dart` are on PATH, and
+            `flutter pub get` has already run. Call them directly -- do NOT
+            prefix with `fvm`. CLAUDE.md tells humans to use fvm because it pins
+            the SDK on their machine; CI has already pinned it, and there is no
+            fvm binary here.
+
+            Run things to check your work. If you suspect a bug, prove it:
+            `flutter analyze`, or a targeted `flutter test <path>`. If a claim in
+            the PR description is load-bearing, verify it rather than trusting
+            it. Do NOT re-run the whole suite -- the `flutter` workflow already
+            does that on every PR, and duplicating it just burns minutes.
+            Targeted runs are for confirming or killing a specific finding.
+
+            A finding you actually reproduced is worth more than five you
+            reasoned your way to. State which findings you verified by running
+            something and which are reasoning only. Do not blur the two.
+
             Be concise. Only flag issues that genuinely matter; skip nitpicks.
             Leave inline comments on specific lines where useful.
           claude_args: |
-            --max-turns 25
+            --max-turns 35
+            --allowedTools "Bash(flutter analyze),Bash(flutter analyze:*),Bash(flutter test:*),Bash(dart analyze:*),Bash(dart run:*)"
 
       # The action does not fail the job when the review itself fails, so a
       # review that never ran reports a green check. This gate is the fix.
