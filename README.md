@@ -67,6 +67,31 @@ colour and state regressions, not typography.
   subscription or a repeating animation. Otherwise the straggler timer outlives
   the test and trips the pending-timer assertion, failing a test that passed.
 
+### Database migrations
+
+Every other DB test builds a *fresh* database (`AppDatabase.forTesting` runs
+`onCreate`/`createAll`), so it never exercises `onUpgrade` — the path every
+existing user actually takes. `test/core/storage/database/migration_test.dart`
+covers that path with drift's `SchemaVerifier`: it builds a database at each old
+schema version, runs the real migration, and diffs the result against the
+expected schema.
+
+`drift_schemas/` holds one JSON snapshot per schema version. **After changing
+the schema, bump `schemaVersion` and regenerate both:**
+
+```bash
+fvm dart run drift_dev schema dump lib/core/storage/database/app_database.dart drift_schemas/
+fvm dart run drift_dev schema generate --data-classes --companions drift_schemas/ test/drift_schemas/
+```
+
+A guard test fails if `schemaVersion` has no matching snapshot, so you can't
+bump the version — or add a table — and leave the migration untested.
+
+One thing the verifier cannot see: `notes_fts` is created with
+`customStatement`, so it's absent from drift's schema model. Anything FTS-related
+needs an explicit assertion (there is one) rather than relying on schema
+validation.
+
 ### Coverage
 
 The CI gate measures the **logic layers** (domain, data, providers, core),
