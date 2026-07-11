@@ -1,7 +1,7 @@
 # Abide
 
 [![flutter](https://github.com/davidodejobi/abide/actions/workflows/flutter.yml/badge.svg)](https://github.com/davidodejobi/abide/actions/workflows/flutter.yml)
-[![codecov](https://codecov.io/github/davidodejobi/abide/graph/badge.svg?token=REPLACE_WITH_GRAPH_TOKEN)](https://codecov.io/github/davidodejobi/abide)
+[![codecov](https://codecov.io/gh/davidodejobi/abide/graph/badge.svg?token=RLZK8V5I05)](https://codecov.io/gh/davidodejobi/abide)
 
 A hymnal and Bible reader for all Christians. Multi-language hymn packs,
 favorites, a parallel split view, offline Bible translations, and tablets
