@@ -2197,6 +2197,768 @@ class BibleAnnotationsCompanion extends UpdateCompanion<BibleAnnotation> {
   }
 }
 
+class $ReadingDaysTable extends ReadingDays
+    with TableInfo<$ReadingDaysTable, ReadingDay> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ReadingDaysTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _dateKeyMeta =
+      const VerificationMeta('dateKey');
+  @override
+  late final GeneratedColumn<String> dateKey = GeneratedColumn<String>(
+      'date_key', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _sourceMeta = const VerificationMeta('source');
+  @override
+  late final GeneratedColumn<String> source = GeneratedColumn<String>(
+      'source', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _completedAtMeta =
+      const VerificationMeta('completedAt');
+  @override
+  late final GeneratedColumn<DateTime> completedAt = GeneratedColumn<DateTime>(
+      'completed_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns => [dateKey, source, completedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'reading_days';
+  @override
+  VerificationContext validateIntegrity(Insertable<ReadingDay> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('date_key')) {
+      context.handle(_dateKeyMeta,
+          dateKey.isAcceptableOrUnknown(data['date_key']!, _dateKeyMeta));
+    } else if (isInserting) {
+      context.missing(_dateKeyMeta);
+    }
+    if (data.containsKey('source')) {
+      context.handle(_sourceMeta,
+          source.isAcceptableOrUnknown(data['source']!, _sourceMeta));
+    } else if (isInserting) {
+      context.missing(_sourceMeta);
+    }
+    if (data.containsKey('completed_at')) {
+      context.handle(
+          _completedAtMeta,
+          completedAt.isAcceptableOrUnknown(
+              data['completed_at']!, _completedAtMeta));
+    } else if (isInserting) {
+      context.missing(_completedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {dateKey};
+  @override
+  ReadingDay map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ReadingDay(
+      dateKey: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}date_key'])!,
+      source: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}source'])!,
+      completedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}completed_at'])!,
+    );
+  }
+
+  @override
+  $ReadingDaysTable createAlias(String alias) {
+    return $ReadingDaysTable(attachedDatabase, alias);
+  }
+}
+
+class ReadingDay extends DataClass implements Insertable<ReadingDay> {
+  /// Local calendar day, `YYYY-MM-DD`. A date key, not a timestamp: the streak
+  /// asks a calendar question ("did they read yesterday"), and 24-hour
+  /// arithmetic answers it wrong on the two days a year the clock jumps.
+  final String dateKey;
+
+  /// What earned the day: `plan` | `chapter` | `altar`. `altar` is unused today
+  /// and deliberately allowed for -- Family Altar plugs into this same streak
+  /// engine later, and a string column means it does so without a migration.
+  final String source;
+  final DateTime completedAt;
+  const ReadingDay(
+      {required this.dateKey, required this.source, required this.completedAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['date_key'] = Variable<String>(dateKey);
+    map['source'] = Variable<String>(source);
+    map['completed_at'] = Variable<DateTime>(completedAt);
+    return map;
+  }
+
+  ReadingDaysCompanion toCompanion(bool nullToAbsent) {
+    return ReadingDaysCompanion(
+      dateKey: Value(dateKey),
+      source: Value(source),
+      completedAt: Value(completedAt),
+    );
+  }
+
+  factory ReadingDay.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ReadingDay(
+      dateKey: serializer.fromJson<String>(json['dateKey']),
+      source: serializer.fromJson<String>(json['source']),
+      completedAt: serializer.fromJson<DateTime>(json['completedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'dateKey': serializer.toJson<String>(dateKey),
+      'source': serializer.toJson<String>(source),
+      'completedAt': serializer.toJson<DateTime>(completedAt),
+    };
+  }
+
+  ReadingDay copyWith(
+          {String? dateKey, String? source, DateTime? completedAt}) =>
+      ReadingDay(
+        dateKey: dateKey ?? this.dateKey,
+        source: source ?? this.source,
+        completedAt: completedAt ?? this.completedAt,
+      );
+  ReadingDay copyWithCompanion(ReadingDaysCompanion data) {
+    return ReadingDay(
+      dateKey: data.dateKey.present ? data.dateKey.value : this.dateKey,
+      source: data.source.present ? data.source.value : this.source,
+      completedAt:
+          data.completedAt.present ? data.completedAt.value : this.completedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ReadingDay(')
+          ..write('dateKey: $dateKey, ')
+          ..write('source: $source, ')
+          ..write('completedAt: $completedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(dateKey, source, completedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ReadingDay &&
+          other.dateKey == this.dateKey &&
+          other.source == this.source &&
+          other.completedAt == this.completedAt);
+}
+
+class ReadingDaysCompanion extends UpdateCompanion<ReadingDay> {
+  final Value<String> dateKey;
+  final Value<String> source;
+  final Value<DateTime> completedAt;
+  final Value<int> rowid;
+  const ReadingDaysCompanion({
+    this.dateKey = const Value.absent(),
+    this.source = const Value.absent(),
+    this.completedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ReadingDaysCompanion.insert({
+    required String dateKey,
+    required String source,
+    required DateTime completedAt,
+    this.rowid = const Value.absent(),
+  })  : dateKey = Value(dateKey),
+        source = Value(source),
+        completedAt = Value(completedAt);
+  static Insertable<ReadingDay> custom({
+    Expression<String>? dateKey,
+    Expression<String>? source,
+    Expression<DateTime>? completedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (dateKey != null) 'date_key': dateKey,
+      if (source != null) 'source': source,
+      if (completedAt != null) 'completed_at': completedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ReadingDaysCompanion copyWith(
+      {Value<String>? dateKey,
+      Value<String>? source,
+      Value<DateTime>? completedAt,
+      Value<int>? rowid}) {
+    return ReadingDaysCompanion(
+      dateKey: dateKey ?? this.dateKey,
+      source: source ?? this.source,
+      completedAt: completedAt ?? this.completedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (dateKey.present) {
+      map['date_key'] = Variable<String>(dateKey.value);
+    }
+    if (source.present) {
+      map['source'] = Variable<String>(source.value);
+    }
+    if (completedAt.present) {
+      map['completed_at'] = Variable<DateTime>(completedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ReadingDaysCompanion(')
+          ..write('dateKey: $dateKey, ')
+          ..write('source: $source, ')
+          ..write('completedAt: $completedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $PlanSubscriptionsTable extends PlanSubscriptions
+    with TableInfo<$PlanSubscriptionsTable, PlanSubscription> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PlanSubscriptionsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _planIdMeta = const VerificationMeta('planId');
+  @override
+  late final GeneratedColumn<String> planId = GeneratedColumn<String>(
+      'plan_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _startDateKeyMeta =
+      const VerificationMeta('startDateKey');
+  @override
+  late final GeneratedColumn<String> startDateKey = GeneratedColumn<String>(
+      'start_date_key', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _isActiveMeta =
+      const VerificationMeta('isActive');
+  @override
+  late final GeneratedColumn<bool> isActive = GeneratedColumn<bool>(
+      'is_active', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_active" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  @override
+  List<GeneratedColumn> get $columns => [planId, startDateKey, isActive];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'plan_subscriptions';
+  @override
+  VerificationContext validateIntegrity(Insertable<PlanSubscription> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('plan_id')) {
+      context.handle(_planIdMeta,
+          planId.isAcceptableOrUnknown(data['plan_id']!, _planIdMeta));
+    } else if (isInserting) {
+      context.missing(_planIdMeta);
+    }
+    if (data.containsKey('start_date_key')) {
+      context.handle(
+          _startDateKeyMeta,
+          startDateKey.isAcceptableOrUnknown(
+              data['start_date_key']!, _startDateKeyMeta));
+    } else if (isInserting) {
+      context.missing(_startDateKeyMeta);
+    }
+    if (data.containsKey('is_active')) {
+      context.handle(_isActiveMeta,
+          isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {planId};
+  @override
+  PlanSubscription map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PlanSubscription(
+      planId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}plan_id'])!,
+      startDateKey: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}start_date_key'])!,
+      isActive: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_active'])!,
+    );
+  }
+
+  @override
+  $PlanSubscriptionsTable createAlias(String alias) {
+    return $PlanSubscriptionsTable(attachedDatabase, alias);
+  }
+}
+
+class PlanSubscription extends DataClass
+    implements Insertable<PlanSubscription> {
+  /// Slug from `assets/plans/<id>.json`, e.g. `bible-in-a-year`.
+  final String planId;
+
+  /// The day the plan began. Day N of the plan is [startDateKey] + (N - 1), so
+  /// "which day am I on" is calendar arithmetic rather than a stored cursor
+  /// that can drift out of step with the completed rows.
+  final String startDateKey;
+  final bool isActive;
+  const PlanSubscription(
+      {required this.planId,
+      required this.startDateKey,
+      required this.isActive});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['plan_id'] = Variable<String>(planId);
+    map['start_date_key'] = Variable<String>(startDateKey);
+    map['is_active'] = Variable<bool>(isActive);
+    return map;
+  }
+
+  PlanSubscriptionsCompanion toCompanion(bool nullToAbsent) {
+    return PlanSubscriptionsCompanion(
+      planId: Value(planId),
+      startDateKey: Value(startDateKey),
+      isActive: Value(isActive),
+    );
+  }
+
+  factory PlanSubscription.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PlanSubscription(
+      planId: serializer.fromJson<String>(json['planId']),
+      startDateKey: serializer.fromJson<String>(json['startDateKey']),
+      isActive: serializer.fromJson<bool>(json['isActive']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'planId': serializer.toJson<String>(planId),
+      'startDateKey': serializer.toJson<String>(startDateKey),
+      'isActive': serializer.toJson<bool>(isActive),
+    };
+  }
+
+  PlanSubscription copyWith(
+          {String? planId, String? startDateKey, bool? isActive}) =>
+      PlanSubscription(
+        planId: planId ?? this.planId,
+        startDateKey: startDateKey ?? this.startDateKey,
+        isActive: isActive ?? this.isActive,
+      );
+  PlanSubscription copyWithCompanion(PlanSubscriptionsCompanion data) {
+    return PlanSubscription(
+      planId: data.planId.present ? data.planId.value : this.planId,
+      startDateKey: data.startDateKey.present
+          ? data.startDateKey.value
+          : this.startDateKey,
+      isActive: data.isActive.present ? data.isActive.value : this.isActive,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PlanSubscription(')
+          ..write('planId: $planId, ')
+          ..write('startDateKey: $startDateKey, ')
+          ..write('isActive: $isActive')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(planId, startDateKey, isActive);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PlanSubscription &&
+          other.planId == this.planId &&
+          other.startDateKey == this.startDateKey &&
+          other.isActive == this.isActive);
+}
+
+class PlanSubscriptionsCompanion extends UpdateCompanion<PlanSubscription> {
+  final Value<String> planId;
+  final Value<String> startDateKey;
+  final Value<bool> isActive;
+  final Value<int> rowid;
+  const PlanSubscriptionsCompanion({
+    this.planId = const Value.absent(),
+    this.startDateKey = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PlanSubscriptionsCompanion.insert({
+    required String planId,
+    required String startDateKey,
+    this.isActive = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : planId = Value(planId),
+        startDateKey = Value(startDateKey);
+  static Insertable<PlanSubscription> custom({
+    Expression<String>? planId,
+    Expression<String>? startDateKey,
+    Expression<bool>? isActive,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (planId != null) 'plan_id': planId,
+      if (startDateKey != null) 'start_date_key': startDateKey,
+      if (isActive != null) 'is_active': isActive,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PlanSubscriptionsCompanion copyWith(
+      {Value<String>? planId,
+      Value<String>? startDateKey,
+      Value<bool>? isActive,
+      Value<int>? rowid}) {
+    return PlanSubscriptionsCompanion(
+      planId: planId ?? this.planId,
+      startDateKey: startDateKey ?? this.startDateKey,
+      isActive: isActive ?? this.isActive,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (planId.present) {
+      map['plan_id'] = Variable<String>(planId.value);
+    }
+    if (startDateKey.present) {
+      map['start_date_key'] = Variable<String>(startDateKey.value);
+    }
+    if (isActive.present) {
+      map['is_active'] = Variable<bool>(isActive.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PlanSubscriptionsCompanion(')
+          ..write('planId: $planId, ')
+          ..write('startDateKey: $startDateKey, ')
+          ..write('isActive: $isActive, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $PlanDayProgressTable extends PlanDayProgress
+    with TableInfo<$PlanDayProgressTable, PlanDayProgressData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PlanDayProgressTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _planIdMeta = const VerificationMeta('planId');
+  @override
+  late final GeneratedColumn<String> planId = GeneratedColumn<String>(
+      'plan_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _dayIndexMeta =
+      const VerificationMeta('dayIndex');
+  @override
+  late final GeneratedColumn<int> dayIndex = GeneratedColumn<int>(
+      'day_index', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _completedAtMeta =
+      const VerificationMeta('completedAt');
+  @override
+  late final GeneratedColumn<DateTime> completedAt = GeneratedColumn<DateTime>(
+      'completed_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns => [id, planId, dayIndex, completedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'plan_day_progress';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<PlanDayProgressData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('plan_id')) {
+      context.handle(_planIdMeta,
+          planId.isAcceptableOrUnknown(data['plan_id']!, _planIdMeta));
+    } else if (isInserting) {
+      context.missing(_planIdMeta);
+    }
+    if (data.containsKey('day_index')) {
+      context.handle(_dayIndexMeta,
+          dayIndex.isAcceptableOrUnknown(data['day_index']!, _dayIndexMeta));
+    } else if (isInserting) {
+      context.missing(_dayIndexMeta);
+    }
+    if (data.containsKey('completed_at')) {
+      context.handle(
+          _completedAtMeta,
+          completedAt.isAcceptableOrUnknown(
+              data['completed_at']!, _completedAtMeta));
+    } else if (isInserting) {
+      context.missing(_completedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  PlanDayProgressData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PlanDayProgressData(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      planId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}plan_id'])!,
+      dayIndex: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}day_index'])!,
+      completedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}completed_at'])!,
+    );
+  }
+
+  @override
+  $PlanDayProgressTable createAlias(String alias) {
+    return $PlanDayProgressTable(attachedDatabase, alias);
+  }
+}
+
+class PlanDayProgressData extends DataClass
+    implements Insertable<PlanDayProgressData> {
+  /// Deterministic: `<planId>:<dayIndex>`. Makes "mark this day read"
+  /// idempotent under insertOnConflictUpdate with no read-modify-write.
+  final String id;
+  final String planId;
+
+  /// 1-based, matching `PlanDay.dayIndex` in the JSON. An off-by-one here does
+  /// not crash -- it silently credits the wrong day.
+  final int dayIndex;
+  final DateTime completedAt;
+  const PlanDayProgressData(
+      {required this.id,
+      required this.planId,
+      required this.dayIndex,
+      required this.completedAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['plan_id'] = Variable<String>(planId);
+    map['day_index'] = Variable<int>(dayIndex);
+    map['completed_at'] = Variable<DateTime>(completedAt);
+    return map;
+  }
+
+  PlanDayProgressCompanion toCompanion(bool nullToAbsent) {
+    return PlanDayProgressCompanion(
+      id: Value(id),
+      planId: Value(planId),
+      dayIndex: Value(dayIndex),
+      completedAt: Value(completedAt),
+    );
+  }
+
+  factory PlanDayProgressData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PlanDayProgressData(
+      id: serializer.fromJson<String>(json['id']),
+      planId: serializer.fromJson<String>(json['planId']),
+      dayIndex: serializer.fromJson<int>(json['dayIndex']),
+      completedAt: serializer.fromJson<DateTime>(json['completedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'planId': serializer.toJson<String>(planId),
+      'dayIndex': serializer.toJson<int>(dayIndex),
+      'completedAt': serializer.toJson<DateTime>(completedAt),
+    };
+  }
+
+  PlanDayProgressData copyWith(
+          {String? id, String? planId, int? dayIndex, DateTime? completedAt}) =>
+      PlanDayProgressData(
+        id: id ?? this.id,
+        planId: planId ?? this.planId,
+        dayIndex: dayIndex ?? this.dayIndex,
+        completedAt: completedAt ?? this.completedAt,
+      );
+  PlanDayProgressData copyWithCompanion(PlanDayProgressCompanion data) {
+    return PlanDayProgressData(
+      id: data.id.present ? data.id.value : this.id,
+      planId: data.planId.present ? data.planId.value : this.planId,
+      dayIndex: data.dayIndex.present ? data.dayIndex.value : this.dayIndex,
+      completedAt:
+          data.completedAt.present ? data.completedAt.value : this.completedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PlanDayProgressData(')
+          ..write('id: $id, ')
+          ..write('planId: $planId, ')
+          ..write('dayIndex: $dayIndex, ')
+          ..write('completedAt: $completedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, planId, dayIndex, completedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PlanDayProgressData &&
+          other.id == this.id &&
+          other.planId == this.planId &&
+          other.dayIndex == this.dayIndex &&
+          other.completedAt == this.completedAt);
+}
+
+class PlanDayProgressCompanion extends UpdateCompanion<PlanDayProgressData> {
+  final Value<String> id;
+  final Value<String> planId;
+  final Value<int> dayIndex;
+  final Value<DateTime> completedAt;
+  final Value<int> rowid;
+  const PlanDayProgressCompanion({
+    this.id = const Value.absent(),
+    this.planId = const Value.absent(),
+    this.dayIndex = const Value.absent(),
+    this.completedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PlanDayProgressCompanion.insert({
+    required String id,
+    required String planId,
+    required int dayIndex,
+    required DateTime completedAt,
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        planId = Value(planId),
+        dayIndex = Value(dayIndex),
+        completedAt = Value(completedAt);
+  static Insertable<PlanDayProgressData> custom({
+    Expression<String>? id,
+    Expression<String>? planId,
+    Expression<int>? dayIndex,
+    Expression<DateTime>? completedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (planId != null) 'plan_id': planId,
+      if (dayIndex != null) 'day_index': dayIndex,
+      if (completedAt != null) 'completed_at': completedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PlanDayProgressCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? planId,
+      Value<int>? dayIndex,
+      Value<DateTime>? completedAt,
+      Value<int>? rowid}) {
+    return PlanDayProgressCompanion(
+      id: id ?? this.id,
+      planId: planId ?? this.planId,
+      dayIndex: dayIndex ?? this.dayIndex,
+      completedAt: completedAt ?? this.completedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (planId.present) {
+      map['plan_id'] = Variable<String>(planId.value);
+    }
+    if (dayIndex.present) {
+      map['day_index'] = Variable<int>(dayIndex.value);
+    }
+    if (completedAt.present) {
+      map['completed_at'] = Variable<DateTime>(completedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PlanDayProgressCompanion(')
+          ..write('id: $id, ')
+          ..write('planId: $planId, ')
+          ..write('dayIndex: $dayIndex, ')
+          ..write('completedAt: $completedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -2208,12 +2970,19 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $AttachmentsTable attachments = $AttachmentsTable(this);
   late final $BibleAnnotationsTable bibleAnnotations =
       $BibleAnnotationsTable(this);
+  late final $ReadingDaysTable readingDays = $ReadingDaysTable(this);
+  late final $PlanSubscriptionsTable planSubscriptions =
+      $PlanSubscriptionsTable(this);
+  late final $PlanDayProgressTable planDayProgress =
+      $PlanDayProgressTable(this);
   late final NotesDao notesDao = NotesDao(this as AppDatabase);
   late final NoteLinksDao noteLinksDao = NoteLinksDao(this as AppDatabase);
   late final FoldersDao foldersDao = FoldersDao(this as AppDatabase);
   late final TagsDao tagsDao = TagsDao(this as AppDatabase);
   late final BibleAnnotationsDao bibleAnnotationsDao =
       BibleAnnotationsDao(this as AppDatabase);
+  late final ReadingPlansDao readingPlansDao =
+      ReadingPlansDao(this as AppDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2225,7 +2994,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         noteTags,
         noteLinks,
         attachments,
-        bibleAnnotations
+        bibleAnnotations,
+        readingDays,
+        planSubscriptions,
+        planDayProgress
       ];
 }
 
@@ -4457,6 +5229,448 @@ typedef $$BibleAnnotationsTableProcessedTableManager = ProcessedTableManager<
     (BibleAnnotation, $$BibleAnnotationsTableReferences),
     BibleAnnotation,
     PrefetchHooks Function({bool noteId})>;
+typedef $$ReadingDaysTableCreateCompanionBuilder = ReadingDaysCompanion
+    Function({
+  required String dateKey,
+  required String source,
+  required DateTime completedAt,
+  Value<int> rowid,
+});
+typedef $$ReadingDaysTableUpdateCompanionBuilder = ReadingDaysCompanion
+    Function({
+  Value<String> dateKey,
+  Value<String> source,
+  Value<DateTime> completedAt,
+  Value<int> rowid,
+});
+
+class $$ReadingDaysTableFilterComposer
+    extends Composer<_$AppDatabase, $ReadingDaysTable> {
+  $$ReadingDaysTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get dateKey => $composableBuilder(
+      column: $table.dateKey, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get source => $composableBuilder(
+      column: $table.source, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get completedAt => $composableBuilder(
+      column: $table.completedAt, builder: (column) => ColumnFilters(column));
+}
+
+class $$ReadingDaysTableOrderingComposer
+    extends Composer<_$AppDatabase, $ReadingDaysTable> {
+  $$ReadingDaysTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get dateKey => $composableBuilder(
+      column: $table.dateKey, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get source => $composableBuilder(
+      column: $table.source, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get completedAt => $composableBuilder(
+      column: $table.completedAt, builder: (column) => ColumnOrderings(column));
+}
+
+class $$ReadingDaysTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ReadingDaysTable> {
+  $$ReadingDaysTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get dateKey =>
+      $composableBuilder(column: $table.dateKey, builder: (column) => column);
+
+  GeneratedColumn<String> get source =>
+      $composableBuilder(column: $table.source, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get completedAt => $composableBuilder(
+      column: $table.completedAt, builder: (column) => column);
+}
+
+class $$ReadingDaysTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $ReadingDaysTable,
+    ReadingDay,
+    $$ReadingDaysTableFilterComposer,
+    $$ReadingDaysTableOrderingComposer,
+    $$ReadingDaysTableAnnotationComposer,
+    $$ReadingDaysTableCreateCompanionBuilder,
+    $$ReadingDaysTableUpdateCompanionBuilder,
+    (ReadingDay, BaseReferences<_$AppDatabase, $ReadingDaysTable, ReadingDay>),
+    ReadingDay,
+    PrefetchHooks Function()> {
+  $$ReadingDaysTableTableManager(_$AppDatabase db, $ReadingDaysTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ReadingDaysTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ReadingDaysTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ReadingDaysTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> dateKey = const Value.absent(),
+            Value<String> source = const Value.absent(),
+            Value<DateTime> completedAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              ReadingDaysCompanion(
+            dateKey: dateKey,
+            source: source,
+            completedAt: completedAt,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String dateKey,
+            required String source,
+            required DateTime completedAt,
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              ReadingDaysCompanion.insert(
+            dateKey: dateKey,
+            source: source,
+            completedAt: completedAt,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$ReadingDaysTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $ReadingDaysTable,
+    ReadingDay,
+    $$ReadingDaysTableFilterComposer,
+    $$ReadingDaysTableOrderingComposer,
+    $$ReadingDaysTableAnnotationComposer,
+    $$ReadingDaysTableCreateCompanionBuilder,
+    $$ReadingDaysTableUpdateCompanionBuilder,
+    (ReadingDay, BaseReferences<_$AppDatabase, $ReadingDaysTable, ReadingDay>),
+    ReadingDay,
+    PrefetchHooks Function()>;
+typedef $$PlanSubscriptionsTableCreateCompanionBuilder
+    = PlanSubscriptionsCompanion Function({
+  required String planId,
+  required String startDateKey,
+  Value<bool> isActive,
+  Value<int> rowid,
+});
+typedef $$PlanSubscriptionsTableUpdateCompanionBuilder
+    = PlanSubscriptionsCompanion Function({
+  Value<String> planId,
+  Value<String> startDateKey,
+  Value<bool> isActive,
+  Value<int> rowid,
+});
+
+class $$PlanSubscriptionsTableFilterComposer
+    extends Composer<_$AppDatabase, $PlanSubscriptionsTable> {
+  $$PlanSubscriptionsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get planId => $composableBuilder(
+      column: $table.planId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get startDateKey => $composableBuilder(
+      column: $table.startDateKey, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isActive => $composableBuilder(
+      column: $table.isActive, builder: (column) => ColumnFilters(column));
+}
+
+class $$PlanSubscriptionsTableOrderingComposer
+    extends Composer<_$AppDatabase, $PlanSubscriptionsTable> {
+  $$PlanSubscriptionsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get planId => $composableBuilder(
+      column: $table.planId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get startDateKey => $composableBuilder(
+      column: $table.startDateKey,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isActive => $composableBuilder(
+      column: $table.isActive, builder: (column) => ColumnOrderings(column));
+}
+
+class $$PlanSubscriptionsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PlanSubscriptionsTable> {
+  $$PlanSubscriptionsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get planId =>
+      $composableBuilder(column: $table.planId, builder: (column) => column);
+
+  GeneratedColumn<String> get startDateKey => $composableBuilder(
+      column: $table.startDateKey, builder: (column) => column);
+
+  GeneratedColumn<bool> get isActive =>
+      $composableBuilder(column: $table.isActive, builder: (column) => column);
+}
+
+class $$PlanSubscriptionsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $PlanSubscriptionsTable,
+    PlanSubscription,
+    $$PlanSubscriptionsTableFilterComposer,
+    $$PlanSubscriptionsTableOrderingComposer,
+    $$PlanSubscriptionsTableAnnotationComposer,
+    $$PlanSubscriptionsTableCreateCompanionBuilder,
+    $$PlanSubscriptionsTableUpdateCompanionBuilder,
+    (
+      PlanSubscription,
+      BaseReferences<_$AppDatabase, $PlanSubscriptionsTable, PlanSubscription>
+    ),
+    PlanSubscription,
+    PrefetchHooks Function()> {
+  $$PlanSubscriptionsTableTableManager(
+      _$AppDatabase db, $PlanSubscriptionsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PlanSubscriptionsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PlanSubscriptionsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PlanSubscriptionsTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> planId = const Value.absent(),
+            Value<String> startDateKey = const Value.absent(),
+            Value<bool> isActive = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              PlanSubscriptionsCompanion(
+            planId: planId,
+            startDateKey: startDateKey,
+            isActive: isActive,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String planId,
+            required String startDateKey,
+            Value<bool> isActive = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              PlanSubscriptionsCompanion.insert(
+            planId: planId,
+            startDateKey: startDateKey,
+            isActive: isActive,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$PlanSubscriptionsTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $PlanSubscriptionsTable,
+    PlanSubscription,
+    $$PlanSubscriptionsTableFilterComposer,
+    $$PlanSubscriptionsTableOrderingComposer,
+    $$PlanSubscriptionsTableAnnotationComposer,
+    $$PlanSubscriptionsTableCreateCompanionBuilder,
+    $$PlanSubscriptionsTableUpdateCompanionBuilder,
+    (
+      PlanSubscription,
+      BaseReferences<_$AppDatabase, $PlanSubscriptionsTable, PlanSubscription>
+    ),
+    PlanSubscription,
+    PrefetchHooks Function()>;
+typedef $$PlanDayProgressTableCreateCompanionBuilder = PlanDayProgressCompanion
+    Function({
+  required String id,
+  required String planId,
+  required int dayIndex,
+  required DateTime completedAt,
+  Value<int> rowid,
+});
+typedef $$PlanDayProgressTableUpdateCompanionBuilder = PlanDayProgressCompanion
+    Function({
+  Value<String> id,
+  Value<String> planId,
+  Value<int> dayIndex,
+  Value<DateTime> completedAt,
+  Value<int> rowid,
+});
+
+class $$PlanDayProgressTableFilterComposer
+    extends Composer<_$AppDatabase, $PlanDayProgressTable> {
+  $$PlanDayProgressTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get planId => $composableBuilder(
+      column: $table.planId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get dayIndex => $composableBuilder(
+      column: $table.dayIndex, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get completedAt => $composableBuilder(
+      column: $table.completedAt, builder: (column) => ColumnFilters(column));
+}
+
+class $$PlanDayProgressTableOrderingComposer
+    extends Composer<_$AppDatabase, $PlanDayProgressTable> {
+  $$PlanDayProgressTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get planId => $composableBuilder(
+      column: $table.planId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get dayIndex => $composableBuilder(
+      column: $table.dayIndex, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get completedAt => $composableBuilder(
+      column: $table.completedAt, builder: (column) => ColumnOrderings(column));
+}
+
+class $$PlanDayProgressTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PlanDayProgressTable> {
+  $$PlanDayProgressTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get planId =>
+      $composableBuilder(column: $table.planId, builder: (column) => column);
+
+  GeneratedColumn<int> get dayIndex =>
+      $composableBuilder(column: $table.dayIndex, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get completedAt => $composableBuilder(
+      column: $table.completedAt, builder: (column) => column);
+}
+
+class $$PlanDayProgressTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $PlanDayProgressTable,
+    PlanDayProgressData,
+    $$PlanDayProgressTableFilterComposer,
+    $$PlanDayProgressTableOrderingComposer,
+    $$PlanDayProgressTableAnnotationComposer,
+    $$PlanDayProgressTableCreateCompanionBuilder,
+    $$PlanDayProgressTableUpdateCompanionBuilder,
+    (
+      PlanDayProgressData,
+      BaseReferences<_$AppDatabase, $PlanDayProgressTable, PlanDayProgressData>
+    ),
+    PlanDayProgressData,
+    PrefetchHooks Function()> {
+  $$PlanDayProgressTableTableManager(
+      _$AppDatabase db, $PlanDayProgressTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PlanDayProgressTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PlanDayProgressTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PlanDayProgressTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> planId = const Value.absent(),
+            Value<int> dayIndex = const Value.absent(),
+            Value<DateTime> completedAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              PlanDayProgressCompanion(
+            id: id,
+            planId: planId,
+            dayIndex: dayIndex,
+            completedAt: completedAt,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required String planId,
+            required int dayIndex,
+            required DateTime completedAt,
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              PlanDayProgressCompanion.insert(
+            id: id,
+            planId: planId,
+            dayIndex: dayIndex,
+            completedAt: completedAt,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$PlanDayProgressTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $PlanDayProgressTable,
+    PlanDayProgressData,
+    $$PlanDayProgressTableFilterComposer,
+    $$PlanDayProgressTableOrderingComposer,
+    $$PlanDayProgressTableAnnotationComposer,
+    $$PlanDayProgressTableCreateCompanionBuilder,
+    $$PlanDayProgressTableUpdateCompanionBuilder,
+    (
+      PlanDayProgressData,
+      BaseReferences<_$AppDatabase, $PlanDayProgressTable, PlanDayProgressData>
+    ),
+    PlanDayProgressData,
+    PrefetchHooks Function()>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -4474,4 +5688,10 @@ class $AppDatabaseManager {
       $$AttachmentsTableTableManager(_db, _db.attachments);
   $$BibleAnnotationsTableTableManager get bibleAnnotations =>
       $$BibleAnnotationsTableTableManager(_db, _db.bibleAnnotations);
+  $$ReadingDaysTableTableManager get readingDays =>
+      $$ReadingDaysTableTableManager(_db, _db.readingDays);
+  $$PlanSubscriptionsTableTableManager get planSubscriptions =>
+      $$PlanSubscriptionsTableTableManager(_db, _db.planSubscriptions);
+  $$PlanDayProgressTableTableManager get planDayProgress =>
+      $$PlanDayProgressTableTableManager(_db, _db.planDayProgress);
 }

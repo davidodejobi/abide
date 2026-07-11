@@ -5,6 +5,7 @@ import 'daos/bible_annotations_dao.dart';
 import 'daos/folders_dao.dart';
 import 'daos/note_links_dao.dart';
 import 'daos/notes_dao.dart';
+import 'daos/reading_plans_dao.dart';
 import 'daos/tags_dao.dart';
 
 /// App-wide Drift database. Lives for the whole app session (manual providers
@@ -33,4 +34,8 @@ final tagsDaoProvider = Provider<TagsDao>(
 
 final bibleAnnotationsDaoProvider = Provider<BibleAnnotationsDao>(
   (ref) => ref.watch(appDatabaseProvider).bibleAnnotationsDao,
+);
+
+final readingPlansDaoProvider = Provider<ReadingPlansDao>(
+  (ref) => ref.watch(appDatabaseProvider).readingPlansDao,
 );

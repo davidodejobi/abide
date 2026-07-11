@@ -53,7 +53,8 @@ jobs:
           files: coverage/lcov.info
           fail_ci_if_error: false
 
-      # Two exclusions, both load-bearing:
+      # Three exclusions, all load-bearing. Keep codecov.yml's `ignore:` in step
+      # with this list, or the badge and the build tell different stories:
       #   - generated files (*.g.dart, *.gr.dart, *.freezed.dart): drift,
       #     auto_route and freezed emit thousands of untested lines that would
       #     drown the real number (they sit at ~22% and are nobody's fault).
@@ -61,10 +62,15 @@ jobs:
       #     behaviour and pixels, not lines. Counting UI lines here would mean
       #     that adding a widget test for a 797-line screen DROPS coverage and
       #     fails CI — punishing the test author.
+      #   - storage/database/tables.dart: uncoverable by construction, not
+      #     untested. build_runner reads these classes at BUILD time and emits
+      #     `$NotesTable extends Notes`, overriding every column getter, so the
+      #     getters in that file never execute at runtime. It measures LH:0 even
+      #     though Notes has a thorough DAO suite — no test can ever move it.
       - name: Enforce coverage threshold (logic layers only)
         run: |
           pct=$(awk '
-            /^SF:/  { skip = ($0 ~ /\.g\.dart$/ || $0 ~ /\.gr\.dart$/ || $0 ~ /\.freezed\.dart$/ || $0 ~ /\/ui\//) }
+            /^SF:/  { skip = ($0 ~ /\.g\.dart$/ || $0 ~ /\.gr\.dart$/ || $0 ~ /\.freezed\.dart$/ || $0 ~ /\/ui\// || $0 ~ /storage\/database\/tables\.dart$/) }
             /^LF:/  { split($0, a, ":"); lf = a[2] }
             /^LH:/  { split($0, a, ":"); lh = a[2]; if (!skip) { tlf += lf; tlh += lh } }
             END     { if (tlf > 0) printf "%.1f", 100 * tlh / tlf; else print "0" }
