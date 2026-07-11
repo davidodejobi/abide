@@ -253,7 +253,6 @@ class HymnDetailPage extends HookConsumerWidget {
                   onLanguageSwitch: () => ToastHelper.info(
                       context, 'Language switch will be available soon'),
                   onSplit: openSplit,
-                  splitActive: split.value.isOpen,
                   onFontSize: () => _showFontSizeSheet(context),
                   onToggleFavorite: () => ref
                       .read(favoritesProvider.notifier)
@@ -379,7 +378,6 @@ class _BottomBar extends StatelessWidget {
     required this.onSplit,
     required this.onFontSize,
     required this.onToggleFavorite,
-    this.splitActive = false,
   });
 
   final bool isDark;
@@ -387,7 +385,6 @@ class _BottomBar extends StatelessWidget {
   final VoidCallback onShare;
   final VoidCallback onLanguageSwitch;
   final VoidCallback onSplit;
-  final bool splitActive;
   final VoidCallback onFontSize;
   final VoidCallback onToggleFavorite;
 
@@ -433,11 +430,12 @@ class _BottomBar extends StatelessWidget {
                   isDark: isDark,
                 ),
                 8.w,
+                // Never "active": this bar only renders in the single-pane
+                // branch, so split view is off by definition whenever it shows.
                 _BottomBarButton(
                   icon: 'split'.iconSvg,
                   onTap: onSplit,
                   isDark: isDark,
-                  isActive: splitActive,
                 ),
                 8.w,
                 _FontSizeBarButton(onTap: onFontSize, isDark: isDark),
