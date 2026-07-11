@@ -76,6 +76,7 @@ flutter:
     - assets/bible/ig-biblica/books/
     - assets/bible/yo-biblica/
     - assets/bible/yo-biblica/books/
+    - assets/plans/
     - assets/images/lottie/
     - assets/audio/
     - assets/audio/onboarding/

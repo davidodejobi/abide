@@ -1,0 +1,187 @@
+{
+  "id": "psalms-30",
+  "title": "30 Days in the Psalms",
+  "description": "The whole psalter in a month, five psalms a day.",
+  "days": [
+    {
+      "day": 1,
+      "passages": [
+        "PSA.1.1-9.20"
+      ]
+    },
+    {
+      "day": 2,
+      "passages": [
+        "PSA.10.1-17.15"
+      ]
+    },
+    {
+      "day": 3,
+      "passages": [
+        "PSA.18.1-20.9"
+      ]
+    },
+    {
+      "day": 4,
+      "passages": [
+        "PSA.21.1-25.22"
+      ]
+    },
+    {
+      "day": 5,
+      "passages": [
+        "PSA.26.1-31.24"
+      ]
+    },
+    {
+      "day": 6,
+      "passages": [
+        "PSA.32.1-35.28"
+      ]
+    },
+    {
+      "day": 7,
+      "passages": [
+        "PSA.36.1-39.13"
+      ]
+    },
+    {
+      "day": 8,
+      "passages": [
+        "PSA.40.1-44.26"
+      ]
+    },
+    {
+      "day": 9,
+      "passages": [
+        "PSA.45.1-50.23"
+      ]
+    },
+    {
+      "day": 10,
+      "passages": [
+        "PSA.51.1-56.13"
+      ]
+    },
+    {
+      "day": 11,
+      "passages": [
+        "PSA.57.1-63.11"
+      ]
+    },
+    {
+      "day": 12,
+      "passages": [
+        "PSA.64.1-68.35"
+      ]
+    },
+    {
+      "day": 13,
+      "passages": [
+        "PSA.69.1-72.20"
+      ]
+    },
+    {
+      "day": 14,
+      "passages": [
+        "PSA.73.1-76.12"
+      ]
+    },
+    {
+      "day": 15,
+      "passages": [
+        "PSA.77.1-78.72"
+      ]
+    },
+    {
+      "day": 16,
+      "passages": [
+        "PSA.79.1-83.18"
+      ]
+    },
+    {
+      "day": 17,
+      "passages": [
+        "PSA.84.1-89.52"
+      ]
+    },
+    {
+      "day": 18,
+      "passages": [
+        "PSA.90.1-92.15"
+      ]
+    },
+    {
+      "day": 19,
+      "passages": [
+        "PSA.93.1-98.9"
+      ]
+    },
+    {
+      "day": 20,
+      "passages": [
+        "PSA.99.1-104.35"
+      ]
+    },
+    {
+      "day": 21,
+      "passages": [
+        "PSA.105.1-106.48"
+      ]
+    },
+    {
+      "day": 22,
+      "passages": [
+        "PSA.107.1-108.13"
+      ]
+    },
+    {
+      "day": 23,
+      "passages": [
+        "PSA.109.1-114.8"
+      ]
+    },
+    {
+      "day": 24,
+      "passages": [
+        "PSA.115.1-119.176"
+      ]
+    },
+    {
+      "day": 25,
+      "passages": [
+        "PSA.120.1-7"
+      ]
+    },
+    {
+      "day": 26,
+      "passages": [
+        "PSA.121.1-8"
+      ]
+    },
+    {
+      "day": 27,
+      "passages": [
+        "PSA.122.1-132.18"
+      ]
+    },
+    {
+      "day": 28,
+      "passages": [
+        "PSA.133.1-138.8"
+      ]
+    },
+    {
+      "day": 29,
+      "passages": [
+        "PSA.139.1-144.15"
+      ]
+    },
+    {
+      "day": 30,
+      "passages": [
+        "PSA.145.1-150.6"
+      ]
+    }
+  ]
+}
