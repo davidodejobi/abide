@@ -10,6 +10,15 @@ ignore:
   - "**/*.gr.dart"
   - "**/*.freezed.dart"
   - "lib/**/ui/**"
+  # Drift table definitions are uncoverable by construction, not untested.
+  # build_runner reads these classes at BUILD time and emits `$NotesTable extends
+  # Notes` which overrides every column getter with a real GeneratedColumn, so
+  # the getters in this file never execute at runtime. Proof: the whole file
+  # measures LH:0 -- including Notes, which has a thorough DAO suite. No test can
+  # ever hit these lines, so leaving them in the denominator just drags the
+  # number down with work nobody can do. The runtime code they become lives in
+  # the .g.dart already excluded above.
+  - "lib/core/storage/database/tables.dart"
 
 coverage:
   status:
