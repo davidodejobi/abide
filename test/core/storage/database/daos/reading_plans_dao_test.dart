@@ -233,6 +233,44 @@ void main() {
     });
   });
 
+  group('Given a reader three days behind catches up in one sitting', () {
+    group('When they mark three plan days on the same calendar day', () {
+      test('Then the plan advances three days and the streak advances one',
+          () async {
+        // What "Mark read" does, three times over, in one evening. Both halves
+        // matter and they pull in opposite directions:
+        //
+        //   - the plan MUST advance three days, or catching up is impossible and
+        //     someone who fell behind can never get back on schedule.
+        //   - the streak MUST advance one, because you cannot catch up on
+        //     turning up. Three days of reading in one night is one day of
+        //     showing up, and pretending otherwise makes the streak a lie.
+        //
+        // The date primary key on reading_days is what enforces the second half:
+        // marks two and three are no-ops.
+        for (final planDay in [1, 2, 3]) {
+          await dao.markDayComplete(
+            dateKey: '2026-01-15',
+            source: 'plan',
+            completedAt: now,
+          );
+          await dao.markPlanDayComplete(
+            planId: 'nt-90',
+            dayIndex: planDay,
+            completedAt: now,
+          );
+        }
+
+        expect(await dao.watchCompletedDayIndexes('nt-90').first, {1, 2, 3});
+        expect(
+          await dao.completedDayKeys(),
+          {'2026-01-15'},
+          reason: 'one evening of reading is one day of streak, not three',
+        );
+      });
+    });
+  });
+
   group('Given someone ticks off plan days they never read', () {
     group('When the streak is looked at', () {
       test('Then it is untouched -- plan progress cannot manufacture a streak',

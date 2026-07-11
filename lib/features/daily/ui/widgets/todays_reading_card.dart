@@ -55,6 +55,21 @@ class TodaysReadingCard extends ConsumerWidget {
                   ),
                 ),
               ),
+              // Today's streak day, shown as a status rather than baked into the
+              // Mark button. It answers "did I turn up today?" without ever
+              // standing between the reader and the next day of the plan.
+              if (isTodayDone) ...[
+                Icon(Icons.check_circle, size: 16, color: colorScheme.secondary),
+                const SizedBox(width: 4),
+                Text(
+                  'Read today',
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: colorScheme.secondary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(width: 12),
+              ],
               TextButton(
                 onPressed: onChangePlan,
                 style: TextButton.styleFrom(
@@ -151,6 +166,20 @@ class TodaysReadingCard extends ConsumerWidget {
             // Short labels, deliberately. "Continue reading" wrapped onto two
             // lines inside a half-width button and looked broken; the card
             // already says what is being continued, so the verb is enough.
+            //
+            // "Mark read" stays enabled even once today's streak day is earned,
+            // and that is the whole point. The card always shows the OLDEST day
+            // you have not read, so someone three days behind marks three days
+            // in one sitting and is caught up. Disabling this button after the
+            // first mark -- which it used to do, by asking "is today done?"
+            // instead of "is this day done?" -- meant you could never catch up
+            // at all: one plan day per calendar day, forever, no matter how much
+            // you actually read.
+            //
+            // Marking three plan days still earns exactly ONE day of streak: the
+            // reading_days row is keyed on the date, so the second and third
+            // marks are no-ops. You can catch up on the plan. You cannot catch
+            // up on turning up.
             Row(
               children: [
                 Expanded(
@@ -161,19 +190,10 @@ class TodaysReadingCard extends ConsumerWidget {
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  // Done is a state, not a second action. Once the day is
-                  // marked, the button stops offering and starts confirming --
-                  // a tick and a past-tense word, disabled.
-                  child: isTodayDone
-                      ? OutlinedButton.icon(
-                          onPressed: null,
-                          icon: const Icon(Icons.check, size: 18),
-                          label: const Text('Done'),
-                        )
-                      : OutlinedButton(
-                          onPressed: () => _markRead(ref),
-                          child: const Text('Mark read'),
-                        ),
+                  child: OutlinedButton(
+                    onPressed: () => _markRead(ref),
+                    child: const Text('Mark read'),
+                  ),
                 ),
               ],
             ),
