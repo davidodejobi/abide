@@ -52,9 +52,9 @@ String? _firstName(String? full) {
 String _welcomeBody(String greeting) => '''
 Hi $greeting, welcome to your tablets.
 
-A tablet is a single page you can write on. Sermon notes go here. Quiet thoughts. Quotes you want to keep. Anything you would jot down in a paper notebook lives here, except you can tap a phrase and Abide takes you right to it. Everything stays on your device, online or offline.
+A tablet is a single page you can write on. Sermon notes go here. Quiet thoughts. Quotes you want to keep. Anything you would jot down in a paper notebook lives here, except you can tap a phrase and Lumway takes you right to it. Everything stays on your device, online or offline.
 
-**Link to a hymn or a verse.** Type two square brackets and write what you want to point at. Try a hymn like [[hymn:hymn_0001]] (Holy, Holy, Holy), or a verse like [[bible:JHN.3.16]]. You can quote a longer passage with a range, like [[bible:JHN.3.16-18]], or pin a specific edition, like [[bible:JHN.3.16:en-kjv]]. Tap any link and Abide jumps right to it.
+**Link to a hymn or a verse.** Type two square brackets and write what you want to point at. Try a hymn like [[hymn:hymn_0001]] (Holy, Holy, Holy), or a verse like [[bible:JHN.3.16]]. You can quote a longer passage with a range, like [[bible:JHN.3.16-18]], or pin a specific edition, like [[bible:JHN.3.16:en-kjv]]. Tap any link and Lumway jumps right to it.
 
 You can also link to another tablet by writing its title in brackets, like [[Sunday reflections]]. Open the linked tablet and this one shows up in its backlinks.
 

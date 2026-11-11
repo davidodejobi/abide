@@ -57,7 +57,7 @@ class WelcomeSceneScreen extends HookWidget {
         children: [
           const Spacer(flex: 2),
           TypewriterText(
-            text: 'Kaabo. Welcome to Abide.',
+            text: 'Kaabo. Welcome to Lumway.',
             style: AppTextStyles.doodleHeadline(color: ink),
             startDelay: const Duration(milliseconds: 350),
             onTypingStart: sfx.penTickStart,

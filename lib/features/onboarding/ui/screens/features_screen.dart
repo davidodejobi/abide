@@ -7,7 +7,7 @@ import 'package:openbaptisthymnal/features/onboarding/audio/onboarding_sfx.dart'
 import 'package:openbaptisthymnal/features/onboarding/ui/widgets/hand_drawn_button.dart';
 import 'package:openbaptisthymnal/features/onboarding/ui/widgets/typewriter_text.dart';
 
-/// Third onboarding screen — describes what Abide is growing into: a place to
+/// Third onboarding screen — describes what Lumway is growing into: a place to
 /// sing, study, take notes, and pray together as a family.
 class FeaturesScreen extends HookWidget {
   const FeaturesScreen({super.key, required this.onNext, required this.sfx});
@@ -65,7 +65,7 @@ class FeaturesScreen extends HookWidget {
                   if (showBody.value)
                     TypewriterText(
                     text: 'Each hour calls for something different.\n'
-                        'Abide is here for all of them.\n'
+                        'Lumway is here for all of them.\n'
                         '\n'
                         'On your tablets you can write\n'
                         'whatever God is teaching you.\n'

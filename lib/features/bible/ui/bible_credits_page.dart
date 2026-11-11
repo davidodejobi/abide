@@ -20,7 +20,7 @@ class BibleCreditsPage extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
         children: [
           Text(
-            'Abide bundles these Bible translations. Public-domain texts are '
+            'Lumway bundles these Bible translations. Public-domain texts are '
             'free to use; the Biblica translations are used under the Creative '
             'Commons Attribution-ShareAlike 4.0 International License '
             '(CC BY-SA 4.0).',

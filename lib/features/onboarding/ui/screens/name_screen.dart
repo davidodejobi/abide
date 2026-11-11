@@ -50,7 +50,7 @@ class NameScreen extends HookConsumerWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'So Abide can feel like yours.',
+            'So Lumway can feel like yours.',
             style: AppTextStyles.doodleBody(color: ink.withValues(alpha: 0.7)),
           ),
           const SizedBox(height: 32),
