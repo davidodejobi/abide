@@ -64,6 +64,7 @@ class _LumButtonState extends State<LumButton> {
       enabled: enabled,
       label: widget.label,
       excludeSemantics: true,
+      onTap: widget.onPressed,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTapDown: enabled ? (_) => setState(() => _down = true) : null,
@@ -73,7 +74,8 @@ class _LumButtonState extends State<LumButton> {
         child: Opacity(
           opacity: enabled ? 1 : 0.5,
           child: Container(
-            height: LumButton.faceHeight + LumButton.lip,
+            constraints: const BoxConstraints(
+                minHeight: LumButton.faceHeight + LumButton.lip),
             decoration: BoxDecoration(color: lipColor, borderRadius: radius),
             child: Padding(
               padding: EdgeInsets.only(
@@ -94,7 +96,11 @@ class _LumButtonState extends State<LumButton> {
                       ),
                       const SizedBox(width: 10),
                     ],
-                    Text(widget.label, style: LumText.headline.copyWith(color: fg)),
+                    Flexible(
+                      child: Text(widget.label,
+                          textAlign: TextAlign.center,
+                          style: LumText.headline.copyWith(color: fg)),
+                    ),
                   ],
                 ),
               ),

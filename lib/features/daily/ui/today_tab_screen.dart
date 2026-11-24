@@ -370,6 +370,7 @@ class _TextAction extends StatelessWidget {
       button: true,
       label: label,
       excludeSemantics: true,
+      onTap: onTap,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(LumRadius.sm),

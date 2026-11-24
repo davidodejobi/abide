@@ -63,6 +63,7 @@ class StreakPage extends ConsumerWidget {
                           button: true,
                           label: DailyStrings.back,
                           excludeSemantics: true,
+                          onTap: () => context.router.maybePop(),
                           child: GestureDetector(
                             behavior: HitTestBehavior.opaque,
                             onTap: () => context.router.maybePop(),

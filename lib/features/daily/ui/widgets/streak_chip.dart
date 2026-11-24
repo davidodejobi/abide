@@ -19,6 +19,7 @@ class StreakChip extends StatelessWidget {
       button: true,
       label: DailyStrings.streakChipSemantics(days),
       excludeSemantics: true,
+      onTap: onTap,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: onTap,
