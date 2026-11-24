@@ -6,7 +6,7 @@ import 'package:openbaptisthymnal/features/share_card/ui/scripture_share_card_pa
 import 'package:openbaptisthymnal/features/share_card/ui/share_card_style.dart';
 
 /// The shareable scripture card: verse text as the hero, with its reference and
-/// the Abide mark beneath. Fixed 4:5 portrait so exports stay consistent across
+/// the Lumway mark beneath. Fixed 4:5 portrait so exports stay consistent across
 /// style presets. Mirrors [LyricCard] without the hymn-number watermark.
 ///
 /// Each verse is prefixed with its number so the boundaries between verses stay
@@ -91,7 +91,7 @@ class ScriptureCard extends StatelessWidget {
                   Container(width: 28, height: 2, color: style.accent),
                   const SizedBox(width: 10),
                   Text(
-                    'Abide',
+                    'Lumway',
                     style: AppTextStyles.labelMedium.copyWith(
                       color: style.accent,
                       letterSpacing: 1.5,

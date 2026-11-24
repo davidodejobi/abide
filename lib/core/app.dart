@@ -49,7 +49,7 @@ class AbideApp extends HookConsumerWidget {
 
     return ToastificationWrapper(
       child: MaterialApp.router(
-        title: 'Abide',
+        title: 'Lumway',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,

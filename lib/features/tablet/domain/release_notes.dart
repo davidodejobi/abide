@@ -32,7 +32,7 @@ class ReleaseNote {
 const kReleaseNotes = <ReleaseNote>[
   ReleaseNote(
     id: 'release-today-tab',
-    title: 'New in Abide: Today, streaks and reading plans',
+    title: 'New in Lumway: Today, streaks and reading plans',
     body: '''
 There is a new **Today** tab, first in the row at the bottom. It is there to give the day a place to start.
 

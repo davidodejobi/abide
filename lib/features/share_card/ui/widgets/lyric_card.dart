@@ -86,7 +86,7 @@ class LyricCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 10),
                       Text(
-                        'Abide',
+                        'Lumway',
                         style: AppTextStyles.labelMedium.copyWith(
                           color: style.accent,
                           letterSpacing: 1.5,
