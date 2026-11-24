@@ -1,8 +1,8 @@
 import 'package:auto_route/auto_route.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
+import 'package:openbaptisthymnal/core/theme/lum_theme.dart';
+import 'package:openbaptisthymnal/core/widgets/lum_page_background.dart';
 import 'package:openbaptisthymnal/core/providers/bottom_nav_provider.dart';
 import 'package:openbaptisthymnal/features/bible/ui/bible_tab_screen.dart';
 import 'package:openbaptisthymnal/features/daily/ui/today_tab_screen.dart';
@@ -21,8 +21,10 @@ class DashboardScreen extends HookConsumerWidget {
     final navVisible = ref.watch(bottomNavVisibleProvider);
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       body: Stack(
         children: [
+          const Positioned.fill(child: LumPageBackground()),
           SafeArea(
             bottom: false,
             child: IndexedStack(
@@ -63,8 +65,7 @@ class DashboardScreen extends HookConsumerWidget {
   }
 }
 
-/// Extracted widget to prevent unnecessary rebuilds
-/// of the expensive liquid glass renderer
+/// Extracted so the blur layer only rebuilds when the selection changes.
 class _BottomNavigation extends StatelessWidget {
   const _BottomNavigation({
     required this.currentIndex,
@@ -76,47 +77,16 @@ class _BottomNavigation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
     return SafeArea(
       top: false,
-      child: AdaptiveBottomNavBar(
-        fake: false,
-        showIndicator: true,
-        indicatorColor: colorScheme.primary,
-        glassSettings: const LiquidGlassSettings(
-          ambientStrength: 0.2,
+      minimum: const EdgeInsets.only(bottom: 8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: LumSize.screenGutter),
+        child: GlassTabBar(
+          labels: const ['Today', 'Tablets', 'Songs', 'Bible', 'Settings'],
+          selectedIndex: currentIndex,
+          onTabSelected: onTabSelected,
         ),
-        tabs: const [
-          // The `icon` is never rendered: MaterialBottomNavBar resolves the SVG
-          // from the LABEL, lowercased ('Today' -> today.svg / today_fill.svg).
-          // It is still required by the constructor, hence the placeholder.
-          AdaptiveBottomNavTab(
-            label: 'Today',
-            icon: CupertinoIcons.sun_max,
-            selectedIcon: CupertinoIcons.sun_max_fill,
-          ),
-          AdaptiveBottomNavTab(
-            label: 'Tablets',
-            icon: CupertinoIcons.doc_text,
-            selectedIcon: CupertinoIcons.doc_text_fill,
-          ),
-          AdaptiveBottomNavTab(
-            label: 'Songs',
-            icon: CupertinoIcons.music_note_list,
-          ),
-          AdaptiveBottomNavTab(
-            label: 'Bible',
-            icon: CupertinoIcons.book,
-            selectedIcon: CupertinoIcons.book_fill,
-          ),
-          AdaptiveBottomNavTab(
-            label: 'Settings',
-            icon: CupertinoIcons.settings,
-          ),
-        ],
-        selectedIndex: currentIndex,
-        onTabSelected: onTabSelected,
       ),
     );
   }
