@@ -37,7 +37,7 @@ abstract final class HymnStrings {
   static String stanzas(int n) => n == 1 ? '1 stanza' : '$n stanzas';
   static String noResults(String q) => 'No results for “$q”';
   static String notAvailable(String language) =>
-      "This hymn isn't available in $language yet.";
+      'No $language version of this hymn yet.';
   static String couldNotLoad(String e) => 'Could not load hymn: $e';
 
   static String languageName(String code) => switch (code) {

@@ -30,6 +30,11 @@ class FakeHymnalRepository implements HymnalRepository {
         hymns: {for (final id in _titles.keys) id: const Hymn(category: 'x')},
       );
 
+  // The fake's packs share ids, so every hymn pairs with itself.
+  @override
+  Future<Map<String, String>> getPairTable(String languageCode) async =>
+      {for (final id in _titles.keys) id: id};
+
   @override
   Future<HymnalIndex> getHymnalIndex() async => HymnalIndex(orders: {
         'en': _titles.keys.toList(),

@@ -37,12 +37,17 @@ class _HymnSplitState {
     required this.orientation,
     required this.secondaryHymnId,
     required this.secondaryLanguage,
+    this.secondaryIdLanguage,
   });
 
   final bool isOpen;
   final SplitOrientation orientation;
   final String? secondaryHymnId;
   final String? secondaryLanguage;
+
+  /// Pack that [secondaryHymnId] is an id of (differs from the pane's
+  /// language when the pane opened as the pair of the primary hymn).
+  final String? secondaryIdLanguage;
 
   static const initial = _HymnSplitState(
     isOpen: false,
@@ -56,6 +61,7 @@ class _HymnSplitState {
     SplitOrientation? orientation,
     String? secondaryHymnId,
     String? secondaryLanguage,
+    String? secondaryIdLanguage,
     bool clearSecondary = false,
   }) =>
       _HymnSplitState(
@@ -66,6 +72,9 @@ class _HymnSplitState {
         secondaryLanguage: clearSecondary
             ? null
             : (secondaryLanguage ?? this.secondaryLanguage),
+        secondaryIdLanguage: clearSecondary
+            ? null
+            : (secondaryIdLanguage ?? this.secondaryIdLanguage),
       );
 }
 
@@ -99,6 +108,7 @@ class HymnDetailPage extends HookConsumerWidget {
         orientation: SplitOrientation.vertical,
         secondaryHymnId: hymnId,
         secondaryLanguage: _otherLanguage(language),
+        secondaryIdLanguage: language,
       );
     }
 
@@ -198,13 +208,16 @@ class HymnDetailPage extends HookConsumerWidget {
                         primary: primaryView,
                         secondary: _SecondaryHymnPane(
                           hymnId: split.value.secondaryHymnId,
+                          idLanguage: split.value.secondaryIdLanguage,
                           language: split.value.secondaryLanguage ??
                               _otherLanguage(language),
                           textScale: textScale,
                           onShare: shareText,
                           onPickHymn: (id, lang) => split.value = split.value
                               .copyWith(
-                                  secondaryHymnId: id, secondaryLanguage: lang),
+                                  secondaryHymnId: id,
+                                  secondaryLanguage: lang,
+                                  secondaryIdLanguage: lang),
                           onLanguageChanged: (lang) => split.value =
                               split.value.copyWith(secondaryLanguage: lang),
                           onChange: () => split.value =
@@ -326,6 +339,7 @@ class _TopRow extends StatelessWidget {
 class _SecondaryHymnPane extends ConsumerWidget {
   const _SecondaryHymnPane({
     required this.hymnId,
+    required this.idLanguage,
     required this.language,
     required this.textScale,
     required this.onShare,
@@ -335,6 +349,7 @@ class _SecondaryHymnPane extends ConsumerWidget {
   });
 
   final String? hymnId;
+  final String? idLanguage;
   final String language;
   final double textScale;
   final void Function(String body) onShare;
@@ -353,8 +368,8 @@ class _SecondaryHymnPane extends ConsumerWidget {
         onSelected: onPickHymn,
       );
     }
-    final translationAsync =
-        ref.watch(hymnInLanguageProvider(HymnInLanguageKey(hymnId!, language)));
+    final translationAsync = ref.watch(hymnInLanguageProvider(
+        HymnInLanguageKey(hymnId!, language, idLanguage: idLanguage)));
     return translationAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => Center(

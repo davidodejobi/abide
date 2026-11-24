@@ -115,7 +115,7 @@ class _NoteEditorView extends HookConsumerWidget {
     Future<void> navigateToLink(ParsedLink link) async {
       switch (link.type) {
         case NoteLinkType.hymn:
-          final target = ref
+          final target = await ref
               .read(hymnLinkResolverProvider)
               .resolve(link.targetKey, editionPin: link.editionPin);
           if (target == null) return;
