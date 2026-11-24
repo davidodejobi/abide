@@ -36,6 +36,8 @@ class TodayTabScreen extends ConsumerStatefulWidget {
   ConsumerState<TodayTabScreen> createState() => _TodayTabScreenState();
 }
 
+const double _maxSceneWidth = 430;
+
 class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
     with AutomaticKeepAliveClientMixin {
   @override
@@ -60,9 +62,8 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
     final hasPlan = data != null;
     // Which plan day was finished today (the highest one before the next
     // unread day), or null if none, e.g. day 1 was unmarked again.
-    final doneAsync = hasPlan
-        ? ref.watch(planDaysDoneTodayProvider(data.plan.id))
-        : null;
+    final doneAsync =
+        hasPlan ? ref.watch(planDaysDoneTodayProvider(data.plan.id)) : null;
     final next = data?.day?.dayIndex;
     final doneIndex = next == null
         ? null
@@ -94,10 +95,6 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
       return const Center(child: CircularProgressIndicator.adaptive());
     }
 
-    final width = MediaQuery.sizeOf(context).width;
-    final k = width / RoadScene.designWidth;
-    final panelTop = (done ? 404 : 392) * k - inset;
-
     final int? currentDay;
     final int total;
     if (!hasPlan) {
@@ -111,114 +108,138 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
       total = data.plan.dayCount;
     }
 
-    return LayoutBuilder(
-      builder: (context, box) {
-        return SingleChildScrollView(
-          clipBehavior: Clip.none,
-          child: ConstrainedBox(
-            constraints: BoxConstraints(minHeight: box.maxHeight),
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Positioned(
-                  top: -inset,
-                  left: 0,
-                  child: RoadScene(
-                    width: width,
-                    mood: mood,
-                    currentDay: currentDay,
-                    totalDays: total,
-                    showTomorrowTag: done,
+    return Align(
+      alignment: Alignment.topCenter,
+      // The road is drawn for a phone: on a tablet or in landscape it stays
+      // phone-wide and centred rather than stretching.
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: _maxSceneWidth),
+        child: LayoutBuilder(builder: (context, box) {
+          final width = box.maxWidth;
+          final k = width / RoadScene.designWidth;
+          // Where the scene hands over to the panel, capped so landscape keeps
+          // room for the reading; the header below can push it further down.
+          final panelTop =
+              ((done ? 404 : 392) * k - inset).clamp(0.0, box.maxHeight * 0.55);
+          return SingleChildScrollView(
+            clipBehavior: Clip.none,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: box.maxHeight),
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Positioned(
+                    top: -inset,
+                    left: 0,
+                    child: RoadScene(
+                      width: width,
+                      mood: mood,
+                      currentDay: currentDay,
+                      totalDays: total,
+                      showTomorrowTag: done,
+                    ),
                   ),
-                ),
-                Positioned(
-                  top: 24,
-                  left: LumSize.screenGutter + 4,
-                  right: LumSize.screenGutter + 4,
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const SizedBox(height: 4),
-                            Text(
-                              done
-                                  ? DailyStrings.eveningCaps(now)
-                                  : DailyStrings.dateCaps(now),
-                              style: LumText.roadLabelCaps11
-                                  .copyWith(color: overSkySecondary),
-                            ),
-                            const SizedBox(height: 10),
-                            Semantics(
-                              header: true,
-                              child: Text(
-                                headText,
-                                style: LumText.title1
-                                    .copyWith(color: overSky),
+                      // The header is part of the layout: the panel starts at the
+                      // scene's handover or just under the header, whichever is
+                      // lower, so large text never slides under the panel.
+                      ConstrainedBox(
+                        constraints: BoxConstraints(minHeight: panelTop),
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(
+                              LumSize.screenGutter + 4,
+                              24,
+                              LumSize.screenGutter + 4,
+                              LumSpace.lg),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      done
+                                          ? DailyStrings.eveningCaps(now)
+                                          : DailyStrings.dateCaps(now),
+                                      style: LumText.roadLabelCaps11
+                                          .copyWith(color: overSkySecondary),
+                                    ),
+                                    const SizedBox(height: 10),
+                                    Semantics(
+                                      header: true,
+                                      child: Text(
+                                        headText,
+                                        style: LumText.title1
+                                            .copyWith(color: overSky),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (streak.isActive)
-                        Padding(
-                          padding: const EdgeInsets.only(left: LumSpace.md),
-                          child: StreakChip(
-                            days: streak.current,
-                            onTap: () =>
-                                context.router.push(const StreakRoute()),
+                              if (streak.isActive)
+                                Padding(
+                                  padding:
+                                      const EdgeInsets.only(left: LumSpace.md),
+                                  child: StreakChip(
+                                    days: streak.current,
+                                    onTap: () => context.router
+                                        .push(const StreakRoute()),
+                                  ),
+                                ),
+                            ],
                           ),
                         ),
+                      ),
+                      ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minHeight: (box.maxHeight - panelTop).clamp(0, 4000),
+                        ),
+                        child: _Panel(
+                          child: reading.when(
+                            loading: () => const SizedBox(height: 160),
+                            error: (e, _) => Text(
+                              DailyStrings.loadError,
+                              style:
+                                  LumText.body.copyWith(color: c.textSecondary),
+                            ),
+                            data: (d) => d == null
+                                ? _NoPlan(onChoose: _choosePlan)
+                                : d.isFinished
+                                    ? _Finished(
+                                        reading: d,
+                                        bookNames: bookNames,
+                                        onChoose: _choosePlan,
+                                      )
+                                    : done
+                                        ? _DayDone(
+                                            reading: d,
+                                            doneIndex: doneIndex,
+                                            bookNames: bookNames,
+                                            streakDays: streak.current,
+                                            onReadAhead: () => setState(
+                                                () => _readAhead = true),
+                                          )
+                                        : _Reading(
+                                            reading: d,
+                                            bookNames: bookNames,
+                                            onChange: _choosePlan,
+                                            onMarkRead: () => _markRead(d),
+                                          ),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
-                ),
-                Padding(
-                  padding: EdgeInsets.only(top: panelTop),
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      minHeight: (box.maxHeight - panelTop).clamp(0, 4000),
-                    ),
-                    child: _Panel(
-                      child: reading.when(
-                        loading: () => const SizedBox(height: 160),
-                        error: (e, _) => Text(
-                          DailyStrings.loadError,
-                          style: LumText.body.copyWith(color: c.textSecondary),
-                        ),
-                        data: (d) => d == null
-                            ? _NoPlan(onChoose: _choosePlan)
-                            : d.isFinished
-                                ? _Finished(
-                                    reading: d,
-                                    bookNames: bookNames,
-                                    onChoose: _choosePlan,
-                                  )
-                                : done
-                                    ? _DayDone(
-                                        reading: d,
-                                        doneIndex: doneIndex,
-                                        bookNames: bookNames,
-                                        streakDays: streak.current,
-                                        onReadAhead: () =>
-                                            setState(() => _readAhead = true),
-                                      )
-                                    : _Reading(
-                                        reading: d,
-                                        bookNames: bookNames,
-                                        onChange: _choosePlan,
-                                        onMarkRead: () => _markRead(d),
-                                      ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        );
-      },
+          );
+        }),
+      ),
     );
   }
 
@@ -296,10 +317,19 @@ class _Reading extends ConsumerWidget {
         Text(reading.plan.title.toUpperCase(),
             style: LumText.roadLabelCaps11.copyWith(color: c.textSecondary)),
         const SizedBox(height: 10),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Semantics(
+        LayoutBuilder(
+          builder: (context, box) {
+            final scaler = MediaQuery.textScalerOf(context);
+            double width(String text, TextStyle style, [TextScaler? sc]) {
+              final p = TextPainter(
+                text: TextSpan(text: text, style: style),
+                textDirection: TextDirection.ltr,
+                textScaler: sc ?? scaler,
+              )..layout();
+              return p.width;
+            }
+
+            final numberBlock = Semantics(
               label: DailyStrings.dayN(day.dayIndex),
               excludeSemantics: true,
               child: Column(
@@ -316,30 +346,78 @@ class _Reading extends ConsumerWidget {
                   ),
                 ],
               ),
-            ),
-            const SizedBox(width: 22),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(DailyStrings.todaysReading.toUpperCase(),
-                        style: LumText.roadLabelCaps11
-                            .copyWith(color: c.textSecondary)),
-                    const SizedBox(height: 4),
-                    Text(passage,
-                        style: LumText.roadTitleLarge34
-                            .copyWith(color: c.textPrimary)),
-                    const SizedBox(height: 4),
-                    Text(DailyStrings.chapters(_chapters(day)),
-                        style: LumText.footnote
-                            .copyWith(color: c.textSecondary)),
-                  ],
+            );
+            final numberWidth = width(
+              '${day.dayIndex}',
+              LumText.roadDisplayHero120,
+              TextScaler.noScaling,
+            );
+            final beside = box.maxWidth - numberWidth - 22;
+            // Never break a word: try 34 beside the number, then 24, then give
+            // the passage the full row under the number.
+            final TextStyle style;
+            final bool below;
+            var shrink = false;
+            if (width(passage, LumText.roadTitleLarge34) <= beside) {
+              style = LumText.roadTitleLarge34;
+              below = false;
+            } else if (width(passage, LumText.roadTitleSmall24) <= beside) {
+              style = LumText.roadTitleSmall24;
+              below = false;
+            } else {
+              final longest = passage
+                  .split(' ')
+                  .reduce((a, b) => a.length >= b.length ? a : b);
+              style = width(longest, LumText.roadTitleLarge34) <= box.maxWidth
+                  ? LumText.roadTitleLarge34
+                  : LumText.roadTitleSmall24;
+              // Even 24 can't hold the longest word at this width and text
+              // size: scale the line down rather than break the word.
+              shrink = width(longest, style) > box.maxWidth;
+              below = true;
+            }
+            final info = Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(DailyStrings.todaysReading.toUpperCase(),
+                    style: LumText.roadLabelCaps11
+                        .copyWith(color: c.textSecondary)),
+                const SizedBox(height: 4),
+                shrink
+                    ? FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(passage,
+                            style: style.copyWith(color: c.textPrimary)),
+                      )
+                    : Text(passage,
+                        style: style.copyWith(color: c.textPrimary)),
+                const SizedBox(height: 4),
+                Text(DailyStrings.chapters(_chapters(day)),
+                    style:
+                        LumText.footnote.copyWith(color: c.textSecondary)),
+              ],
+            );
+            if (below) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [numberBlock, const SizedBox(height: 8), info],
+              );
+            }
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                numberBlock,
+                const SizedBox(width: 22),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 14),
+                    child: info,
+                  ),
                 ),
-              ),
-            ),
-          ],
+              ],
+            );
+          },
         ),
         const SizedBox(height: 16),
         LumButton(
@@ -368,8 +446,8 @@ class _Reading extends ConsumerWidget {
             _TextAction(
               label:
                   '${DailyStrings.dayOfTotal(day.dayIndex, reading.plan.dayCount)} · ${DailyStrings.allDays}',
-              onTap: () => context.router
-                  .push(PlanDaysRoute(planId: reading.plan.id)),
+              onTap: () =>
+                  context.router.push(PlanDaysRoute(planId: reading.plan.id)),
             ),
             _TextAction(label: DailyStrings.changePlan, onTap: onChange),
           ],
@@ -540,8 +618,8 @@ class _Tile extends StatelessWidget {
             ),
             const SizedBox(height: 2),
             Text(label,
-                style: LumText.footnote
-                    .copyWith(color: streak ? c.tileOnStreak : c.textSecondary)),
+                style: LumText.footnote.copyWith(
+                    color: streak ? c.tileOnStreak : c.textSecondary)),
           ],
         ),
       ),

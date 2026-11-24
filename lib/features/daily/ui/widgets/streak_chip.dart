@@ -36,19 +36,24 @@ class StreakChip extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.symmetric(
                     horizontal: LumSpace.lg, vertical: LumSpace.sm),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const LampIcon(size: 24),
-                    const SizedBox(width: LumSpace.sm),
-                    Text('$days',
-                        style: LumText.roadDisplayStat28.copyWith(
-                            fontSize: 22, color: c.textPrimary)),
-                    const SizedBox(width: LumSpace.xs),
-                    Text(DailyStrings.streakDays(days),
-                        style: LumText.subheadline
-                            .copyWith(color: c.textSecondary)),
-                  ],
+                // Small chip beside the greeting: capped so it never squeezes
+                // the title off the row at large text sizes.
+                child: MediaQuery.withClampedTextScaling(
+                  maxScaleFactor: 1.3,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const LampIcon(size: 24),
+                      const SizedBox(width: LumSpace.sm),
+                      Text('$days',
+                          style: LumText.roadDisplayStat28
+                              .copyWith(fontSize: 22, color: c.textPrimary)),
+                      const SizedBox(width: LumSpace.xs),
+                      Text(DailyStrings.streakDays(days),
+                          style: LumText.subheadline
+                              .copyWith(color: c.textSecondary)),
+                    ],
+                  ),
                 ),
               ),
             ),

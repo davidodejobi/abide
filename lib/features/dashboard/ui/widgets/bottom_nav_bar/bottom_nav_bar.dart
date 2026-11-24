@@ -134,6 +134,8 @@ class _TabItem extends StatelessWidget {
                 const SizedBox(height: 3),
                 Text(
                   label,
+                  textScaler: MediaQuery.textScalerOf(context)
+                      .clamp(maxScaleFactor: 1.3),
                   maxLines: 1,
                   overflow: TextOverflow.clip,
                   style: LumText.caption.copyWith(
