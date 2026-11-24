@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:openbaptisthymnal/core/storage/database/database_provider.dart';
 import 'package:openbaptisthymnal/core/theme/app_theme.dart';
+import 'package:openbaptisthymnal/features/daily/domain/date_key.dart';
 import 'package:openbaptisthymnal/features/bible/domain/verse_ref.dart';
 import 'package:openbaptisthymnal/features/daily/domain/reading_plan.dart';
 import 'package:openbaptisthymnal/features/daily/domain/streak.dart';
@@ -9,6 +13,8 @@ import 'package:openbaptisthymnal/features/daily/providers/daily_providers.dart'
 import 'package:openbaptisthymnal/features/daily/ui/daily_strings.dart';
 import 'package:openbaptisthymnal/features/daily/ui/today_tab_screen.dart';
 import 'package:openbaptisthymnal/features/onboarding/providers/onboarding_provider.dart';
+
+import '../../../support/pump_app.dart';
 
 ReadingPlan _plan() => ReadingPlan(
       id: 'nt-90',
@@ -46,6 +52,11 @@ Widget _app(List<Override> overrides, {ThemeData? theme, double scale = 1}) {
   );
 }
 
+class _FakeDay extends TodayKeyNotifier {
+  @override
+  String build() => todayKey();
+}
+
 void main() {
 
 
@@ -54,6 +65,7 @@ void main() {
     t.view.devicePixelRatio = 3;
     addTearDown(t.view.reset);
     await t.pumpWidget(w);
+    await t.pump(const Duration(milliseconds: 100));
     await t.pump(const Duration(milliseconds: 100));
   }
 
@@ -67,6 +79,7 @@ void main() {
         isTodayCompleteProvider.overrideWithValue(false),
         todaysReadingProvider.overrideWith((_) async =>
             TodaysReading(plan: plan, day: plan.dayAt(41), completedDays: 40)),
+        planDaysDoneTodayProvider.overrideWith((_, __) => Stream.value({})),
       ], scale: 1.3),
     );
     expect(find.text('41'), findsWidgets);
@@ -87,12 +100,82 @@ void main() {
         isTodayCompleteProvider.overrideWithValue(true),
         todaysReadingProvider.overrideWith((_) async =>
             TodaysReading(plan: plan, day: plan.dayAt(42), completedDays: 41)),
+        planDaysDoneTodayProvider.overrideWith((_, __) => Stream.value({41})),
       ]),
     );
     expect(find.text(DailyStrings.tomorrowDay(42)), findsOneWidget);
     expect(find.text(DailyStrings.dayN(41)), findsOneWidget);
     expect(find.text(DailyStrings.writeNote), findsOneWidget);
     expect(find.text(DailyStrings.startReading), findsNothing);
+  });
+
+  testWidgets('Given day 11 done today but day 1 unmarked, Then no "Day 0"',
+      (t) async {
+    final plan = _plan();
+    await pump(
+      t,
+      _app([
+        streakProvider.overrideWithValue(_streak(today: true)),
+        isTodayCompleteProvider.overrideWithValue(true),
+        // next unread day is 1; day 11 was the one finished today.
+        todaysReadingProvider.overrideWith((_) async =>
+            TodaysReading(plan: plan, day: plan.dayAt(1), completedDays: 1)),
+        planDaysDoneTodayProvider.overrideWith((_, __) => Stream.value({11})),
+      ]),
+    );
+    expect(find.text(DailyStrings.dayN(0)), findsNothing);
+    expect(find.text(DailyStrings.startReading), findsOneWidget);
+  });
+
+  testWidgets('Given the plan is loading, Then the stub road is not shown',
+      (t) async {
+    await pump(
+      t,
+      _app([
+        streakProvider.overrideWithValue(_streak()),
+        isTodayCompleteProvider.overrideWithValue(false),
+        todaysReadingProvider.overrideWith(
+            (_) => Completer<TodaysReading?>().future),
+      ]),
+    );
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.text('9999'), findsNothing);
+  });
+
+  testWidgets('Given the day rolls over, Then the reading shows again',
+      (t) async {
+    final plan = _plan();
+    final today = DateTime.now();
+    final tomorrow = DateTime(today.year, today.month, today.day + 1);
+    final db = testDb();
+    addTearDown(db.close);
+    await db.readingPlansDao.startPlan(planId: plan.id, startDateKey: dayKey(today));
+    await db.readingPlansDao.markReadingComplete(
+      dateKey: dayKey(today),
+      source: 'plan',
+      planId: plan.id,
+      dayIndex: 1,
+      completedAt: today,
+    );
+    await pump(
+      t,
+      _app([
+        appDatabaseProvider.overrideWithValue(db),
+        planByIdProvider(plan.id).overrideWith((_) async => plan),
+        todayKeyProvider.overrideWith(_FakeDay.new),
+      ]),
+    );
+    await t.pump(const Duration(milliseconds: 300));
+    expect(find.text(DailyStrings.writeNote), findsOneWidget);
+
+    ProviderScope.containerOf(t.element(find.byType(TodayTabScreen)))
+        .read(todayKeyProvider.notifier)
+        .state = dayKey(tomorrow);
+    await t.pump(const Duration(milliseconds: 300));
+    expect(find.text(DailyStrings.startReading), findsOneWidget);
+    expect(find.text(DailyStrings.writeNote), findsNothing);
+    await t.pumpWidget(const SizedBox());
+    await t.pump(const Duration(milliseconds: 100));
   });
 
   testWidgets('Given no plan, Then it offers Choose a plan and no streak chip',

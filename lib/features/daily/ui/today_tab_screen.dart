@@ -58,7 +58,22 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
 
     final data = reading.valueOrNull;
     final hasPlan = data != null;
-    final done = hasPlan && todayDone && data.completedDays > 0 && !_readAhead;
+    // Which plan day was finished today (the highest one before the next
+    // unread day), or null if none, e.g. day 1 was unmarked again.
+    final doneAsync = hasPlan
+        ? ref.watch(planDaysDoneTodayProvider(data.plan.id))
+        : null;
+    final next = data?.day?.dayIndex;
+    final doneIndex = next == null
+        ? null
+        : (doneAsync?.valueOrNull ?? const <int>{})
+            .where((i) => i >= 1 && i < next)
+            .fold<int?>(null, (m, i) => m == null || i > m ? i : m);
+    final done = hasPlan &&
+        todayDone &&
+        data.completedDays > 0 &&
+        !_readAhead &&
+        doneIndex != null;
     final mood = done ? RoadMood.evening : RoadMood.day;
     final greeting = TimeGreeting.now().greeting;
     final now = DateTime.now();
@@ -72,6 +87,12 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
     final view = View.of(context);
     final ViewPadding vp = view.padding;
     final inset = vp.top / view.devicePixelRatio;
+
+    // Stub road ("day 1 of 9999") must never flash while the plan loads.
+    if ((reading.isLoading && !reading.hasValue) ||
+        (doneAsync != null && doneAsync.isLoading && !doneAsync.hasValue)) {
+      return const Center(child: CircularProgressIndicator.adaptive());
+    }
 
     final width = MediaQuery.sizeOf(context).width;
     final k = width / RoadScene.designWidth;
@@ -177,6 +198,7 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
                                 : done
                                     ? _DayDone(
                                         reading: d,
+                                        doneIndex: doneIndex,
                                         bookNames: bookNames,
                                         streakDays: streak.current,
                                         onReadAhead: () =>
@@ -395,12 +417,14 @@ class _TextAction extends StatelessWidget {
 class _DayDone extends ConsumerWidget {
   const _DayDone({
     required this.reading,
+    required this.doneIndex,
     required this.bookNames,
     required this.streakDays,
     required this.onReadAhead,
   });
 
   final TodaysReading reading;
+  final int doneIndex;
   final Map<String, String> bookNames;
   final int streakDays;
   final VoidCallback onReadAhead;
@@ -409,7 +433,6 @@ class _DayDone extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final c = context.lum;
     final next = reading.day!.dayIndex;
-    final doneIndex = next - 1;
     final doneDay = reading.plan.dayAt(doneIndex);
     final passage =
         doneDay == null ? '' : formatPassages(doneDay.passages, bookNames);
