@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import 'app_colors.dart';
 import 'app_text_styles.dart';
+import 'lum_theme.dart';
 
 /// App theme configuration
 abstract final class AppTheme {
@@ -14,9 +15,10 @@ abstract final class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
-      colorScheme: _lightColorScheme,
-      textTheme: _textTheme,
-      scaffoldBackgroundColor: AppColors.backgroundLight,
+      colorScheme: LumTheme.colorScheme(Brightness.light),
+      textTheme: LumTheme.textTheme,
+      scaffoldBackgroundColor: LumColors.light.bgPage,
+      fontFamily: 'Inter',
       appBarTheme: _lightAppBarTheme,
       cardTheme: _lightCardTheme,
       elevatedButtonTheme: _elevatedButtonTheme,
@@ -29,7 +31,7 @@ abstract final class AppTheme {
       floatingActionButtonTheme: _floatingActionButtonTheme,
       bottomNavigationBarTheme: _lightBottomNavigationBarTheme,
       navigationBarTheme: _lightNavigationBarTheme,
-      iconTheme: const IconThemeData(color: AppColors.primary),
+      iconTheme: IconThemeData(color: LumColors.light.iconDefault),
       dialogTheme: _lightDialogTheme,
       snackBarTheme: _snackBarTheme,
     );
@@ -43,9 +45,10 @@ abstract final class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
-      colorScheme: _darkColorScheme,
-      textTheme: _textTheme,
-      scaffoldBackgroundColor: AppColors.backgroundDark, // #0C0C0C
+      colorScheme: LumTheme.colorScheme(Brightness.dark),
+      textTheme: LumTheme.textTheme,
+      scaffoldBackgroundColor: LumColors.dark.bgPage,
+      fontFamily: 'Inter',
       appBarTheme: _darkAppBarTheme,
       cardTheme: _darkCardTheme,
       elevatedButtonTheme: _elevatedButtonTheme,
@@ -58,100 +61,11 @@ abstract final class AppTheme {
       floatingActionButtonTheme: _floatingActionButtonTheme,
       bottomNavigationBarTheme: _darkBottomNavigationBarTheme,
       navigationBarTheme: _darkNavigationBarTheme,
-      iconTheme: const IconThemeData(color: AppColors.secondary),
+      iconTheme: IconThemeData(color: LumColors.dark.iconDefault),
       dialogTheme: _darkDialogTheme,
       snackBarTheme: _snackBarTheme,
     );
   }
-
-  // ============================================
-  // COLOR SCHEMES
-  // ============================================
-
-  static const ColorScheme _lightColorScheme = ColorScheme(
-    brightness: Brightness.light,
-    primary: AppColors.primary,
-    onPrimary: AppColors.white,
-    primaryContainer: AppColors.primary200,
-    onPrimaryContainer: AppColors.primaryDark,
-    secondary: AppColors.secondary,
-    onSecondary: AppColors.white,
-    secondaryContainer: AppColors.secondary100,
-    onSecondaryContainer: AppColors.secondaryDark,
-    tertiary: AppColors.primary400,
-    onTertiary: AppColors.white,
-    tertiaryContainer: AppColors.primary300,
-    onTertiaryContainer: AppColors.primaryDark,
-    error: AppColors.error,
-    onError: AppColors.white,
-    surface: AppColors.surfaceLight,
-    onSurface: AppColors.neutral900,
-    surfaceContainerHighest: AppColors.neutral200,
-    onSurfaceVariant: AppColors.neutral500,
-    outline: AppColors.neutral300,
-    outlineVariant: AppColors.neutral200,
-    shadow: AppColors.black,
-    scrim: AppColors.black,
-    inverseSurface: AppColors.neutral800,
-    onInverseSurface: AppColors.neutral100,
-    inversePrimary: AppColors.primary300,
-  );
-
-  static const ColorScheme _darkColorScheme = ColorScheme(
-    brightness: Brightness.dark,
-    // Primary - Gold accent in dark mode for better visibility
-    primary: AppColors.secondary,
-    onPrimary: AppColors.secondaryDark,
-    primaryContainer: AppColors.secondaryDark,
-    onPrimaryContainer: AppColors.secondary,
-    // Secondary - Navy blue as secondary in dark mode
-    secondary: AppColors.primary300,
-    onSecondary: AppColors.primaryDark,
-    secondaryContainer: AppColors.primaryDark,
-    onSecondaryContainer: AppColors.primary200,
-    // Tertiary
-    tertiary: AppColors.primary400,
-    onTertiary: AppColors.primaryDark,
-    tertiaryContainer: AppColors.primaryLight,
-    onTertiaryContainer: AppColors.primary200,
-    // Error
-    error: AppColors.error,
-    onError: AppColors.white,
-    // Surface colors - from Figma dark theme
-    surface: AppColors.surfaceDark, // #141414
-    onSurface: AppColors.neutral100, // #FAF8F3
-    surfaceContainerHighest: AppColors.surfaceContainerDark, // #1A1A1A
-    onSurfaceVariant: AppColors.neutral500, // #848484
-    outline: AppColors.neutral600, // #626262
-    outlineVariant: AppColors.neutral700, // #2B2B2B
-    shadow: AppColors.black,
-    scrim: AppColors.black,
-    inverseSurface: AppColors.neutral100,
-    onInverseSurface: AppColors.neutral900,
-    inversePrimary: AppColors.primary,
-  );
-
-  // ============================================
-  // TEXT THEME
-  // ============================================
-
-  static TextTheme get _textTheme => const TextTheme(
-        displayLarge: AppTextStyles.displayLarge,
-        displayMedium: AppTextStyles.displayMedium,
-        displaySmall: AppTextStyles.displaySmall,
-        headlineLarge: AppTextStyles.headlineLarge,
-        headlineMedium: AppTextStyles.headlineMedium,
-        headlineSmall: AppTextStyles.headlineSmall,
-        titleLarge: AppTextStyles.titleLarge,
-        titleMedium: AppTextStyles.titleMedium,
-        titleSmall: AppTextStyles.titleSmall,
-        bodyLarge: AppTextStyles.bodyLarge,
-        bodyMedium: AppTextStyles.bodyMedium,
-        bodySmall: AppTextStyles.bodySmall,
-        labelLarge: AppTextStyles.labelLarge,
-        labelMedium: AppTextStyles.labelMedium,
-        labelSmall: AppTextStyles.labelSmall,
-      );
 
   // ============================================
   // APP BAR THEMES

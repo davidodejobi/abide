@@ -80,11 +80,42 @@ flutter:
     - assets/images/lottie/
     - assets/audio/
     - assets/audio/onboarding/
+    - assets/fonts/licenses/
     - path: assets/images/icons/
       transformers:
         - package: vector_graphics_compiler
 
   fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-Regular.ttf
+        - asset: assets/fonts/Inter-Italic.ttf
+          style: italic
+        - asset: assets/fonts/Inter-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Inter-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Inter-SemiBoldItalic.ttf
+          weight: 600
+          style: italic
+        - asset: assets/fonts/Inter-Bold.ttf
+          weight: 700
+
+    - family: GentiumBookPlus
+      fonts:
+        - asset: assets/fonts/GentiumBookPlus-Regular.ttf
+        - asset: assets/fonts/GentiumBookPlus-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/GentiumBookPlus-Italic.ttf
+          style: italic
+        - asset: assets/fonts/GentiumBookPlus-BoldItalic.ttf
+          weight: 700
+          style: italic
+
+    - family: BricolageGrotesque
+      fonts:
+        - asset: assets/fonts/BricolageGrotesque-Variable.ttf
+
     - family: EBGaramond
       fonts:
         - asset: assets/fonts/EBGaramond-Regular.ttf
