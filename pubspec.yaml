@@ -78,6 +78,7 @@ flutter:
     - assets/bible/yo-biblica/books/
     - assets/plans/
     - assets/images/lottie/
+    - assets/images/road/
     - assets/audio/
     - assets/audio/onboarding/
     - assets/fonts/licenses/
