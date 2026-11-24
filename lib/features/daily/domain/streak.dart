@@ -12,6 +12,8 @@ class StreakResult {
     required this.current,
     required this.completedToday,
     required this.graceDaysUsed,
+    required this.longest,
+    required this.totalDays,
   });
 
   /// Days in the current unbroken run, counting only days actually completed.
@@ -28,6 +30,15 @@ class StreakResult {
   /// Surfaced so the UI can be honest ("1 rest day used") instead of pretending
   /// the run was perfect.
   final int graceDaysUsed;
+
+  /// The best run ever, under the same rules as [current]. Worth showing
+  /// precisely when [current] is small: a broken streak is easier to restart
+  /// when you can see you have done it before.
+  final int longest;
+
+  /// Every day ever completed. Unlike a streak, this one only goes up -- which
+  /// is the point of showing it. A year of reading is not erased by a bad week.
+  final int totalDays;
 
   bool get isActive => current > 0;
 }
@@ -69,6 +80,8 @@ StreakResult computeStreak(
       current: 0,
       completedToday: false,
       graceDaysUsed: 0,
+      longest: 0,
+      totalDays: 0,
     );
   }
 
@@ -99,5 +112,53 @@ StreakResult computeStreak(
     // day the walk forgave on the way down is an artifact of the walk, not a
     // rest day the user took.
     graceDaysUsed: current == 0 ? 0 : forgiven.length,
+    longest: _longestRun(
+      completedDayKeys,
+      from: dateFromKey(earliest)!,
+      to: today,
+      graceDaysPerWeek: graceDaysPerWeek,
+    ),
+    totalDays: completedDayKeys.length,
   );
+}
+
+/// The best run under the same rules as the current one, found by walking the
+/// calendar forward once from the first day the user ever completed.
+///
+/// A forward scan rather than "recompute the streak ending at every day": same
+/// answer, but it visits each day once instead of once per completed day, and it
+/// is bounded by the span of the user's own history.
+int _longestRun(
+  Set<String> completedDayKeys, {
+  required DateTime from,
+  required DateTime to,
+  required int graceDaysPerWeek,
+}) {
+  var best = 0;
+  var run = 0;
+  var forgiven = <DateTime>[];
+
+  for (var cursor = from;
+      dayKey(cursor).compareTo(dayKey(to)) <= 0;
+      cursor = nextDay(cursor)) {
+    if (completedDayKeys.contains(dayKey(cursor))) {
+      run++;
+      continue;
+    }
+
+    // Today does not break a run: the day is not over. Anything earlier does.
+    if (dayKey(cursor) == dayKey(to)) break;
+
+    final inWindow =
+        forgiven.where((day) => daysBetween(cursor, day) < 7).length;
+    if (inWindow >= graceDaysPerWeek) {
+      best = run > best ? run : best;
+      run = 0;
+      forgiven = <DateTime>[];
+    } else {
+      forgiven.add(cursor);
+    }
+  }
+
+  return run > best ? run : best;
 }

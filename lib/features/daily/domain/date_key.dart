@@ -53,6 +53,41 @@ DateTime previousDay(DateTime date) =>
 DateTime nextDay(DateTime date) =>
     DateTime(date.year, date.month, date.day + 1);
 
+const _weekdays = [
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+  'Sunday',
+];
+
+const _months = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];
+
+/// "Thursday, 11 July" -- what the Today tab says under the greeting.
+///
+/// Hand-rolled rather than `intl`'s DateFormat because the app does not depend
+/// on intl and pulling it in for one line is not worth the megabyte. If the app
+/// ever localises properly this is the first thing to replace.
+String formatToday(DateTime date) {
+  return '${_weekdays[date.weekday - 1]}, '
+      '${date.day} ${_months[date.month - 1]}';
+}
+
 /// Whole calendar days between [a] and [b], regardless of order.
 ///
 /// Projects both onto UTC midnight before subtracting. Taking `difference()` on

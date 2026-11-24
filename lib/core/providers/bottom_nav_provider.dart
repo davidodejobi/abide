@@ -8,13 +8,25 @@ final bottomNavProvider = StateProvider<int>((ref) => 0);
 /// again on scroll up, so chrome gets out of the way during immersive reading.
 final bottomNavVisibleProvider = StateProvider<bool>((ref) => true);
 
-/// Enum representing the available bottom navigation tabs.
-/// Tablets (notes) is the default landing tab; the old Home/hymn tab is now "Songs".
+/// The bottom navigation tabs.
+///
+/// Today lands first, and is therefore the tab the app opens on
+/// ([bottomNavProvider] defaults to 0). That is the point of the whole feature:
+/// a streak nobody sees cannot bring anyone back, so it greets you rather than
+/// waiting to be found.
+///
+/// **This enum is documentation, not the source of truth.** Nothing reads it.
+/// The tabs actually render from two hand-synced lists in `dashboard_screen.dart`
+/// -- `IndexedStack.children` and `tabs:` -- so a new tab means editing all three
+/// at the same ordinal, and the nav bar resolves each icon from the *lowercased
+/// label* (`'Today'` -> `assets/images/icons/today.svg` + `today_fill.svg`).
+/// A missing SVG throws at runtime, not at build.
 enum BottomNavTab {
-  tablets(0, 'Tablets'),
-  songs(1, 'Songs'),
-  bible(2, 'Bible'),
-  settings(3, 'Settings');
+  today(0, 'Today'),
+  tablets(1, 'Tablets'),
+  songs(2, 'Songs'),
+  bible(3, 'Bible'),
+  settings(4, 'Settings');
 
   const BottomNavTab(this.tabIndex, this.label);
 
@@ -24,7 +36,7 @@ enum BottomNavTab {
   static BottomNavTab fromIndex(int index) {
     return BottomNavTab.values.firstWhere(
       (tab) => tab.tabIndex == index,
-      orElse: () => BottomNavTab.tablets,
+      orElse: () => BottomNavTab.today,
     );
   }
 }

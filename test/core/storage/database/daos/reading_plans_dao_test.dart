@@ -233,6 +233,106 @@ void main() {
     });
   });
 
+  group('Given "Mark read" is tapped', () {
+    group('When the reading is recorded', () {
+      test('Then the streak day and the plan day land together', () async {
+        // One transaction, not two writes. Recorded separately, a failure
+        // between them credits a streak day for a plan day that never advanced,
+        // and the card goes on offering the passage it just said you had read.
+        await dao.markReadingComplete(
+          dateKey: '2026-01-15',
+          source: 'plan',
+          planId: 'nt-90',
+          dayIndex: 1,
+          completedAt: now,
+        );
+
+        expect(await dao.completedDayKeys(), {'2026-01-15'});
+        expect(await dao.watchCompletedDayIndexes('nt-90').first, {1});
+      });
+
+      test('Then a repeat tap on the same day changes nothing', () async {
+        // Both keys are deterministic, so the double-tap is a no-op twice over.
+        for (var i = 0; i < 3; i++) {
+          await dao.markReadingComplete(
+            dateKey: '2026-01-15',
+            source: 'plan',
+            planId: 'nt-90',
+            dayIndex: 1,
+            completedAt: now,
+          );
+        }
+
+        expect(await db.select(db.readingDays).get(), hasLength(1));
+        expect(await db.select(db.planDayProgress).get(), hasLength(1));
+      });
+    });
+  });
+
+  group('Given a reader three days behind catches up in one sitting', () {
+    group('When they mark three plan days on the same calendar day', () {
+      test('Then the plan advances three days and the streak advances one',
+          () async {
+        // What "Mark read" does, three times over, in one evening. Both halves
+        // matter and they pull in opposite directions:
+        //
+        //   - the plan MUST advance three days, or catching up is impossible and
+        //     someone who fell behind can never get back on schedule.
+        //   - the streak MUST advance one, because you cannot catch up on
+        //     turning up. Three days of reading in one night is one day of
+        //     showing up, and pretending otherwise makes the streak a lie.
+        //
+        // The date primary key on reading_days is what enforces the second half:
+        // marks two and three are no-ops.
+        // Exactly what tapping "Mark read" three times does.
+        for (final planDay in [1, 2, 3]) {
+          await dao.markReadingComplete(
+            dateKey: '2026-01-15',
+            source: 'plan',
+            planId: 'nt-90',
+            dayIndex: planDay,
+            completedAt: now,
+          );
+        }
+
+        expect(await dao.watchCompletedDayIndexes('nt-90').first, {1, 2, 3});
+        expect(
+          await dao.completedDayKeys(),
+          {'2026-01-15'},
+          reason: 'one evening of reading is one day of streak, not three',
+        );
+      });
+    });
+  });
+
+  group('Given someone ticks off plan days they never read', () {
+    group('When the streak is looked at', () {
+      test('Then it is untouched -- plan progress cannot manufacture a streak',
+          () async {
+        // The anti-gaming invariant, stated where it can be broken. Plan
+        // progress and reading days are separate tables written by separate
+        // calls, so marking 90 plan days produces exactly zero streak days.
+        // If someone ever "tidies" markPlanDayComplete into also writing a
+        // reading day, the streak becomes a thing you can fake in an afternoon
+        // and this test is what stops them.
+        for (var day = 1; day <= 90; day++) {
+          await dao.markPlanDayComplete(
+            planId: 'nt-90',
+            dayIndex: day,
+            completedAt: now,
+          );
+        }
+
+        expect(await dao.watchCompletedDayIndexes('nt-90').first, hasLength(90));
+        expect(
+          await dao.completedDayKeys(),
+          isEmpty,
+          reason: 'not one day of streak was earned by ticking boxes',
+        );
+      });
+    });
+  });
+
   group('Given a completed calendar day and a completed plan day', () {
     group('When they are recorded', () {
       test('Then they are independent -- catching up is not a longer streak',

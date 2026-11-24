@@ -77,6 +77,24 @@ void main() {
     });
   });
 
+  group('Given the date shown under the Today greeting', () {
+    group('When it is formatted', () {
+      test('Then it reads as a person would say it', () {
+        // Replaced TimeGreeting.accent ("he gives his beloved sleep"), which
+        // read as a fortune cookie under someone's name.
+        expect(formatToday(DateTime(2026, 7, 11)), 'Saturday, 11 July');
+        expect(formatToday(DateTime(2026, 1, 1)), 'Thursday, 1 January');
+      });
+
+      test('Then the weekday and month lookups do not run off their lists', () {
+        // Monday is weekday 1 and December is month 12; an off-by-one in either
+        // index throws a RangeError on exactly one day of the week or year.
+        expect(formatToday(DateTime(2026, 12, 28)), 'Monday, 28 December');
+        expect(formatToday(DateTime(2026, 12, 27)), 'Sunday, 27 December');
+      });
+    });
+  });
+
   group('Given two calendar days', () {
     group('When the distance between them is measured', () {
       test('Then it counts whole days, in either direction', () {
