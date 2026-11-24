@@ -1,4 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET"/>
     <!-- Required by audio_waveforms to record voice notes in tablets. -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <application android:label="Lumway" android:name="${applicationName}" android:icon="@mipmap/ic_launcher">

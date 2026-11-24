@@ -17,6 +17,8 @@ class StorageService {
   static const String _seededReleaseNotesKey = 'seeded_release_note_ids';
   static const String _defaultBibleLinkEditionKey = 'default_bible_link_edition';
   static const String _defaultHymnLinkEditionKey = 'default_hymn_link_edition';
+  static const String _appConfigCacheKey = 'app_config_cache';
+  static const String _dismissedUpdateKey = 'dismissed_update_version';
 
   /// Save theme mode
   Future<void> saveThemeMode(ThemeMode mode) async {
@@ -130,5 +132,21 @@ class StorageService {
     } else {
       await _prefs.setString(_defaultHymnLinkEditionKey, editionId);
     }
+  }
+
+  /// Last good remote app config (JSON string), so the forced-update gate
+  /// still shows offline.
+  String? getAppConfigCache() => _prefs.getString(_appConfigCacheKey);
+
+  Future<void> saveAppConfigCache(String json) async {
+    await _prefs.setString(_appConfigCacheKey, json);
+  }
+
+  /// The `latestVersion` the user tapped "Later" on, so the optional update
+  /// sheet shows once per release.
+  String? getDismissedUpdateVersion() => _prefs.getString(_dismissedUpdateKey);
+
+  Future<void> saveDismissedUpdateVersion(String version) async {
+    await _prefs.setString(_dismissedUpdateKey, version);
   }
 }

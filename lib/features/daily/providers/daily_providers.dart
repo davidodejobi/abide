@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openbaptisthymnal/core/storage/database/app_database.dart';
 import 'package:openbaptisthymnal/core/storage/database/database_provider.dart';
@@ -48,13 +51,66 @@ final planProgressProvider = StreamProvider.family<Set<int>, String>(
       ref.watch(readingPlansDaoProvider).watchCompletedDayIndexes(planId),
 );
 
+/// Today's date key. Moves at local midnight and on app resume, so anything
+/// derived from "today" rolls over without a restart.
+final todayKeyProvider =
+    NotifierProvider<TodayKeyNotifier, String>(TodayKeyNotifier.new);
+
+class TodayKeyNotifier extends Notifier<String> with WidgetsBindingObserver {
+  Timer? _timer;
+
+  @override
+  String build() {
+    WidgetsBinding.instance.addObserver(this);
+    ref.onDispose(() {
+      _timer?.cancel();
+      WidgetsBinding.instance.removeObserver(this);
+    });
+    _schedule();
+    return todayKey();
+  }
+
+  void _schedule() {
+    _timer?.cancel();
+    final now = DateTime.now();
+    // A second past midnight, so the timer never fires on the old day.
+    _timer = Timer(nextDay(now).difference(now) + const Duration(seconds: 1), () {
+      refresh();
+    });
+  }
+
+  void refresh() {
+    state = todayKey();
+    _schedule();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) refresh();
+  }
+}
+
+/// Plan days of [planId] completed today (by `completedAt`), read-only. The
+/// "done" panel names one of these instead of guessing it is `next - 1`.
+final planDaysDoneTodayProvider =
+    StreamProvider.family<Set<int>, String>((ref, planId) {
+  final today = ref.watch(todayKeyProvider);
+  final db = ref.watch(appDatabaseProvider);
+  return (db.select(db.planDayProgress)..where((t) => t.planId.equals(planId)))
+      .watch()
+      .map((rows) => {
+            for (final r in rows)
+              if (dayKey(r.completedAt) == today) r.dayIndex,
+          });
+});
+
 /// The streak, recomputed from the completed days on every change.
 ///
 /// Derived, never stored. `computeStreak` is pure, so this provider is just the
 /// wiring: the clock is read here, at the edge, and nowhere below.
 final streakProvider = Provider<StreakResult>((ref) {
   final days = ref.watch(completedDayKeysProvider).valueOrNull ?? const {};
-  return computeStreak(days, todayKey: todayKey());
+  return computeStreak(days, todayKey: ref.watch(todayKeyProvider));
 });
 
 /// Whether today is already marked read. Drives the "Mark as read" button's

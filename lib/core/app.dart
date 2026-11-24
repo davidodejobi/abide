@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:openbaptisthymnal/features/app_update/ui/app_update_overlay.dart';
 import 'package:openbaptisthymnal/features/onboarding/domain/seed_welcome_note.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/seed_release_notes.dart';
 import 'package:openbaptisthymnal/features/tablet/providers/tablets_providers.dart';
@@ -54,6 +55,8 @@ class AbideApp extends HookConsumerWidget {
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
         themeMode: themeMode,
+        builder: (context, child) =>
+            AppUpdateOverlay(child: child ?? const SizedBox.shrink()),
         routerConfig: appRouter.config(
           deepLinkBuilder: appRouter.onboardingDeepLink,
         ),

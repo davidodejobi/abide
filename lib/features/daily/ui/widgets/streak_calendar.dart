@@ -1,131 +1,209 @@
 import 'package:flutter/material.dart';
-import 'package:openbaptisthymnal/core/theme/app_colors.dart';
-import 'package:openbaptisthymnal/core/theme/app_text_styles.dart';
+import 'package:openbaptisthymnal/core/theme/lum_theme.dart';
 
 import '../../domain/date_key.dart';
+import '../../domain/streak.dart';
+import '../daily_strings.dart';
 
-/// A contribution-graph of reading days: one square per day, weeks as columns.
-///
-/// Chosen over a month grid because the streak is about *runs*, and a run is
-/// something you see at a glance here -- a solid column, a gap, a solid column.
-/// A month view makes you count.
-class StreakCalendar extends StatelessWidget {
-  const StreakCalendar({
+/// The days of the current run that were forgiven by the grace rule: missed
+/// days sitting between read days of the run. Derived from the same inputs the
+/// streak is, so it can never disagree with it. Today is never a miss.
+Set<String> graceDayKeys(
+  Set<String> completed,
+  StreakResult streak,
+  DateTime today,
+) {
+  final grace = <String>{};
+  if (streak.current == 0) return grace;
+  var cursor = completed.contains(dayKey(today)) ? today : previousDay(today);
+  var counted = 0;
+  for (var i = 0; i < 800 && counted < streak.current; i++) {
+    if (completed.contains(dayKey(cursor))) {
+      counted++;
+    } else {
+      grace.add(dayKey(cursor));
+    }
+    cursor = previousDay(cursor);
+  }
+  return grace;
+}
+
+/// One month as a Monday-first grid (Figma M1-10): read = check, grace = leaf,
+/// missed = a plain number, today = a gold ring. Never colour alone, never red.
+class StreakMonthGrid extends StatelessWidget {
+  const StreakMonthGrid({
     super.key,
-    required this.completedDayKeys,
+    required this.completed,
+    required this.grace,
     required this.today,
-    this.weeks = 26,
+    required this.streakDays,
   });
 
-  final Set<String> completedDayKeys;
+  final Set<String> completed;
+  final Set<String> grace;
   final DateTime today;
-
-  /// Roughly six months. Enough to show a long run without the squares becoming
-  /// too small to read on a phone.
-  final int weeks;
+  final int streakDays;
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final c = context.lum;
+    final first = DateTime(today.year, today.month, 1);
+    final daysInMonth = DateTime(today.year, today.month + 1, 0).day;
+    final lead = first.weekday - 1;
+    final rows = ((lead + daysInMonth) / 7).ceil();
 
-    // Columns end on the week containing today. weekday is 1..7 (Mon..Sun), so
-    // this lands on the Monday of the current week and walks back.
-    final endOfWeek = today.add(Duration(days: 7 - today.weekday));
-    final start = DateTime(
-      endOfWeek.year,
-      endOfWeek.month,
-      endOfWeek.day - (weeks * 7) + 1,
-    );
-
-    final columns = <Widget>[];
-    var cursor = start;
-
-    for (var w = 0; w < weeks; w++) {
-      final cells = <Widget>[];
-      for (var d = 0; d < 7; d++) {
-        final key = dayKey(cursor);
-        final isFuture = cursor.isAfter(today);
-        cells.add(
-          _Cell(
-            done: completedDayKeys.contains(key),
-            isToday: key == dayKey(today),
-            isFuture: isFuture,
-          ),
-        );
-        cursor = nextDay(cursor);
+    Widget cell(int? day) {
+      if (day == null) return const SizedBox(height: 44);
+      final d = DateTime(today.year, today.month, day);
+      final key = dayKey(d);
+      final isToday = day == today.day;
+      final read = completed.contains(key);
+      final isGrace = !read && grace.contains(key);
+      Widget inner;
+      String sem;
+      if (read) {
+        inner = Icon(Icons.check_rounded, size: 20, color: c.textPrimary);
+        sem = 'read';
+      } else if (isGrace) {
+        inner = Icon(Icons.eco_rounded, size: 22, color: c.iconSuccess);
+        sem = 'grace day';
+      } else {
+        inner = Text('$day',
+            style: LumText.subheadline.copyWith(
+                color: d.isAfter(today) ? c.textDisabled : c.textSecondary));
+        sem = d.isAfter(today) ? '' : 'not read';
       }
-      columns.add(
-        Padding(
-          padding: const EdgeInsets.only(right: 3),
-          child: Column(children: cells),
+      return Semantics(
+        label: '$day, ${isToday ? 'today, ' : ''}$sem',
+        excludeSemantics: true,
+        child: Center(
+          child: Container(
+            width: 40,
+            height: 40,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: read ? c.bgElevated : null,
+              border: isToday
+                  ? Border.all(color: c.sceneStopCurrentTop, width: 2.5)
+                  : (read ? Border.all(color: c.borderSubtle) : null),
+            ),
+            child: isToday && !read
+                ? Text('$day',
+                    style: LumText.subheadlineEmphasized
+                        .copyWith(color: c.textPrimary))
+                : inner,
+          ),
         ),
       );
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          reverse: true, // open at today, not six months ago
-          child: Row(children: columns),
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            Text(
-              'Less',
-              style: AppTextStyles.bodySmall.copyWith(
-                color: colorScheme.onSurface.withValues(alpha: 0.5),
+    return Container(
+      padding: const EdgeInsets.all(LumSpace.lg),
+      decoration: BoxDecoration(
+        color: c.scenePanel,
+        borderRadius: BorderRadius.circular(LumRadius.xl),
+        border: Border.all(color: c.borderSubtle),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(DailyStrings.monthYear(today),
+                    style: LumText.headline.copyWith(color: c.textPrimary)),
+              ),
+              Text(DailyStrings.inARow(streakDays),
+                  style: LumText.footnoteEmphasized
+                      .copyWith(color: c.textSecondary)),
+            ],
+          ),
+          const SizedBox(height: LumSpace.md),
+          Row(
+            children: [
+              for (final l in DailyStrings.weekdayInitials)
+                Expanded(
+                  child: ExcludeSemantics(
+                    child: Center(
+                      child: Text(l,
+                          style: LumText.footnoteEmphasized
+                              .copyWith(color: c.textSecondary)),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: LumSpace.sm),
+          for (var r = 0; r < rows; r++)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Row(
+                children: [
+                  for (var col = 0; col < 7; col++)
+                    Expanded(
+                      child: () {
+                        final n = r * 7 + col - lead + 1;
+                        return cell(n >= 1 && n <= daysInMonth ? n : null);
+                      }(),
+                    ),
+                ],
               ),
             ),
-            const SizedBox(width: 6),
-            const _Cell(done: false, isToday: false, isFuture: false),
-            const _Cell(done: true, isToday: false, isFuture: false),
-            const SizedBox(width: 6),
-            Text(
-              'Read',
-              style: AppTextStyles.bodySmall.copyWith(
-                color: colorScheme.onSurface.withValues(alpha: 0.5),
+          const SizedBox(height: LumSpace.sm),
+          Wrap(
+            spacing: LumSpace.lg,
+            runSpacing: LumSpace.sm,
+            children: [
+              _Legend(
+                swatch: Container(
+                  width: 18,
+                  height: 18,
+                  decoration: BoxDecoration(
+                      shape: BoxShape.circle, color: c.bgElevated,
+                      border: Border.all(color: c.borderSubtle)),
+                ),
+                label: DailyStrings.legendRead,
               ),
-            ),
-          ],
-        ),
-      ],
+              _Legend(
+                swatch: Icon(Icons.eco_rounded, size: 18, color: c.iconSuccess),
+                label: DailyStrings.legendGrace,
+              ),
+              _Legend(
+                swatch: Container(
+                  width: 18,
+                  height: 18,
+                  decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                          color: c.sceneStopCurrentTop, width: 2)),
+                ),
+                label: DailyStrings.legendToday,
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
 
-class _Cell extends StatelessWidget {
-  const _Cell({
-    required this.done,
-    required this.isToday,
-    required this.isFuture,
-  });
+class _Legend extends StatelessWidget {
+  const _Legend({required this.swatch, required this.label});
 
-  final bool done;
-  final bool isToday;
-  final bool isFuture;
+  final Widget swatch;
+  final String label;
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Container(
-      width: 12,
-      height: 12,
-      margin: const EdgeInsets.only(bottom: 3),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(3),
-        color: done
-            ? AppColors.secondary
-            : colorScheme.onSurface.withValues(alpha: isFuture ? 0.03 : 0.08),
-        // Today is outlined rather than filled when unread: a quiet "this one is
-        // still open", not a reprimand.
-        border: isToday && !done
-            ? Border.all(color: AppColors.secondary, width: 1.5)
-            : null,
-      ),
+    final c = context.lum;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        swatch,
+        const SizedBox(width: 6),
+        Text(label,
+            style: LumText.footnote.copyWith(color: c.textSecondary)),
+      ],
     );
   }
 }
