@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -45,9 +47,12 @@ void main() {
 
   group('decideStatus', () {
     test('forced, optional, maintenance, none', () {
-      expect(decideStatus(installed: '0.2.0', config: cfg()), UpdateStatus.forced);
-      expect(decideStatus(installed: '0.3.0', config: cfg()), UpdateStatus.optional);
-      expect(decideStatus(installed: '0.3.1', config: cfg()), UpdateStatus.none);
+      expect(
+          decideStatus(installed: '0.2.0', config: cfg()), UpdateStatus.forced);
+      expect(decideStatus(installed: '0.3.0', config: cfg()),
+          UpdateStatus.optional);
+      expect(
+          decideStatus(installed: '0.3.1', config: cfg()), UpdateStatus.none);
       expect(
         decideStatus(installed: '0.3.1', config: cfg(maintenance: true)),
         UpdateStatus.maintenance,
@@ -59,11 +64,13 @@ void main() {
         UpdateStatus.forced,
       );
       expect(
-        decideStatus(installed: '0.3.0', config: cfg(), dismissedLatest: '0.3.1'),
+        decideStatus(
+            installed: '0.3.0', config: cfg(), dismissedLatest: '0.3.1'),
         UpdateStatus.none,
       );
       expect(
-        decideStatus(installed: '0.3.0', config: cfg(), dismissedLatest: '0.3.0'),
+        decideStatus(
+            installed: '0.3.0', config: cfg(), dismissedLatest: '0.3.0'),
         UpdateStatus.optional,
       );
       expect(
@@ -97,7 +104,8 @@ void main() {
         sharedPreferencesProvider.overrideWithValue(sp),
         installedVersionProvider.overrideWith((_) async => '0.2.0'),
         appConfigRepositoryProvider.overrideWith(
-          (ref) => AppConfigRepository(StorageService(sp), fetcher: () async => null),
+          (ref) => AppConfigRepository(StorageService(sp),
+              fetcher: () async => null),
         ),
       ]);
       addTearDown(offline.dispose);
@@ -106,8 +114,61 @@ void main() {
       expect(offline.read(appUpdateProvider).checkedAt, isNotNull);
     });
 
+    Future<void> seedCache(
+      SharedPreferences sp,
+      AppConfig config,
+      DateTime at,
+    ) =>
+        StorageService(sp).saveAppConfigCache(
+          jsonEncode({
+            'config': config.toJson(),
+            'checkedAt': at.toIso8601String(),
+          }),
+        );
+
+    test('cached maintenance is ignored, fresh maintenance is honoured',
+        () async {
+      final c = await container(() async => null, installed: '0.3.1');
+      await seedCache(c.read(sharedPreferencesProvider), cfg(maintenance: true),
+          DateTime.now());
+      await c.read(appUpdateProvider.notifier).check();
+      expect(c.read(appUpdateProvider).status, UpdateStatus.none);
+
+      final f = await container(() async => cfg(maintenance: true),
+          installed: '0.3.1');
+      await f.read(appUpdateProvider.notifier).check();
+      expect(f.read(appUpdateProvider).status, UpdateStatus.maintenance);
+    });
+
+    test('cached forced gate expires after 7 days', () async {
+      final c = await container(() async => null);
+      final sp = c.read(sharedPreferencesProvider);
+      await seedCache(
+          sp, cfg(), DateTime.now().subtract(const Duration(days: 6)));
+      await c.read(appUpdateProvider.notifier).check();
+      expect(c.read(appUpdateProvider).status, UpdateStatus.forced);
+
+      final old = await container(() async => null);
+      await seedCache(old.read(sharedPreferencesProvider), cfg(),
+          DateTime.now().subtract(const Duration(days: 8)));
+      await old.read(appUpdateProvider.notifier).check();
+      expect(old.read(appUpdateProvider).status, UpdateStatus.none);
+    });
+
+    test('concurrent check() calls fetch once', () async {
+      var fetches = 0;
+      final c = await container(() async {
+        fetches++;
+        return cfg();
+      });
+      final n = c.read(appUpdateProvider.notifier);
+      await Future.wait([n.check(), n.check()]);
+      expect(fetches, 1);
+    });
+
     test('optional is dismissed once per latestVersion', () async {
-      final c = await container(() async => cfg(min: '0.1.0'), installed: '0.3.0');
+      final c =
+          await container(() async => cfg(min: '0.1.0'), installed: '0.3.0');
       final n = c.read(appUpdateProvider.notifier);
       await n.check();
       expect(c.read(appUpdateProvider).status, UpdateStatus.optional);
@@ -118,7 +179,67 @@ void main() {
     });
   });
 
-  testWidgets('forced gate shows and blocks the app underneath', (tester) async {
+  test('storeUrlFor falls back when the config has no url', () {
+    expect(storeUrlFor(null, ios: false),
+        'https://play.google.com/store/apps/details?id=com.openbaptisthymnal');
+    expect(storeUrlFor(cfg(), ios: true), 'https://apps.apple.com/');
+    const withUrl = AppConfig(
+        minVersion: '1',
+        latestVersion: '1',
+        androidStoreUrl: 'https://x.test/a');
+    expect(storeUrlFor(withUrl, ios: false), 'https://x.test/a');
+  });
+
+  testWidgets('forced gate hides the app from semantics and offers Check again',
+      (tester) async {
+    final handle = tester.ensureSemantics();
+    final c = await container(() async => cfg());
+    await tester.pumpWidget(UncontrolledProviderScope(
+      container: c,
+      child: MaterialApp(
+        theme: AppTheme.lightTheme,
+        home: const AppUpdateOverlay(
+          child: Scaffold(body: Center(child: Text('Underneath'))),
+        ),
+      ),
+    ));
+    await tester.pumpAndSettle();
+    expect(find.semantics.byLabel('Underneath'), findsNothing);
+    expect(find.semantics.byLabel('Check again'), findsOneWidget);
+    handle.dispose();
+  });
+
+  testWidgets('android back dismisses the optional sheet, not the gate',
+      (tester) async {
+    Future<void> pump(ProviderContainer c) async {
+      await tester.pumpWidget(UncontrolledProviderScope(
+        container: c,
+        child: MaterialApp(
+          theme: AppTheme.lightTheme,
+          home: const AppUpdateOverlay(child: Scaffold(body: Text('App'))),
+        ),
+      ));
+      await tester.pumpAndSettle();
+    }
+
+    final opt =
+        await container(() async => cfg(min: '0.1.0'), installed: '0.3.0');
+    await pump(opt);
+    expect(opt.read(appUpdateProvider).status, UpdateStatus.optional);
+    await WidgetsBinding.instance.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(opt.read(appUpdateProvider).status, UpdateStatus.none);
+
+    await tester.pumpWidget(const SizedBox());
+    final forced = await container(() async => cfg());
+    await pump(forced);
+    await WidgetsBinding.instance.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(forced.read(appUpdateProvider).status, UpdateStatus.forced);
+  });
+
+  testWidgets('forced gate shows and blocks the app underneath',
+      (tester) async {
     var taps = 0;
     final c = await container(() async => cfg());
     await tester.pumpWidget(UncontrolledProviderScope(
@@ -128,7 +249,8 @@ void main() {
         home: AppUpdateOverlay(
           child: Scaffold(
             body: Center(
-              child: TextButton(onPressed: () => taps++, child: const Text('Underneath')),
+              child: TextButton(
+                  onPressed: () => taps++, child: const Text('Underneath')),
             ),
           ),
         ),

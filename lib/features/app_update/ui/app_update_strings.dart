@@ -15,6 +15,9 @@ abstract final class AppUpdateStrings {
   static const forcedBody =
       'This version can no longer talk to our servers. The update takes '
       'about a minute. Your road, streak and notes stay exactly as they are.';
+  static const checkAgain = 'Check again';
+  static const storeOpenFailed =
+      'Could not open the store. Try again in a moment.';
   static const openAppStore = 'Open the App Store';
   static const openPlayStore = 'Open Google Play';
   static String forcedFootnote(String minVersion, String? checkedAtTime) =>

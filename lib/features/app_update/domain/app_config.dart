@@ -36,6 +36,16 @@ class AppConfig {
         'maintenanceMessage': maintenanceMessage,
         'storeUrls': {'ios': iosStoreUrl, 'android': androidStoreUrl},
       };
+
+  /// Same config with maintenance off: maintenance is only honoured from a
+  /// fresh fetch, never from a cached copy.
+  AppConfig withoutMaintenance() => AppConfig(
+        minVersion: minVersion,
+        latestVersion: latestVersion,
+        maintenanceMessage: maintenanceMessage,
+        iosStoreUrl: iosStoreUrl,
+        androidStoreUrl: androidStoreUrl,
+      );
 }
 
 enum UpdateStatus { none, optional, forced, maintenance }
@@ -77,4 +87,16 @@ UpdateStatus decideStatus({
     return UpdateStatus.optional;
   }
   return UpdateStatus.none;
+}
+
+/// Store link for this platform: the config's own URL when it has one, else a
+/// hard-coded fallback so the gate button always has somewhere to go.
+String storeUrlFor(AppConfig? config, {required bool ios}) {
+  final url = ios ? config?.iosStoreUrl : config?.androidStoreUrl;
+  if (url != null && url.isNotEmpty) return url;
+  // ponytail: replace the iOS fallback with the real App Store id link
+  // (https://apps.apple.com/app/id<id>) once the listing exists.
+  return ios
+      ? 'https://apps.apple.com/'
+      : 'https://play.google.com/store/apps/details?id=com.openbaptisthymnal';
 }

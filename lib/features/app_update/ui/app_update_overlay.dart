@@ -23,6 +23,29 @@ class AppUpdateOverlay extends HookConsumerWidget {
       Future.microtask(() => ref.read(appUpdateProvider.notifier).check());
       return null;
     }, const []);
+    // The overlay sits above the Navigator, so it can't use PopScope. Android
+    // back is taken here instead: the sheet and maintenance dismiss, the forced
+    // gate swallows it. Registered at mount, before the Router's own observer,
+    // so it gets the first look.
+    useEffect(() {
+      final observer = _BackObserver(() {
+        final n = ref.read(appUpdateProvider.notifier);
+        switch (ref.read(appUpdateProvider).status) {
+          case UpdateStatus.none:
+            return false;
+          case UpdateStatus.forced:
+            return true;
+          case UpdateStatus.maintenance:
+            n.dismissMaintenance();
+            return true;
+          case UpdateStatus.optional:
+            n.dismissOptional();
+            return true;
+        }
+      });
+      WidgetsBinding.instance.addObserver(observer);
+      return () => WidgetsBinding.instance.removeObserver(observer);
+    }, const []);
     useOnAppLifecycleStateChange((_, state) {
       if (state == AppLifecycleState.resumed) {
         ref.read(appUpdateProvider.notifier).check();
@@ -31,16 +54,21 @@ class AppUpdateOverlay extends HookConsumerWidget {
 
     final update = ref.watch(appUpdateProvider);
     final notifier = ref.read(appUpdateProvider.notifier);
+    final blocked = update.status != UpdateStatus.none;
     return Stack(
       children: [
-        child,
+        ExcludeSemantics(
+          excluding: blocked,
+          child: ExcludeFocus(
+            excluding: blocked,
+            child: IgnorePointer(ignoring: blocked, child: child),
+          ),
+        ),
         // ponytail: Android uses the same sheet/gate and opens the Play
         // listing. Play Core in-app (flexible) updates are a later upgrade.
         switch (update.status) {
           UpdateStatus.none => const SizedBox.shrink(),
-          UpdateStatus.forced => Positioned.fill(
-              child: _Gate(update: update),
-            ),
+          UpdateStatus.forced => Positioned.fill(child: _Gate(update: update)),
           UpdateStatus.maintenance => Positioned.fill(
               child: _Maintenance(onKeepReading: notifier.dismissMaintenance),
             ),
@@ -53,15 +81,36 @@ class AppUpdateOverlay extends HookConsumerWidget {
   }
 }
 
-Future<void> _openStore(AppConfig? config) async {
-  final url = defaultTargetPlatform == TargetPlatform.iOS
-      ? config?.iosStoreUrl
-      : config?.androidStoreUrl;
-  if (url == null) return;
-  try {
-    await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-  } catch (_) {}
+/// Opens the store; sets [error] to a short message when it can't.
+class _BackObserver with WidgetsBindingObserver {
+  _BackObserver(this.onBack);
+  final bool Function() onBack;
+
+  @override
+  Future<bool> didPopRoute() async => onBack();
 }
+
+Future<void> _openStore(AppConfig? config, ValueNotifier<String?> error) async {
+  var ok = false;
+  try {
+    ok = await launchUrl(
+      Uri.parse(storeUrlFor(config, ios: _isIos)),
+      mode: LaunchMode.externalApplication,
+    );
+  } catch (_) {}
+  error.value = ok ? null : AppUpdateStrings.storeOpenFailed;
+}
+
+Widget _errorText(BuildContext context, String? message) => message == null
+    ? const SizedBox.shrink()
+    : Padding(
+        padding: const EdgeInsets.only(top: LumSpace.md),
+        child: Text(
+          message,
+          textAlign: TextAlign.center,
+          style: LumText.footnote.copyWith(color: context.lum.textSecondary),
+        ),
+      );
 
 bool get _isIos => defaultTargetPlatform == TargetPlatform.iOS;
 
@@ -83,7 +132,8 @@ class _Coin extends StatelessWidget {
           colors: [c.buttonGoldTop, c.buttonGoldBottom],
         ),
       ),
-      child: Icon(Icons.chevron_right_rounded, size: size * 0.6, color: c.buttonOnGold),
+      child: Icon(Icons.chevron_right_rounded,
+          size: size * 0.6, color: c.buttonOnGold),
     );
   }
 }
@@ -148,12 +198,13 @@ class _Centered extends StatelessWidget {
 
 /// Forced update. Opaque and full screen, so nothing underneath can be
 /// reached. No dismiss control.
-class _Gate extends StatelessWidget {
+class _Gate extends HookConsumerWidget {
   const _Gate({required this.update});
   final AppUpdateState update;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final error = useState<String?>(null);
     final config = update.config;
     final at = update.checkedAt;
     final today = DateTime.now();
@@ -161,7 +212,8 @@ class _Gate extends StatelessWidget {
             at.year == today.year &&
             at.month == today.month &&
             at.day == today.day
-        ? MaterialLocalizations.of(context).formatTimeOfDay(TimeOfDay.fromDateTime(at))
+        ? MaterialLocalizations.of(context)
+            .formatTimeOfDay(TimeOfDay.fromDateTime(at))
         : null;
     // ponytail: the design also has "Export my notes" here. Left out until
     // notes export exists; the gate only offers the store button for now.
@@ -170,9 +222,18 @@ class _Gate extends StatelessWidget {
       body: AppUpdateStrings.forcedBody,
       actions: [
         LumButton(
-          label: _isIos ? AppUpdateStrings.openAppStore : AppUpdateStrings.openPlayStore,
-          onPressed: () => _openStore(config),
+          label: _isIos
+              ? AppUpdateStrings.openAppStore
+              : AppUpdateStrings.openPlayStore,
+          onPressed: () => _openStore(config, error),
         ),
+        const SizedBox(height: LumSpace.md),
+        LumButton(
+          label: AppUpdateStrings.checkAgain,
+          kind: LumButtonKind.secondary,
+          onPressed: () => ref.read(appUpdateProvider.notifier).check(),
+        ),
+        _errorText(context, error.value),
       ],
       footnote: AppUpdateStrings.forcedFootnote(config?.minVersion ?? '', time),
     );
@@ -190,7 +251,8 @@ class _Maintenance extends StatelessWidget {
       title: AppUpdateStrings.maintenanceTitle,
       body: AppUpdateStrings.maintenanceBody,
       actions: [
-        LumButton(label: AppUpdateStrings.keepReading, onPressed: onKeepReading),
+        LumButton(
+            label: AppUpdateStrings.keepReading, onPressed: onKeepReading),
       ],
       footnote: AppUpdateStrings.maintenanceFootnote,
     );
@@ -198,7 +260,7 @@ class _Maintenance extends StatelessWidget {
 }
 
 /// Optional update: bottom sheet over a scrim. Tapping the scrim is "Later".
-class _Sheet extends StatelessWidget {
+class _Sheet extends HookWidget {
   const _Sheet({required this.update, required this.onLater});
   final AppUpdateState update;
   final VoidCallback onLater;
@@ -206,6 +268,7 @@ class _Sheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.lum;
+    final error = useState<String?>(null);
     return Stack(
       children: [
         Positioned.fill(
@@ -217,81 +280,96 @@ class _Sheet extends StatelessWidget {
         ),
         Align(
           alignment: Alignment.bottomCenter,
-          child: Material(
-            color: c.glassFillOpaque,
-            borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(LumRadius.xl),
-            ),
-            child: SafeArea(
-              top: false,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  LumSize.screenGutter, LumSpace.md, LumSize.screenGutter, LumSpace.lg,
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Center(
-                      child: Container(
-                        width: 36,
-                        height: 5,
-                        decoration: BoxDecoration(
-                          color: c.borderStrong,
-                          borderRadius: BorderRadius.circular(3),
-                        ),
-                      ),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+                maxHeight: MediaQuery.sizeOf(context).height * 0.9),
+            child: Material(
+              color: c.glassFillOpaque,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(LumRadius.xl),
+              ),
+              child: SafeArea(
+                top: false,
+                child: SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      LumSize.screenGutter,
+                      LumSpace.md,
+                      LumSize.screenGutter,
+                      LumSpace.lg,
                     ),
-                    const SizedBox(height: LumSpace.md),
-                    Row(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        const _Coin(44),
-                        const SizedBox(width: LumSpace.md),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                AppUpdateStrings.optionalTitle,
-                                style: LumText.headline.copyWith(color: c.textPrimary),
+                        Center(
+                          child: Container(
+                            width: 36,
+                            height: 5,
+                            decoration: BoxDecoration(
+                              color: c.borderStrong,
+                              borderRadius: BorderRadius.circular(3),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: LumSpace.md),
+                        Row(
+                          children: [
+                            const _Coin(44),
+                            const SizedBox(width: LumSpace.md),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    AppUpdateStrings.optionalTitle,
+                                    style: LumText.headline
+                                        .copyWith(color: c.textPrimary),
+                                  ),
+                                  Text(
+                                    AppUpdateStrings.optionalVersion(
+                                        update.config?.latestVersion ?? ''),
+                                    style: LumText.footnote
+                                        .copyWith(color: c.textSecondary),
+                                  ),
+                                ],
                               ),
-                              Text(
-                                AppUpdateStrings.optionalVersion(update.config?.latestVersion ?? ''),
-                                style: LumText.footnote.copyWith(color: c.textSecondary),
-                              ),
-                            ],
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: LumSpace.md),
+                        Text(
+                          AppUpdateStrings.optionalHeadline,
+                          style: LumText.title2.copyWith(color: c.textPrimary),
+                        ),
+                        const SizedBox(height: LumSpace.sm),
+                        Text(
+                          AppUpdateStrings.optionalBody,
+                          style: LumText.subheadline
+                              .copyWith(color: c.textSecondary),
+                        ),
+                        const SizedBox(height: LumSpace.md),
+                        LumButton(
+                          label: AppUpdateStrings.update,
+                          onPressed: () => _openStore(update.config, error),
+                        ),
+                        _errorText(context, error.value),
+                        const SizedBox(height: LumSpace.sm),
+                        TextButton(
+                          onPressed: onLater,
+                          style: TextButton.styleFrom(
+                            minimumSize: const Size.fromHeight(44),
+                            foregroundColor: c.textPrimary,
+                          ),
+                          child: Text(
+                            AppUpdateStrings.later,
+                            style:
+                                LumText.headline.copyWith(color: c.textPrimary),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: LumSpace.md),
-                    Text(
-                      AppUpdateStrings.optionalHeadline,
-                      style: LumText.title2.copyWith(color: c.textPrimary),
-                    ),
-                    const SizedBox(height: LumSpace.sm),
-                    Text(
-                      AppUpdateStrings.optionalBody,
-                      style: LumText.subheadline.copyWith(color: c.textSecondary),
-                    ),
-                    const SizedBox(height: LumSpace.md),
-                    LumButton(
-                      label: AppUpdateStrings.update,
-                      onPressed: () => _openStore(update.config),
-                    ),
-                    const SizedBox(height: LumSpace.sm),
-                    TextButton(
-                      onPressed: onLater,
-                      style: TextButton.styleFrom(
-                        minimumSize: const Size.fromHeight(44),
-                        foregroundColor: c.textPrimary,
-                      ),
-                      child: Text(
-                        AppUpdateStrings.later,
-                        style: LumText.headline.copyWith(color: c.textPrimary),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),

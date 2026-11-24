@@ -27,23 +27,33 @@ class AppUpdateState {
 final appUpdateProvider =
     NotifierProvider<AppUpdateNotifier, AppUpdateState>(AppUpdateNotifier.new);
 
+/// A cached config (and so a cached forced gate) is trusted for this long.
+const kCacheTtl = Duration(days: 7);
+
 class AppUpdateNotifier extends Notifier<AppUpdateState> {
   String? _installed;
   AppConfig? _config;
   DateTime? _checkedAt;
   bool _maintenanceDismissed = false;
+  Future<void>? _inflight;
 
   @override
   AppUpdateState build() => const AppUpdateState();
 
   /// Cache first (so a forced gate shows offline), then the network. Never
   /// throws and never blocks the UI: call without awaiting.
-  Future<void> check() async {
+  Future<void> check() =>
+      _inflight ??= _check().whenComplete(() => _inflight = null);
+
+  Future<void> _check() async {
     try {
       _installed ??= await ref.read(installedVersionProvider.future);
       final repo = ref.read(appConfigRepositoryProvider);
       final cached = repo.cached();
-      if (cached != null) _set(cached.config, cached.checkedAt);
+      if (cached != null &&
+          DateTime.now().difference(cached.checkedAt) < kCacheTtl) {
+        _set(cached.config.withoutMaintenance(), cached.checkedAt);
+      }
       final fresh = await repo.refresh();
       if (fresh != null) _set(fresh.config, fresh.checkedAt);
     } catch (_) {
