@@ -42,6 +42,7 @@ Widget _app(List<Override> overrides, {ThemeData? theme, double scale = 1}) {
     overrides: [
       userNameProvider.overrideWithValue('Maya'),
       planBookNamesProvider.overrideWith((_) async => {'JHN': 'John'}),
+      dayPartClockProvider.overrideWithValue(() => DateTime(2026, 1, 7, 10)),
       ...overrides,
     ],
     child: MaterialApp(
@@ -124,7 +125,7 @@ void main() {
   });
 
   testWidgets(
-      'Given today is done, Then it turns to evening and names tomorrow',
+      'Given today is done, Then it shows done and names tomorrow',
       (t) async {
     final plan = _plan();
     await pump(

@@ -31,8 +31,8 @@ import 'widgets/road_sheets.dart';
 import 'widgets/streak_chip.dart';
 
 /// The Today tab: the road scene, today's reading and the one button that
-/// starts it. After "Mark as read" the same screen turns to evening and says
-/// what tomorrow holds (Figma M1-01, M1-08, M1-12).
+/// starts it. After "Mark as read" the same screen says well done (or rest
+/// well at dusk) and names what tomorrow holds (Figma M1-01, M1-08, M1-12).
 ///
 /// Reads the existing daily providers only; nothing about plans or streaks is
 /// computed here beyond display arithmetic.
@@ -87,7 +87,7 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
     final part = ref.watch(dayPartProvider);
     final dark = part == DayPart.evening || part == DayPart.night;
     final mood = dark ? RoadMood.evening : RoadMood.day;
-    final now = DateTime.now();
+    final now = ref.watch(dayPartClockProvider)();
 
     final title = !done
         ? TimeGreeting.forPart(part).greeting
@@ -529,7 +529,7 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
   }
 
   /// Opens the reader on today's plan day. Mark read lives there; when it was
-  /// marked, "read ahead" is over and Today turns to evening.
+  /// marked, "read ahead" is over and Today shows the done state.
   Future<void> _startReading(TodaysReading d) async {
     final marked = await openBibleLink(
       context,
