@@ -159,9 +159,3 @@ flutter:
     - family: PatrickHand
       fonts:
         - asset: assets/fonts/PatrickHand-Regular.ttf
-
-dependency_overrides:
-  # appflowy_editor imports universal_html, which pulls in dart:html and breaks
-  # the wasm build. The stub keeps the one thing it needs.
-  universal_html:
-    path: third_party/universal_html

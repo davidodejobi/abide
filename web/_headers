@@ -16,8 +16,8 @@
 /*.wasm
   Content-Type: application/wasm
 /sqlite3.wasm
-  Cache-Control: public, max-age=86400
+  Cache-Control: no-cache
 /drift_worker.js
   Cache-Control: no-cache
 /assets/*
-  Cache-Control: public, max-age=3600
+  Cache-Control: no-cache

@@ -14,8 +14,10 @@ class ShareService {
     Rect? sharePositionOrigin,
   }) async {
     try {
-      // Process image in an isolate to avoid blocking the UI
-      final processedBytes = await compute(_processImageBytes, imageBytes);
+      // Process image in an isolate to avoid blocking the UI (no isolates on
+      // web; the bytes are already a PNG from the capture).
+      final processedBytes =
+          kIsWeb ? imageBytes : await compute(_processImageBytes, imageBytes);
 
       if (kIsWeb) {
         await SharePlus.instance.share(ShareParams(

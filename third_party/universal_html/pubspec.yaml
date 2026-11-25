@@ -1,8 +1,0 @@
-name: universal_html
-description: Minimal wasm-safe stand-in for universal_html (appflowy_editor only needs window.navigator.platform).
-version: 2.3.0
-publish_to: none
-environment:
-  sdk: ^3.0.0
-dependencies:
-  web: ^1.0.0

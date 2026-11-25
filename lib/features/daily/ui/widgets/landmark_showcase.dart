@@ -109,7 +109,7 @@ class _LandmarkShowcaseState extends State<LandmarkShowcase>
 
   /// True once the first 3D frame is up; the static sprite stands in until
   /// then, and for good if 3D is unavailable.
-  bool _shown3d = false, _failed3d = false;
+  bool _shown3d = false, _failed3d = kIsWeb; // no 3D renderer on web
   List<Color> _palette = const [];
   bool _landed = false;
   bool _init = false, _reduce = false, _flying = false, _started = false;
@@ -348,7 +348,7 @@ class _LandmarkShowcaseState extends State<LandmarkShowcase>
                                 fit: BoxFit.contain),
                           ),
                           // Flutter GPU is not on web: keep the sprite there.
-                          if (!_failed3d && !kIsWeb)
+                          if (!_failed3d)
                             LandmarkModel3d(
                               key: const ValueKey('showcase-3d'),
                               art: widget.art,

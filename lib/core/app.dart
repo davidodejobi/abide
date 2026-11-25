@@ -63,17 +63,18 @@ class AbideApp extends HookConsumerWidget {
         builder: (context, child) => MaterialUiCompatibilityBridge(
           child: SplashIntro(
             child: AppUpdateOverlay(
-              // Phone-width column on wide screens (desktop browsers, tablets).
-              child: ColoredBox(
-                color: Theme.of(context).scaffoldBackgroundColor,
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(
-                        maxWidth: kIsWeb ? 560 : double.infinity),
-                    child: child ?? const SizedBox.shrink(),
-                  ),
-                ),
-              ),
+              child: kIsWeb
+                  // Phone-width column on wide desktop browsers.
+                  ? ColoredBox(
+                      color: Theme.of(context).scaffoldBackgroundColor,
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 560),
+                          child: child ?? const SizedBox.shrink(),
+                        ),
+                      ),
+                    )
+                  : child ?? const SizedBox.shrink(),
             ),
           ),
         ),
