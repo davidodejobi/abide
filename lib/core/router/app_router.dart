@@ -14,6 +14,8 @@ import 'package:openbaptisthymnal/features/hymn/ui/hymn_detail_page.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/tablets_tab_screen.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/pages/tablet_editor_page.dart';
 import 'package:openbaptisthymnal/features/onboarding/ui/onboarding_page.dart';
+import 'package:openbaptisthymnal/features/plus/ui/plus_page.dart';
+import 'package:openbaptisthymnal/features/plus/ui/sponsor_page.dart';
 import 'package:openbaptisthymnal/features/settings/ui/settings_tab_screen.dart';
 import 'package:openbaptisthymnal/features/share_card/ui/scripture_share_card_page.dart';
 import 'package:openbaptisthymnal/features/share_card/ui/share_card_page.dart';
@@ -53,6 +55,8 @@ class AppRouter extends RootStackRouter {
         AutoRoute(page: ScriptureShareCardRoute.page),
         AutoRoute(page: BibleCreditsRoute.page),
         AutoRoute(page: OnboardingRoute.page),
+        AutoRoute(page: PlusRoute.page),
+        AutoRoute(page: SponsorRoute.page),
       ];
 
   /// Routes the app to onboarding on first launch, otherwise the dashboard.

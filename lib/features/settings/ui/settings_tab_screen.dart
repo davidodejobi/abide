@@ -1,4 +1,5 @@
 import 'package:auto_route/auto_route.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
@@ -13,6 +14,10 @@ import 'package:openbaptisthymnal/core/theme/theme_provider.dart';
 import 'package:openbaptisthymnal/core/widgets/lum_chip.dart';
 import 'package:openbaptisthymnal/features/bible/model/bible_edition.dart';
 import 'package:openbaptisthymnal/features/bible/providers/bible_providers.dart';
+import 'package:openbaptisthymnal/features/plus/plus_config.dart';
+import 'package:openbaptisthymnal/features/plus/providers/plus_providers.dart';
+import 'package:openbaptisthymnal/features/plus/ui/plus_gate.dart';
+import 'package:openbaptisthymnal/features/plus/ui/trial_reminder_card.dart';
 import 'package:openbaptisthymnal/features/settings/ui/widgets/font_size_control.dart';
 import 'package:openbaptisthymnal/features/settings/ui/widgets/you_rows.dart';
 import 'package:openbaptisthymnal/features/settings/ui/you_strings.dart';
@@ -59,6 +64,36 @@ class _SettingsTabScreenState extends ConsumerState<SettingsTabScreen>
               child: Text(YouStrings.title,
                   style: LumText.largeTitle.copyWith(color: c.textPrimary)),
             ),
+            const SizedBox(height: LumSpace.lg),
+            const TrialReminderCard(),
+            YouGroup(children: [
+              YouRow(
+                icon: PhosphorIcons.sparkle(),
+                title: PlusStrings.plusRow,
+                subtitle: ref.watch(plusProvider.select((e) => e.isPlus))
+                    ? PlusStrings.plusRowActive
+                    : PlusStrings.plusRowFree,
+                onTap: () => context.router.push(const PlusRoute()),
+              ),
+              YouRow(
+                icon: PhosphorIcons.heart(),
+                title: PlusStrings.sponsorRow,
+                onTap: () => context.router.push(const SponsorRoute()),
+              ),
+              // Example Plus gate: the sheet opens only for readers without Plus.
+              YouRow(
+                icon: PhosphorIcons.cloudArrowUp(),
+                title: PlusFeature.sync.title,
+                onTap: () => requirePlus(context, ref, PlusFeature.sync),
+              ),
+              if (kDebugMode)
+                SwitchListTile(
+                  title: const Text(PlusStrings.debugToggle),
+                  value: ref.watch(plusProvider.select((e) => e.isPlus)),
+                  onChanged: (v) =>
+                      ref.read(plusProvider.notifier).debugSet(v),
+                ),
+            ]),
             const YouSectionLabel(YouStrings.appearance),
             YouGroup(children: [
               YouControlRow(
