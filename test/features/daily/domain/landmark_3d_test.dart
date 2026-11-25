@@ -36,7 +36,7 @@ void main() {
   });
 
   test('every landmark, model top and whole podium, fits the view', () {
-    final raw = File('assets/images/road/models/manifest.json').readAsStringSync();
+    final raw = File('assets/images/road/landmarks.json').readAsStringSync();
     final lm = (jsonDecode(raw) as Map)['landmarks'] as Map;
     for (final e in parseFramings(raw).entries) {
       final fr = e.value, r = fr.podiumRadius;
@@ -65,15 +65,21 @@ void main() {
 
   test('the bundled manifest covers every landmark sprite', () {
     final f = parseFramings(
-        File('assets/images/road/models/manifest.json').readAsStringSync());
+        File('assets/images/road/landmarks.json').readAsStringSync());
     final sprites = Directory('assets/images/road/living')
         .listSync()
         .map((e) => e.uri.pathSegments.last)
         .where((n) => n.startsWith('lm_'))
         .map((n) => n.substring(3, n.length - 5));
     expect(f.keys.toSet(), sprites.toSet());
+    final bundled = ((jsonDecode(File('assets/images/road/landmarks.json')
+            .readAsStringSync()) as Map)['landmarks'] as Map)
+        .map((k, v) => MapEntry(k as String, (v as Map)['bundled'] as bool));
+    expect(bundled.values.where((b) => b).length, 37);
     for (final k in f.keys) {
-      expect(File('assets/images/road/models/$k.glb').existsSync(), isTrue);
+      // Only the 37 original models ship a glb; the rest come from the CDN.
+      expect(File('assets/images/road/models/$k.glb').existsSync(), bundled[k],
+          reason: k);
       expect(f[k]!.podiumRadius, greaterThan(0));
     }
   });

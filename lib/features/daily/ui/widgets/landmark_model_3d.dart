@@ -6,7 +6,10 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_scene/scene.dart' hide Animation;
 import 'package:vector_math/vector_math.dart' as vm;
 
+import '../../data/glb_cache.dart';
 import '../../domain/landmark_3d.dart';
+import '../../domain/landmark_glb_loader.dart';
+import 'road_art.dart';
 
 /// A landmark glb standing on a 3D podium (static; only the model turns), turned by [turns] (the showcase's
 /// spin controller, so whoosh, idle turn and drag inertia drive it).
@@ -39,7 +42,7 @@ class LandmarkModel3d extends StatefulWidget {
   /// The cached framing for [art], loading the manifest once.
   static Future<LandmarkFraming?> framingFor(String art) async {
     _LandmarkModel3dState._framings ??=
-        parseFramings(await rootBundle.loadString('${_LandmarkModel3dState._dir}/manifest.json'));
+        parseFramings(await rootBundle.loadString(_LandmarkModel3dState._manifest));
     return _LandmarkModel3dState._framings![art];
   }
 
@@ -49,6 +52,16 @@ class LandmarkModel3d extends StatefulWidget {
 
 class _LandmarkModel3dState extends State<LandmarkModel3d> {
   static const _dir = 'assets/images/road/models';
+  static const _manifest = 'assets/images/road/landmarks.json';
+
+  /// Cache, bundle, then CDN (see [LandmarkGlbLoader]); one for the app.
+  static final _loader = LandmarkGlbLoader(
+    cache: createGlbCache(),
+    loadBundled: (art) async => (await rootBundle.load('$_dir/$art.glb'))
+        .buffer
+        .asUint8List(),
+    fetch: fetchGlb,
+  );
   static Map<String, LandmarkFraming>? _framings;
 
   static bool _logged = false;
@@ -78,10 +91,13 @@ class _LandmarkModel3dState extends State<LandmarkModel3d> {
       // Static resources and shaders are initialised once, then reused.
       await Scene.initializeStaticResources();
       _framings ??=
-          parseFramings(await rootBundle.loadString('$_dir/manifest.json'));
+          parseFramings(await rootBundle.loadString(_manifest));
       final framing = _framings![widget.art];
       if (framing == null) throw StateError('no framing for ${widget.art}');
-      final model = await Node.fromGlbAsset('$_dir/${widget.art}.glb');
+      final info = (await RoadArt.load()).catalog.models[widget.art];
+      final glb = info == null ? null : await _loader.load(info);
+      if (glb == null) throw StateError('no model for ${widget.art}');
+      final model = await Node.fromGlbBytes(glb);
       if (!mounted) return;
       final podium = await Node.fromGlbAsset('$_dir/podium.glb');
       if (!mounted) return;
