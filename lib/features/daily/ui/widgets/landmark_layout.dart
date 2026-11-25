@@ -22,9 +22,9 @@ Rect stopFootprint(double x, double y) =>
 /// last is about 55% of the original art size).
 const landmarkScaleSteps = [1.0, .93, .86, .79];
 
-/// Landmarks the road never drops while any room exists (nativity, cross,
-/// empty tomb): placed before all others.
-const landmarkPriority = ['mat-tomb', 'mat-cross', 'mat-manger'];
+/// Landmarks (by art) the road never drops while any room exists (nativity,
+/// cross, empty tomb): placed before all others.
+const landmarkPriority = ['tomb', 'cross', 'manger'];
 
 /// World rect (camera dy = 0, camera dx = 195) of every landmark that fits on
 /// the road, by id. A landmark stays within its own day's stretch of road
@@ -54,11 +54,11 @@ Map<String, Rect> layoutLandmarks(Map<int, List<Landmark>> byDay,
     for (final id in landmarkPriority)
       for (final n in days)
         for (var i = 0; i < byDay[n]!.length; i++)
-          if (byDay[n]![i].id == id) (n, i),
+          if (byDay[n]![i].art == id) (n, i),
     for (var slot = 0; slot < 2; slot++)
       for (final n in days)
         if (slot < byDay[n]!.length &&
-            !landmarkPriority.contains(byDay[n]![slot].id))
+            !landmarkPriority.contains(byDay[n]![slot].art))
           (n, slot),
   ];
   {

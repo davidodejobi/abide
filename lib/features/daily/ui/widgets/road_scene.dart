@@ -173,7 +173,7 @@ class RoadSceneState extends State<RoadScene> with TickerProviderStateMixin {
       _layout = const {};
       _landmarkPlan = null;
     } else if (_landmarkPlan != plan.id) {
-      _landmarks = landmarksByDay(plan, _art!.landmarks, placeArtless: true);
+      _landmarks = landmarksByDay(plan, _art!.catalog);
       _layout = layoutLandmarks(_landmarks);
       _landmarkPlan = plan.id;
       _windowAt = null;

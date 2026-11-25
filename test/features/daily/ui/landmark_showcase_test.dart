@@ -32,7 +32,15 @@ void main() {
       double text = 1}) async {
     art = (await t.runAsync(RoadArt.load))!;
     await t.runAsync(() => art.ensureLandmarks(['garden']));
-    lm = art.landmarks.firstWhere((l) => l.art == 'garden');
+    lm = const Landmark(
+        id: 'd001-garden',
+        book: 'GEN',
+        fromChapter: 1,
+        toChapter: 4,
+        title: 'Light and the first garden',
+        short: 'In the beginning',
+        ref: 'Genesis 1:1',
+        art: 'garden');
     sprite = art['lm_garden']!;
     t.view.physicalSize = size * 3;
     t.view.devicePixelRatio = 3;
