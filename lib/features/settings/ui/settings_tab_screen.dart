@@ -62,8 +62,10 @@ class _SettingsTabScreenState extends ConsumerState<SettingsTabScreen>
               child: Text(YouStrings.title,
                   style: LumText.largeTitle.copyWith(color: c.textPrimary)),
             ),
-            const YouSectionLabel(AccountStrings.youSection),
-            YouGroup(children: [_AccountRow()]),
+            if (ref.watch(authRepositoryProvider) != null) ...[
+              const YouSectionLabel(AccountStrings.youSection),
+              YouGroup(children: [_AccountRow()]),
+            ],
             const YouSectionLabel(YouStrings.appearance),
             YouGroup(children: [
               YouControlRow(

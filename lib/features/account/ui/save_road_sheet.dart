@@ -81,7 +81,7 @@ class _SaveRoadSheetState extends ConsumerState<SaveRoadSheet> {
   Future<void> _sendCode() async {
     final email = _email.text.trim();
     final ok =
-        await _run(() => ref.read(authRepositoryProvider).sendEmailCode(email));
+        await _run(() => ref.read(authRepositoryProvider)!.sendEmailCode(email));
     if (ok && mounted) {
       _code.clear();
       setState(() => _step = _Step.code);
@@ -91,7 +91,7 @@ class _SaveRoadSheetState extends ConsumerState<SaveRoadSheet> {
 
   Future<void> _resend() async {
     final ok = await _run(() =>
-        ref.read(authRepositoryProvider).sendEmailCode(_email.text.trim()));
+        ref.read(authRepositoryProvider)!.sendEmailCode(_email.text.trim()));
     if (ok && mounted) _startResendTimer();
   }
 
@@ -99,7 +99,7 @@ class _SaveRoadSheetState extends ConsumerState<SaveRoadSheet> {
     if (_code.text.length != 6 || _busy) return;
     final email = _email.text.trim();
     final ok = await _run(
-        () => ref.read(authRepositoryProvider).verifyCode(email, _code.text));
+        () => ref.read(authRepositoryProvider)!.verifyCode(email, _code.text));
     if (ok && mounted) {
       _timer?.cancel();
       setState(() => _step = _Step.success);
@@ -176,7 +176,7 @@ class _SaveRoadSheetState extends ConsumerState<SaveRoadSheet> {
         const SizedBox(height: LumSpace.lg),
         TextField(
           controller: _email,
-          enabled: !_busy,
+          readOnly: _busy,
           keyboardType: TextInputType.emailAddress,
           textInputAction: TextInputAction.send,
           autofillHints: const [AutofillHints.email],
@@ -208,7 +208,7 @@ class _SaveRoadSheetState extends ConsumerState<SaveRoadSheet> {
         // one-time-code suggestion all work, and it verifies on the sixth digit.
         TextField(
           controller: _code,
-          enabled: !_busy,
+          readOnly: _busy,
           autofocus: true,
           keyboardType: TextInputType.number,
           textAlign: TextAlign.center,

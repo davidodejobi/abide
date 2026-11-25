@@ -55,9 +55,9 @@ Future<void> _sendEmail(WidgetTester tester) async {
 
 void main() {
   group('shouldPromptSaveRoad (day-3 rule)', () {
-    bool rule({int? prev, required int days, bool saved = false, bool seen = false}) =>
+    bool rule({int? prev, required int days, bool loaded = true, bool saved = false, bool seen = false}) =>
         shouldPromptSaveRoad(
-            previousDays: prev, days: days, saved: saved, alreadyPrompted: seen);
+            previousDays: prev, days: days, accountLoaded: loaded, saved: saved, alreadyPrompted: seen);
 
     test('fires when the third day is completed', () {
       expect(rule(prev: 2, days: 3), isTrue);
@@ -66,6 +66,8 @@ void main() {
       expect(rule(prev: 1, days: 2), isFalse);
       expect(rule(prev: null, days: 5), isFalse);
       expect(rule(prev: 3, days: 4), isFalse);
+      expect(rule(prev: 0, days: 3), isFalse); // sync jump
+      expect(rule(prev: 2, days: 3, loaded: false), isFalse);
     });
     test('never for a saved reader or after it was shown once', () {
       expect(rule(prev: 2, days: 3, saved: true), isFalse);

@@ -64,19 +64,25 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
   Widget build(BuildContext context) {
     super.build(context);
     // "Save your road" is offered once, as the third day is completed.
+    ref.watch(accountProvider); // keep it loaded for the listener below
     ref.listen(completedDayKeysProvider, (prev, next) {
+      if (ref.read(authRepositoryProvider) == null) return;
       final days = next.valueOrNull?.length;
+      final account = ref.read(accountProvider).valueOrNull;
       if (days == null) return;
       final prompt = shouldPromptSaveRoad(
         previousDays: prev?.valueOrNull?.length,
         days: days,
-        saved: ref.read(accountProvider).valueOrNull?.isSaved ?? false,
+        accountLoaded: account != null,
+        saved: account?.isSaved ?? false,
         alreadyPrompted: ref.read(saveRoadPromptedProvider),
       );
       if (!prompt) return;
-      ref.read(saveRoadPromptedProvider.notifier).markShown();
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) showSaveRoadSheet(context);
+        // Skip (and stay unmarked) if another sheet or page is above Today.
+        if (!mounted || ModalRoute.of(context)?.isCurrent != true) return;
+        ref.read(saveRoadPromptedProvider.notifier).markShown();
+        showSaveRoadSheet(context);
       });
     });
     final c = context.lum;

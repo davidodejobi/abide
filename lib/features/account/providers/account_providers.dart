@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openbaptisthymnal/core/storage/storage_provider.dart';
 
@@ -5,11 +6,16 @@ import '../data/fake_auth_repository.dart';
 import '../domain/auth_repository.dart';
 
 /// The one swap point: override with the Supabase repository when it exists.
-final authRepositoryProvider =
-    Provider<AuthRepository>((ref) => FakeAuthRepository());
+/// Null means no auth is available (release builds until the real layer
+/// lands): the account UI hides and nothing prompts. The fake is debug-only,
+/// or opt-in with `--dart-define=FAKE_AUTH=true`.
+final authRepositoryProvider = Provider<AuthRepository?>((ref) =>
+    kDebugMode || const bool.fromEnvironment('FAKE_AUTH')
+        ? FakeAuthRepository()
+        : null);
 
-final accountProvider = StreamProvider<AuthAccount>(
-    (ref) => ref.watch(authRepositoryProvider).watchAccount());
+final accountProvider = StreamProvider<AuthAccount>((ref) =>
+    ref.watch(authRepositoryProvider)?.watchAccount() ?? const Stream.empty());
 
 const _promptedKey = 'save_road_prompted';
 
