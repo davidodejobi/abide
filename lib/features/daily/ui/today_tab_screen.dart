@@ -207,6 +207,7 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
                   onStopTap: data == null
                       ? null
                       : (day) => _openStop(data, day, evening: done),
+                  liftedId: _lifted,
                   onLandmarkTap: data == null ? null : _openLandmark,
                 ),
               ),
@@ -495,7 +496,9 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
     await _open(open);
   }
 
-  Future<void> _openLandmark(Landmark landmark, int day) async {
+  String? _lifted;
+
+  Future<void> _openLandmark(Landmark landmark, int day, Rect from) async {
     LandmarkStory? story;
     try {
       story = (await ref.read(landmarkStoriesProvider.future))[landmark.id];
@@ -511,8 +514,14 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
       } catch (_) {}
     }
     if (!mounted) return;
+    if (sprite != null) setState(() => _lifted = landmark.id);
     final open = await showLandmarkSheet(context,
-        landmark: landmark, story: story, day: day, sprite: sprite);
+        landmark: landmark,
+        story: story,
+        day: day,
+        sprite: sprite,
+        from: sprite == null ? null : from);
+    if (mounted && _lifted == landmark.id) setState(() => _lifted = null);
     await _open(open);
   }
 

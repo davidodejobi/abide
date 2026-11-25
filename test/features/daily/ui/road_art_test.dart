@@ -54,7 +54,7 @@ void main() {
           currentDay: 6,
           totalDays: 30,
           plan: plan,
-          onLandmarkTap: (l, d) => taps.add(l.id),
+          onLandmarkTap: (l, d, _) => taps.add(l.id),
         ),
       ),
     ));
@@ -97,7 +97,7 @@ void main() {
       ),
     ));
     await t.tap(find.text('open'));
-    await t.pumpAndSettle();
+    await t.pump(const Duration(milliseconds: 300)); // the showcase never settles
     expect(find.byType(RawImage), findsOneWidget);
     await t.runAsync(() => art.ensureLandmarks([]));
     await t.pump();

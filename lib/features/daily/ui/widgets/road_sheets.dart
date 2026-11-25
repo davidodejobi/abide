@@ -11,6 +11,7 @@ import '../../domain/reading_plan.dart';
 import '../../domain/road_days.dart';
 import '../../domain/road_landmarks.dart';
 import '../daily_strings.dart';
+import 'landmark_showcase.dart';
 
 /// What a road sheet asks the Today tab to open: the reader at [targetKey],
 /// with Mark read only when [planId] and [dayIndex] are given.
@@ -63,16 +64,24 @@ Future<RoadOpen?> showLandmarkSheet(
   required LandmarkStory? story,
   required int day,
   ui.Image? sprite,
-}) {
-  return _show(
+  Rect? from,
+}) async {
+  // [from] is where the sprite stands on the road (global): it flies from
+  // there into the sheet and back. Resolves once it has landed home again.
+  final flight = ShowcaseFlight(from);
+  final open = await _show(
     context,
     (_) => LandmarkSheet(
       landmark: landmark,
       story: story,
       day: day,
       sprite: sprite,
+      flight: flight,
     ),
   );
+  if (!flight.backStarted) flight.finish();
+  await flight.settled;
+  return open;
 }
 
 Future<RoadOpen?> _show(BuildContext context, WidgetBuilder builder) {
@@ -237,7 +246,10 @@ class LandmarkSheet extends StatelessWidget {
     required this.story,
     required this.day,
     this.sprite,
+    this.flight,
   });
+
+  final ShowcaseFlight? flight;
 
   /// The landmark's picture from the road, shown at the top; null when it has
   /// none yet.
@@ -262,18 +274,24 @@ class LandmarkSheet extends StatelessWidget {
     final s = story;
     return _SheetBody(
       children: [
-        if (sprite != null) ...[
-          Center(child: _Sprite(sprite!)),
-          const SizedBox(height: LumSpace.md),
+        if (sprite != null && landmark.art != null)
+          LandmarkShowcase(
+            art: landmark.art!,
+            sprite: sprite!,
+            eyebrow: '${DailyStrings.dayN(day)} · ${landmark.ref}',
+            title: landmark.title,
+            flight: flight,
+          )
+        else ...[
+          Text('${DailyStrings.dayN(day)} · ${landmark.ref}'.toUpperCase(),
+              style: LumText.roadLabelCaps11.copyWith(color: c.textSecondary)),
+          const SizedBox(height: LumSpace.xs),
+          Semantics(
+            header: true,
+            child: Text(landmark.title,
+                style: LumText.title1.copyWith(color: c.textPrimary)),
+          ),
         ],
-        Text('${DailyStrings.dayN(day)} · ${landmark.ref}'.toUpperCase(),
-            style: LumText.roadLabelCaps11.copyWith(color: c.textSecondary)),
-        const SizedBox(height: LumSpace.xs),
-        Semantics(
-          header: true,
-          child: Text(landmark.title,
-              style: LumText.title1.copyWith(color: c.textPrimary)),
-        ),
         const SizedBox(height: LumSpace.lg),
         if (s == null)
           Text(landmark.short,
@@ -333,33 +351,4 @@ class LandmarkSheet extends StatelessWidget {
       ],
     );
   }
-}
-
-/// The road's sprite, held by its own handle: the road may evict (dispose) its
-/// copy while the sheet is open.
-class _Sprite extends StatefulWidget {
-  const _Sprite(this.image);
-
-  final ui.Image image;
-
-  @override
-  State<_Sprite> createState() => _SpriteState();
-}
-
-class _SpriteState extends State<_Sprite> {
-  late final ui.Image _mine = widget.image.clone();
-
-  @override
-  void dispose() {
-    _mine.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => ExcludeSemantics(
-        child: SizedBox(
-          height: 150,
-          child: RawImage(image: _mine, fit: BoxFit.contain),
-        ),
-      );
 }

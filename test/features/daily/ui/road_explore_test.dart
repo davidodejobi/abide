@@ -33,7 +33,7 @@ const _key = ValueKey('road');
 Widget _road({
   int day = 5,
   void Function(int)? onStop,
-  void Function(Landmark, int)? onLandmark,
+  void Function(Landmark, int, Rect)? onLandmark,
   ReadingPlan? plan,
   int total = 30,
   bool noPlan = false,
@@ -183,7 +183,7 @@ void main() {
     await loadArt(t);
     final taps = <(String, int)>[];
     await t.pumpWidget(
-        _app(_road(day: 12, onLandmark: (l, d) => taps.add((l.id, d)))));
+        _app(_road(day: 12, onLandmark: (l, d, _) => taps.add((l.id, d)))));
     await artArrives(t);
     await t.pump(const Duration(milliseconds: 100));
     final tap = _state(t).debugLandmarkTap(12);

@@ -47,6 +47,7 @@ class RoadScene extends StatefulWidget {
     this.hideBack,
     this.onStopTap,
     this.onLandmarkTap,
+    this.liftedId,
   });
 
   /// The scene's height; defaults to the design aspect ([heightFor]). The
@@ -66,8 +67,14 @@ class RoadScene extends StatefulWidget {
   /// Called with the day number of a tapped stop.
   final void Function(int day)? onStopTap;
 
-  /// Called with a tapped landmark and the day it stands at.
-  final void Function(Landmark landmark, int day)? onLandmarkTap;
+  /// Called with a tapped landmark, the day it stands at, and where its sprite
+  /// is on screen (global), so a sheet can fly it in.
+  final void Function(Landmark landmark, int day, Rect globalRect)?
+      onLandmarkTap;
+
+  /// A landmark (by id) that has lifted off the road into a sheet: its sprite
+  /// is not drawn while it is away.
+  final String? liftedId;
 
   final double width;
   final RoadMood mood;
@@ -428,6 +435,20 @@ class RoadSceneState extends State<RoadScene> with TickerProviderStateMixin {
     setState(() => _showBack = (here - _posNow).abs() > 1.2);
   }
 
+  void _tapLandmark(Landmark lm, int n) {
+    final cb = widget.onLandmarkTap;
+    if (cb == null) return;
+    final slot = math.max(0, (_landmarks[n] ?? const <Landmark>[]).indexOf(lm));
+    final r = _RoadPainter.landmarkRect(n, _cameraAt(_lookNow()), slot);
+    final k = widget.width / RoadScene.designWidth;
+    final box = context.findRenderObject();
+    final origin = box is RenderBox && box.attached
+        ? box.localToGlobal(Offset.zero)
+        : Offset.zero;
+    cb(lm, n, Rect.fromLTWH(r.left * k, r.top * k, r.width * k, r.height * k)
+        .shift(origin));
+  }
+
   void _onTap(TapUpDetails d) {
     if (_swallowTap) {
       _swallowTap = false;
@@ -438,7 +459,7 @@ class RoadSceneState extends State<RoadScene> with TickerProviderStateMixin {
     // Landmarks stand in front of their stop, so they win the tap.
     for (final h in _cache.hits.reversed) {
       if (h.rect.contains(p)) {
-        widget.onLandmarkTap?.call(h.landmark, h.n);
+        _tapLandmark(h.landmark, h.n);
         return;
       }
     }
@@ -512,6 +533,7 @@ class RoadSceneState extends State<RoadScene> with TickerProviderStateMixin {
       total: widget.totalDays,
       finished: widget.currentDay == null,
       landmarks: _landmarks,
+      liftedId: widget.liftedId,
       showTomorrowTag: widget.showTomorrowTag && widget.currentDay != null,
       semantics: _semantics,
       lookOf: _lookNow,
@@ -613,7 +635,7 @@ class RoadSceneState extends State<RoadScene> with TickerProviderStateMixin {
             textDirection: TextDirection.ltr,
             label: '${lm.title}, ${lm.ref}',
             button: true,
-            onTap: () => widget.onLandmarkTap?.call(lm, n),
+            onTap: () => _tapLandmark(lm, n),
             sortKey: OrdinalSortKey(n + .5 + i * .1),
           ),
         ));
@@ -799,6 +821,7 @@ class _RoadPainter extends CustomPainter {
     required this.total,
     required this.finished,
     required this.landmarks,
+    this.liftedId,
     required this.showTomorrowTag,
     required this.semantics,
     required this.lookOf,
@@ -814,6 +837,7 @@ class _RoadPainter extends CustomPainter {
   final int total;
   final bool finished, showTomorrowTag;
   final Map<int, List<Landmark>> landmarks;
+  final String? liftedId;
   final geo = const RoadGeometry();
   final List<CustomPainterSemantics> Function(Size, _RoadPainter) semantics;
 
@@ -1258,6 +1282,7 @@ class _RoadPainter extends CustomPainter {
     }
     final shifted = rect.shift(Offset(0, (1 - r) * 14));
     cache.hits.add(_Hit(rect, lm, n));
+    if (lm.id == liftedId) return; // it is up in the sheet
     if (r > .02) {
       final burst = math.sin(math.pi * ((pos - (n - .3)) / .9).clamp(0.0, 1.0));
       final a = (r * (.5 + .25 * pulse) + burst * .3).clamp(0.0, 1.0);
