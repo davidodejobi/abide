@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
+
 import 'package:appflowy_editor/appflowy_editor.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/gestures.dart';
@@ -424,7 +426,8 @@ class _NoteEditorView extends HookConsumerWidget {
       dividerMobileToolbarItem,
       actionItem(PhosphorIcons.linkSimple(), insertLinkToken),
       actionItem(PhosphorIcons.image(), insertImage),
-      actionItem(PhosphorIcons.microphone(), insertAudio),
+      // Recording needs native audio plugins; not available on web yet.
+      if (!kIsWeb) actionItem(PhosphorIcons.microphone(), insertAudio),
       actionItem(PhosphorIcons.clipboardText(), insertPasteText),
     ];
 

@@ -64,7 +64,8 @@ class AbideApp extends HookConsumerWidget {
               color: Theme.of(context).scaffoldBackgroundColor,
               child: Center(
                 child: ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: kIsWeb ? 560 : double.infinity),
+                  constraints:
+                      const BoxConstraints(maxWidth: kIsWeb ? 560 : double.infinity),
                   child: child ?? const SizedBox.shrink(),
                 ),
               ),
