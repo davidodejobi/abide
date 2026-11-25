@@ -267,22 +267,36 @@ void main() {
           expect(sub.updatedAt, 0);
           expect(await db.select(db.planDayProgress).get(), hasLength(1));
 
-          final queued = await db.select(db.syncOutbox).get();
-          expect(queued.map((r) => r.entity).toSet(), {
-            'notes',
-            'reading_days',
-            'plan_subscriptions',
-            'plan_day_progress'
-          });
-          expect(queued, hasLength(4));
-
-          // Triggers are live after the upgrade.
-          await db.customStatement('DELETE FROM sync_outbox');
+          // Nothing is queued while sync is off, so installs without sync pay
+          // nothing; the triggers exist and wake up when sync is enabled.
+          expect(await db.select(db.syncOutbox).get(), isEmpty);
           await db.delete(db.readingDays).go();
+          expect(await db.select(db.syncOutbox).get(), isEmpty);
+          await db.customStatement(
+              "INSERT INTO sync_state(key, value) VALUES ('sync_enabled', '1')");
+          await db.into(db.planDayProgress).insertOnConflictUpdate(
+              v5.PlanDayProgressCompanion.insert(
+                  id: 'bible-in-a-year:1',
+                  planId: 'bible-in-a-year',
+                  dayIndex: 1,
+                  completedAt: at.millisecondsSinceEpoch ~/ 1000));
           final after = await db.select(db.syncOutbox).getSingle();
-          expect((after.entity, after.op), ('reading_days', 'delete'));
+          expect((after.entity, after.op), ('plan_day_progress', 'upsert'));
         },
       );
+    });
+  });
+
+  group('Given a v5 upgrade that was interrupted part-way', () {
+    test('Then re-running it does not fail on the column that already exists',
+        () async {
+      // The shape a crash used to leave: updated_at added, nothing else done.
+      final schema = await verifier.schemaAt(4);
+      schema.rawDatabase.execute(
+          'ALTER TABLE plan_subscriptions ADD COLUMN updated_at INTEGER NOT NULL DEFAULT 0');
+      final db = AppDatabase.forTesting(schema.newConnection());
+      addTearDown(db.close);
+      await verifier.migrateAndValidate(db, 5);
     });
   });
 

@@ -84,8 +84,7 @@ void main() {
           .overrideWithValue(container.read(sharedPreferencesProvider)),
     ]);
     addTearDown(fresh.dispose);
-    expect(
-        fresh.read(storageServiceProvider).getDefaultHymnLinkEdition(), 'yo');
+    expect(fresh.read(storageServiceProvider).getDefaultHymnLinkEdition(), 'yo');
   });
 
   for (final w in [390.0, 320.0]) {

@@ -80,19 +80,21 @@ class AppDatabase extends _$AppDatabase {
             await m.createTable(planDayProgress);
           }
           if (from < 5) {
-            // Sync groundwork. The only change to an existing table is
-            // plan_subscriptions.updatedAt (defaults to the epoch, so no row is
-            // rewritten); everything else is new. From < 4 the table was just
-            // created with the column already, so adding it would be a
-            // duplicate. Backfilling the outbox means data written before sync
-            // existed is pushed on the first run instead of being stranded.
-            if (from >= 4) {
-              await m.addColumn(planSubscriptions, planSubscriptions.updatedAt);
-            }
-            await m.createTable(syncOutbox);
-            await m.createTable(syncState);
-            await createSyncTriggers(this);
-            await backfillSyncOutbox(this);
+            // One transaction: a crash part-way must not leave a half-applied
+            // v5 that fails to re-run. addColumn is also guarded, since from < 4
+            // creates plan_subscriptions with the column already in place.
+            // Nothing is queued for sync here; that happens when sync is first
+            // switched on (see SyncService), so installs without sync pay nothing.
+            await transaction(() async {
+              if (from >= 4 &&
+                  !await _hasColumn('plan_subscriptions', 'updated_at')) {
+                await m.addColumn(
+                    planSubscriptions, planSubscriptions.updatedAt);
+              }
+              await m.createTable(syncOutbox);
+              await m.createTable(syncState);
+              await createSyncTriggers(this);
+            });
           }
         },
         beforeOpen: (details) async {
@@ -132,6 +134,11 @@ class AppDatabase extends _$AppDatabase {
       'INSERT INTO notes_fts(note_id, title, content) '
       'SELECT id, title, content_markdown FROM notes',
     );
+  }
+
+  Future<bool> _hasColumn(String table, String column) async {
+    final cols = await customSelect('PRAGMA table_info($table)').get();
+    return cols.any((r) => r.read<String>('name') == column);
   }
 
   /// Creates `bible_annotations` on upgrade, but only if it isn't already there.

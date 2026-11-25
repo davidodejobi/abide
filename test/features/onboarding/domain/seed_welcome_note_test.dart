@@ -34,7 +34,7 @@ void main() {
       final storage = await _makeStorage();
       final calls = <String>[];
       Future<String> create(
-          {String title = '', String contentMarkdown = ''}) async {
+              {String title = '', String contentMarkdown = ''}) async {
         calls.add(title);
         return 'id-${calls.length}';
       }
@@ -143,8 +143,7 @@ void main() {
       expect(body, isNot(contains('—')));
     });
 
-    test(
-        'a thrown createNote leaves the seeded flag false so we retry next run',
+    test('a thrown createNote leaves the seeded flag false so we retry next run',
         () async {
       final storage = await _makeStorage();
 

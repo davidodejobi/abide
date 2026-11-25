@@ -29,34 +29,9 @@ BibleManifest johnManifest() => const BibleManifest(
             ordinal: 43,
             code: 'JHN',
             name: 'John',
-            chapterVerseCounts: [
-              51,
-              25,
-              36,
-              54,
-              47,
-              71,
-              53,
-              59,
-              41,
-              42,
-              57,
-              50,
-              38,
-              31,
-              27,
-              33,
-              26,
-              40,
-              42,
-              31,
-              25
-            ]),
+            chapterVerseCounts: [51, 25, 36, 54, 47, 71, 53, 59, 41, 42, 57, 50, 38, 31, 27, 33, 26, 40, 42, 31, 25]),
         BibleBookInfo(
-            ordinal: 44,
-            code: 'ACT',
-            name: 'Acts',
-            chapterVerseCounts: [26, 47]),
+            ordinal: 44, code: 'ACT', name: 'Acts', chapterVerseCounts: [26, 47]),
       ],
     );
 
@@ -72,8 +47,7 @@ ReadingPlan ntPlan() => ReadingPlan(
     );
 
 /// Overrides so the reader runs with no assets or database streams.
-Future<List<Override>> readerOverrides(
-    {List<Override> extra = const []}) async {
+Future<List<Override>> readerOverrides({List<Override> extra = const []}) async {
   SharedPreferences.setMockInitialValues({});
   final prefs = await SharedPreferences.getInstance();
   return [

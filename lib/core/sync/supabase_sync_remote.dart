@@ -3,6 +3,14 @@ import 'package:uuid/uuid.dart';
 
 import 'sync_remote.dart';
 
+/// Row id of a highlight on the server: a uuid v5 of the app user and verse.
+String highlightRemoteId(
+        String appUserId, String book, int chapter, int verse) =>
+    const Uuid().v5(
+      '6f1c2b0e-5a4d-4c6a-9d3e-0a7b1c2d3e4f',
+      '$appUserId:highlight:$book.$chapter.$verse',
+    );
+
 /// Supabase implementation, mapped onto the reader tables in abide-backend
 /// (migration 23). Local entity -> remote table:
 ///
@@ -26,20 +34,46 @@ class SupabaseSyncRemote implements SyncRemote {
   final SupabaseClient _client;
 
   static const _pageSize = 500;
-  static const _uuid = Uuid();
-  // Fixed namespace so every device derives the same uuid for a highlight.
-  static const _ns = '6f1c2b0e-5a4d-4c6a-9d3e-0a7b1c2d3e4f';
 
-  bool _userReady = false;
+  String? _appUserId;
+
+  /// Signs in anonymously if there is no session yet (so app start never waits
+  /// on the network), then makes sure our user row exists. Cached once done.
+  Future<String> _ensureUser() async {
+    final cached = _appUserId;
+    if (cached != null) return cached;
+    final auth = _client.auth;
+    if (auth.currentSession == null) {
+      await auth.signInAnonymously().timeout(const Duration(seconds: 10));
+    }
+    final id = await _client.rpc('ensure_app_user');
+    return _appUserId = id as String;
+  }
+
+  @override
+  Future<String> identity() => _ensureUser();
+
+  /// Constraint (22/23), permission (42501) and trigger (P0001) errors, or a
+  /// record we could not map, will fail forever; anything else (network, 5xx,
+  /// auth) is worth retrying.
+  @override
+  bool isPermanent(Object error) {
+    if (error is PostgrestException) {
+      final c = error.code ?? '';
+      return c.startsWith('22') ||
+          c.startsWith('23') ||
+          c == '42501' ||
+          c == 'P0001';
+    }
+    return error is FormatException || error is RangeError;
+  }
 
   // u_notes.title is capped at 300 characters.
   static String _clip(String s) => s.length <= 300 ? s : s.substring(0, 300);
 
-  Future<void> _ensureUser() async {
-    if (_userReady) return;
-    await _client.rpc('ensure_app_user');
-    _userReady = true;
-  }
+  /// LIKE treats _ and % as wildcards; plan ids may contain underscores.
+  static String _likeEscape(String s) =>
+      s.replaceAll(r'\', r'\\').replaceAll('_', r'\_').replaceAll('%', r'\%');
 
   // --- time helpers (local dates are unix seconds) ---------------------------
 
@@ -72,6 +106,10 @@ class SupabaseSyncRemote implements SyncRemote {
     if (c == null || v == null || c < 1 || v < 1 || p[0].isEmpty) return null;
     return (p[0], c, v);
   }
+
+  /// Per-user, so two accounts highlighting the same verse never share a row id.
+  String _highlightRemoteId(String book, int c, int v) =>
+      highlightRemoteId(_appUserId!, book, c, v);
 
   static String _highlightLocalId(String book, int c, int v) =>
       'highlight:$book.$c.$v';
@@ -112,7 +150,7 @@ class SupabaseSyncRemote implements SyncRemote {
               : null;
           if (v == null) break; // only single-verse highlights have a home
           up('u_highlights', 'id', {
-            'id': _uuid.v5(_ns, _highlightLocalId(v.$1, v.$2, v.$3)),
+            'id': _highlightRemoteId(v.$1, v.$2, v.$3),
             'translation': '*', // local highlights are edition-independent
             'book': v.$1,
             'chapter': v.$2,
@@ -123,9 +161,10 @@ class SupabaseSyncRemote implements SyncRemote {
             'deleted_at': p['is_deleted'] == 1 ? stamp : null,
           });
         case 'plan_day_progress':
-          final done = DateTime.parse(_iso(p['completed_at']));
+          final year =
+              p['plan_year'] ?? DateTime.parse(_iso(p['completed_at'])).year;
           up('u_reading_progress', 'user_id,plan_key,day_index', {
-            'plan_key': '${p['plan_id']}@${done.year}',
+            'plan_key': '${p['plan_id']}@$year',
             'day_index': p['day_index'],
             'completed_at': _iso(p['completed_at']),
             'client_updated_at': stamp,
@@ -170,13 +209,13 @@ class SupabaseSyncRemote implements SyncRemote {
         await _client
             .from('u_highlights')
             .update(patch)
-            .eq('id', _uuid.v5(_ns, _highlightLocalId(v.$1, v.$2, v.$3)));
+            .eq('id', _highlightRemoteId(v.$1, v.$2, v.$3));
       case 'plan_day_progress':
         final i = r.rowId.lastIndexOf(':');
         await _client
             .from('u_reading_progress')
             .update(patch)
-            .like('plan_key', '${r.rowId.substring(0, i)}@%')
+            .like('plan_key', '${_likeEscape(r.rowId.substring(0, i))}@%')
             .eq('day_index', int.parse(r.rowId.substring(i + 1)));
       case 'reading_days':
         await _client
@@ -214,8 +253,12 @@ class SupabaseSyncRemote implements SyncRemote {
 
     final out = <SyncRecord>[];
     for (final r in rows) {
-      final rec = _toRecord(entity, r);
-      if (rec != null) out.add(rec);
+      try {
+        final rec = _toRecord(entity, r);
+        if (rec != null) out.add(rec);
+      } catch (_) {
+        // A row we cannot read is skipped, not fatal; the cursor moves past it.
+      }
     }
     if (rows.isEmpty) return SyncPage(const [], cursor);
     final next = rows.last['updated_at'] as String;
@@ -264,19 +307,15 @@ class SupabaseSyncRemote implements SyncRemote {
           r['chapter'] as int,
           r['verse_start'] as int,
         );
-        return SyncRecord(
-          entity: entity,
-          rowId: id,
-          updatedAt: updated,
-          payload: {
-            'id': id,
-            'verse_ref': id.substring('highlight:'.length),
-            'kind': 'highlight',
-            'color': r['color'],
-            'updated_at': stamp,
-            'is_deleted': deleted ? 1 : 0,
-          },
-        );
+        // A server tombstone is a hard delete here (the local eraser deletes).
+        return rec(id, {
+          'id': id,
+          'verse_ref': id.substring('highlight:'.length),
+          'kind': 'highlight',
+          'color': r['color'],
+          'updated_at': stamp,
+          'is_deleted': 0,
+        });
       case 'plan_day_progress':
         final key = r['plan_key'] as String;
         final plan = key.substring(0, key.lastIndexOf('@'));

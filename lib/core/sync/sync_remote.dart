@@ -33,6 +33,14 @@ class SyncPage {
 /// The server side of sync. Everything above this seam is backend-agnostic, so
 /// tests run against `InMemorySyncRemote` and production uses Supabase.
 abstract class SyncRemote {
+  /// Stable id of the account the rows belong to. Sync resets its cursors and
+  /// re-queues local data when this changes (sign-out, a different account).
+  Future<String> identity();
+
+  /// True when [error] means this record will never be accepted (constraint,
+  /// permission or mapping error), as opposed to a transient network failure.
+  bool isPermanent(Object error);
+
   /// Upserts [records]. Must keep the row with the greater `updatedAt` (last
   /// write wins) and be safe to repeat.
   Future<void> push(List<SyncRecord> records);

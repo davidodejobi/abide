@@ -6,12 +6,30 @@ class InMemorySyncRemote implements SyncRemote {
   final _rows = <String, Map<String, (int, SyncRecord)>>{};
   var _seq = 0;
 
+  /// Account id reported to the service; change it to simulate a new account.
+  String owner = 'user-1';
+
+  /// Row ids the "server" refuses permanently (like a constraint violation).
+  final rejectIds = <String>{};
+
+  @override
+  Future<String> identity() async {
+    if (!online) throw StateError('offline');
+    return owner;
+  }
+
+  @override
+  bool isPermanent(Object error) => error is PermanentSyncError;
+
   /// Flip to false to simulate being offline: every call throws.
   bool online = true;
 
   @override
   Future<void> push(List<SyncRecord> records) async {
     if (!online) throw StateError('offline');
+    for (final r in records) {
+      if (rejectIds.contains(r.rowId)) throw PermanentSyncError(r.rowId);
+    }
     for (final r in records) {
       final table = _rows.putIfAbsent(r.entity, () => {});
       final existing = table[r.rowId]?.$2;
@@ -36,4 +54,11 @@ class InMemorySyncRemote implements SyncRemote {
 
   /// Test helper: current server copy of a row.
   SyncRecord? get(String entity, String rowId) => _rows[entity]?[rowId]?.$2;
+}
+
+class PermanentSyncError implements Exception {
+  PermanentSyncError(this.rowId);
+  final String rowId;
+  @override
+  String toString() => 'PermanentSyncError($rowId)';
 }

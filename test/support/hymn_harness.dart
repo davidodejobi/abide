@@ -55,8 +55,7 @@ class FakeHymnalRepository implements HymnalRepository {
                   for (var i = 0; i < _lines[e.key]!.length; i++)
                     Stanza(index: i + 1, text: _lines[e.key]![i]),
                 ],
-                chorus:
-                    e.key == 'hymn_0001' ? 'Sing it out, sing it out' : null,
+                chorus: e.key == 'hymn_0001' ? 'Sing it out, sing it out' : null,
               ),
             ),
         },

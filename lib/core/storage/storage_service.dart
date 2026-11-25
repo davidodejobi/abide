@@ -16,8 +16,7 @@ class StorageService {
   static const String _audioQualityKey = 'audio_quality';
   static const String _welcomeNoteSeededKey = 'welcome_note_seeded';
   static const String _seededReleaseNotesKey = 'seeded_release_note_ids';
-  static const String _defaultBibleLinkEditionKey =
-      'default_bible_link_edition';
+  static const String _defaultBibleLinkEditionKey = 'default_bible_link_edition';
   static const String _defaultHymnLinkEditionKey = 'default_hymn_link_edition';
   static const String _appConfigCacheKey = 'app_config_cache';
   static const String _dismissedUpdateKey = 'dismissed_update_version';

@@ -26,8 +26,7 @@ void main() {
   late Map<String, BibleBookInfo> booksByCode;
 
   setUpAll(() async {
-    final raw =
-        await rootBundle.loadString('assets/bible/en-kjv/manifest.json');
+    final raw = await rootBundle.loadString('assets/bible/en-kjv/manifest.json');
     final manifest =
         BibleManifest.fromJson(jsonDecode(raw) as Map<String, dynamic>);
     booksByCode = {for (final b in manifest.books) b.code: b};
@@ -72,8 +71,7 @@ void main() {
                 ),
                 reason: '$where -- chapter is shorter than that',
               );
-              expect(passage.start.verse, 1,
-                  reason: '$where -- whole chapters');
+              expect(passage.start.verse, 1, reason: '$where -- whole chapters');
             }
           }
         });
@@ -103,7 +101,9 @@ void main() {
         final scheduled = [
           for (final day in plan.days)
             for (final passage in day.passages)
-              for (var c = passage.start.chapter; c <= passage.end.chapter; c++)
+              for (var c = passage.start.chapter;
+                  c <= passage.end.chapter;
+                  c++)
                 '${passage.start.book}.$c',
         ];
 
@@ -199,7 +199,9 @@ void main() {
         for (final day in plan.days) {
           for (final passage in day.passages) {
             expect(passage.start.book, 'PSA');
-            for (var c = passage.start.chapter; c <= passage.end.chapter; c++) {
+            for (var c = passage.start.chapter;
+                c <= passage.end.chapter;
+                c++) {
               psalms.add(c);
             }
           }

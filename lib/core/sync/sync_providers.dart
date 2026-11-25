@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:drift/drift.dart' show TableUpdateQuery;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -46,13 +47,24 @@ class SyncController extends Notifier<void> {
     });
     if (service == null) return;
 
+    // Resume pulls; pause/hide flush what was written before backgrounding.
     _lifecycle = AppLifecycleListener(
       onResume: () => service.sync(),
+      onHide: () => service.sync(),
+      onPause: () => service.sync(),
     );
-    // Any write to the outbox (made by triggers) means unsynced local changes.
+    // Local writes to any synced table (the outbox itself is filled by
+    // triggers, which drift cannot see) start a debounced sync.
     final db = ref.watch(appDatabaseProvider);
-    _outbox = db.select(db.syncOutbox).watch().listen((rows) {
-      if (rows.isEmpty) return;
+    _outbox = db
+        .tableUpdates(TableUpdateQuery.onAllTables([
+      db.notes,
+      db.bibleAnnotations,
+      db.readingDays,
+      db.planSubscriptions,
+      db.planDayProgress,
+    ]))
+        .listen((_) {
       _timer?.cancel();
       _timer = Timer(debounce, service.sync);
     });
@@ -63,13 +75,7 @@ class SyncController extends Notifier<void> {
 /// Call once at startup. No-op (and no network) without both dart-defines.
 Future<void> initSupabaseIfConfigured() async {
   if (!supabaseConfigured) return;
+  // Initialise only: restoring a saved session is local. Signing in (a network
+  // call) happens lazily on the first sync, never before the first frame.
   await Supabase.initialize(url: supabaseUrl, publishableKey: supabaseAnonKey);
-  final auth = Supabase.instance.client.auth;
-  if (auth.currentSession == null) {
-    try {
-      await auth.signInAnonymously();
-    } catch (_) {
-      // Offline at first open: reading stays local, sync retries later.
-    }
-  }
 }

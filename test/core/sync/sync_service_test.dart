@@ -1,8 +1,10 @@
-import 'package:drift/drift.dart' hide isNull;
+import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:openbaptisthymnal/core/storage/database/app_database.dart';
 import 'package:openbaptisthymnal/core/sync/in_memory_sync_remote.dart';
+import 'package:openbaptisthymnal/core/sync/supabase_sync_remote.dart';
+import 'package:uuid/uuid.dart';
 import 'package:openbaptisthymnal/core/sync/sync_service.dart';
 
 DateTime t(int minutes) =>
@@ -154,6 +156,7 @@ void main() {
 
   group('offline then online', () {
     test('changes queue while offline and flush on reconnect', () async {
+      await a.service.sync(); // first run turns the outbox on
       remote.online = false;
       await a.writeNote('n1', 'offline note', t(1));
       await a.db.readingPlansDao.markDayComplete(
@@ -171,6 +174,7 @@ void main() {
     });
 
     test('several edits while offline coalesce to the latest', () async {
+      await a.service.sync();
       remote.online = false;
       await a.writeNote('n1', 'v1', t(1));
       await a.writeNote('n1', 'v2', t(2));
@@ -209,15 +213,19 @@ void main() {
 
       expect(await a.body('n1'), 'from B');
       final notes = await a.db.select(a.db.notes).get();
-      final copies = notes.where((n) => n.id.contains('~conflict~')).toList();
+      final copies =
+          notes.where((n) => n.title.startsWith('Conflict copy')).toList();
       expect(copies, hasLength(1));
       expect(copies.single.contentMarkdown, 'from A');
       expect(copies.single.title, startsWith('Conflict copy'));
+      expect(Uuid.isValidUUID(fromString: copies.single.id), isTrue);
 
       // The copy is itself synced, and everything converges.
       await a.service.sync();
       await b.service.sync();
       expect(await b.db.select(b.db.notes).get(), hasLength(2));
+      expect(remote.get('notes', copies.single.id), isNotNull,
+          reason: 'the copy reaches the server');
     });
 
     test('a newer local edit survives an older server copy', () async {
@@ -252,23 +260,89 @@ void main() {
       await off.writeNote('n1', 'private', t(1));
       expect(await off.service.sync(), isFalse);
       expect(remote.get('notes', 'n1'), isNull);
-      expect(await off.outbox(), 1);
+      expect(await off.outbox(), 0, reason: 'local-only: nothing is queued');
     });
 
-    test('pre-existing rows are queued by the upgrade backfill', () async {
+    test('data written before sync was on is queued when it first runs',
+        () async {
       await a.writeNote('n1', 'old data', t(1));
-      await a.db.customStatement('DELETE FROM sync_outbox');
-      await backfillOutboxForTest(a.db);
+      expect(await a.outbox(), 0);
       await a.service.sync();
       await b.service.sync();
       expect(await b.body('n1'), 'old data');
     });
-  });
-}
 
-Future<void> backfillOutboxForTest(AppDatabase db) async {
-  await db.customStatement(
-    "INSERT OR REPLACE INTO sync_outbox(entity, row_id, op, seq, queued_at) "
-    "SELECT 'notes', id, 'upsert', 1, 0 FROM notes",
-  );
+    test('a different account re-queues everything and resets cursors',
+        () async {
+      await a.writeNote('n1', 'mine', t(1));
+      await a.service.sync();
+      final other = InMemorySyncRemote()..owner = 'user-2';
+      final moved = SyncService(db: a.db, remote: other);
+      await moved.sync();
+      expect(other.get('notes', 'n1'), isNotNull);
+    });
+  });
+
+  group('rejected records', () {
+    test('a permanently rejected row is dropped and does not block the rest',
+        () async {
+      await a.service.sync();
+      await a.writeNote('bad', 'x', t(1));
+      await a.writeNote('good', 'y', t(2));
+      remote.rejectIds.add('bad');
+      expect(await a.service.sync(), isTrue);
+      expect(remote.get('notes', 'good'), isNotNull);
+      expect(remote.get('notes', 'bad'), isNull);
+      expect(await a.outbox(), 0);
+    });
+
+    test('a transient failure keeps the record queued', () async {
+      await a.service.sync();
+      await a.writeNote('n1', 'x', t(1));
+      remote.online = false;
+      expect(await a.service.sync(), isFalse);
+      expect(await a.outbox(), 1);
+    });
+  });
+
+  group('local writes', () {
+    test('restoring a deleted note beats the delete on the other device',
+        () async {
+      await a.writeNote('n1', 'x', t(1));
+      await a.service.sync();
+      await b.service.sync();
+      await a.db.notesDao.softDelete('n1');
+      await a.service.sync();
+      await b.service.sync();
+      expect((await b.db.notesDao.getNote('n1'))!.isDeleted, isTrue);
+
+      await a.db.notesDao.restore('n1');
+      await a.service.sync();
+      await b.service.sync();
+      expect((await b.db.notesDao.getNote('n1'))!.isDeleted, isFalse);
+    });
+
+    test('re-highlighting a tombstoned verse brings it back', () async {
+      await a.db.into(a.db.bibleAnnotations).insert(
+            BibleAnnotationsCompanion.insert(
+              id: 'highlight:JHN.3.16',
+              verseRef: 'JHN.3.16',
+              kind: 'highlight',
+              updatedAt: t(1),
+              isDeleted: const Value(true),
+            ),
+          );
+      await a.db.bibleAnnotationsDao.setHighlight('JHN.3.16', 'blue');
+      final row = await a.db.select(a.db.bibleAnnotations).getSingle();
+      expect(row.isDeleted, isFalse);
+      expect(row.color, 'blue');
+    });
+
+    test('highlight row ids differ per account', () {
+      expect(highlightRemoteId('u1', 'JHN', 3, 16),
+          isNot(highlightRemoteId('u2', 'JHN', 3, 16)));
+      expect(highlightRemoteId('u1', 'JHN', 3, 16),
+          highlightRemoteId('u1', 'JHN', 3, 16));
+    });
+  });
 }

@@ -119,8 +119,7 @@ void main() {
 
   test('watchBibleBacklinksForBook excludes deleted source notes', () async {
     await insertNote(id: 'gone', title: 'Gone', isDeleted: true);
-    await linksDao
-        .replaceLinksForNote('gone', [link('gone', 'bible', 'JHN.3.16')]);
+    await linksDao.replaceLinksForNote('gone', [link('gone', 'bible', 'JHN.3.16')]);
 
     expect(await linksDao.watchBibleBacklinksForBook('JHN').first, isEmpty);
   });

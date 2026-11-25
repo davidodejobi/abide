@@ -171,8 +171,7 @@ void main() {
   });
 
   group('Given the release notes shipped with the app', () {
-    test('Then their ids are unique -- a reused id re-seeds a deleted note',
-        () {
+    test('Then their ids are unique -- a reused id re-seeds a deleted note', () {
       // An id is the ONLY thing that says "this person has seen this". Reuse one
       // and the note reappears for everybody who already deleted it, which is
       // the single promise this feature makes.

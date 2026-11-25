@@ -56,8 +56,7 @@ void main() {
         expect('user'.toCamelCase, 'user');
       });
 
-      test('Then camelCase becomes snake_case without a leading underscore',
-          () {
+      test('Then camelCase becomes snake_case without a leading underscore', () {
         expect('userName'.toSnakeCase, 'user_name');
         expect('UserName'.toSnakeCase, 'user_name');
       });

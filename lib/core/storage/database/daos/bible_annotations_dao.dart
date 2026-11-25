@@ -28,8 +28,8 @@ class BibleAnnotationsDao extends DatabaseAccessor<AppDatabase>
   ) {
     final prefix = '$bookCode.$chapter.';
     return (select(bibleAnnotations)
-          ..where(
-              (t) => t.isDeleted.equals(false) & t.verseRef.like('$prefix%')))
+          ..where((t) =>
+              t.isDeleted.equals(false) & t.verseRef.like('$prefix%')))
         .watch();
   }
 
@@ -42,6 +42,8 @@ class BibleAnnotationsDao extends DatabaseAccessor<AppDatabase>
         kind: 'highlight',
         color: Value(colorKey),
         updatedAt: DateTime.now(),
+        // A highlight tombstoned by sync and then re-added must come back.
+        isDeleted: const Value(false),
       ),
     );
   }

@@ -11,8 +11,12 @@ const syncedEntities = <String, String>{
   'plan_day_progress': 'id',
 };
 
+/// Writes are queued only while sync is on (`sync_enabled` = 1) and not while a
+/// pull is being applied. With sync off the outbox therefore never grows; the
+/// whole database is queued in one go when sync is switched on.
 const _quiet = "COALESCE((SELECT value FROM sync_state WHERE key = 'applying'),"
-    " '0') = '0'";
+    " '0') = '0' AND COALESCE((SELECT value FROM sync_state WHERE key = "
+    "'sync_enabled'), '0') = '1'";
 
 String _enqueue(String entity, String keyExpr, String op) =>
     'INSERT INTO sync_outbox(entity, row_id, op, seq, queued_at) '
@@ -29,6 +33,10 @@ String _enqueue(String entity, String keyExpr, String op) =>
 /// onCreate and the v5 upgrade. Writes made while `applying` is set (pulled
 /// rows) are skipped, otherwise a pull would echo straight back as a push.
 Future<void> createSyncTriggers(AppDatabase db) async {
+  // MAX(seq) runs on every queued write; keep it an index lookup.
+  await db.customStatement(
+    'CREATE INDEX IF NOT EXISTS sync_outbox_seq ON sync_outbox(seq)',
+  );
   for (final e in syncedEntities.entries) {
     final t = e.key, k = e.value;
     await db.customStatement(

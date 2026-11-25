@@ -52,8 +52,8 @@ void main() {
 
   test('upsertFolder updates the name of an existing folder', () async {
     await addFolder('f1', 'Old');
-    await foldersDao.upsertFolder(
-        const FoldersCompanion(id: Value('f1'), name: Value('New')));
+    await foldersDao
+        .upsertFolder(const FoldersCompanion(id: Value('f1'), name: Value('New')));
 
     final folders = await foldersDao.watchFolders().first;
     expect(folders.single.name, 'New');

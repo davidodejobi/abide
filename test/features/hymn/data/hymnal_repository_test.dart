@@ -31,8 +31,7 @@ void main() {
   });
 
   test('a malformed table throws instead of reading as empty', () async {
-    expect(
-        repo(() => throw const FormatException('bad json')).getPairTable('en'),
+    expect(repo(() => throw const FormatException('bad json')).getPairTable('en'),
         throwsFormatException);
     expect(
         repo(() => {

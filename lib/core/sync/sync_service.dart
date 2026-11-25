@@ -1,8 +1,12 @@
 import 'package:drift/drift.dart';
+import 'package:logging/logging.dart';
+import 'package:uuid/uuid.dart';
 
 import '../storage/database/app_database.dart';
 import 'sync_remote.dart';
 import 'sync_triggers.dart';
+
+final _log = Logger('sync');
 
 /// Columns that stay device-local (the folders table is not synced, so a
 /// folder id from another device would break the foreign key).
@@ -44,11 +48,16 @@ class SyncService {
   Future<void>? _inFlight;
   bool _again = false;
 
-  /// Push then pull. Returns true on success, false when disabled, offline or
+  /// Pull then push. Returns true on success, false when disabled, offline or
   /// failed (the outbox keeps everything for the next run). Overlapping calls
   /// coalesce into one follow-up run.
   Future<bool> sync() async {
-    if (!enabled) return false;
+    if (!enabled) {
+      // Local-only: stop queueing and drop whatever was queued.
+      await _setState('sync_enabled', '0');
+      await _db.customStatement('DELETE FROM sync_outbox');
+      return false;
+    }
     if (_inFlight != null) {
       _again = true;
       await _inFlight;
@@ -67,15 +76,35 @@ class SyncService {
 
   Future<bool> _run() async {
     try {
+      await _prepare();
       // Pull first: if a local edit is about to lose to a newer server copy we
       // must see that before pushing, or the server would drop the push and the
       // local text would vanish without a conflict copy.
       await _pull();
       await _push();
       return true;
-    } catch (_) {
+    } catch (e, st) {
+      _log.warning('sync failed, will retry', e, st);
       return false;
     }
+  }
+
+  /// Turns the outbox on and, the first time or when the account changed,
+  /// re-queues every local row and forgets the pull cursors (the new account's
+  /// server has never seen this data, and its cursors mean nothing here).
+  Future<void> _prepare() async {
+    final owner = await _remote.identity();
+    final wasOn = await _state('sync_enabled') == '1';
+    final sameOwner = await _state('owner') == owner;
+    if (wasOn && sameOwner) return;
+    await _db.transaction(() async {
+      await _setState('sync_enabled', '1');
+      await _setState('owner', owner);
+      await _db.customStatement(
+        "DELETE FROM sync_state WHERE key LIKE 'cursor:%'",
+      );
+      await backfillSyncOutbox(_db);
+    });
   }
 
   // --- push -----------------------------------------------------------------
@@ -111,14 +140,31 @@ class SyncService {
               for (final e in row.entries)
                 if (!(_localOnly[entity]?.contains(e.key) ?? false))
                   e.key: e.value,
+              if (entity == 'plan_day_progress')
+                'plan_year': await _planYear(row),
             },
           ));
         }
       }
-      await _remote.push(records);
 
-      // Clear only what was sent; a row rewritten meanwhile has a newer seq and
-      // stays queued.
+      try {
+        await _remote.push(records);
+      } catch (e) {
+        if (!_remote.isPermanent(e)) rethrow;
+        // One bad record must not block everyone else: retry one by one and
+        // drop only the ones the server will never take.
+        for (final r in records) {
+          try {
+            await _remote.push([r]);
+          } catch (e) {
+            if (!_remote.isPermanent(e)) rethrow;
+            _log.severe('dropping unsyncable ${r.entity}/${r.rowId}', e);
+          }
+        }
+      }
+
+      // Clear only what was handled; a row rewritten meanwhile has a newer seq
+      // and stays queued.
       await _db.transaction(() async {
         for (final q in queued) {
           await _db.customStatement(
@@ -134,6 +180,16 @@ class SyncService {
     }
   }
 
+  /// The year the plan run started (from its subscription), so one run keeps
+  /// one plan_key even when it crosses New Year. Falls back to the year the day
+  /// was completed.
+  Future<int> _planYear(Map<String, Object?> progress) async {
+    final sub = await _row('plan_subscriptions', progress['plan_id'] as String);
+    final start = sub?['start_date_key'] as String?;
+    final y = start == null ? null : int.tryParse(start.split('-').first);
+    return y ?? _fromSeconds(progress['completed_at']).toUtc().year;
+  }
+
   // --- pull -----------------------------------------------------------------
 
   Future<void> _pull() async {
@@ -142,25 +198,32 @@ class SyncService {
         final cursor = await _state('cursor:$entity');
         final page = await _remote.pull(entity, cursor);
         if (page.records.isEmpty) break;
-        final copies = <Map<String, Object?>>[];
         await _db.transaction(() async {
+          final copies = <Map<String, Object?>>[];
           await _setState('applying', '1');
           try {
             for (final r in page.records) {
-              await _apply(r, copies);
+              try {
+                await _apply(r, copies);
+              } catch (e) {
+                // A row this app cannot store must not wedge the whole pull.
+                _log.severe('skipping ${r.entity}/${r.rowId}', e);
+              }
             }
           } finally {
             await _setState('applying', '0');
+          }
+          // Back outside the quiet window, still in the same transaction:
+          // copies are new local rows and the triggers queue them for push.
+          for (final c in copies) {
+            await _insert('notes', c);
           }
           if (page.cursor != null) {
             await _setState('cursor:$entity', page.cursor!);
           }
         });
-        // Outside the quiet window on purpose: copies are new local rows that
-        // must be pushed.
-        for (final c in copies) {
-          await _insert('notes', c);
-        }
+        // Raw SQL does not notify drift streams; tell the UI what changed.
+        _db.notifyUpdates({TableUpdate(entity)});
         if (page.cursor == cursor) break;
       }
     }
@@ -198,17 +261,17 @@ class SyncService {
         if (differs && local['is_deleted'] == 0) {
           copies.add({
             ...local,
-            'id': '${r.rowId}~conflict~${local['updated_at']}',
+            'id': const Uuid().v4(),
             'title': 'Conflict copy: ${local['title']}',
             'folder_id': null,
           });
         }
       }
     } else if (local != null) {
-      final newer = r.deleted
-          ? !r.updatedAt.isBefore(localTime!)
-          : r.updatedAt.isAfter(localTime!);
-      if (!newer) return;
+      // Ties apply: clocks have one-second resolution, so a restore right
+      // after a delete shares its timestamp, and the server already ruled the
+      // incoming write the winner. Re-applying an identical row is harmless.
+      if (r.updatedAt.isBefore(localTime!)) return;
     }
 
     if (r.deleted) {

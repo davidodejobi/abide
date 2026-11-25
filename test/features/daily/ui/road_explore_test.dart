@@ -268,8 +268,7 @@ void main() {
     final sem = t.ensureSemantics();
     await t.pumpWidget(_app(_road()));
     await t.pump(const Duration(milliseconds: 50));
-    final id =
-        find.semantics.byAction(SemanticsAction.scrollDown).evaluate().first.id;
+    final id = find.semantics.byAction(SemanticsAction.scrollDown).evaluate().first.id;
     // ignore: deprecated_member_use
     final owner = t.binding.pipelineOwner.semanticsOwner!;
     owner.performAction(id, SemanticsAction.scrollDown);
