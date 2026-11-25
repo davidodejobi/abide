@@ -128,7 +128,7 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
       total = data.plan.dayCount;
     }
 
-    final worldDay = currentDay ?? doneIndex;
+    final worldDay = done ? doneIndex : currentDay;
     final companions = hasPlan && worldDay != null
         ? companionSpots(
             ref

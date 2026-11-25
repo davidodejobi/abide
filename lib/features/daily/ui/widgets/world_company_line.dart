@@ -26,6 +26,8 @@ class WorldCompanyLine extends ConsumerWidget {
     if (w == null) return const SizedBox.shrink();
     final locale = Localizations.maybeLocaleOf(context) ?? const Locale('en');
     final readers = w.readersOnDay;
+    // Alone, or the count is held back: say nothing rather than guess.
+    if (finished && readers == null) return const SizedBox.shrink();
     final others = readers == null ? 0 : readers - 1;
     final text = finished
         ? DailyStrings.youAndOthersFinished(
@@ -36,7 +38,7 @@ class WorldCompanyLine extends ConsumerWidget {
                 ? null
                 : formatCount(readers, locale));
     final child = Padding(
-      padding: const EdgeInsets.only(top: 12),
+      padding: const EdgeInsets.only(top: LumSpace.md),
       child: Text(text,
           style: LumText.callout.copyWith(color: context.lum.textSecondary)),
     );
@@ -44,7 +46,7 @@ class WorldCompanyLine extends ConsumerWidget {
     // The finish moment fades in gently; reduced motion just shows it.
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: 1),
-      duration: const Duration(milliseconds: 700),
+      duration: LumMotion.slow,
       builder: (_, v, c) => Opacity(opacity: v, child: c),
       child: child,
     );

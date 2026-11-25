@@ -4,6 +4,8 @@ import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/widgets.dart' show Locale;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../providers/daily_providers.dart';
+
 /// Anonymous, aggregate company for one plan day, the shape of the
 /// `world_company(p_plan_key, p_day_index)` RPC. Any count the server holds
 /// back (under 5 readers) arrives as null: show "a few", or nothing. Never
@@ -62,8 +64,10 @@ final worldCompanySourceProvider = Provider<WorldCompanySource>((ref) =>
         fakeFlag: const bool.fromEnvironment('FAKE_WORLD_COMPANY')));
 
 final worldCompanyProvider =
-    FutureProvider.family<WorldCompany?, ({String planKey, int day})>(
+    FutureProvider.autoDispose
+        .family<WorldCompany?, ({String planKey, int day})>(
   (ref, k) async {
+    ref.watch(todayKeyProvider); // counts are per day: refetch when it rolls
     try {
       return await ref.watch(worldCompanySourceProvider).load(k.planKey, k.day);
     } catch (_) {
@@ -95,6 +99,8 @@ String formatCount(int n, Locale locale) {
   return out.toString();
 }
 
+const maxCompanionDots = 12;
+
 /// A soft dot walking near the reader. Not a real person.
 typedef CompanionSpot = ({double along, double side, double phase});
 
@@ -102,7 +108,7 @@ typedef CompanionSpot = ({double along, double side, double phase});
 /// from [seed] (the day) so the road never reshuffles on rebuild.
 List<CompanionSpot> companionSpots(int readers, int seed) {
   if (readers < worldMinCount) return const [];
-  final n = math.min(12, (math.log(readers) / math.ln10 * 3).round());
+  final n = math.min(maxCompanionDots, (math.log(readers) / math.ln10 * 3).round());
   final rnd = math.Random(seed * 7919 + 13);
   return [
     for (var i = 0; i < n; i++)

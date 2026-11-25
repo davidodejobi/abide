@@ -85,6 +85,19 @@ void main() {
     expect(find.text('A few people read Day 12 today'), findsOneWidget);
   });
 
+  testWidgets('finish moment with a held-back count shows nothing', (t) async {
+    await t.pumpWidget(ProviderScope(
+      overrides: [worldCompanySourceProvider.overrideWithValue(_NullCount())],
+      child: MaterialApp(
+          theme: AppTheme.lightTheme,
+          home: const Scaffold(
+              body: WorldCompanyLine(planKey: 'p', day: 12, finished: true))),
+    ));
+    await t.pump();
+    await t.pump();
+    expect(find.byType(Text), findsNothing);
+  });
+
   testWidgets('small counts read as a few', (t) async {
     await _pump(t, 3);
     expect(find.text('A few people read Day 12 today'), findsOneWidget);
