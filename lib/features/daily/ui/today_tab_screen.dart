@@ -357,6 +357,12 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
                                           streakDays: streak.current,
                                           onReadAhead: () =>
                                               setState(() => _readAhead = true),
+                                          onShare: () => _shareRoad(
+                                            d,
+                                            doneIndex,
+                                            streak.current,
+                                            bookNames,
+                                          ),
                                         )
                                       : Column(
                                           crossAxisAlignment:
@@ -367,6 +373,12 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
                                               bookNames: bookNames,
                                               onChange: _choosePlan,
                                               onStart: () => _startReading(d),
+                                              onShare: () => _shareRoad(
+                                                d,
+                                                d.day!.dayIndex,
+                                                streak.current,
+                                                bookNames,
+                                              ),
                                             ),
                                             WorldCompanyLine(
                                                 planKey: d.progressKey,
@@ -603,13 +615,72 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
           story: story,
           day: day,
           sprite: sprite,
-          from: sprite == null ? null : from);
+          from: sprite == null ? null : from,
+          onShareCard: () => _shareLandmark(landmark));
     } finally {
       // Whatever happened (error, timeout, swipe), the sprite is back on the
       // road and the road repaints now.
       if (mounted && _lifted == landmark.id) setState(() => _lifted = null);
     }
     await _open(open);
+  }
+
+  /// The share card for the reader's own day. [landmark] (one they tapped)
+  /// only supplies the sprite and the "Near" line; otherwise the nearest
+  /// landmark within a week of the day is used, or none.
+  Future<void> _shareRoad(TodaysReading d, int day, int streak,
+      Map<String, String> bookNames,
+      {Landmark? landmark}) async {
+    var near = landmark;
+    if (near == null) {
+      try {
+        final art = await RoadArt.load();
+        final byDay = landmarksByDay(d.plan, art.landmarks, placeArtless: true);
+        for (var i = 0; i <= 7 && near == null; i++) {
+          near = (byDay[day - i] ?? byDay[day + i])?.firstOrNull;
+        }
+      } catch (_) {
+        // The card is fine without a landmark.
+      }
+    }
+    final planDay = d.plan.dayAt(day);
+    final sprite = near?.art;
+    if (sprite != null && mounted) {
+      // Decode the sprite first so the card never exports without it.
+      try {
+        await precacheImage(
+            AssetImage('assets/images/road/living/lm_$sprite.webp'), context);
+      } catch (_) {}
+    }
+    if (!mounted) return;
+    await context.router.push(RoadShareCardRoute(
+      day: day,
+      totalDays: d.plan.dayCount,
+      planTitle: d.plan.title,
+      streak: streak,
+      passage:
+          planDay == null ? null : formatPassages(planDay.passages, bookNames),
+      landmarkTitle: near?.title,
+      landmarkArt: sprite,
+    ));
+  }
+
+  /// The card from a landmark sheet: the reader's own day and progress, never
+  /// the landmark's day, so it cannot claim a day they have not read.
+  Future<void> _shareLandmark(Landmark landmark) async {
+    final d = ref.read(todaysReadingProvider).valueOrNull;
+    if (d == null) return;
+    final next = d.day?.dayIndex;
+    final day = next == null
+        ? d.plan.dayCount
+        : d.isAnchored
+            ? (d.todayRead ? d.statuses!.today : next)
+            : ref.read(isTodayCompleteProvider) && next > 1
+                ? next - 1
+                : next;
+    await _shareRoad(d, day, ref.read(streakProvider).current,
+        ref.read(planBookNamesProvider).valueOrNull ?? const {},
+        landmark: landmark);
   }
 
   Future<void> _open(RoadOpen? open) async {
@@ -833,12 +904,14 @@ class _Reading extends ConsumerWidget {
     required this.bookNames,
     required this.onChange,
     required this.onStart,
+    required this.onShare,
   });
 
   final TodaysReading reading;
   final Map<String, String> bookNames;
   final VoidCallback onChange;
   final VoidCallback onStart;
+  final VoidCallback onShare;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -970,6 +1043,7 @@ class _Reading extends ConsumerWidget {
                   context.router.push(PlanDaysRoute(planId: reading.plan.id)),
             ),
             _TextAction(label: DailyStrings.changePlan, onTap: onChange),
+            _TextAction(label: DailyStrings.shareRoad, onTap: onShare),
           ],
         ),
       ],
@@ -1019,6 +1093,7 @@ class _DayDone extends ConsumerWidget {
     required this.bookNames,
     required this.streakDays,
     required this.onReadAhead,
+    required this.onShare,
   });
 
   final TodaysReading reading;
@@ -1026,6 +1101,7 @@ class _DayDone extends ConsumerWidget {
   final Map<String, String> bookNames;
   final int streakDays;
   final VoidCallback onReadAhead;
+  final VoidCallback onShare;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -1090,7 +1166,13 @@ class _DayDone extends ConsumerWidget {
         const SizedBox(height: 8),
         Align(
           alignment: Alignment.centerLeft,
-          child: _TextAction(label: DailyStrings.readAhead, onTap: onReadAhead),
+          child: Wrap(
+            spacing: LumSpace.md,
+            children: [
+              _TextAction(label: DailyStrings.readAhead, onTap: onReadAhead),
+              _TextAction(label: DailyStrings.shareRoad, onTap: onShare),
+            ],
+          ),
         ),
       ],
     );
