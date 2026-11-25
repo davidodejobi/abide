@@ -1,12 +1,11 @@
-import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:openbaptisthymnal/core/theme/lum_theme.dart';
 import 'package:openbaptisthymnal/features/share_card/ui/share_card_style.dart';
 import 'package:openbaptisthymnal/features/share_card/ui/widgets/share_card_frame.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/notes_strings.dart';
 
-/// The hymn card: the hymn number as the eyebrow, the title, then the lyrics
-/// scaled down only as far as needed to fit.
+/// The hymn card: the hymn number as the eyebrow, the title, then the lyrics.
+/// The frame scales the road and text so the whole stanza fits.
 class LyricCard extends StatelessWidget {
   const LyricCard({
     super.key,
@@ -29,25 +28,15 @@ class LyricCard extends StatelessWidget {
       style: style,
       format: format,
       eyebrow: NotesStrings.hymnEyebrow(hymnNumber),
-      body: (context, t) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      span: (t) => TextSpan(
         children: [
-          Text(title,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: LumText.title3.copyWith(color: t.textPrimary)),
-          const SizedBox(height: LumSpace.md),
-          Expanded(
-            child: SizedBox(
-              width: double.infinity,
-              child: AutoSizeText(
-                body,
-                style: LumText.readingLyrics.copyWith(color: t.textPrimary),
-                minFontSize: 11,
-                maxFontSize: 22,
-                stepGranularity: 0.5,
-              ),
-            ),
+          TextSpan(
+            text: '$title\n\n',
+            style: LumText.title3.copyWith(color: t.textPrimary),
+          ),
+          TextSpan(
+            text: body,
+            style: LumText.readingLyrics.copyWith(color: t.textPrimary),
           ),
         ],
       ),

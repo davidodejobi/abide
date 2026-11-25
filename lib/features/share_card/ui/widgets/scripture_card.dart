@@ -1,4 +1,3 @@
-import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:openbaptisthymnal/core/theme/lum_theme.dart';
 import 'package:openbaptisthymnal/features/share_card/ui/scripture_share_card_page.dart'
@@ -8,7 +7,7 @@ import 'package:openbaptisthymnal/features/share_card/ui/widgets/share_card_fram
 
 /// The scripture card: the reference as the eyebrow, the verses in the reading
 /// face. A multi-verse passage keeps its verse numbers so the boundaries stay
-/// visible, and the text scales down only when it would overflow.
+/// visible. The frame scales the road and text so every verse fits.
 class ScriptureCard extends StatelessWidget {
   const ScriptureCard({
     super.key,
@@ -33,27 +32,19 @@ class ScriptureCard extends StatelessWidget {
       style: style,
       format: format,
       eyebrow: reference.toUpperCase(),
-      body: (context, t) {
+      span: (t) {
         final base = LumText.readingScripture.copyWith(color: t.textPrimary);
         final number = LumText.readingVerseNumber.copyWith(color: t.textAccent);
-        return SizedBox(
-          width: double.infinity,
-          child: AutoSizeText.rich(
-            TextSpan(
-              children: [
-                for (var i = 0; i < verses.length; i++) ...[
-                  if (i > 0) const TextSpan(text: '  '),
-                  if (verses.length > 1)
-                    TextSpan(text: '${verses[i].number} ', style: number),
-                  TextSpan(text: verses[i].text),
-                ],
-              ],
-            ),
-            style: base,
-            minFontSize: 11,
-            maxFontSize: 24,
-            stepGranularity: 0.5,
-          ),
+        return TextSpan(
+          style: base,
+          children: [
+            for (var i = 0; i < verses.length; i++) ...[
+              if (i > 0) const TextSpan(text: '  '),
+              if (verses.length > 1)
+                TextSpan(text: '${verses[i].number} ', style: number),
+              TextSpan(text: verses[i].text),
+            ],
+          ],
         );
       },
     );
