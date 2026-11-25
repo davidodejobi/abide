@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:openbaptisthymnal/core/utils/json_loader.dart';
 import 'package:openbaptisthymnal/features/hymn/data/hymnal_repository.dart';
@@ -32,8 +33,12 @@ class _FakeRepo implements HymnalRepository {
 /// only, missing file -> empty) is exercised without a Flutter binding.
 class _DiskLoader extends JsonLoader {
   @override
-  Future<Map<String, dynamic>> loadJson(String path) async =>
-      json.decode(await File(path).readAsString()) as Map<String, dynamic>;
+  Future<Map<String, dynamic>> loadJson(String path) async {
+    final f = File(path);
+    // rootBundle reports a missing asset as a FlutterError.
+    if (!f.existsSync()) throw FlutterError('Unable to load asset: $path');
+    return json.decode(await f.readAsString()) as Map<String, dynamic>;
+  }
 }
 
 void main() {

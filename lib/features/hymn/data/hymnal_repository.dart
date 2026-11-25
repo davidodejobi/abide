@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show FlutterError;
 import 'package:openbaptisthymnal/core/utils/json_loader.dart';
 import 'package:openbaptisthymnal/features/hymn/model/hymnal_core.dart';
 import 'package:openbaptisthymnal/features/hymn/model/hymnal_index.dart';
@@ -43,9 +44,11 @@ class HymnalRepositoryImpl implements HymnalRepository {
     try {
       data = await _jsonLoader
           .loadJson('assets/hymnal/pairs/yo_$languageCode.json');
-    } catch (_) {
+    } on FlutterError {
       return const {}; // no table shipped for this language
     }
+    // A table that exists but is malformed throws: silently losing every pair
+    // would make cross-language links fall back without any signal.
     final pairs = (data['pairs'] as Map<String, dynamic>?) ?? const {};
     return {
       for (final e in pairs.entries)
