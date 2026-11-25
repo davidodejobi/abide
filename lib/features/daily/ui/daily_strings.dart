@@ -90,6 +90,13 @@ abstract final class DailyStrings {
   static String chapters(int n) => n == 1 ? '1 chapter' : '$n chapters';
   static String doneCaps(String passage) => 'DONE · ${passage.toUpperCase()}';
   static String dayN(int n) => 'Day $n';
+  // World company: aggregate counts only. A null count means "a few".
+  static String peopleReadToday(int day, String? count) => count == null
+      ? 'A few people read Day $day today'
+      : '$count people read Day $day today';
+  static String youAndOthersFinished(int day, String? others) => others == null
+      ? 'You finished Day $day with a few others'
+      : 'You and $others others finished Day $day';
   static String tomorrowDay(int n) => 'Tomorrow: Day $n';
   static String dayOfTotal(int n, int total) => 'Day $n of $total';
   static String streakDays(int n) => n == 1 ? 'day' : 'days';
