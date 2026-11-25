@@ -65,7 +65,8 @@ void main() {
   });
 
   testWidgets('quality chip writes the audio quality provider', (tester) async {
-    final container = await _pump(tester);
+    // Tall enough that the Plus and Account groups do not push it off screen.
+    final container = await _pump(tester, size: const Size(390, 2200));
     await tester.tap(find.text(AudioQuality.high.label));
     await tester.pump();
     expect(container.read(audioQualityProvider), AudioQuality.high);
