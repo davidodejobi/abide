@@ -134,6 +134,7 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
                       mood: mood,
                       currentDay: currentDay,
                       totalDays: total,
+                      plan: data?.plan,
                       showTomorrowTag: done,
                     ),
                   ),
