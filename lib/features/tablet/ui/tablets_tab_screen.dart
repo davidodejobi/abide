@@ -2,21 +2,27 @@ import 'dart:io';
 
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:openbaptisthymnal/core/router/app_router.dart';
 import 'package:openbaptisthymnal/core/storage/database/app_database.dart';
 import 'package:openbaptisthymnal/core/storage/database/daos/notes_dao.dart';
-import 'package:openbaptisthymnal/core/theme/app_colors.dart';
-import 'package:openbaptisthymnal/core/theme/app_text_styles.dart';
+import 'package:openbaptisthymnal/core/theme/lum_theme.dart';
+import 'package:openbaptisthymnal/core/widgets/lum_button.dart';
+import 'package:openbaptisthymnal/core/widgets/lum_chip.dart';
+import 'package:openbaptisthymnal/core/widgets/lum_group_card.dart';
 import 'package:openbaptisthymnal/features/hymn/ui/widgets/search_bar_widget.dart';
+import 'package:openbaptisthymnal/features/tablet/domain/note_date_label.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/tablet_preview.dart';
 import 'package:openbaptisthymnal/features/tablet/providers/tablets_providers.dart';
+import 'package:openbaptisthymnal/features/tablet/ui/notes_strings.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/widgets/tablet_filter_sheet.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
-/// Tablets tab — the app's default landing screen. Lists the user's tablets and
-/// opens the editor for create/edit.
+/// The Notes tab (Figma M4-01 list, M4-03 empty): title, search, filter and the
+/// note cards. Opens the editor to create or edit. The class keeps its old
+/// name so the generated route stays put.
 @RoutePage()
 class TabletsTabScreen extends HookConsumerWidget {
   const TabletsTabScreen({super.key});
@@ -31,101 +37,149 @@ class TabletsTabScreen extends HookConsumerWidget {
     final activeFolder = ref.watch(activeFolderProvider);
     final activeTag = ref.watch(activeTagProvider);
     final hasFilter = activeFolder != null || activeTag != null;
+    final all = ref.watch(tabletsListProvider);
+    final total = all.valueOrNull?.length;
+    final c = context.lum;
 
-    Widget body() {
-      if (query.isNotEmpty) return _SearchResults(query: query);
-      if (activeTag != null) return _TagTabletsList(tagId: activeTag);
-      if (activeFolder != null) {
-        return _FolderTabletsList(folderId: activeFolder);
-      }
-      return const _TabletsList();
+    // A brand-new notebook: no notes at all, nothing typed, no filter.
+    final isEmpty = total == 0 && query.isEmpty && !hasFilter;
+
+    void newNote() => context.router.push(TabletEditorRoute());
+
+    final Widget body;
+    if (query.isNotEmpty) {
+      body = _SearchResults(query: query);
+    } else if (activeTag != null) {
+      body = _NoteList(
+        notes: ref.watch(notesWithTagProvider(activeTag)),
+        empty: const _QuietEmpty(
+          icon: PhosphorIconsRegular.tag,
+          title: NotesStrings.tagEmpty,
+          body: NotesStrings.tagEmptyBody,
+        ),
+      );
+    } else if (activeFolder != null) {
+      body = _NoteList(
+        notes: ref.watch(tabletsInFolderProvider(activeFolder)),
+        empty: const _QuietEmpty(
+          icon: PhosphorIconsRegular.folderOpen,
+          title: NotesStrings.folderEmpty,
+          body: NotesStrings.folderEmptyBody,
+        ),
+      );
+    } else if (isEmpty) {
+      body = _EmptyNotes(onWrite: newNote);
+    } else {
+      body = _NoteList(
+        notes: all,
+        empty: _EmptyNotes(onWrite: newNote),
+      );
     }
 
-    // Lift the "new tablet" action off the top bar and into a thumb-reachable
-    // FAB that floats just above the bottom navigation bar.
-    final navClearance = MediaQuery.of(context).padding.bottom + 100;
-
-    return Stack(
-      children: [
-        Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 8, 12),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Tablets',
-                      style: AppTextStyles.headlineLarge.copyWith(
-                        fontWeight: FontWeight.w600,
+    return CustomScrollView(
+      slivers: [
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              LumSize.screenGutter + 4,
+              LumSpace.xxxl,
+              LumSize.screenGutter + 4,
+              LumSpace.lg,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Semantics(
+                            header: true,
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                NotesStrings.notes,
+                                maxLines: 1,
+                                style: LumText.roadDisplayMedium56
+                                    .copyWith(color: c.textPrimary),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: LumSpace.xs),
+                          Text(
+                            total == null || total == 0
+                                ? NotesStrings.noNotesYet
+                                : NotesStrings.count(total),
+                            style: LumText.subheadline
+                                .copyWith(color: c.textSecondary),
+                          ),
+                        ],
                       ),
                     ),
+                    const SizedBox(width: LumSpace.md),
+                    _NewNoteButton(onPressed: newNote),
+                  ],
+                ),
+                if (!isEmpty) ...[
+                  const SizedBox(height: LumSpace.lg),
+                  SearchBarWidget(
+                    controller: searchController,
+                    hintText: NotesStrings.searchHint,
+                    onChanged: (value) => searchQuery.value = value,
                   ),
-                  if (query.isEmpty)
-                    IconButton(
-                      icon: Icon(
-                        hasFilter
-                            ? PhosphorIcons.funnel(PhosphorIconsStyle.fill)
-                            : PhosphorIcons.funnel(),
-                        color: hasFilter
-                            ? Theme.of(context).colorScheme.primary
-                            : null,
-                      ),
-                      tooltip: 'Filter tablets',
-                      onPressed: () => showModalBottomSheet<void>(
-                        context: context,
-                        showDragHandle: true,
-                        isScrollControlled: true,
-                        useSafeArea: true,
-                        constraints: BoxConstraints(
-                          maxHeight: MediaQuery.of(context).size.height * 0.9,
-                        ),
-                        builder: (_) => const TabletFilterSheet(),
-                      ),
-                    ),
-                  const SizedBox(width: 4),
+                  const SizedBox(height: LumSpace.md),
+                  const _FilterRow(),
                 ],
-              ),
+              ],
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-              child: SearchBarWidget(
-                controller: searchController,
-                hintText: 'Search tablets...',
-                onChanged: (value) => searchQuery.value = value,
-              ),
-            ),
-            if (query.isEmpty && hasFilter) const _ActiveFilterBar(),
-            Expanded(child: body()),
-          ],
-        ),
-        // Thumb-reachable primary action, floating clear of the bottom nav.
-        Positioned(
-          right: 20,
-          bottom: navClearance,
-          child: FloatingActionButton(
-            heroTag: 'new_tablet_fab',
-            backgroundColor: AppColors.secondary,
-            foregroundColor: AppColors.primaryDark,
-            elevation: 4,
-            tooltip: 'New tablet',
-            onPressed: () => context.router.push(TabletEditorRoute()),
-            child: Icon(PhosphorIcons.plus(), size: 28),
           ),
         ),
+        body,
       ],
     );
   }
 }
 
-/// A dismissible strip naming the active folder/tag filter so the user can see
-/// what's narrowing the list now that the chip rows are gone, and clear it.
-class _ActiveFilterBar extends ConsumerWidget {
-  const _ActiveFilterBar();
+/// The ink pencil button beside the title (Figma M4-01).
+class _NewNoteButton extends StatelessWidget {
+  const _NewNoteButton({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.lum;
+    return Semantics(
+      button: true,
+      label: NotesStrings.newNote,
+      excludeSemantics: true,
+      onTap: onPressed,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onPressed,
+        child: Container(
+          width: 56,
+          height: 56,
+          decoration: BoxDecoration(color: c.bgPrimary, shape: BoxShape.circle),
+          child: Icon(PhosphorIcons.pencilSimple(),
+              size: LumSize.iconMd, color: c.textOnPrimary),
+        ),
+      ),
+    );
+  }
+}
+
+/// Filter chip plus, when a folder or tag is active, a selected chip naming it
+/// (tap to clear). Reuses the existing folder and tag filter sheet.
+class _FilterRow extends ConsumerWidget {
+  const _FilterRow();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final scheme = Theme.of(context).colorScheme;
     final activeFolder = ref.watch(activeFolderProvider);
     final activeTag = ref.watch(activeTagProvider);
 
@@ -141,106 +195,110 @@ class _ActiveFilterBar extends ConsumerWidget {
           .firstOrNull;
       if (folder != null) label = folder.name;
     }
-    if (label == null) return const SizedBox.shrink();
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: InputChip(
-          label: Text(label),
-          avatar: Icon(
-            activeTag != null ? PhosphorIcons.tag() : PhosphorIcons.folder(),
-            size: 18,
+    return Wrap(
+      spacing: LumSpace.sm,
+      runSpacing: LumSpace.sm,
+      children: [
+        LumChip(
+          label: NotesStrings.filter,
+          icon: PhosphorIcons.funnel(),
+          onTap: () => showModalBottomSheet<void>(
+            context: context,
+            showDragHandle: true,
+            isScrollControlled: true,
+            useSafeArea: true,
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.9,
+            ),
+            builder: (_) => const TabletFilterSheet(),
           ),
-          backgroundColor: scheme.primaryContainer,
-          labelStyle: TextStyle(
-            color: scheme.onPrimaryContainer,
-            fontFamily: 'Geist',
-            fontWeight: FontWeight.w600,
-          ),
-          deleteIconColor: scheme.onPrimaryContainer,
-          onDeleted: () {
-            ref.read(activeFolderProvider.notifier).state = null;
-            ref.read(activeTagProvider.notifier).state = null;
-          },
         ),
+        if (label != null)
+          LumChip(
+            label: label,
+            selected: true,
+            onTap: () {
+              ref.read(activeFolderProvider.notifier).state = null;
+              ref.read(activeTagProvider.notifier).state = null;
+            },
+          ),
+      ],
+    );
+  }
+}
+
+/// Loading, error, empty or the stack of note cards, as a sliver.
+class _NoteList extends ConsumerWidget {
+  const _NoteList({required this.notes, required this.empty});
+
+  final AsyncValue<List<Note>> notes;
+  final Widget empty;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return notes.when(
+      loading: () => const _Centered(child: CircularProgressIndicator()),
+      error: (err, _) => _Centered(
+        child: Text(NotesStrings.loadError(err),
+            textAlign: TextAlign.center,
+            style: LumText.body.copyWith(color: context.lum.textPrimary)),
+      ),
+      data: (list) {
+        if (list.isEmpty) return empty;
+        return SliverPadding(
+          padding: const EdgeInsets.fromLTRB(
+              LumSize.screenGutter, 0, LumSize.screenGutter, 150),
+          sliver: SliverList.separated(
+            itemCount: list.length + 1,
+            separatorBuilder: (_, __) => const SizedBox(height: LumSpace.md),
+            itemBuilder: (context, i) =>
+                i == list.length ? const _SavedLine() : NoteCard(note: list[i]),
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// Quiet closing line: notes live on the device.
+class _SavedLine extends StatelessWidget {
+  const _SavedLine();
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.lum;
+    return Padding(
+      padding: const EdgeInsets.only(top: LumSpace.sm),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+              width: 8,
+              height: 8,
+              decoration:
+                  BoxDecoration(color: c.iconSuccess, shape: BoxShape.circle)),
+          const SizedBox(width: LumSpace.sm),
+          Flexible(
+            child: Text(NotesStrings.savedOnPhone,
+                style: LumText.footnote.copyWith(color: c.textSecondary)),
+          ),
+        ],
       ),
     );
   }
 }
 
-/// Live list of tablets in the active folder.
-class _FolderTabletsList extends ConsumerWidget {
-  const _FolderTabletsList({required this.folderId});
+class _Centered extends StatelessWidget {
+  const _Centered({required this.child});
 
-  final String folderId;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final tabletsAsync = ref.watch(tabletsInFolderProvider(folderId));
-    return tabletsAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (err, _) => Center(child: Text('Could not load tablets: $err')),
-      data: (tablets) {
-        if (tablets.isEmpty) return const _EmptyFolder();
-        return ListView.separated(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
-          itemCount: tablets.length,
-          separatorBuilder: (_, __) => const Divider(height: 1),
-          itemBuilder: (context, index) => _TabletTile(tablet: tablets[index]),
-        );
-      },
-    );
-  }
-}
-
-/// Live list of tablets carrying the active tag.
-class _TagTabletsList extends ConsumerWidget {
-  const _TagTabletsList({required this.tagId});
-
-  final String tagId;
+  final Widget child;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final tabletsAsync = ref.watch(notesWithTagProvider(tagId));
-    return tabletsAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (err, _) => Center(child: Text('Could not load tablets: $err')),
-      data: (tablets) {
-        if (tablets.isEmpty) return const _EmptyTag();
-        return ListView.separated(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
-          itemCount: tablets.length,
-          separatorBuilder: (_, __) => const Divider(height: 1),
-          itemBuilder: (context, index) => _TabletTile(tablet: tablets[index]),
-        );
-      },
-    );
-  }
-}
-
-/// Live list of all tablets, shown when the search box is empty.
-class _TabletsList extends ConsumerWidget {
-  const _TabletsList();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final tabletsAsync = ref.watch(tabletsListProvider);
-    return tabletsAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (err, _) => Center(child: Text('Could not load tablets: $err')),
-      data: (tablets) {
-        if (tablets.isEmpty) return const _EmptyTablets();
-        return ListView.separated(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
-          itemCount: tablets.length,
-          separatorBuilder: (_, __) => const Divider(height: 1),
-          itemBuilder: (context, index) => _TabletTile(tablet: tablets[index]),
-        );
-      },
-    );
-  }
+  Widget build(BuildContext context) => SliverFillRemaining(
+        hasScrollBody: false,
+        child: Center(child: child),
+      );
 }
 
 /// Debounced full-text search results for the current query.
@@ -251,369 +309,348 @@ class _SearchResults extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final resultsAsync = ref.watch(tabletSearchProvider(query));
-    return resultsAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (err, _) => Center(child: Text('Search failed: $err')),
-      data: (hits) {
-        if (hits.isEmpty) return _NoResults(query: query);
-        return ListView.separated(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
-          itemCount: hits.length,
-          separatorBuilder: (_, __) => const Divider(height: 1),
-          itemBuilder: (context, index) => _SearchResultTile(hit: hits[index]),
+    final c = context.lum;
+    return ref.watch(tabletSearchProvider(query)).when(
+          loading: () => const _Centered(child: CircularProgressIndicator()),
+          error: (err, _) => _Centered(
+            child: Text(NotesStrings.searchFailed(err),
+                textAlign: TextAlign.center,
+                style: LumText.body.copyWith(color: c.textPrimary)),
+          ),
+          data: (hits) {
+            if (hits.isEmpty) {
+              return SliverFillRemaining(
+                hasScrollBody: false,
+                child: _QuietEmptyBody(
+                  icon: PhosphorIcons.magnifyingGlass(),
+                  title: NotesStrings.noMatches(query),
+                ),
+              );
+            }
+            return SliverPadding(
+              padding: const EdgeInsets.fromLTRB(
+                  LumSize.screenGutter, 0, LumSize.screenGutter, 150),
+              sliver: SliverList.separated(
+                itemCount: hits.length,
+                separatorBuilder: (_, __) =>
+                    const SizedBox(height: LumSpace.md),
+                itemBuilder: (context, i) => _SearchHitCard(hit: hits[i]),
+              ),
+            );
+          },
         );
-      },
+  }
+}
+
+/// One card surface shared by list and search rows.
+class _CardShell extends StatelessWidget {
+  const _CardShell(
+      {required this.label, required this.onTap, required this.child});
+
+  final String label;
+  final VoidCallback onTap;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.lum;
+    return Semantics(
+      button: true,
+      label: label,
+      excludeSemantics: true,
+      onTap: onTap,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Container(
+          width: double.infinity,
+          constraints: const BoxConstraints(minHeight: LumSize.rowMin),
+          padding: const EdgeInsets.all(LumSpace.lg),
+          decoration: LumGroupCard.decoration(c),
+          child: child,
+        ),
+      ),
     );
   }
 }
 
-/// A single search hit: tablet title plus the highlighted snippet returned by
-/// FTS5. Tapping opens the editor for that tablet.
-class _SearchResultTile extends StatelessWidget {
-  const _SearchResultTile({required this.hit});
+/// A search hit: title plus the highlighted snippet from FTS5.
+class _SearchHitCard extends StatelessWidget {
+  const _SearchHitCard({required this.hit});
 
   final NoteSearchHit hit;
 
   @override
   Widget build(BuildContext context) {
+    final c = context.lum;
     final note = hit.note;
-    final title = note.title.trim().isEmpty ? 'Untitled' : note.title.trim();
+    final title =
+        note.title.trim().isEmpty ? NotesStrings.untitled : note.title.trim();
     final snippet = hit.snippet.replaceAll(RegExp(r'\s+'), ' ').trim();
-
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(vertical: 6),
-      title: Text(
-        title,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: const TextStyle(
-          fontFamily: 'Geist',
-          fontWeight: FontWeight.w600,
-          fontSize: 16,
-        ),
-      ),
-      subtitle: snippet.isEmpty
-          ? null
-          : Text(
-              snippet,
+    return _CardShell(
+      label: title,
+      onTap: () => context.router.push(TabletEditorRoute(noteId: note.id)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontFamily: 'EBGaramond', fontSize: 15),
-            ),
-      onTap: () => context.router.push(TabletEditorRoute(noteId: note.id)),
-    );
-  }
-}
-
-/// Empty state shown when a non-empty query matches no tablets.
-class _NoResults extends StatelessWidget {
-  const _NoResults({required this.query});
-
-  final String query;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = Theme.of(context).colorScheme.onSurfaceVariant;
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(PhosphorIcons.magnifyingGlass(), size: 64, color: color),
-          const SizedBox(height: 12),
-          Text(
-            'No tablets match "$query"',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontFamily: 'Geist',
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: color,
-            ),
-          ),
+              style: LumText.headline.copyWith(color: c.textPrimary)),
+          if (snippet.isNotEmpty) ...[
+            const SizedBox(height: LumSpace.xs),
+            Text(snippet,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: LumText.subheadline.copyWith(color: c.textSecondary)),
+          ],
         ],
       ),
     );
   }
 }
 
-class _TabletTile extends ConsumerWidget {
-  const _TabletTile({required this.tablet});
+/// A note in the list: title, preview, tags and when it was last touched.
+/// Swipe left to delete.
+class NoteCard extends ConsumerWidget {
+  const NoteCard({super.key, required this.note, this.now});
 
-  final Note tablet;
+  final Note note;
+
+  /// Clock for the date label; tests pin it.
+  final DateTime? now;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final c = context.lum;
     final title =
-        tablet.title.trim().isEmpty ? 'Untitled' : tablet.title.trim();
-    final preview = notePreviewText(tablet.contentMarkdown);
-    final imagePath = notePreviewImage(tablet.contentMarkdown);
-    final hasAudio = imagePath == null && noteHasAudio(tablet.contentMarkdown);
+        note.title.trim().isEmpty ? NotesStrings.untitled : note.title.trim();
+    final preview = notePreviewText(note.contentMarkdown);
+    final imagePath = notePreviewImage(note.contentMarkdown);
+    final hasAudio = imagePath == null && noteHasAudio(note.contentMarkdown);
+    final tags =
+        ref.watch(tagsForNoteProvider(note.id)).valueOrNull ?? const [];
+    final secondary = preview.isNotEmpty
+        ? preview
+        : (hasAudio
+            ? NotesStrings.voiceNote
+            : (imagePath != null ? NotesStrings.photo : ''));
 
-    return Dismissible(
-      key: ValueKey(tablet.id),
-      direction: DismissDirection.endToStart,
-      background: Container(
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 24),
-        color: Theme.of(context).colorScheme.errorContainer,
-        child: Icon(
-          PhosphorIcons.trash(),
-          color: Theme.of(context).colorScheme.onErrorContainer,
-        ),
-      ),
-      onDismissed: (_) =>
-          ref.read(tabletsRepositoryProvider).deleteNote(tablet.id),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(vertical: 6),
-        leading: imagePath != null
-            ? _TabletThumbnail(path: imagePath)
-            : hasAudio
-                ? Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color:
-                          Theme.of(context).colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(
-                      PhosphorIcons.microphone(),
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  )
-                : null,
-        title: Text(
-          title,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-            fontFamily: 'Geist',
-            fontWeight: FontWeight.w600,
-            fontSize: 16,
+    void delete() => ref.read(tabletsRepositoryProvider).deleteNote(note.id);
+
+    return Semantics(
+      customSemanticsActions: {
+        const CustomSemanticsAction(label: NotesStrings.deleteNote): delete,
+      },
+      child: Dismissible(
+        key: ValueKey(note.id),
+        direction: DismissDirection.endToStart,
+        background: Container(
+          alignment: Alignment.centerRight,
+          padding: const EdgeInsets.only(right: LumSpace.xl),
+          decoration: BoxDecoration(
+            color: c.bgDangerContainer,
+            borderRadius: BorderRadius.circular(LumRadius.xl),
           ),
+          child: Icon(PhosphorIcons.trash(), color: c.textOnDangerContainer),
         ),
-        subtitle: _TabletSubtitle(
-          noteId: tablet.id,
-          preview: preview,
-          hasAudio: hasAudio,
-          hasImage: imagePath != null,
-        ),
-        onTap: () => context.router.push(TabletEditorRoute(noteId: tablet.id)),
-      ),
-    );
-  }
-}
-
-/// Tablet tile subtitle: preview text (or a media label) above a wrap of the
-/// tablet's tags. Tags are watched per tile, so attaching/removing one in the
-/// editor reflects here live.
-class _TabletSubtitle extends ConsumerWidget {
-  const _TabletSubtitle({
-    required this.noteId,
-    required this.preview,
-    required this.hasAudio,
-    required this.hasImage,
-  });
-
-  final String noteId;
-  final String preview;
-  final bool hasAudio;
-  final bool hasImage;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final scheme = Theme.of(context).colorScheme;
-    final tags = ref.watch(tagsForNoteProvider(noteId)).valueOrNull ?? const [];
-
-    Widget? primary;
-    if (preview.isNotEmpty) {
-      primary = Text(
-        preview,
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
-        style: AppTextStyles.bodyMedium.copyWith(
-          fontFamily: AppTextStyles.fontFamilyGeist,
-          color: scheme.onSurfaceVariant,
-        ),
-      );
-    } else if (hasAudio || hasImage) {
-      primary = Text(
-        hasAudio ? 'Voice tablet' : 'Photo',
-        style: AppTextStyles.bodyMedium.copyWith(
-          fontFamily: AppTextStyles.fontFamilyGeist,
-          color: scheme.onSurfaceVariant,
-        ),
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (primary != null) primary,
-        if (tags.isNotEmpty)
-          Padding(
-            padding: EdgeInsets.only(top: primary != null ? 6 : 2),
-            child: Wrap(
-              spacing: 6,
-              runSpacing: 4,
-              children: [
-                for (final tag in tags)
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: scheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      '#${tag.name}',
-                      style: TextStyle(
-                        fontFamily: 'Geist',
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                        color: scheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
+        onDismissed: (_) => delete(),
+        child: _CardShell(
+          label: title,
+          onTap: () => context.router.push(TabletEditorRoute(noteId: note.id)),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (imagePath != null || hasAudio) ...[
+                _Thumb(path: imagePath),
+                const SizedBox(width: LumSpace.md),
               ],
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-/// Square rounded thumbnail for the first image in a tablet. Falls back to a
-/// neutral image-broken icon if the file is missing.
-class _TabletThumbnail extends StatelessWidget {
-  const _TabletThumbnail({required this.path});
-
-  final String path;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final isNetwork = path.startsWith('http');
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
-      child: SizedBox(
-        width: 48,
-        height: 48,
-        child: isNetwork
-            ? Image.network(path, fit: BoxFit.cover)
-            : Image.file(
-                File(path),
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(
-                  color: scheme.surfaceContainerHighest,
-                  child: Icon(
-                    PhosphorIcons.imageBroken(),
-                    size: 22,
-                    color: scheme.onSurfaceVariant,
-                  ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: LumText.headline.copyWith(color: c.textPrimary)),
+                    if (secondary.isNotEmpty) ...[
+                      const SizedBox(height: LumSpace.xs),
+                      Text(secondary,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: LumText.subheadline
+                              .copyWith(color: c.textSecondary)),
+                    ],
+                    if (tags.isNotEmpty) ...[
+                      const SizedBox(height: LumSpace.sm),
+                      Wrap(
+                        spacing: LumSpace.sm,
+                        runSpacing: LumSpace.xs,
+                        children: [
+                          for (final tag in tags)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: LumSpace.md, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: c.bgAccentContainer,
+                                borderRadius:
+                                    BorderRadius.circular(LumRadius.full),
+                              ),
+                              child: Text('#${tag.name}',
+                                  style: LumText.footnoteEmphasized.copyWith(
+                                      color: c.textOnAccentContainer)),
+                            ),
+                        ],
+                      ),
+                    ],
+                    const SizedBox(height: LumSpace.sm),
+                    Text(noteDateLabel(note.updatedAt, now ?? DateTime.now()),
+                        style:
+                            LumText.footnote.copyWith(color: c.textSecondary)),
+                  ],
                 ),
               ),
+            ],
+          ),
+        ),
       ),
     );
   }
 }
 
-/// Empty state shown when the selected folder has no tablets.
-class _EmptyFolder extends StatelessWidget {
-  const _EmptyFolder();
+/// Square thumbnail: the first image, or a microphone tile for voice notes.
+class _Thumb extends StatelessWidget {
+  const _Thumb({required this.path});
+
+  final String? path;
 
   @override
   Widget build(BuildContext context) {
-    final color = Theme.of(context).colorScheme.onSurfaceVariant;
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(PhosphorIcons.folderOpen(), size: 64, color: color),
-          const SizedBox(height: 12),
-          Text(
-            'This folder is empty',
-            style: TextStyle(
-              fontFamily: 'Geist',
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: color,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Move tablets here from the editor',
-            style:
-                TextStyle(fontFamily: 'EBGaramond', fontSize: 15, color: color),
-          ),
-        ],
+    final c = context.lum;
+    final p = path;
+    final tile = Container(
+      color: c.bgSurfaceSunken,
+      child: Icon(
+          p == null ? PhosphorIcons.microphone() : PhosphorIcons.imageBroken(),
+          size: 22,
+          color: c.iconSecondary),
+    );
+    return ExcludeSemantics(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(LumRadius.md),
+        child: SizedBox(
+          width: 56,
+          height: 56,
+          child: p == null
+              ? tile
+              : p.startsWith('http')
+                  ? Image.network(p, fit: BoxFit.cover)
+                  : Image.file(File(p),
+                      fit: BoxFit.cover, errorBuilder: (_, __, ___) => tile),
+        ),
       ),
     );
   }
 }
 
-/// Empty state shown when the selected tag has no tablets.
-class _EmptyTag extends StatelessWidget {
-  const _EmptyTag();
+/// Folder or tag with nothing in it.
+class _QuietEmpty extends StatelessWidget {
+  const _QuietEmpty(
+      {required this.icon, required this.title, required this.body});
+
+  final IconData icon;
+  final String title;
+  final String body;
+
+  @override
+  Widget build(BuildContext context) => SliverFillRemaining(
+        hasScrollBody: false,
+        child: _QuietEmptyBody(icon: icon, title: title, body: body),
+      );
+}
+
+class _QuietEmptyBody extends StatelessWidget {
+  const _QuietEmptyBody({required this.icon, required this.title, this.body});
+
+  final IconData icon;
+  final String title;
+  final String? body;
 
   @override
   Widget build(BuildContext context) {
-    final color = Theme.of(context).colorScheme.onSurfaceVariant;
+    final c = context.lum;
     return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(PhosphorIcons.tag(), size: 64, color: color),
-          const SizedBox(height: 12),
-          Text(
-            'Nothing tagged here',
-            style: TextStyle(
-              fontFamily: 'Geist',
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: color,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Add this tag to tablets from the editor',
-            style:
-                TextStyle(fontFamily: 'EBGaramond', fontSize: 15, color: color),
-          ),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.all(LumSpace.xl),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 48, color: c.iconSecondary),
+            const SizedBox(height: LumSpace.md),
+            Text(title,
+                textAlign: TextAlign.center,
+                style: LumText.headline.copyWith(color: c.textPrimary)),
+            if (body != null) ...[
+              const SizedBox(height: LumSpace.xs),
+              Text(body!,
+                  textAlign: TextAlign.center,
+                  style: LumText.subheadline.copyWith(color: c.textSecondary)),
+            ],
+          ],
+        ),
       ),
     );
   }
 }
 
-class _EmptyTablets extends StatelessWidget {
-  const _EmptyTablets();
+/// First-run empty state (Figma M4-03): the road, a promise, one clear action.
+class _EmptyNotes extends StatelessWidget {
+  const _EmptyNotes({required this.onWrite});
+
+  final VoidCallback onWrite;
 
   @override
   Widget build(BuildContext context) {
-    final color = Theme.of(context).colorScheme.onSurfaceVariant;
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
+    final c = context.lum;
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return SliverPadding(
+      padding: const EdgeInsets.fromLTRB(
+          LumSize.screenGutter + 4, 0, LumSize.screenGutter + 4, 150),
+      sliver: SliverList.list(
         children: [
-          Icon(PhosphorIcons.notePencil(), size: 64, color: color),
-          const SizedBox(height: 12),
-          Text(
-            'No tablets yet',
-            style: TextStyle(
-              fontFamily: 'Geist',
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: color,
+          ExcludeSemantics(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(LumRadius.lg),
+              child: SizedBox(
+                height: 120,
+                width: double.infinity,
+                child: Image.asset(
+                  'assets/images/road/bg_${dark ? 'dark' : 'light'}.png',
+                  fit: BoxFit.cover,
+                  alignment: const Alignment(0, 0.35),
+                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                ),
+              ),
             ),
           ),
-          const SizedBox(height: 4),
-          Text(
-            'Tap + to write your first tablet',
-            style:
-                TextStyle(fontFamily: 'EBGaramond', fontSize: 15, color: color),
+          const SizedBox(height: LumSpace.xl),
+          Semantics(
+            header: true,
+            child: Text(NotesStrings.emptyTitle,
+                style: LumText.title1.copyWith(color: c.textPrimary)),
           ),
+          const SizedBox(height: LumSpace.sm),
+          Text(NotesStrings.emptyBody,
+              style: LumText.body.copyWith(color: c.textSecondary)),
+          const SizedBox(height: LumSpace.xl),
+          LumButton(
+            label: NotesStrings.writeNote,
+            icon: Icon(PhosphorIcons.pencilSimple()),
+            onPressed: onWrite,
+          ),
+          const SizedBox(height: LumSpace.xl),
+          Text(NotesStrings.freeAndLocal,
+              style: LumText.footnote.copyWith(color: c.textSecondary)),
         ],
       ),
     );
