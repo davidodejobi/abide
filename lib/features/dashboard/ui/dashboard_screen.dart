@@ -29,14 +29,19 @@ class DashboardScreen extends HookConsumerWidget {
             bottom: false,
             child: IndexedStack(
               index: currentIndex,
-              children: const [
-                // Order must match `tabs:` in _BottomNavigation below, and
-                // BottomNavTab's ordinals. Three lists, hand-synced.
-                TodayTabScreen(),
-                TabletsTabScreen(),
-                HomeTabScreen(),
-                BibleTabScreen(),
-                SettingsTabScreen(),
+              // Order must match `tabs:` in _BottomNavigation below, and
+              // BottomNavTab's ordinals. Three lists, hand-synced.
+              // TickerMode: IndexedStack keeps hidden tabs mounted with tickers
+              // running, so mute every tab but the visible one.
+              children: [
+                for (final (i, tab) in const [
+                  TodayTabScreen(),
+                  TabletsTabScreen(),
+                  HomeTabScreen(),
+                  BibleTabScreen(),
+                  SettingsTabScreen(),
+                ].indexed)
+                  TickerMode(enabled: i == currentIndex, child: tab),
               ],
             ),
           ),

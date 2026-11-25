@@ -78,6 +78,7 @@ flutter:
     - assets/plans/
     - assets/images/lottie/
     - assets/images/road/
+    - assets/images/road/living/
     - assets/fonts/licenses/
     - path: assets/images/icons/
       transformers:
