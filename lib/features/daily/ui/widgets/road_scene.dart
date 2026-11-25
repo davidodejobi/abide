@@ -95,7 +95,8 @@ class RoadSceneState extends State<RoadScene> with TickerProviderStateMixin {
   static const _geo = RoadGeometry();
 
   RoadArt? _art;
-  Map<int, Landmark> _landmarks = const {};
+  Map<int, List<Landmark>> _landmarks = const {};
+  int? _windowAt; // stop the loaded landmark sprites are centred on
   String? _landmarkPlan;
 
   late double _from, _to, _dusk0, _dusk1;
@@ -132,10 +133,29 @@ class RoadSceneState extends State<RoadScene> with TickerProviderStateMixin {
     } else if (_landmarkPlan != plan.id) {
       _landmarks = landmarksByDay(plan, _art!.landmarks, placeArtless: true);
       _landmarkPlan = plan.id;
-      _art!.ensureLandmarks(_landmarks.values.map((l) => l.art)).then((_) {
-        if (mounted) setState(() {});
-      }, onError: (_) {});
+      _windowAt = null;
+      _syncWindow(_lookNow());
     }
+  }
+
+  /// Sprites are decoded only for landmarks within [_windowStops] of the
+  /// camera and evicted beyond (a year-long plan would otherwise hold every
+  /// picture for ever). Re-centred once the camera is [_windowStep] stops from
+  /// the last centre; until a sprite is in, its landmark shows as a signpost.
+  static const _windowStops = 15, _windowStep = 5;
+
+  void _syncWindow(double look) {
+    final art = _art;
+    if (art == null) return;
+    final at = look.round();
+    if (_windowAt != null && (at - _windowAt!).abs() < _windowStep) return;
+    _windowAt = at;
+    art.ensureLandmarks([
+      for (var n = at - _windowStops; n <= at + _windowStops; n++)
+        for (final l in _landmarks[n] ?? const <Landmark>[]) l.art,
+    ]).then((_) {
+      if (mounted) setState(() {});
+    }, onError: (_) {});
   }
 
   /// The traveller's current fractional stop position, for tests.
@@ -152,9 +172,10 @@ class RoadSceneState extends State<RoadScene> with TickerProviderStateMixin {
 
   /// Where to tap (local px) to hit the landmark at [day], for tests.
   @visibleForTesting
-  Offset? debugLandmarkTap(int day) {
-    if (_landmarks[day] == null) return null;
-    final r = _RoadPainter.landmarkRect(day, _cameraAt(_lookNow()));
+  Offset? debugLandmarkTap(int day, [int slot = 0]) {
+    final list = _landmarks[day];
+    if (list == null || slot >= list.length) return null;
+    final r = _RoadPainter.landmarkRect(day, _cameraAt(_lookNow()), slot);
     return r.center.translate(0, 8) * (widget.width / RoadScene.designWidth);
   }
 
@@ -205,6 +226,7 @@ class RoadSceneState extends State<RoadScene> with TickerProviderStateMixin {
   void _moveTo(double look) {
     final c = clampLook(look, widget.totalDays);
     _exploreAt = c;
+    _syncWindow(c);
     final far = (c - _posNow).abs() > 1.2;
     if (far != _showBack) {
       setState(() => _showBack = far);
@@ -232,6 +254,7 @@ class RoadSceneState extends State<RoadScene> with TickerProviderStateMixin {
       _exploreAt = null;
       _showBack = false;
     });
+    _syncWindow(_posNow);
   }
 
   /// Runs the camera back to the traveller (cut under reduced motion).
@@ -283,6 +306,7 @@ class RoadSceneState extends State<RoadScene> with TickerProviderStateMixin {
   void didUpdateWidget(RoadScene oldWidget) {
     super.didUpdateWidget(oldWidget);
     _syncLandmarks();
+    _syncWindow(_target);
     final target = _target, dusk = _duskTarget;
     if (target == _to && dusk == _dusk1) return;
     // A day was read (or the plan changed) while exploring: bring the camera
@@ -466,19 +490,21 @@ class RoadSceneState extends State<RoadScene> with TickerProviderStateMixin {
           sortKey: OrdinalSortKey(n.toDouble()),
         ),
       ));
-      final lm = _landmarks[n];
-      if (lm == null) continue;
-      final r = _RoadPainter.landmarkRect(n, cam);
-      out.add(CustomPainterSemantics(
-        rect: Rect.fromLTRB(r.left * k, r.top * k, r.right * k, r.bottom * k),
-        properties: SemanticsProperties(
-          textDirection: TextDirection.ltr,
-          label: '${lm.title}, ${lm.ref}',
-          button: true,
-          onTap: () => widget.onLandmarkTap?.call(lm, n),
-          sortKey: OrdinalSortKey(n + .5),
-        ),
-      ));
+      final lms = _landmarks[n] ?? const <Landmark>[];
+      for (var i = 0; i < lms.length; i++) {
+        final lm = lms[i];
+        final r = _RoadPainter.landmarkRect(n, cam, i);
+        out.add(CustomPainterSemantics(
+          rect: Rect.fromLTRB(r.left * k, r.top * k, r.right * k, r.bottom * k),
+          properties: SemanticsProperties(
+            textDirection: TextDirection.ltr,
+            label: '${lm.title}, ${lm.ref}',
+            button: true,
+            onTap: () => widget.onLandmarkTap?.call(lm, n),
+            sortKey: OrdinalSortKey(n + .5 + i * .1),
+          ),
+        ));
+      }
     }
     return out;
   }
@@ -635,7 +661,7 @@ class _RoadPainter extends CustomPainter {
   final double from, to, dusk0, dusk1;
   final int total;
   final bool finished, showTomorrowTag;
-  final Map<int, Landmark> landmarks;
+  final Map<int, List<Landmark>> landmarks;
   final geo = const RoadGeometry();
   final List<CustomPainterSemantics> Function(Size, _RoadPainter) semantics;
 
@@ -660,10 +686,11 @@ class _RoadPainter extends CustomPainter {
 
   /// Where landmark [n] stands, in design pixels: outboard of its own stop so
   /// it never sits on the road.
-  static Rect landmarkRect(int n, Offset cam) {
+  /// Slot 0 stands outboard of its stop; slot 1 across the road from it.
+  static Rect landmarkRect(int n, Offset cam, [int slot = 0]) {
     const geo = RoadGeometry();
     final st = geo.stop(n);
-    final side = st.x > 0 ? 1.0 : -1.0;
+    final side = (st.x > 0 ? 1.0 : -1.0) * (slot == 0 ? 1 : -1);
     const w = 672 * _s * _landmarkScale, h = 576 * _s * _landmarkScale;
     final cx = st.x + cam.dx + side * 78, bottom = st.y + cam.dy + 18;
     return Rect.fromLTWH(cx - w / 2, bottom - h * .86, w, h);
@@ -864,10 +891,15 @@ class _RoadPainter extends CustomPainter {
       Offset cam, double pulse, double dusk, Color tint) {
     final v = geo.visibleStops(look);
     for (var n = v.last; n >= v.first; n--) {
-      _props(canvas, sp, n, cam);
+      final lms = landmarks[n];
+      // Two landmarks take both sides of the stop: no prop to crowd them.
+      if (lms == null || lms.length < 2) _props(canvas, sp, n, cam);
       if (n < 1 || n > total) continue;
-      final lm = landmarks[n];
-      if (lm != null) _landmark(canvas, sp, n, lm, pos, cam, pulse, tint);
+      if (lms != null) {
+        for (var i = 0; i < lms.length; i++) {
+          _landmark(canvas, sp, n, lms[i], i, pos, cam, pulse, tint);
+        }
+      }
       _stop(canvas, sp, n, pos, cam, pulse, dusk);
     }
   }
@@ -878,8 +910,9 @@ class _RoadPainter extends CustomPainter {
     final kind = _propKinds[h % _propKinds.length];
     final img = art?[kind];
     if (img == null) return;
-    final lmSide =
-        landmarks[n] != null ? (geo.stop(n).x > 0 ? 1.0 : -1.0) : 0.0;
+    final lmSide = landmarks[n]?.isNotEmpty == true
+        ? (geo.stop(n).x > 0 ? 1.0 : -1.0)
+        : 0.0;
     final s = _stopAt(n, cam);
     var dx = side * (118 + (h >> 4) % 46).toDouble();
     if (lmSide != 0 && dx.sign == lmSide) dx = -dx;
@@ -998,20 +1031,17 @@ class _RoadPainter extends CustomPainter {
         cache.fill..color = c.sceneGlow.withValues(alpha: a));
   }
 
-  void _landmark(Canvas canvas, Paint sp, int n, Landmark lm, double pos,
-      Offset cam, double pulse, Color tint) {
+  void _landmark(Canvas canvas, Paint sp, int n, Landmark lm, int slot,
+      double pos, Offset cam, double pulse, Color tint) {
     final artKey = lm.art;
+    // No sprite (none drawn, failed, or not decoded yet): a signpost stands in.
     final img = artKey == null ? null : art?['lm_$artKey'];
-    final markerOnly =
-        artKey == null || (art?.failed.contains(artKey) ?? false);
-    // Sprite still decoding: nothing yet (a marker would flash for a frame).
-    if (img == null && !markerOnly) return;
     // Reveal as the walker closes in on the stop: it rises, warms and glows.
     final r =
         Curves.easeOut.transform(((pos - (n - .55)) / .55).clamp(0.0, 1.0));
-    final rect = landmarkRect(n, cam);
+    final rect = landmarkRect(n, cam, slot);
     if (rect.bottom < 40 || rect.top > 600) return;
-    if (img == null || markerOnly) {
+    if (img == null) {
       // Generous tap target: the sign itself is small.
       cache.hits.add(_Hit(
           Rect.fromCenter(

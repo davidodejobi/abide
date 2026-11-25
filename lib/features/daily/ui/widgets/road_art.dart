@@ -47,23 +47,48 @@ class RoadArt {
     return art;
   }
 
-  Future<void> _decode(String n) => _loading[n] ??= () async {
+  Future<void> _decode(String n, {int? width}) => _loading[n] ??= () async {
         final data = await rootBundle.load('$_dir/$n.webp');
-        final codec = await ui.instantiateImageCodec(data.buffer.asUint8List());
+        final codec = await ui.instantiateImageCodec(data.buffer.asUint8List(),
+            targetWidth: width);
         _images[n] = (await codec.getNextFrame()).image;
       }();
 
   /// Art keys whose sprite is missing or failed to decode; the road draws a
-  /// marker sign for those landmarks instead.
+  /// signpost for those landmarks instead.
   final failed = <String>{};
+  Set<String> _wanted = {};
 
-  /// Decodes the sprites for the given landmark art keys (e.g. `garden`). A
-  /// missing sprite is recorded in [failed], never thrown.
-  Future<void> ensureLandmarks(Iterable<String?> arts) => Future.wait([
-        for (final a in arts.toSet())
-          if (a != null)
-            _decode('lm_$a').catchError((Object _) {
-              failed.add(a);
-            }),
-      ]);
+  /// Landmark sprites are decoded at this width: they are drawn about 100
+  /// design px wide, so this is sharp at 3x and a fifth of full size in memory.
+  static const spriteWidth = 320;
+
+  /// Makes [arts] (e.g. `garden`) the loaded landmark sprites: decodes the
+  /// missing ones and evicts every other. A missing or broken sprite is
+  /// recorded in [failed], never thrown.
+  Future<void> ensureLandmarks(Iterable<String?> arts) {
+    _wanted = {
+      for (final a in arts)
+        if (a != null) a,
+    };
+    for (final k in [
+      for (final k in {..._images.keys, ..._loading.keys})
+        if (k.startsWith('lm_') && !_wanted.contains(k.substring(3))) k,
+    ]) {
+      _images.remove(k)?.dispose();
+      _loading.remove(k);
+    }
+    return Future.wait([
+      for (final a in _wanted)
+        _decode('lm_$a', width: spriteWidth).then((_) {
+          // Evicted while decoding: do not keep it.
+          if (!_wanted.contains(a)) {
+            _images.remove('lm_$a')?.dispose();
+            _loading.remove('lm_$a');
+          }
+        }, onError: (Object _) {
+          failed.add(a);
+        }),
+    ]);
+  }
 }

@@ -59,51 +59,65 @@ List<Landmark> parseLandmarks(String json) => [
         Landmark.fromJson(m as Map<String, dynamic>),
     ];
 
-/// Which landmark stands at which plan day (1-based day index).
+/// Which landmarks stand at which plan day (1-based day index), at most
+/// [perDay] per day (they stand either side of the stop).
 ///
 /// A landmark is placed at the first day whose passages touch its chapters, so
-/// it arrives the moment the reader reaches that part of the Bible. One
-/// landmark per day: a landmark that loses its day to an earlier one moves to
-/// the next day if that day is free (the tomb follows the cross), and is
-/// dropped otherwise. A landmark whose art was used within the last
-/// [artGapDays] days is skipped so the road does not repeat itself. Landmarks
-/// without art are never placed, unless [placeArtless] is set (the road draws
-/// them as marker signs, each its own "picture" for the repeat rule).
-Map<int, Landmark> landmarksByDay(ReadingPlan plan, List<Landmark> all,
-    {int artGapDays = 4, bool placeArtless = false}) {
+/// it arrives the moment the reader reaches that part of the Bible. A day's own
+/// matches always win its slots. A landmark that does not fit moves to the next
+/// day only if that day has a slot left after its own matches, and never
+/// further. A landmark whose art was used within the last [artGapDays] days is
+/// dropped so the road does not repeat itself. Landmarks without art are never
+/// placed unless [placeArtless] is set (the road draws them as marker signs,
+/// each its own "picture" for the repeat rule). Own matches come first in each
+/// day's list, then any carried over from the day before.
+Map<int, List<Landmark>> landmarksByDay(ReadingPlan plan, List<Landmark> all,
+    {int artGapDays = 4, bool placeArtless = false, int perDay = 2}) {
   final placed = <String>{};
   final lastArtDay = <String, int>{};
-  final out = <int, Landmark>{};
+  final out = <int, List<Landmark>>{};
   var displaced = <Landmark>[];
   for (final day in plan.days) {
     bool touches(Landmark lm) => day.passages.any((p) =>
         p.start.book == lm.book &&
         p.start.chapter <= lm.toChapter &&
         p.end.chapter >= lm.fromChapter);
-    final candidates = [
-      ...displaced,
+    final own = [
       for (final lm in all)
         if ((placeArtless || lm.art != null) &&
-            !displaced.contains(lm) &&
+            !placed.contains(lm.id) &&
             touches(lm))
           lm,
     ];
+    final carried = [
+      for (final lm in displaced)
+        if (!placed.contains(lm.id) && !own.contains(lm)) lm,
+    ];
     displaced = [];
-    for (final lm in candidates) {
-      if (placed.contains(lm.id)) continue;
-      final last = lastArtDay[lm.art ?? lm.id];
+    final today = <Landmark>[];
+    void place(Landmark lm, bool canCarry) {
+      final key = lm.art ?? lm.id;
+      final last = lastArtDay[key];
       if (last != null && day.dayIndex - last < artGapDays) {
         placed.add(lm.id); // same picture as a recent stop: drop, don't retry
-        continue;
+        return;
       }
-      if (out.containsKey(day.dayIndex)) {
-        if (touches(lm) && !displaced.contains(lm)) displaced.add(lm);
-        continue;
+      if (today.length >= perDay) {
+        if (canCarry) displaced.add(lm);
+        return;
       }
-      out[day.dayIndex] = lm;
+      today.add(lm);
       placed.add(lm.id);
-      lastArtDay[lm.art ?? lm.id] = day.dayIndex;
+      lastArtDay[key] = day.dayIndex;
     }
+
+    for (final lm in own) {
+      place(lm, true);
+    }
+    for (final lm in carried) {
+      place(lm, false);
+    }
+    if (today.isNotEmpty) out[day.dayIndex] = today;
   }
   return out;
 }

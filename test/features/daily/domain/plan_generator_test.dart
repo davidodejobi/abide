@@ -42,9 +42,7 @@ void main() {
         final scheduled = [
           for (final day in days)
             for (final passage in day.passages)
-              for (var c = passage.start.chapter;
-                  c <= passage.end.chapter;
-                  c++)
+              for (var c = passage.start.chapter; c <= passage.end.chapter; c++)
                 '${passage.start.book}.$c',
         ];
 
@@ -58,7 +56,9 @@ void main() {
         // 12 chapters over 12 days: the reserve rule must hand each day one,
         // even though the verse targets would happily give day 1 several.
         final days = generateVerseBalancedDays(
-          books: [book('GEN', 1, [100, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])],
+          books: [
+            book('GEN', 1, [100, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
+          ],
           days: 12,
         );
 
@@ -91,7 +91,9 @@ void main() {
     group('When consecutive chapters of one book fall on the same day', () {
       test('Then they merge into a single range', () {
         final days = generateVerseBalancedDays(
-          books: [book('GEN', 1, [10, 20, 30])],
+          books: [
+            book('GEN', 1, [10, 20, 30])
+          ],
           days: 1,
         );
 
@@ -102,7 +104,9 @@ void main() {
     group('When a passage is built', () {
       test('Then it covers the whole chapter, verse 1 to its last verse', () {
         final days = generateVerseBalancedDays(
-          books: [book('PSA', 19, [6])],
+          books: [
+            book('PSA', 19, [6])
+          ],
           days: 1,
         );
 
@@ -118,7 +122,9 @@ void main() {
       test('Then it throws rather than emitting an empty day', () {
         expect(
           () => generateVerseBalancedDays(
-            books: [book('GEN', 1, [10, 20])],
+            books: [
+              book('GEN', 1, [10, 20])
+            ],
             days: 5,
           ),
           throwsArgumentError,
@@ -132,7 +138,9 @@ void main() {
       test('Then it throws', () {
         expect(
           () => generateVerseBalancedDays(
-            books: [book('GEN', 1, [10])],
+            books: [
+              book('GEN', 1, [10])
+            ],
             days: 0,
           ),
           throwsArgumentError,

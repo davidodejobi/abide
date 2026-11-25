@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:openbaptisthymnal/core/theme/lum_theme.dart';
 import 'package:openbaptisthymnal/core/widgets/lum_button.dart';
@@ -60,10 +62,16 @@ Future<RoadOpen?> showLandmarkSheet(
   required Landmark landmark,
   required LandmarkStory? story,
   required int day,
+  ui.Image? sprite,
 }) {
   return _show(
     context,
-    (_) => LandmarkSheet(landmark: landmark, story: story, day: day),
+    (_) => LandmarkSheet(
+      landmark: landmark,
+      story: story,
+      day: day,
+      sprite: sprite,
+    ),
   );
 }
 
@@ -228,7 +236,12 @@ class LandmarkSheet extends StatelessWidget {
     required this.landmark,
     required this.story,
     required this.day,
+    this.sprite,
   });
+
+  /// The landmark's picture from the road, shown at the top; null when it has
+  /// none yet.
+  final ui.Image? sprite;
 
   final Landmark landmark;
   final LandmarkStory? story;
@@ -249,6 +262,10 @@ class LandmarkSheet extends StatelessWidget {
     final s = story;
     return _SheetBody(
       children: [
+        if (sprite != null) ...[
+          Center(child: _Sprite(sprite!)),
+          const SizedBox(height: LumSpace.md),
+        ],
         Text('${DailyStrings.dayN(day)} · ${landmark.ref}'.toUpperCase(),
             style: LumText.roadLabelCaps11.copyWith(color: c.textSecondary)),
         const SizedBox(height: LumSpace.xs),
@@ -316,4 +333,33 @@ class LandmarkSheet extends StatelessWidget {
       ],
     );
   }
+}
+
+/// The road's sprite, held by its own handle: the road may evict (dispose) its
+/// copy while the sheet is open.
+class _Sprite extends StatefulWidget {
+  const _Sprite(this.image);
+
+  final ui.Image image;
+
+  @override
+  State<_Sprite> createState() => _SpriteState();
+}
+
+class _SpriteState extends State<_Sprite> {
+  late final ui.Image _mine = widget.image.clone();
+
+  @override
+  void dispose() {
+    _mine.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => ExcludeSemantics(
+        child: SizedBox(
+          height: 150,
+          child: RawImage(image: _mine, fit: BoxFit.contain),
+        ),
+      );
 }

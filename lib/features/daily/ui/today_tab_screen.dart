@@ -1,3 +1,4 @@
+import 'dart:ui' as ui show Image;
 import 'dart:ui' show ViewPadding;
 
 import 'package:auto_route/auto_route.dart';
@@ -20,6 +21,7 @@ import '../providers/daily_providers.dart';
 import 'daily_strings.dart';
 import 'widgets/lamp_icon.dart';
 import 'widgets/plan_picker_sheet.dart';
+import 'widgets/road_art.dart';
 import 'widgets/road_scene.dart';
 import 'widgets/road_sheets.dart';
 import 'widgets/streak_chip.dart';
@@ -295,8 +297,16 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
       // The retelling is a bonus; the sheet still opens with the title.
     }
     if (!mounted) return;
+    ui.Image? sprite;
+    final art = landmark.art;
+    if (art != null) {
+      try {
+        sprite = (await RoadArt.load())['lm_$art'];
+      } catch (_) {}
+    }
+    if (!mounted) return;
     final open = await showLandmarkSheet(context,
-        landmark: landmark, story: story, day: day);
+        landmark: landmark, story: story, day: day, sprite: sprite);
     await _open(open);
   }
 

@@ -173,7 +173,7 @@ void main() {
     expect(taps.length, n);
   });
 
-  testWidgets('Given a landmark with no picture yet, Then a marker is tappable',
+  testWidgets('Given a landmark whose sprite is not in yet, Then its signpost is tappable',
       (t) async {
     await loadArt(t);
     final taps = <(String, int)>[];

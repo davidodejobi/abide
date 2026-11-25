@@ -98,7 +98,10 @@ void main() {
         _lm('ark', 'GEN', 6, 9, 'Genesis 6:14', art: 'ark'),
       ];
       final m = landmarksByDay(plan, all, placeArtless: true);
-      expect(m.map((d, l) => MapEntry(d, l.id)), {1: 'garden', 3: 'ark'});
+      expect(m.map((d, l) => MapEntry(d, l.map((x) => x.id).toList())), {
+        1: ['garden'],
+        3: ['ark'],
+      });
     });
 
     test('openingKey reads the verse off the reference', () {

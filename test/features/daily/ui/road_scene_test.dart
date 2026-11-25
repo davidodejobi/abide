@@ -29,7 +29,8 @@ Widget _app(Widget child, {bool reduce = false}) => MaterialApp(
       home: Scaffold(body: child),
     );
 
-RoadSceneState _state(WidgetTester t, Key k) => t.state<RoadSceneState>(find.byKey(k, skipOffstage: false));
+RoadSceneState _state(WidgetTester t, Key k) =>
+    t.state<RoadSceneState>(find.byKey(k, skipOffstage: false));
 
 void main() {
   // The art decodes with real async I/O, so load it outside the fake clock
@@ -71,7 +72,8 @@ void main() {
       (t) async {
     await loadArt(t);
     const k = ValueKey('road');
-    Widget stack(int index, int day) => _app(IndexedStack(index: index, children: [
+    Widget stack(int index, int day) =>
+        _app(IndexedStack(index: index, children: [
           for (final (i, w) in [_road(k, day), const SizedBox()].indexed)
             TickerMode(enabled: i == index, child: w),
         ]));
@@ -79,7 +81,8 @@ void main() {
     await t.pump(const Duration(milliseconds: 50));
     await t.pumpWidget(stack(1, 1)); // switch away
     await t.pump(const Duration(seconds: 1));
-    expect(t.binding.transientCallbackCount, 0, reason: 'no tickers should run');
+    expect(t.binding.transientCallbackCount, 0,
+        reason: 'no tickers should run');
     await t.pumpWidget(stack(1, 2)); // day read while hidden
     await t.pump(const Duration(seconds: 4));
     expect(_state(t, k).debugPos, 1, reason: 'the walk must wait for the tab');
@@ -92,13 +95,17 @@ void main() {
     expect(_state(t, k).debugPos, 2);
   });
 
-  testWidgets('Given the plan is finished, Then it draws without a current stop',
+  testWidgets(
+      'Given the plan is finished, Then it draws without a current stop',
       (t) async {
     await t.pumpWidget(MaterialApp(
       theme: AppTheme.darkTheme,
       home: const Scaffold(
         body: RoadScene(
-            width: 390, mood: RoadMood.evening, currentDay: null, totalDays: 30),
+            width: 390,
+            mood: RoadMood.evening,
+            currentDay: null,
+            totalDays: 30),
       ),
     ));
     await t.pump(const Duration(milliseconds: 100));
