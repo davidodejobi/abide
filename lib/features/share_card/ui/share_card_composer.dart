@@ -4,6 +4,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:gal/gal.dart';
 import 'package:openbaptisthymnal/core/theme/lum_theme.dart';
 import 'package:openbaptisthymnal/core/utils/services/share_service.dart';
 import 'package:openbaptisthymnal/core/utils/toast_helper.dart';
@@ -88,8 +89,13 @@ class _ShareCardComposerState extends State<ShareCardComposer> {
       }, NotesStrings.shareError);
 
   Future<void> _saveImage() => _run(() async {
-        await ShareService().saveImage(await _capture(), widget.filename);
-        if (mounted) ToastHelper.success(context, NotesStrings.imageSaved);
+        try {
+          await ShareService().saveImage(await _capture(), widget.filename);
+          if (mounted) ToastHelper.success(context, NotesStrings.imageSaved);
+        } on GalException catch (e) {
+          if (e.type != GalExceptionType.accessDenied) rethrow;
+          if (mounted) ToastHelper.error(context, NotesStrings.saveDenied);
+        }
       }, NotesStrings.saveError);
 
   String get _text =>

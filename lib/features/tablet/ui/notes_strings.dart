@@ -40,6 +40,8 @@ abstract final class NotesStrings {
   static const copyText = 'Copy text';
   static const shareTextAction = 'Share text';
   static const imageSaved = 'Saved to your photos';
+  static const saveDenied =
+      'Photos access is off. Turn it on in Settings to save images.';
   static const saveError = 'Could not save the image';
   static const textCopied = 'Copied to clipboard';
   static const showReference = 'Show reference';

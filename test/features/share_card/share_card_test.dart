@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:openbaptisthymnal/core/theme/app_theme.dart';
+import 'package:openbaptisthymnal/features/hymn/model/lyrics.dart';
+import 'package:openbaptisthymnal/features/hymn/model/stanza.dart';
 import 'package:openbaptisthymnal/features/share_card/ui/scripture_share_card_page.dart';
 import 'package:openbaptisthymnal/features/share_card/ui/share_card_page.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/notes_strings.dart';
@@ -98,5 +100,56 @@ void main() {
     await settle(t);
     expect(find.textContaining('Chorus words'), findsOneWidget);
     expect(t.takeException(), isNull);
+  });
+
+  testWidgets('whole-hymn share preselects every part, no Selection chip',
+      (t) async {
+    await pump(
+      t,
+      const ShareCardPage(
+        hymnNumber: '001',
+        title: 'Amazing Grace',
+        parts: [
+          (label: 'Verse 1', text: 'Stanza one words'),
+          (label: 'Chorus', text: 'Chorus words'),
+          (label: 'Verse 2', text: 'Stanza two words'),
+        ],
+      ),
+    );
+    expect(find.text(NotesStrings.selectionLabel), findsNothing);
+    final card = find.textContaining('Stanza one words');
+    expect(card, findsOneWidget);
+    final text = (t.widget<Text>(card)).textSpan!.toPlainText();
+    expect(text.indexOf('Chorus words'), lessThan(text.indexOf('Stanza two')));
+  });
+
+  testWidgets('another hymn (split pane) shares its own title and parts',
+      (t) async {
+    await pump(
+      t,
+      const ShareCardPage(
+        hymnNumber: '001',
+        title: 'Mímọ́, Mímọ́',
+        body: 'Ẹsẹ kìíní',
+        parts: [
+          (label: 'Verse 1', text: 'Ẹsẹ kìíní'),
+          (label: 'Verse 2', text: 'Ẹsẹ kejì'),
+        ],
+      ),
+    );
+    expect(find.textContaining('Mímọ́, Mímọ́'), findsWidgets);
+    expect(find.textContaining('Ẹsẹ kìíní'), findsOneWidget);
+    expect(find.textContaining('Ẹsẹ kejì'), findsNothing);
+  });
+
+  test('shareParts skips a blank chorus and places it after verse 1', () {
+    const stanzas = [
+      Stanza(index: 1, text: 'a'),
+      Stanza(index: 2, text: 'b'),
+    ];
+    expect(shareParts(const Lyrics(stanzas: stanzas, chorus: '')).length, 2);
+    expect(shareParts(const Lyrics(stanzas: stanzas, chorus: '  ')).length, 2);
+    final withChorus = shareParts(const Lyrics(stanzas: stanzas, chorus: 'c'));
+    expect(withChorus.map((p) => p.text), ['a', 'c', 'b']);
   });
 }
