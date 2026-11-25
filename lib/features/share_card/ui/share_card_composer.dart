@@ -137,11 +137,14 @@ class _ShareCardComposerState extends State<ShareCardComposer> {
                     Expanded(
                       child: Semantics(
                         header: true,
-                        child: Text(
-                          widget.title,
-                          textAlign: TextAlign.center,
-                          style:
-                              LumText.headline.copyWith(color: c.textPrimary),
+                        child: MediaQuery.withClampedTextScaling(
+                          maxScaleFactor: 1.3,
+                          child: Text(
+                            widget.title,
+                            textAlign: TextAlign.center,
+                            style:
+                                LumText.headline.copyWith(color: c.textPrimary),
+                          ),
                         ),
                       ),
                     ),
@@ -151,48 +154,50 @@ class _ShareCardComposerState extends State<ShareCardComposer> {
                 ),
               ),
               Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(LumSize.screenGutter,
-                      LumSpace.sm, LumSize.screenGutter, LumSpace.xl),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _preview(c),
-                      const SizedBox(height: LumSpace.xl),
-                      if (widget.options != null) ...[
-                        widget.options!,
+                child: LayoutBuilder(
+                  builder: (context, box) => SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(LumSize.screenGutter,
+                        LumSpace.sm, LumSize.screenGutter, LumSpace.xl),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _preview(c, box.maxHeight),
+                        const SizedBox(height: LumSpace.xl),
+                        if (widget.options != null) ...[
+                          widget.options!,
+                          const SizedBox(height: LumSpace.lg),
+                        ],
+                        _OptionGroup(
+                          label: NotesStrings.lookLabel,
+                          children: [
+                            for (final preset in ShareCardStyle.presets)
+                              LumChip(
+                                label: preset.label,
+                                selected: preset.id == _style.id,
+                                onTap: () => setState(() => _style = preset),
+                              ),
+                          ],
+                        ),
                         const SizedBox(height: LumSpace.lg),
+                        _OptionGroup(
+                          label: NotesStrings.shapeLabel,
+                          children: [
+                            for (final f in ShareCardFormat.values)
+                              LumChip(
+                                label: f.label,
+                                selected: f == _format,
+                                onTap: () => setState(() => _format = f),
+                              ),
+                            LumChip(
+                              label: NotesStrings.showReference,
+                              selected: _showReference,
+                              onTap: () => setState(
+                                  () => _showReference = !_showReference),
+                            ),
+                          ],
+                        ),
                       ],
-                      _OptionGroup(
-                        label: NotesStrings.lookLabel,
-                        children: [
-                          for (final preset in ShareCardStyle.presets)
-                            LumChip(
-                              label: preset.label,
-                              selected: preset.id == _style.id,
-                              onTap: () => setState(() => _style = preset),
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: LumSpace.lg),
-                      _OptionGroup(
-                        label: NotesStrings.shapeLabel,
-                        children: [
-                          for (final f in ShareCardFormat.values)
-                            LumChip(
-                              label: f.label,
-                              selected: f == _format,
-                              onTap: () => setState(() => _format = f),
-                            ),
-                          LumChip(
-                            label: NotesStrings.showReference,
-                            selected: _showReference,
-                            onTap: () => setState(
-                                () => _showReference = !_showReference),
-                          ),
-                        ],
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ),
@@ -204,9 +209,16 @@ class _ShareCardComposerState extends State<ShareCardComposer> {
     );
   }
 
-  Widget _preview(LumColors c) => Center(
+  /// The tall card takes about 70% of the scroll area so the first options
+  /// peek in below it; the square never needs more than 300.
+  Widget _preview(LumColors c, double viewport) => Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 300),
+          constraints: BoxConstraints(
+            maxWidth: _format == ShareCardFormat.status
+                ? (viewport * 0.7 * ShareCardFormat.status.aspect)
+                    .clamp(200.0, 300.0)
+                : 300,
+          ),
           child: DecoratedBox(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(LumRadius.xl),
@@ -250,26 +262,31 @@ class _ShareCardComposerState extends State<ShareCardComposer> {
                 onPressed: _busy ? null : _shareImage,
               ),
               const SizedBox(height: LumSpace.sm),
-              Wrap(
-                alignment: WrapAlignment.center,
-                spacing: LumSpace.sm,
-                children: [
-                  _QuietAction(
-                    icon: PhosphorIcons.downloadSimple(),
-                    label: NotesStrings.saveImage,
-                    onTap: _busy ? null : _saveImage,
-                  ),
-                  _QuietAction(
-                    icon: PhosphorIcons.copy(),
-                    label: NotesStrings.copyText,
-                    onTap: _copyText,
-                  ),
-                  _QuietAction(
-                    icon: PhosphorIcons.textT(),
-                    label: NotesStrings.shareTextAction,
-                    onTap: _busy ? null : _shareText,
-                  ),
-                ],
+              // Large text stays readable but cannot crowd out the preview.
+              MediaQuery.withClampedTextScaling(
+                maxScaleFactor: 1.3,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    for (final a in [
+                      (
+                        PhosphorIcons.downloadSimple(),
+                        NotesStrings.saveImage,
+                        _busy ? null : _saveImage
+                      ),
+                      (PhosphorIcons.copy(), NotesStrings.copyText, _copyText),
+                      (
+                        PhosphorIcons.textT(),
+                        NotesStrings.shareTextAction,
+                        _busy ? null : _shareText
+                      ),
+                    ])
+                      Expanded(
+                        child:
+                            _QuietAction(icon: a.$1, label: a.$2, onTap: a.$3),
+                      ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -314,8 +331,7 @@ class _OptionGroup extends StatelessWidget {
                   LumText.footnoteEmphasized.copyWith(color: c.textSecondary)),
         ),
         const SizedBox(height: LumSpace.sm),
-        Wrap(
-            spacing: LumSpace.sm, runSpacing: LumSpace.sm, children: children),
+        Wrap(spacing: LumSpace.sm, runSpacing: LumSpace.sm, children: children),
       ],
     );
   }
@@ -350,13 +366,14 @@ class _QuietAction extends StatelessWidget {
           child: ConstrainedBox(
             constraints: const BoxConstraints(minHeight: 48),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: LumSpace.sm),
-              child: Row(
+              padding: const EdgeInsets.symmetric(vertical: LumSpace.xs),
+              child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(icon, size: LumSize.iconSm, color: c.textPrimary),
-                  const SizedBox(width: LumSpace.xs),
+                  const SizedBox(height: LumSpace.xxs),
                   Text(label,
+                      textAlign: TextAlign.center,
                       style: LumText.subheadlineEmphasized
                           .copyWith(color: c.textPrimary)),
                 ],

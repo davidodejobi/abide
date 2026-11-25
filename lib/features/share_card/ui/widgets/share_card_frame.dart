@@ -20,6 +20,7 @@ class ShareCardFrame extends StatelessWidget {
 
   final ShareCardStyle style;
   final ShareCardFormat format;
+
   /// Reference line above the words; null hides it.
   final String? eyebrow;
 
