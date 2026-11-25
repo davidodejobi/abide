@@ -1,6 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:collection/collection.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:openbaptisthymnal/features/bible/ui/bible_credits_page.dart';
 import 'package:openbaptisthymnal/features/bible/ui/bible_reader_page.dart';
 import 'package:openbaptisthymnal/features/bible/ui/bible_tab_screen.dart';
