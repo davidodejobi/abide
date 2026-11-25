@@ -125,7 +125,9 @@ class _LandmarkModel3dState extends State<LandmarkModel3d> {
         final m = p.material;
         if (m is PhysicallyBasedMaterial) {
           final c = widget.podiumColor;
-          m.baseColorFactor = vm.Vector4(c.r, c.g, c.b, 1);
+          // baseColorFactor is linear; Color is sRGB.
+          double lin(double v) => math.pow(v, 2.2).toDouble();
+          m.baseColorFactor = vm.Vector4(lin(c.r), lin(c.g), lin(c.b), 1);
         }
       }
       n.children.forEach(walk);

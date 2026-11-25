@@ -16,11 +16,11 @@ double flingTurnsPerSecond(double vx) => vx / dragPxPerTurn;
 const podiumDepth = .19;
 
 /// Podium radius as a multiple of the model's ground footprint radius.
-const podiumFootprintScale = 1.05;
+const podiumFootprintScale = 1.03;
 
 /// Where the podium centre sits in the view, in NDC y (-1 is the bottom), so
 /// the stage's spotlight lands on it.
-const podiumAnchorY = -.40;
+const podiumAnchorY = 1 - 2 * 210 / 288;
 
 /// How the camera frames one landmark on its podium, one view for both.
 ///
@@ -144,13 +144,13 @@ class LandmarkFraming {
   static const elevationDeg = 24.0;
 
   /// Width over height of the 3D view box.
-  static const aspect = 320 / 260;
+  static const aspect = 320 / 288;
 
   /// How much of the view (NDC) the fitted content may use.
   static const viewFill = .97;
 
   /// How high the model top may reach (NDC), leaving room for the close button.
-  static const topFill = .9;
+  static const topFill = .92;
 
   double get yawStartTurns => yawStartDeg / 360;
 

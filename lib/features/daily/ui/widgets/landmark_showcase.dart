@@ -194,7 +194,7 @@ class _LandmarkShowcaseState extends State<LandmarkShowcase>
   }
 
   /// The 3D view box around the slot (it spills past the 210 px slot).
-  static const _box = Rect.fromLTRB(-55, -8, _heroSize + 55, _heroSize + 42);
+  static const _box = Rect.fromLTRB(-55, -36, _heroSize + 55, _heroSize + 42);
 
   /// Where the model appears inside the slot, from its projected bounds;
   /// the whole slot until the framing is known.
@@ -205,6 +205,18 @@ class _LandmarkShowcaseState extends State<LandmarkShowcase>
     double x(double n) => _box.left + (n + 1) / 2 * _box.width;
     double y(double n) => _box.top + (1 - n) / 2 * _box.height;
     return Rect.fromLTRB(x(l), y(t), x(r), y(b));
+  }
+
+  /// The 3D podium's top ellipse in stage coordinates: centre and half
+  /// width, so the spotlight base can match it. Null until framed.
+  (Offset, double)? _podiumOnStage() {
+    final f = _framing;
+    if (f == null || _failed3d) return null;
+    // The slot sits 36 px down the stage and centred across it.
+    double sx(double n) => _box.left + (n + 1) / 2 * _box.width;
+    double sy(double n) => 36 + _box.top + (1 - n) / 2 * _box.height;
+    final c = f.project((0, 0, 0)), rim = f.project((f.podiumRadius, 0, 0));
+    return (Offset(0, sy(c.$2)), sx(rim.$1) - sx(0));
   }
 
   /// Screen rect the sprite flies to and from: where the 3D model lands.
@@ -332,6 +344,7 @@ class _LandmarkShowcaseState extends State<LandmarkShowcase>
                   ink: c.textPrimary,
                   reduce: _reduce,
                   contact: _shown3d,
+                  podium: _podiumOnStage(),
                 ),
               ),
             ),
@@ -383,15 +396,14 @@ class _LandmarkShowcaseState extends State<LandmarkShowcase>
                             Positioned(
                               left: -55,
                               right: -55,
-                              top: -8,
+                              top: -36,
                               bottom: -42,
                               child: LandmarkModel3d(
                               key: const ValueKey('showcase-3d'),
                               art: widget.art,
                               turns: _spin,
                               active: _landed,
-                              podiumColor: Color.lerp(c.bgSurface,
-                                  colors.first, .55)!,
+                              podiumColor: Color.lerp(colors.first, c.bgSurface, .15)!,
                               // Called from the scene's tick, so state
                               // changes wait for the frame to finish.
                               onShown: () => WidgetsBinding.instance
@@ -612,6 +624,7 @@ class _StagePainter extends CustomPainter {
     required this.ink,
     required this.reduce,
     required this.contact,
+    this.podium,
   });
 
   final Animation<double> reveal, burst;
@@ -619,11 +632,16 @@ class _StagePainter extends CustomPainter {
   final Color surface, edge, ink;
   final bool reduce, contact;
 
+  /// 3D podium centre (dy only) and half width, once 3D is up.
+  final (Offset, double)? podium;
+
   @override
   void paint(Canvas canvas, Size size) {
     final cx = size.width / 2;
     final lit = Curves.easeOut.transform(reveal.value);
-    final top = Offset(cx, size.height - (contact ? 80 : 52)), rx = 108.0, ry = 24.0;
+    final p = contact ? podium : null;
+    final top = Offset(cx, p?.$1.dy ?? size.height - (contact ? 80 : 52));
+    final rx = p?.$2 ?? 108.0, ry = p != null ? rx * .41 : 24.0;
     final tint = colors.first;
 
     // Floor shadow.
@@ -640,8 +658,8 @@ class _StagePainter extends CustomPainter {
       final cone = Path()
         ..moveTo(cx - 26, 0)
         ..lineTo(cx + 26, 0)
-        ..lineTo(cx + rx + 20, top.dy)
-        ..lineTo(cx - rx - 20, top.dy)
+        ..lineTo(cx + rx + (p == null ? 20 : 0), top.dy)
+        ..lineTo(cx - rx - (p == null ? 20 : 0), top.dy)
         ..close();
       canvas.drawPath(
         cone,
@@ -742,7 +760,8 @@ class _StagePainter extends CustomPainter {
       o.colors != colors ||
       o.surface != surface ||
       o.reduce != reduce ||
-      o.contact != contact;
+      o.contact != contact ||
+      o.podium != podium;
 }
 
 /// Sparkles rising off the podium in the landmark's colours.
