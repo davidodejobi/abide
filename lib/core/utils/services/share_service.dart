@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
+import 'package:gal/gal.dart';
 import 'package:image/image.dart' as img;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -37,6 +38,16 @@ class ShareService {
       rethrow;
     }
   }
+
+  /// Shares plain text through the system share sheet.
+  Future<void> shareText(String text, {Rect? sharePositionOrigin}) =>
+      SharePlus.instance.share(
+        ShareParams(text: text, sharePositionOrigin: sharePositionOrigin),
+      );
+
+  /// Saves the PNG to the photo gallery; the OS asks for permission on first use.
+  Future<void> saveImage(Uint8List imageBytes, String filename) =>
+      Gal.putImageBytes(imageBytes, name: filename);
 
   /// Decodes and re-encodes the image to ensure it is a valid PNG.
   /// Runs in a separate isolate.
