@@ -20,8 +20,17 @@ class RoadArt {
 
   static const _dir = 'assets/images/road/living';
   static const names = [
-    'stop_done', 'stop_cur', 'stop_lock', 'trav', 'hills', 'cloud',
-    'prop_tree', 'prop_cypress', 'prop_bush', 'prop_pond', 'prop_flowers',
+    'stop_done',
+    'stop_cur',
+    'stop_lock',
+    'trav',
+    'hills',
+    'cloud',
+    'prop_tree',
+    'prop_cypress',
+    'prop_bush',
+    'prop_pond',
+    'prop_flowers',
     'prop_rock',
   ];
 
@@ -30,8 +39,10 @@ class RoadArt {
   static Future<RoadArt> load() => _memo ??= _load();
 
   static Future<RoadArt> _load() async {
-    final art = RoadArt._(<String, ui.Image>{}, parseLandmarks(
-        await rootBundle.loadString('assets/images/road/landmarks.json')));
+    final art = RoadArt._(
+        <String, ui.Image>{},
+        parseLandmarks(
+            await rootBundle.loadString('assets/images/road/landmarks.json')));
     await Future.wait([for (final n in names) art._decode(n)]);
     return art;
   }
@@ -42,7 +53,17 @@ class RoadArt {
         _images[n] = (await codec.getNextFrame()).image;
       }();
 
-  /// Decodes the sprites for the given landmark art keys (e.g. `garden`).
-  Future<void> ensureLandmarks(Iterable<String?> arts) =>
-      Future.wait([for (final a in arts.toSet()) if (a != null) _decode('lm_$a')]);
+  /// Art keys whose sprite is missing or failed to decode; the road draws a
+  /// marker sign for those landmarks instead.
+  final failed = <String>{};
+
+  /// Decodes the sprites for the given landmark art keys (e.g. `garden`). A
+  /// missing sprite is recorded in [failed], never thrown.
+  Future<void> ensureLandmarks(Iterable<String?> arts) => Future.wait([
+        for (final a in arts.toSet())
+          if (a != null)
+            _decode('lm_$a').catchError((Object _) {
+              failed.add(a);
+            }),
+      ]);
 }
