@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -81,16 +82,23 @@ Future<RoadOpen?> showLandmarkSheet(
       sprite: sprite,
       flight: flight,
     ),
+    // The road stays visible above it.
+    maxHeightFraction: sprite != null && landmark.art != null ? .78 : null,
   );
   if (!flight.backStarted) flight.finish();
   await flight.settled;
   return open;
 }
 
-Future<RoadOpen?> _show(BuildContext context, WidgetBuilder builder) {
+Future<RoadOpen?> _show(BuildContext context, WidgetBuilder builder,
+    {double? maxHeightFraction}) {
   return showModalBottomSheet<RoadOpen>(
     context: context,
     isScrollControlled: true,
+    constraints: maxHeightFraction == null
+        ? null
+        : BoxConstraints(
+            maxHeight: MediaQuery.sizeOf(context).height * maxHeightFraction),
     showDragHandle: true,
     useSafeArea: true,
     backgroundColor: context.lum.bgPage,
@@ -283,84 +291,217 @@ class LandmarkSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.lum;
-    final s = story;
+    final showcase = sprite != null && landmark.art != null;
+    final rest = _rest(context);
+    if (showcase) {
+      return LandmarkShowcase(
+        art: landmark.art!,
+        sprite: sprite!,
+        eyebrow: '${DailyStrings.dayN(day)} · ${landmark.ref}',
+        title: landmark.title,
+        flight: flight,
+        builder: (context, stage, text) => _ShowcaseLayout(
+          stage: stage,
+          text: text,
+          rest: rest,
+          onClose: () => Navigator.of(context).pop(),
+        ),
+      );
+    }
     return _SheetBody(
       children: [
-        if (sprite != null && landmark.art != null)
-          LandmarkShowcase(
-            art: landmark.art!,
-            sprite: sprite!,
-            eyebrow: '${DailyStrings.dayN(day)} · ${landmark.ref}',
-            title: landmark.title,
-            flight: flight,
-          )
-        else ...[
-          Text('${DailyStrings.dayN(day)} · ${landmark.ref}'.toUpperCase(),
-              style: LumText.roadLabelCaps11.copyWith(color: c.textSecondary)),
-          const SizedBox(height: LumSpace.xs),
-          Semantics(
-            header: true,
-            child: Text(landmark.title,
-                style: LumText.title1.copyWith(color: c.textPrimary)),
-          ),
-        ],
-        const SizedBox(height: LumSpace.lg),
-        if (s == null)
-          Text(landmark.short,
-              style: LumText.body.copyWith(color: c.textPrimary))
-        else ...[
-          Text(DailyStrings.whatHappened,
-              style: LumText.roadLabelCaps11.copyWith(color: c.textSecondary)),
-          const SizedBox(height: LumSpace.sm),
-          Text(s.story, style: LumText.body.copyWith(color: c.textPrimary)),
-          const SizedBox(height: LumSpace.lg),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(LumSpace.lg),
-            decoration: BoxDecoration(
-              color: c.bgSurface,
-              borderRadius: BorderRadius.circular(LumRadius.lg),
-              border: Border.all(color: c.borderSubtle),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(DailyStrings.whyItMatters,
-                    style: LumText.roadLabelCaps11
-                        .copyWith(color: c.textSecondary)),
-                const SizedBox(height: LumSpace.sm),
-                Text(s.why,
-                    style: LumText.callout.copyWith(color: c.textPrimary)),
-              ],
-            ),
-          ),
-        ],
-        const SizedBox(height: LumSpace.xl),
-        LumButton(
-          label: DailyStrings.readRef(landmark.ref),
-          icon: const Icon(Icons.menu_book_outlined),
-          onPressed: () =>
-              Navigator.of(context).pop(RoadOpen(landmark.openingKey)),
+        Text('${DailyStrings.dayN(day)} · ${landmark.ref}'.toUpperCase(),
+            style: LumText.roadLabelCaps11.copyWith(color: c.textSecondary)),
+        const SizedBox(height: LumSpace.xs),
+        Semantics(
+          header: true,
+          child: Text(landmark.title,
+              style: LumText.title1.copyWith(color: c.textPrimary)),
         ),
+        const SizedBox(height: LumSpace.lg),
+        ...rest,
+      ],
+    );
+  }
+
+  /// What follows the title: the retelling, why it matters, Read and Share.
+  List<Widget> _rest(BuildContext context) {
+    final c = context.lum;
+    final s = story;
+    return [
+      if (s == null)
+        Text(landmark.short, style: LumText.body.copyWith(color: c.textPrimary))
+      else ...[
+        Text(DailyStrings.whatHappened,
+            style: LumText.roadLabelCaps11.copyWith(color: c.textSecondary)),
         const SizedBox(height: LumSpace.sm),
-        Builder(
-          builder: (context) => LumButton(
-            label: DailyStrings.share,
-            icon: const Icon(Icons.ios_share_rounded),
-            kind: LumButtonKind.secondary,
-            onPressed: () {
-              // iPad needs an anchor for the share popover.
-              final box = context.findRenderObject() as RenderBox?;
-              ShareService().shareText(
-                shareText,
-                sharePositionOrigin: box == null || !box.hasSize
-                    ? null
-                    : box.localToGlobal(Offset.zero) & box.size,
-              );
-            },
+        Text(s.story, style: LumText.body.copyWith(color: c.textPrimary)),
+        const SizedBox(height: LumSpace.lg),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(LumSpace.lg),
+          decoration: BoxDecoration(
+            color: c.bgSurface,
+            borderRadius: BorderRadius.circular(LumRadius.lg),
+            border: Border.all(color: c.borderSubtle),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(DailyStrings.whyItMatters,
+                  style:
+                      LumText.roadLabelCaps11.copyWith(color: c.textSecondary)),
+              const SizedBox(height: LumSpace.sm),
+              Text(s.why,
+                  style: LumText.callout.copyWith(color: c.textPrimary)),
+            ],
           ),
         ),
       ],
+      const SizedBox(height: LumSpace.xl),
+      LumButton(
+        label: DailyStrings.readRef(landmark.ref),
+        icon: const Icon(Icons.menu_book_outlined),
+        onPressed: () =>
+            Navigator.of(context).pop(RoadOpen(landmark.openingKey)),
+      ),
+      const SizedBox(height: LumSpace.sm),
+      Builder(
+        builder: (context) => LumButton(
+          label: DailyStrings.share,
+          icon: const Icon(Icons.ios_share_rounded),
+          kind: LumButtonKind.secondary,
+          onPressed: () {
+            // iPad needs an anchor for the share popover.
+            final box = context.findRenderObject() as RenderBox?;
+            ShareService().shareText(
+              shareText,
+              sharePositionOrigin: box == null || !box.hasSize
+                  ? null
+                  : box.localToGlobal(Offset.zero) & box.size,
+            );
+          },
+        ),
+      ),
+    ];
+  }
+}
+
+/// A round close button with a 48 pt target; it closes the sheet the same way
+/// a swipe does, so the sprite flies home.
+class _CloseButton extends StatelessWidget {
+  const _CloseButton({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.lum;
+    return Semantics(
+      button: true,
+      label: DailyStrings.close,
+      excludeSemantics: true,
+      onTap: onPressed,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onPressed,
+        child: SizedBox(
+          width: 48,
+          height: 48,
+          child: Center(
+            child: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: c.bgSurface,
+                border: Border.all(color: c.borderSubtle),
+              ),
+              child: Icon(Icons.close_rounded, size: 20, color: c.textPrimary),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The showcase sheet's layout. Only the stage is pinned, scaled down to leave
+/// the story at least [_minBody] pt; the title scrolls with the story. When
+/// even that does not fit (landscape, huge text) everything scrolls. The Close
+/// button is always pinned top-right.
+class _ShowcaseLayout extends StatelessWidget {
+  const _ShowcaseLayout({
+    required this.stage,
+    required this.text,
+    required this.rest,
+    required this.onClose,
+  });
+
+  final Widget stage, text;
+  final List<Widget> rest;
+  final VoidCallback onClose;
+
+  static const _minBody = 180.0;
+  static const _stageH = LandmarkShowcase.stageHeight;
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      top: false,
+      child: LayoutBuilder(builder: (context, box) {
+        final max = box.maxHeight.isFinite ? box.maxHeight : double.infinity;
+        final stageH = math.min(_stageH, max * .4);
+        final pinned = max.isInfinite || max - stageH >= _minBody;
+        final width = box.maxWidth - 2 * LumSize.screenGutter;
+        Widget scaled(double h) => SizedBox(
+              width: width,
+              height: h,
+              child: FittedBox(
+                fit: BoxFit.fill,
+                child: SizedBox(
+                    width: width * _stageH / h, height: _stageH, child: stage),
+              ),
+            );
+        final body = SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(
+              LumSize.screenGutter, 0, LumSize.screenGutter, LumSpace.lg),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (!pinned) scaled(_stageH),
+              const SizedBox(height: LumSpace.md),
+              text,
+              const SizedBox(height: LumSpace.sm),
+              ...rest,
+            ],
+          ),
+        );
+        return Stack(
+          children: [
+            pinned
+                ? Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: LumSize.screenGutter),
+                        child: scaled(stageH),
+                      ),
+                      Flexible(child: body),
+                    ],
+                  )
+                : body,
+            Positioned(
+              top: 0,
+              right: LumSize.screenGutter - 8,
+              child: _CloseButton(onPressed: onClose),
+            ),
+          ],
+        );
+      }),
     );
   }
 }

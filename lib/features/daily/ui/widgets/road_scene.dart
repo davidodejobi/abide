@@ -220,6 +220,10 @@ class RoadSceneState extends State<RoadScene> with TickerProviderStateMixin {
     return r.center.translate(0, 8) * (widget.width / RoadScene.designWidth);
   }
 
+  /// Whether landmark [id]'s sprite was drawn in the last paint, for tests.
+  @visibleForTesting
+  bool debugDrew(String id) => _cache.drawn.contains(id);
+
   /// Whether the camera has left the traveller, for tests.
   @visibleForTesting
   bool get debugExploring => _exploreAt != null;
@@ -347,6 +351,9 @@ class RoadSceneState extends State<RoadScene> with TickerProviderStateMixin {
   @override
   void didUpdateWidget(RoadScene oldWidget) {
     super.didUpdateWidget(oldWidget);
+    // A landmark landing back (or lifting off) must show at once, not on the
+    // next scroll: the road may otherwise be idle and never repaint.
+    if (oldWidget.liftedId != widget.liftedId) _nudge.value++;
     if (oldWidget.visibleBottom != widget.visibleBottom) {
       oldWidget.visibleBottom?.removeListener(_panelMoved);
       widget.visibleBottom?.addListener(_panelMoved);
@@ -771,6 +778,8 @@ class _Hit {
 /// Things that outlive a painter instance: shaders, paints, text layouts.
 class _Cache {
   final hits = <_Hit>[];
+  /// Ids of the landmark sprites drawn in the last paint, for tests.
+  final drawn = <String>{};
   final text = <String, TextPainter>{};
   final filters = <int, ColorFilter>{};
   final sprite = Paint()..filterQuality = FilterQuality.medium;
@@ -920,6 +929,7 @@ class _RoadPainter extends CustomPainter {
     final tint = _tint(dusk);
     final sp = cache.sprite..colorFilter = cache.filter(tint);
     cache.hits.clear();
+    cache.drawn.clear();
 
     _background(canvas, dusk);
     final hills = _hills();
@@ -1319,6 +1329,7 @@ class _RoadPainter extends CustomPainter {
     final shifted = rect.shift(Offset(0, (1 - r) * 14));
     cache.hits.add(_Hit(rect, lm, n));
     if (lm.id == liftedId) return; // it is up in the sheet
+    cache.drawn.add(lm.id);
     if (r > .02) {
       final burst = math.sin(math.pi * ((pos - (n - .3)) / .9).clamp(0.0, 1.0));
       final a = (r * (.5 + .25 * pulse) + burst * .3).clamp(0.0, 1.0);

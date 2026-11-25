@@ -547,13 +547,19 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
     }
     if (!mounted) return;
     if (sprite != null) setState(() => _lifted = landmark.id);
-    final open = await showLandmarkSheet(context,
-        landmark: landmark,
-        story: story,
-        day: day,
-        sprite: sprite,
-        from: sprite == null ? null : from);
-    if (mounted && _lifted == landmark.id) setState(() => _lifted = null);
+    RoadOpen? open;
+    try {
+      open = await showLandmarkSheet(context,
+          landmark: landmark,
+          story: story,
+          day: day,
+          sprite: sprite,
+          from: sprite == null ? null : from);
+    } finally {
+      // Whatever happened (error, timeout, swipe), the sprite is back on the
+      // road and the road repaints now.
+      if (mounted && _lifted == landmark.id) setState(() => _lifted = null);
+    }
     await _open(open);
   }
 
