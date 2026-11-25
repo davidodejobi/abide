@@ -1,4 +1,5 @@
 import 'package:auto_route/auto_route.dart';
+import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
@@ -16,6 +17,10 @@ import 'package:openbaptisthymnal/core/theme/theme_provider.dart';
 import 'package:openbaptisthymnal/core/widgets/lum_chip.dart';
 import 'package:openbaptisthymnal/features/bible/model/bible_edition.dart';
 import 'package:openbaptisthymnal/features/bible/providers/bible_providers.dart';
+import 'package:openbaptisthymnal/features/plus/plus_config.dart';
+import 'package:openbaptisthymnal/features/plus/providers/plus_providers.dart';
+import 'package:openbaptisthymnal/features/plus/ui/plus_gate.dart';
+import 'package:openbaptisthymnal/features/plus/ui/trial_reminder_card.dart';
 import 'package:openbaptisthymnal/features/settings/ui/widgets/font_size_control.dart';
 import 'package:openbaptisthymnal/features/settings/ui/widgets/you_rows.dart';
 import 'package:openbaptisthymnal/features/settings/ui/you_strings.dart';
@@ -62,6 +67,42 @@ class _SettingsTabScreenState extends ConsumerState<SettingsTabScreen>
               child: Text(YouStrings.title,
                   style: LumText.largeTitle.copyWith(color: c.textPrimary)),
             ),
+            if (ref.watch(plusEnabledProvider)) ...[
+              const SizedBox(height: LumSpace.lg),
+              const TrialReminderCard(),
+              YouGroup(children: [
+                YouRow(
+                  icon: PhosphorIcons.sparkle(),
+                  title: PlusStrings.plusRow,
+                  subtitle: ref.watch(plusProvider.select((e) => e.isPlus))
+                      ? PlusStrings.plusRowActive
+                      : PlusStrings.plusRowFree,
+                  onTap: () => context.router.push(const PlusRoute()),
+                ),
+                YouRow(
+                  icon: PhosphorIcons.heart(),
+                  title: PlusStrings.sponsorRow,
+                  onTap: () => context.router.push(const SponsorRoute()),
+                ),
+                // Example Plus gate, debug only until a real Plus feature exists.
+                if (kDebugMode)
+                  YouRow(
+                    icon: PhosphorIcons.cloudArrowUp(),
+                    title: PlusFeature.sync.title,
+                    onTap: () => requirePlus(context, ref, PlusFeature.sync),
+                  ),
+                if (kDebugMode)
+                  Material(
+                    type: MaterialType.transparency,
+                    child: SwitchListTile(
+                      title: const Text(PlusStrings.debugToggle),
+                      value: ref.watch(plusProvider.select((e) => e.isPlus)),
+                      onChanged: (v) =>
+                          ref.read(plusProvider.notifier).debugSet(v),
+                    ),
+                  ),
+              ]),
+            ],
             if (ref.watch(authRepositoryProvider) != null) ...[
               const YouSectionLabel(AccountStrings.youSection),
               YouGroup(children: [_AccountRow()]),
@@ -130,8 +171,8 @@ class _SettingsTabScreenState extends ConsumerState<SettingsTabScreen>
                     ),
                     const SizedBox(height: LumSpace.md),
                     Text(YouStrings.qualityHint(quality.sizeHint),
-                        style: LumText.footnote
-                            .copyWith(color: c.textSecondary)),
+                        style:
+                            LumText.footnote.copyWith(color: c.textSecondary)),
                   ],
                 ),
               ),
@@ -172,7 +213,8 @@ class _SettingsTabScreenState extends ConsumerState<SettingsTabScreen>
 class _BibleLinkRow extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final selected = ref.watch(linkingPreferencesProvider).defaultBibleEditionId;
+    final selected =
+        ref.watch(linkingPreferencesProvider).defaultBibleEditionId;
     final editions = ref.watch(bibleEditionsProvider);
 
     return YouRow(
@@ -186,8 +228,7 @@ class _BibleLinkRow extends ConsumerWidget {
           selected: selected,
           options: [
             const YouChoice(id: null, label: YouStrings.followReading),
-            for (final e in editions)
-              YouChoice(id: e.id, label: e.displayName),
+            for (final e in editions) YouChoice(id: e.id, label: e.displayName),
           ],
         );
         if (picked == null) return;

@@ -324,6 +324,22 @@ class PlanDaysRouteArgs {
 }
 
 /// generated route for
+/// [PlusPage]
+class PlusRoute extends PageRouteInfo<void> {
+  const PlusRoute({List<PageRouteInfo>? children})
+      : super(PlusRoute.name, initialChildren: children);
+
+  static const String name = 'PlusRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const PlusPage();
+    },
+  );
+}
+
+/// generated route for
 /// [RoadShareCardPage]
 class RoadShareCardRoute extends PageRouteInfo<RoadShareCardRouteArgs> {
   RoadShareCardRoute({
@@ -601,6 +617,22 @@ class ShareCardRouteArgs {
       title.hashCode ^
       body.hashCode ^
       const ListEquality<({String label, String text})>().hash(parts);
+}
+
+/// generated route for
+/// [SponsorPage]
+class SponsorRoute extends PageRouteInfo<void> {
+  const SponsorRoute({List<PageRouteInfo>? children})
+      : super(SponsorRoute.name, initialChildren: children);
+
+  static const String name = 'SponsorRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const SponsorPage();
+    },
+  );
 }
 
 /// generated route for
