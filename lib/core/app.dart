@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -57,7 +58,18 @@ class AbideApp extends HookConsumerWidget {
         darkTheme: AppTheme.darkTheme,
         themeMode: themeMode,
         builder: (context, child) => SplashIntro(
-          child: AppUpdateOverlay(child: child ?? const SizedBox.shrink()),
+          child: AppUpdateOverlay(
+            // Phone-width column on wide screens (desktop browsers, tablets).
+            child: ColoredBox(
+              color: Theme.of(context).scaffoldBackgroundColor,
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: kIsWeb ? 560 : double.infinity),
+                  child: child ?? const SizedBox.shrink(),
+                ),
+              ),
+            ),
+          ),
         ),
         routerConfig: appRouter.config(
           deepLinkBuilder: appRouter.onboardingDeepLink,
