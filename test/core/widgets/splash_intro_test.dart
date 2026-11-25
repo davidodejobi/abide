@@ -30,6 +30,31 @@ void main() {
     expect(find.text('app'), findsOneWidget);
   });
 
+  testWidgets(
+      'child is mounted once and hidden from semantics only during '
+      'the intro', (tester) async {
+    final handle = tester.ensureSemantics();
+    _inits = 0;
+    await SplashIntro.preload();
+    await tester.pumpWidget(
+      const MediaQuery(
+        data: MediaQueryData(),
+        child: Directionality(
+          textDirection: TextDirection.ltr,
+          child: SplashIntro(child: _Probe()),
+        ),
+      ),
+    );
+    expect(_inits, 1);
+    expect(find.bySemanticsLabel('probe'), findsNothing);
+    await tester.pump(const Duration(milliseconds: 700));
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(find.byType(CustomPaint), findsNothing);
+    expect(_inits, 1);
+    expect(find.bySemanticsLabel('probe'), findsOneWidget);
+    handle.dispose();
+  });
+
   testWidgets('reduce motion fades out in 200 ms', (tester) async {
     await SplashIntro.preload();
     await tester.pumpWidget(_app(reduceMotion: true));
@@ -40,4 +65,25 @@ void main() {
     expect(find.byType(Opacity), findsNothing);
     expect(find.text('app'), findsOneWidget);
   });
+}
+
+int _inits = 0;
+
+class _Probe extends StatefulWidget {
+  const _Probe();
+
+  @override
+  State<_Probe> createState() => _ProbeState();
+}
+
+class _ProbeState extends State<_Probe> {
+  @override
+  void initState() {
+    super.initState();
+    _inits++;
+  }
+
+  @override
+  Widget build(BuildContext context) =>
+      Semantics(label: 'probe', child: const SizedBox());
 }

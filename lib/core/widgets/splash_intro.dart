@@ -83,32 +83,37 @@ class _SplashIntroState extends State<SplashIntro>
 
   @override
   Widget build(BuildContext context) {
-    if (_done) return widget.child;
     // The native splash follows the phone's mode, not the in-app theme.
     final page = (MediaQuery.platformBrightnessOf(context) == Brightness.dark
             ? LumColors.dark
             : LumColors.light)
         .bgPage;
     final reduce = MediaQuery.disableAnimationsOf(context);
+    // One tree for the whole life of the widget: the child must never be
+    // remounted when the intro ends (it holds the router and update gate).
     return Stack(
       fit: StackFit.expand,
       children: [
-        widget.child,
         ExcludeSemantics(
-          child: AnimatedBuilder(
-            animation: _c,
-            builder: (context, _) => Opacity(
-              opacity: reduce ? 1 - _c.value : 1,
-              child: CustomPaint(
-                painter: _IntroPainter(
-                  art: SplashIntro._art!,
-                  ms: reduce ? 0 : _c.value * _total.inMilliseconds,
-                  page: page,
+          excluding: !_done,
+          child: ExcludeFocus(excluding: !_done, child: widget.child),
+        ),
+        if (!_done)
+          ExcludeSemantics(
+            child: AnimatedBuilder(
+              animation: _c,
+              builder: (context, _) => Opacity(
+                opacity: reduce ? 1 - _c.value : 1,
+                child: CustomPaint(
+                  painter: _IntroPainter(
+                    art: SplashIntro._art!,
+                    ms: reduce ? 0 : _c.value * _total.inMilliseconds,
+                    page: page,
+                  ),
                 ),
               ),
             ),
           ),
-        ),
       ],
     );
   }
