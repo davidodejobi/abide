@@ -106,10 +106,15 @@ class TodayKeyNotifier extends Notifier<String> with WidgetsBindingObserver {
   }
 }
 
-/// Today as a local-midnight date, moving with [todayKeyProvider].
-final planTodayProvider = Provider<DateTime>(
-  (ref) => dateFromKey(ref.watch(todayKeyProvider)) ?? DateTime.now(),
-);
+/// Today as a local-midnight date, from the injected clock. Deliberately does
+/// not watch [todayKeyProvider]: that one owns a midnight timer, which screens
+/// that only need the date (onboarding) should not start. Auto-disposed so a
+/// sheet opened tomorrow reads tomorrow; providers that stay mounted across
+/// midnight watch [todayKeyProvider] themselves.
+final planTodayProvider = Provider.autoDispose<DateTime>((ref) {
+  final now = ref.watch(dayPartClockProvider)();
+  return DateTime(now.year, now.month, now.day);
+});
 
 /// Plans the user asked to be reminded about, by plan id. Stored locally only:
 /// the app has no notification package yet, so this flag is what a scheduled
@@ -172,7 +177,12 @@ final todaysReadingProvider = FutureProvider<TodaysReading?>((ref) async {
       await ref.watch(planProgressProvider(subscription.planId).future);
 
   final schedule = PlanSchedule(plan);
-  final today = ref.watch(planTodayProvider);
+  // Only a calendar-anchored plan changes with the day, so only it follows the
+  // midnight roll; a progress-driven one must not reload at midnight.
+  final fallbackToday = ref.watch(planTodayProvider);
+  final DateTime today = schedule.isFixed
+      ? (dateFromKey(ref.watch(todayKeyProvider)) ?? fallbackToday)
+      : fallbackToday;
   // A fixed-start plan from a past year is a finished run, not today's plan:
   // show the picker so they can join this year's.
   if (schedule.isFixed &&

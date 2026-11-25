@@ -126,10 +126,9 @@ class _GoalCard extends StatelessWidget {
             Container(
               width: 40,
               height: 40,
-              decoration: BoxDecoration(
-                  shape: BoxShape.circle, color: c.buttonGoldTop),
-              child:
-                  Icon(Icons.flag_rounded, size: 20, color: c.buttonOnGold),
+              decoration:
+                  BoxDecoration(shape: BoxShape.circle, color: c.buttonGoldTop),
+              child: Icon(Icons.flag_rounded, size: 20, color: c.buttonOnGold),
             ),
             const SizedBox(width: LumSpace.md),
             Expanded(

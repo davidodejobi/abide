@@ -119,8 +119,7 @@ class PlanOptionTile extends StatelessWidget {
                               value: reminderOn, onChanged: onReminderChanged),
                         ]),
                       Text(DailyStrings.warmUp,
-                          style:
-                              LumText.footnote.copyWith(color: fgSoft)),
+                          style: LumText.footnote.copyWith(color: fgSoft)),
                     ] else if (footnote != null) ...[
                       const SizedBox(height: LumSpace.xs),
                       Text(footnote!,
@@ -142,8 +141,7 @@ class PlanOptionTile extends StatelessWidget {
                           color: number, fontSize: selected ? 44 : 30)),
                   if (selected)
                     Text('DAYS',
-                        style:
-                            LumText.roadLabelCaps11.copyWith(color: fgSoft)),
+                        style: LumText.roadLabelCaps11.copyWith(color: fgSoft)),
                 ],
               ),
             ],

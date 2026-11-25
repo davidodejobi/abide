@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:openbaptisthymnal/core/storage/database/database_provider.dart';
+import 'package:openbaptisthymnal/core/storage/storage_provider.dart';
 import 'package:openbaptisthymnal/core/theme/app_theme.dart';
 import 'package:openbaptisthymnal/core/utils/day_part_provider.dart';
 import 'package:openbaptisthymnal/features/daily/domain/date_key.dart';
@@ -15,6 +16,8 @@ import 'package:openbaptisthymnal/features/daily/providers/daily_providers.dart'
 import 'package:openbaptisthymnal/features/daily/ui/daily_strings.dart';
 import 'package:openbaptisthymnal/features/daily/ui/today_tab_screen.dart';
 import 'package:openbaptisthymnal/features/onboarding/providers/onboarding_provider.dart';
+
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../support/pump_app.dart';
 
@@ -37,10 +40,14 @@ StreakResult _streak({bool today = false}) => StreakResult(
       totalDays: 40,
     );
 
+late SharedPreferences _prefs;
+
 Widget _app(List<Override> overrides, {ThemeData? theme, double scale = 1}) {
   return ProviderScope(
     overrides: [
       userNameProvider.overrideWithValue('Maya'),
+      sharedPreferencesProvider.overrideWithValue(_prefs),
+      availablePlansProvider.overrideWith((_) async => <ReadingPlan>[]),
       planBookNamesProvider.overrideWith((_) async => {'JHN': 'John'}),
       dayPartClockProvider.overrideWithValue(() => DateTime(2026, 1, 7, 10)),
       ...overrides,
@@ -63,6 +70,11 @@ class _FakeDay extends TodayKeyNotifier {
 }
 
 void main() {
+  setUpAll(() async {
+    SharedPreferences.setMockInitialValues({});
+    _prefs = await SharedPreferences.getInstance();
+  });
+
   Future<void> pump(WidgetTester t, Widget w) async {
     t.view.physicalSize = const Size(390 * 3, 844 * 3);
     t.view.devicePixelRatio = 3;

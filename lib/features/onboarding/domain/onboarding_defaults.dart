@@ -21,7 +21,8 @@ ReadingPlan onboardingDefaultPlan(List<ReadingPlan> plans, DateTime today) {
 }
 
 /// Languages we ship a Bible edition for, first-seen order.
-List<String> onboardingLanguages([List<BibleEdition> editions = kBibleEditions]) {
+List<String> onboardingLanguages(
+    [List<BibleEdition> editions = kBibleEditions]) {
   final seen = <String>[];
   for (final e in editions) {
     if (!seen.contains(e.languageCode)) seen.add(e.languageCode);

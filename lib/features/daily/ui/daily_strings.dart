@@ -70,9 +70,8 @@ abstract final class DailyStrings {
   static const remindMe = 'Remind me';
   static const warmUp =
       'While you wait, warm up with the New Testament in 90 days or Psalms in 30.';
-  static String yearStartsIn(String title, int days) => days == 1
-      ? '$title starts tomorrow'
-      : '$title starts in $days days';
+  static String yearStartsIn(String title, int days) =>
+      days == 1 ? '$title starts tomorrow' : '$title starts in $days days';
   static String catchUp(int n) => n == 1
       ? '1 earlier day is waiting whenever you want it.'
       : '$n earlier days are waiting whenever you want them.';

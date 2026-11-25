@@ -1155,7 +1155,9 @@ class _PlanNoteCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final c = context.lum;
-    final today = ref.watch(planTodayProvider);
+    final fallbackToday = ref.watch(planTodayProvider);
+    final DateTime today =
+        dateFromKey(ref.watch(todayKeyProvider)) ?? fallbackToday;
     final reminders = ref.watch(planRemindersProvider);
     final plans = ref.watch(availablePlansProvider).valueOrNull ?? const [];
     final lines = <String>[

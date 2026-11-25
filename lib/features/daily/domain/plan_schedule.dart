@@ -39,7 +39,8 @@ class PlanSchedule {
   /// is open all year (late joiners catch up) and rolls on each start date.
   bool isLocked(DateTime today) {
     final o = opensOn;
-    return o != null && DateTime(today.year, today.month, today.day).isBefore(o);
+    return o != null &&
+        DateTime(today.year, today.month, today.day).isBefore(o);
   }
 
   /// Whole days until [opensOn], 0 once open.
@@ -59,7 +60,9 @@ class PlanSchedule {
     final p = _parts!;
     final day = DateTime(date.year, date.month, date.day);
     final thisYear = DateTime(date.year, p.$1, p.$2);
-    return thisYear.isAfter(day) ? DateTime(date.year - 1, p.$1, p.$2) : thisYear;
+    return thisYear.isAfter(day)
+        ? DateTime(date.year - 1, p.$1, p.$2)
+        : thisYear;
   }
 
   /// The calendar day of the run for [date], 1-based. Clamped to the plan, so

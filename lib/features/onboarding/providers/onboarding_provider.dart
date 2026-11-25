@@ -72,8 +72,8 @@ class OnboardingNotifier extends Notifier<OnboardingState> {
   /// Picking a language moves the edition to that language's first Bible.
   void setLanguage(String code) {
     if (code == state.languageCode) return;
-    state = state.copyWith(
-        languageCode: code, editionId: defaultEditionFor(code));
+    state =
+        state.copyWith(languageCode: code, editionId: defaultEditionFor(code));
   }
 
   void setEdition(String id) => state = state.copyWith(editionId: id);
