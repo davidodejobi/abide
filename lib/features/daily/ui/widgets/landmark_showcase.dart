@@ -7,8 +7,8 @@ import 'package:flutter/physics.dart';
 import 'package:flutter/services.dart';
 import 'package:openbaptisthymnal/core/theme/lum_theme.dart';
 
-import '../../domain/landmark_spin.dart';
-import 'road_art.dart';
+import '../../domain/landmark_3d.dart';
+import 'landmark_model_3d.dart';
 
 /// Where a landmark sheet's picture came from on the road, and when it has
 /// finished flying home again. The caller waits on [settled] so the road can
@@ -97,8 +97,9 @@ class _LandmarkShowcaseState extends State<LandmarkShowcase>
   late final _burst =
       AnimationController(vsync: this, duration: const Duration(milliseconds: 700));
 
-  /// The decoded turntable; null until ready (the static sprite stands in).
-  ui.Image? _sheet;
+  /// True once the first 3D frame is up; the static sprite stands in until
+  /// then, and for good if 3D is unavailable.
+  bool _shown3d = false, _failed3d = false;
   List<Color> _palette = const [];
   bool _landed = false;
   bool _init = false, _reduce = false, _flying = false, _started = false;
@@ -117,25 +118,8 @@ class _LandmarkShowcaseState extends State<LandmarkShowcase>
       }
     });
     scheduleMicrotask(() {
-      if (mounted) {
-        _loadPalette();
-        _loadSheet();
-      }
+      if (mounted) _loadPalette();
     });
-  }
-
-  Future<void> _loadSheet() async {
-    try {
-      final img = await RoadArt.loadSpin(widget.art);
-      if (!mounted) {
-        img.dispose();
-        return;
-      }
-      final old = _sheet;
-      setState(() => _sheet = img);
-      old?.dispose();
-      _maybeSpin();
-    } catch (_) {}
   }
 
   Future<void> _loadPalette() async {
@@ -178,8 +162,6 @@ class _LandmarkShowcaseState extends State<LandmarkShowcase>
     _reveal.dispose();
     _burst.dispose();
     _mine.dispose();
-    _sheet?.dispose();
-    _sheet = null;
     super.dispose();
   }
 
@@ -262,9 +244,9 @@ class _LandmarkShowcaseState extends State<LandmarkShowcase>
     _maybeSpin();
   }
 
-  /// The whoosh plays once the picture has landed and the turntable is ready.
+  /// The whoosh plays once the picture has landed and the 3D model is up.
   void _maybeSpin() {
-    if (_started || !_landed || _sheet == null) return;
+    if (_started || !_landed || !_shown3d) return;
     _started = true;
     if (!_reduce) _spin.animateWith(_Whoosh(_spin.value, 2, 1.2));
   }
@@ -289,7 +271,6 @@ class _LandmarkShowcaseState extends State<LandmarkShowcase>
   @override
   Widget build(BuildContext context) {
     final c = context.lum;
-    final sheet = _sheet;
     final colors = _palette.isEmpty ? [c.sceneGlow] : _palette;
     final live = _landed && !_reduce;
     return Column(
@@ -311,6 +292,7 @@ class _LandmarkShowcaseState extends State<LandmarkShowcase>
                       edge: c.borderSubtle,
                       ink: c.textPrimary,
                       reduce: _reduce,
+                      contact: _shown3d,
                     ),
                   ),
                 ),
@@ -323,9 +305,9 @@ class _LandmarkShowcaseState extends State<LandmarkShowcase>
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
                     excludeFromSemantics: true,
-                    onHorizontalDragStart: sheet == null ? null : _dragStart,
-                    onHorizontalDragUpdate: sheet == null ? null : _dragUpdate,
-                    onHorizontalDragEnd: sheet == null ? null : _dragEnd,
+                    onHorizontalDragStart: _shown3d ? _dragStart : null,
+                    onHorizontalDragUpdate: _shown3d ? _dragUpdate : null,
+                    onHorizontalDragEnd: _shown3d ? _dragEnd : null,
                     child: SizedBox(
                       key: _slot,
                       width: _heroSize,
@@ -333,25 +315,40 @@ class _LandmarkShowcaseState extends State<LandmarkShowcase>
                       child: ExcludeSemantics(
                         child: Opacity(
                           opacity: _flying ? 0 : 1,
-                          child: AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 180),
-                            child: sheet == null
-                                ? RawImage(
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              // Seated on the podium; fades out once the 3D
+                              // model is up, and stays if it never is.
+                              AnimatedOpacity(
+                                duration: const Duration(milliseconds: 220),
+                                opacity: _shown3d ? 0 : 1,
+                                child: RawImage(
                                     key: const ValueKey('showcase-static'),
                                     image: _mine,
-                                    fit: BoxFit.contain)
-                                : RepaintBoundary(
-                                    key: const ValueKey('showcase-spin'),
-                                    child: CustomPaint(
-                                      painter: _SpinPainter(
-                                        sheet: sheet,
-                                        turns: _spin,
-                                        clock: _clock,
-                                        bob: live,
-                                      ),
-                                      size: const Size.square(_heroSize),
-                                    ),
-                                  ),
+                                    fit: BoxFit.contain),
+                              ),
+                              if (!_failed3d)
+                                LandmarkModel3d(
+                                  key: const ValueKey('showcase-3d'),
+                                  art: widget.art,
+                                  turns: _spin,
+                                  active: _landed,
+                                  // Called from the scene's tick, so state
+                                  // changes wait for the frame to finish.
+                                  onShown: () => WidgetsBinding.instance
+                                      .addPostFrameCallback((_) {
+                                    if (!mounted) return;
+                                    setState(() => _shown3d = true);
+                                    _maybeSpin();
+                                  }),
+                                  onFailed: () {
+                                    if (mounted) {
+                                      setState(() => _failed3d = true);
+                                    }
+                                  },
+                                ),
+                            ],
                           ),
                         ),
                       ),
@@ -538,33 +535,6 @@ class _FlierState extends State<_Flier> with SingleTickerProviderStateMixin {
 }
 
 // ------------------------------------------------------------------ painters
-class _SpinPainter extends CustomPainter {
-  _SpinPainter({
-    required this.sheet,
-    required this.turns,
-    required this.clock,
-    required this.bob,
-  }) : super(repaint: Listenable.merge([turns, clock]));
-
-  final ui.Image sheet;
-  final Animation<double> turns, clock;
-  final bool bob;
-  final _paint = Paint()..filterQuality = FilterQuality.medium;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final f = spinFrameFor(turns.value);
-    final cell = sheet.width / spinColumns;
-    final src = Rect.fromLTWH(
-        (f % spinColumns) * cell, (f ~/ spinColumns) * cell, cell, cell);
-    final dy = bob ? math.sin(clock.value * 2 * math.pi) * 3 : 0.0;
-    canvas.drawImageRect(sheet, src, (Offset(0, dy) & size), _paint);
-  }
-
-  @override
-  bool shouldRepaint(_SpinPainter o) => o.sheet != sheet || o.bob != bob;
-}
-
 /// Podium, floor shadow and the soft spotlight, lit by [reveal].
 class _StagePainter extends CustomPainter {
   _StagePainter({
@@ -576,12 +546,13 @@ class _StagePainter extends CustomPainter {
     required this.edge,
     required this.ink,
     required this.reduce,
+    required this.contact,
   });
 
   final Animation<double> reveal, burst;
   final List<Color> colors;
   final Color surface, edge, ink;
-  final bool reduce;
+  final bool reduce, contact;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -636,6 +607,15 @@ class _StagePainter extends CustomPainter {
               [0, .5, 1]));
     final topOval = Rect.fromCenter(center: top, width: rx * 2, height: ry * 2);
     canvas.drawOval(topOval, Paint()..color = Color.lerp(surface, tint, .18 * lit)!);
+    // Contact shadow under a 3D model (the sprite carries its own).
+    if (contact) {
+      canvas.drawOval(
+        Rect.fromCenter(center: top.translate(0, 4), width: 150, height: 34),
+        Paint()
+          ..color = Colors.black.withValues(alpha: .34)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 9),
+      );
+    }
     // Pool of light.
     canvas.drawOval(
       topOval.deflate(10),
@@ -680,7 +660,10 @@ class _StagePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_StagePainter o) =>
-      o.colors != colors || o.surface != surface || o.reduce != reduce;
+      o.colors != colors ||
+      o.surface != surface ||
+      o.reduce != reduce ||
+      o.contact != contact;
 }
 
 /// Sparkles rising off the podium in the landmark's colours.

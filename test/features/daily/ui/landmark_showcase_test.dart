@@ -8,7 +8,7 @@ import 'package:openbaptisthymnal/features/daily/domain/road_landmarks.dart';
 import 'package:openbaptisthymnal/features/daily/ui/widgets/road_art.dart';
 import 'package:openbaptisthymnal/features/daily/ui/widgets/road_sheets.dart';
 
-const _spinKey = ValueKey('showcase-spin');
+const _threeDKey = ValueKey('showcase-3d');
 const _staticKey = ValueKey('showcase-static');
 
 Future<void> _pumpFor(WidgetTester t, int ms) async {
@@ -59,7 +59,7 @@ void main() {
     await t.tap(find.text('open'));
   }
 
-  testWidgets('flies in, lands on the podium, then the turntable takes over',
+  testWidgets('flies in, lands on the podium, and falls back to the sprite without 3D',
       (t) async {
     await open(t, from: const Rect.fromLTWH(20, 500, 120, 100));
     await _pumpFor(t, 300);
@@ -74,15 +74,17 @@ void main() {
     expect(find.byType(RawImage), findsOneWidget, reason: 'the flier is gone');
     expect(find.text(lm.title), findsOneWidget);
 
-    // Lazy: the sheet decodes only now, off the fake clock.
+    // 3D cannot start under test (no Flutter GPU): the sprite stays seated
+    // on the podium, there is no turntable, and nothing throws.
     await t.runAsync(
         () => Future<void>.delayed(const Duration(milliseconds: 400)));
     await _pumpFor(t, 400);
-    expect(find.byKey(_spinKey), findsOneWidget);
-    expect(find.byKey(_staticKey), findsNothing);
-
-    // Drag to spin: nothing throws.
-    await t.drag(find.byKey(_spinKey), const Offset(120, 0));
+    expect(t.takeException(), isNull);
+    expect(find.byKey(_staticKey), findsOneWidget);
+    expect(t.widget<AnimatedOpacity>(find.ancestor(of: hero, matching: find.byType(AnimatedOpacity)).first).opacity, 1);
+    expect(find.byKey(_threeDKey), findsNothing,
+        reason: 'the failed 3D view removes itself');
+    await t.drag(find.byKey(_staticKey), const Offset(120, 0));
     await _pumpFor(t, 300);
     expect(t.takeException(), isNull);
   });
@@ -144,16 +146,14 @@ void main() {
     await _pumpFor(t, 400);
     expect(find.text(lm.title), findsOneWidget);
 
-    // Still draggable once the turntable is in; it does not idle on its own.
+    // Nothing spins on its own and nothing throws.
     await t.runAsync(
         () => Future<void>.delayed(const Duration(milliseconds: 400)));
     await _pumpFor(t, 300);
-    expect(find.byKey(_spinKey), findsOneWidget);
-    await t.drag(find.byKey(_spinKey), const Offset(-90, 0));
-    await t.pump();
+    expect(find.byKey(_staticKey), findsOneWidget);
     expect(t.takeException(), isNull);
 
-    Navigator.of(t.element(find.byKey(_spinKey))).pop();
+    Navigator.of(t.element(find.byKey(_staticKey))).pop();
     await _pumpFor(t, 400);
     expect(done, isTrue, reason: 'nothing to wait for');
   });
