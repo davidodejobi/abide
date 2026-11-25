@@ -21,8 +21,8 @@ class ShowcaseFlight {
   bool backStarted = false;
   final _done = Completer<void>();
 
-  Future<void> get settled => _done.future
-      .timeout(const Duration(seconds: 2), onTimeout: () {});
+  Future<void> get settled =>
+      _done.future.timeout(const Duration(seconds: 2), onTimeout: () {});
 
   void finish() {
     if (!_done.isCompleted) _done.complete();
@@ -70,8 +70,17 @@ class LandmarkShowcase extends StatefulWidget {
     required this.sprite,
     required this.eyebrow,
     required this.title,
+    required this.builder,
     this.flight,
   });
+
+  /// Lays out the [stage] (podium and model) and the [text] (eyebrow, title);
+  /// both belong to this widget's state, so the sheet decides what is pinned.
+  final Widget Function(BuildContext context, Widget stage, Widget text)
+      builder;
+
+  /// The stage's natural height.
+  static const stageHeight = 290.0;
 
   final String art;
   final ui.Image sprite;
@@ -84,7 +93,8 @@ class LandmarkShowcase extends StatefulWidget {
 
 class _LandmarkShowcaseState extends State<LandmarkShowcase>
     with TickerProviderStateMixin {
-  static const _stageHeight = 290.0;
+  static const _stageHeight = LandmarkShowcase.stageHeight;
+
   /// The podium's front rim stays put; its top is sized to the model's
   /// footprint (same slant as the camera) so the ground disc rests on it.
   static const _rimY = _stageHeight - 28;
@@ -102,15 +112,18 @@ class _LandmarkShowcaseState extends State<LandmarkShowcase>
   /// guess that fits the static sprite.
   List<double> _box = const [.1, .15, .9, .9];
 
+  /// Where the static sprite's content sits in it (left, right, bottom).
+  List<double>? _staticBox;
+
   final _slot = GlobalKey();
   late final ui.Image _mine = widget.sprite.clone();
   late final _spin = AnimationController.unbounded(vsync: this);
   late final _clock =
       AnimationController(vsync: this, duration: const Duration(seconds: 6));
-  late final _reveal =
-      AnimationController(vsync: this, duration: const Duration(milliseconds: 900));
-  late final _burst =
-      AnimationController(vsync: this, duration: const Duration(milliseconds: 700));
+  late final _reveal = AnimationController(
+      vsync: this, duration: const Duration(milliseconds: 900));
+  late final _burst = AnimationController(
+      vsync: this, duration: const Duration(milliseconds: 700));
 
   /// The decoded turntable; null until ready (the static sprite stands in).
   ui.Image? _sheet;
@@ -134,7 +147,8 @@ class _LandmarkShowcaseState extends State<LandmarkShowcase>
     });
     scheduleMicrotask(() {
       if (mounted) {
-        _loadPalette();
+        _loadStatic();
+        _loadBox();
         _loadSheet();
       }
     });
@@ -161,15 +175,75 @@ class _LandmarkShowcaseState extends State<LandmarkShowcase>
     }
   }
 
-  Future<void> _loadPalette() async {
+  /// The content box is a few bytes of JSON: known long before the sheet
+  /// decodes, so the picture never moves when the turntable arrives.
+  Future<void> _loadBox() async {
+    try {
+      final box = await RoadArt.spinBox(widget.art);
+      if (mounted && box != null) setState(() => _box = box);
+    } catch (_) {}
+  }
+
+  /// Reads the static sprite once: the palette, and where its content sits
+  /// (left, right, bottom as fractions) so it can be seated like the turntable.
+  Future<void> _loadStatic() async {
     try {
       final bytes = await _mine.toByteData(format: ui.ImageByteFormat.rawRgba);
       if (bytes == null || !mounted) return;
-      final p = spinPalette(bytes.buffer.asUint8List());
-      if (p.isNotEmpty && mounted) {
-        setState(() => _palette = [for (final v in p) Color(v)]);
+      final px = bytes.buffer.asUint8List();
+      final w = _mine.width, h = _mine.height;
+      var l = w, r = -1, b = -1;
+      for (var y = 0; y < h; y++) {
+        for (var x = 0; x < w; x++) {
+          if (px[(y * w + x) * 4 + 3] > 128) {
+            if (x < l) l = x;
+            if (x > r) r = x;
+            b = y;
+          }
+        }
       }
+      final p = spinPalette(px);
+      if (!mounted) return;
+      setState(() {
+        if (p.isNotEmpty) _palette = [for (final v in p) Color(v)];
+        if (r > l) _staticBox = [l / w, (r + 1) / w, (b + 1) / h];
+      });
     } catch (_) {}
+  }
+
+  /// The static sprite scaled and placed so its content matches the
+  /// turntable's content box: the crossfade to the spin is seamless.
+  Widget _staticSeated() {
+    final sb = _staticBox;
+    final img = RawImage(
+        key: const ValueKey('showcase-static'), image: _mine, fit: BoxFit.fill);
+    if (sb == null) {
+      return RawImage(
+          key: const ValueKey('showcase-static'),
+          image: _mine,
+          fit: BoxFit.contain);
+    }
+    final hero = _heroSize;
+    final w = _mine.width.toDouble(), h = _mine.height.toDouble();
+    final k = (_box[2] - _box[0]) * hero / ((sb[1] - sb[0]) * w);
+    final cx = (_box[0] + _box[2]) / 2 * hero;
+    return SizedBox(
+      key: const ValueKey('showcase-static-box'),
+      width: hero,
+      height: hero,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Positioned(
+            left: cx - (sb[0] + sb[1]) / 2 * w * k,
+            top: hero * _box[3] - sb[2] * h * k,
+            width: w * k,
+            height: h * k,
+            child: img,
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -179,7 +253,8 @@ class _LandmarkShowcaseState extends State<LandmarkShowcase>
     _init = true;
     _reduce = MediaQuery.disableAnimationsOf(context);
     _flying = widget.flight?.from != null && !_reduce;
-    _route = ModalRoute.of(context)?.animation?..addStatusListener(_routeStatus);
+    _route = ModalRoute.of(context)?.animation
+      ?..addStatusListener(_routeStatus);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       if (_flying) {
@@ -255,6 +330,7 @@ class _LandmarkShowcaseState extends State<LandmarkShowcase>
     if (s != AnimationStatus.reverse || f == null || f.from == null) return;
     if (f.backStarted || _reduce) return;
     f.backStarted = true;
+    _watchdog?.cancel();
     _entry?.remove();
     _entry = null;
     final start = _slotRect();
@@ -279,6 +355,7 @@ class _LandmarkShowcaseState extends State<LandmarkShowcase>
   }
 
   void _land() {
+    _watchdog?.cancel();
     setState(() {
       _flying = false;
       _landed = true;
@@ -327,92 +404,92 @@ class _LandmarkShowcaseState extends State<LandmarkShowcase>
     final podiumRx = (contentW * .5).clamp(72.0, 125.0);
     final colors = _palette.isEmpty ? [c.sceneGlow] : _palette;
     final live = _landed && !_reduce;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        SizedBox(
-          height: _stageHeight,
-          child: Stack(
-            children: [
-              Positioned.fill(
+    final stage = SizedBox(
+      height: _stageHeight,
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: RepaintBoundary(
+              child: CustomPaint(
+                painter: _StagePainter(
+                  repaint: Listenable.merge([_reveal, _burst]),
+                  reveal: _reveal,
+                  burst: _burst,
+                  colors: colors,
+                  surface: c.bgSurface,
+                  edge: c.borderSubtle,
+                  ink: c.textPrimary,
+                  reduce: _reduce,
+                  shadowWidth: contentW,
+                  rx: podiumRx,
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            top: _groundY - _heroSize * bottom,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                excludeFromSemantics: true,
+                onHorizontalDragStart: sheet == null ? null : _dragStart,
+                onHorizontalDragUpdate: sheet == null ? null : _dragUpdate,
+                onHorizontalDragEnd: sheet == null ? null : _dragEnd,
+                child: SizedBox(
+                  key: _slot,
+                  width: _heroSize,
+                  height: _heroSize,
+                  child: ExcludeSemantics(
+                    child: Opacity(
+                      opacity: _flying ? 0 : 1,
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 180),
+                        child: sheet == null
+                            ? _staticSeated()
+                            : RepaintBoundary(
+                                key: const ValueKey('showcase-spin'),
+                                child: CustomPaint(
+                                  painter: _SpinPainter(
+                                    sheet: sheet,
+                                    turns: _spin,
+                                    clock: _clock,
+                                    bob: live,
+                                  ),
+                                  size: Size.square(_heroSize),
+                                ),
+                              ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          if (live)
+            Positioned.fill(
+              child: IgnorePointer(
                 child: RepaintBoundary(
                   child: CustomPaint(
-                    painter: _StagePainter(
-                      repaint: Listenable.merge([_reveal, _burst]),
-                      reveal: _reveal,
-                      burst: _burst,
-                      colors: colors,
-                      surface: c.bgSurface,
-                      edge: c.borderSubtle,
-                      ink: c.textPrimary,
-                      reduce: _reduce,
-                      shadowWidth: contentW,
-                      rx: podiumRx,
-                    ),
+                    painter: _SparklePainter(
+                        clock: _clock, reveal: _reveal, colors: colors),
                   ),
                 ),
               ),
-              Positioned(
-                top: _groundY - _heroSize * bottom,
-                left: 0,
-                right: 0,
-                child: Center(
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    excludeFromSemantics: true,
-                    onHorizontalDragStart: sheet == null ? null : _dragStart,
-                    onHorizontalDragUpdate: sheet == null ? null : _dragUpdate,
-                    onHorizontalDragEnd: sheet == null ? null : _dragEnd,
-                    child: SizedBox(
-                      key: _slot,
-                      width: _heroSize,
-                      height: _heroSize,
-                      child: ExcludeSemantics(
-                        child: Opacity(
-                          opacity: _flying ? 0 : 1,
-                          child: AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 180),
-                            child: sheet == null
-                                ? RawImage(
-                                    key: const ValueKey('showcase-static'),
-                                    image: _mine,
-                                    fit: BoxFit.contain)
-                                : RepaintBoundary(
-                                    key: const ValueKey('showcase-spin'),
-                                    child: CustomPaint(
-                                      painter: _SpinPainter(
-                                        sheet: sheet,
-                                        turns: _spin,
-                                        clock: _clock,
-                                        bob: live,
-                                      ),
-                                      size: Size.square(_heroSize),
-                                    ),
-                                  ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              if (live)
-                Positioned.fill(
-                  child: IgnorePointer(
-                    child: RepaintBoundary(
-                      child: CustomPaint(
-                        painter: _SparklePainter(
-                            clock: _clock, reveal: _reveal, colors: colors),
-                      ),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ),
-        const SizedBox(height: LumSpace.md),
-        _stagger(0, .5, Text(widget.eyebrow.toUpperCase(),
-            style: LumText.roadLabelCaps11.copyWith(color: c.textSecondary))),
+            ),
+        ],
+      ),
+    );
+    final text = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _stagger(
+            0,
+            .5,
+            Text(widget.eyebrow.toUpperCase(),
+                style:
+                    LumText.roadLabelCaps11.copyWith(color: c.textSecondary))),
         const SizedBox(height: LumSpace.xs),
         _stagger(
             .15,
@@ -433,6 +510,7 @@ class _LandmarkShowcaseState extends State<LandmarkShowcase>
             )),
       ],
     );
+    return widget.builder(context, stage, text);
   }
 
   /// Fades and slides a block in over [a]..[b] of the reveal; under reduced
@@ -500,8 +578,7 @@ class _Flier extends StatefulWidget {
 
 class _FlierState extends State<_Flier> with SingleTickerProviderStateMixin {
   late final AnimationController _c = AnimationController(
-      vsync: this,
-      duration: Duration(milliseconds: widget.back ? 420 : 780))
+      vsync: this, duration: Duration(milliseconds: widget.back ? 420 : 780))
     ..addStatusListener((s) {
       if (s == AnimationStatus.completed) widget.onDone();
     })
@@ -633,7 +710,8 @@ class _StagePainter extends CustomPainter {
 
     // Floor shadow.
     canvas.drawOval(
-      Rect.fromCenter(center: Offset(cx, size.height - 20), width: 290, height: 34),
+      Rect.fromCenter(
+          center: Offset(cx, size.height - 20), width: 290, height: 34),
       Paint()
         ..color = ink.withValues(alpha: .16)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10),
@@ -672,11 +750,19 @@ class _StagePainter extends CustomPainter {
     canvas.drawPath(
         side,
         Paint()
-          ..shader = ui.Gradient.linear(Offset(top.dx - rx, 0), Offset(top.dx + rx, 0),
-              [Colors.black.withValues(alpha: .12), Colors.transparent, Colors.black.withValues(alpha: .18)],
-              [0, .5, 1]));
+          ..shader = ui.Gradient.linear(
+              Offset(top.dx - rx, 0), Offset(top.dx + rx, 0), [
+            Colors.black.withValues(alpha: .12),
+            Colors.transparent,
+            Colors.black.withValues(alpha: .18)
+          ], [
+            0,
+            .5,
+            1
+          ]));
     final topOval = Rect.fromCenter(center: top, width: rx * 2, height: ry * 2);
-    canvas.drawOval(topOval, Paint()..color = Color.lerp(surface, tint, .18 * lit)!);
+    canvas.drawOval(
+        topOval, Paint()..color = Color.lerp(surface, tint, .18 * lit)!);
     // Pool of light.
     canvas.drawOval(
       topOval.deflate(10),
@@ -720,7 +806,10 @@ class _StagePainter extends CustomPainter {
     if (!reduce && b > 0 && b < 1) {
       final e = Curves.easeOut.transform(b);
       canvas.drawOval(
-        Rect.fromCenter(center: top, width: (rx * 2) * (1 + e * .7), height: (ry * 2) * (1 + e * .7)),
+        Rect.fromCenter(
+            center: top,
+            width: (rx * 2) * (1 + e * .7),
+            height: (ry * 2) * (1 + e * .7)),
         Paint()
           ..style = PaintingStyle.stroke
           ..strokeWidth = 4 * (1 - e)
@@ -752,7 +841,9 @@ class _SparklePainter extends CustomPainter {
   static const _n = 22;
   static final _seeds = () {
     final r = math.Random(7);
-    return [for (var i = 0; i < _n; i++) List.generate(5, (_) => r.nextDouble())];
+    return [
+      for (var i = 0; i < _n; i++) List.generate(5, (_) => r.nextDouble())
+    ];
   }();
 
   @override

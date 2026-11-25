@@ -70,33 +70,54 @@ class RoadArt {
   @visibleForTesting
   static Future<Map<String, List<double>>> spinMeta() => _loadMeta();
 
+  // A failed read is not remembered: the next call tries again.
   static Future<Map<String, List<double>>> _loadMeta() => _meta ??= () async {
-        final j = jsonDecode(await rootBundle.loadString('$_dir/spin_meta.json'))
-            as Map<String, dynamic>;
-        return {
-          for (final e in j.entries)
-            e.key: [for (final v in e.value as List) (v as num).toDouble()],
-        };
+        try {
+          final j = jsonDecode(
+                  await rootBundle.loadString('$_dir/spin_meta.json'))
+              as Map<String, dynamic>;
+          return {
+            for (final e in j.entries)
+              e.key: [for (final v in e.value as List) (v as num).toDouble()],
+          };
+        } catch (_) {
+          _meta = null;
+          rethrow;
+        }
       }();
 
+  /// A landmark's turntable content box (left, top, right, bottom as fractions
+  /// of a frame; bottom is the ground contact), or null if it has none.
+  static Future<List<double>?> spinBox(String art) async =>
+      (await _loadMeta())[art];
+
   /// A landmark's 4x4 turntable sheet, decoded at full size for one showcase,
-  /// with the content box of a frame (left, top, right, bottom as fractions;
-  /// bottom is the ground contact). The caller owns the image and disposes it
-  /// when the sheet closes. Throws if the sheet is missing or too large.
+  /// with its content box. The caller owns the image and disposes it when the
+  /// sheet closes. Throws if the sheet is missing or larger than a GPU
+  /// texture can be (checked before decoding).
   static Future<({ui.Image image, List<double> box})> loadSpin(
       String art) async {
-    final box = (await _loadMeta())[art] ?? const [.1, .15, .9, .9];
+    final box = await spinBox(art) ?? const [.1, .15, .9, .9];
     final data = await rootBundle.load('$_dir/lm_${art}_spin.webp');
-    final codec = await ui.instantiateImageCodec(data.buffer.asUint8List());
+    final buffer =
+        await ui.ImmutableBuffer.fromUint8List(data.buffer.asUint8List());
     try {
-      final img = (await codec.getNextFrame()).image;
-      if (img.width > maxSpinTexture || img.height > maxSpinTexture) {
-        img.dispose();
-        throw StateError('turntable ${img.width}x${img.height} is too large');
+      final desc = await ui.ImageDescriptor.encoded(buffer);
+      try {
+        if (desc.width > maxSpinTexture || desc.height > maxSpinTexture) {
+          throw StateError('turntable ${desc.width}x${desc.height} is too large');
+        }
+        final codec = await desc.instantiateCodec();
+        try {
+          return (image: (await codec.getNextFrame()).image, box: box);
+        } finally {
+          codec.dispose();
+        }
+      } finally {
+        desc.dispose();
       }
-      return (image: img, box: box);
     } finally {
-      codec.dispose();
+      buffer.dispose();
     }
   }
 
