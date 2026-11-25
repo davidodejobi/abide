@@ -9,7 +9,8 @@ PlanDay _day(int i, List<String> refs) => PlanDay(
       passages: [for (final r in refs) VerseRange.tryParse(r)!],
     );
 
-Landmark _lm(String id, String book, int from, int to, {String? art = 'x'}) =>
+Landmark _lm(String id, String book, int from, int to,
+        {bool hasArt = true, String? art}) =>
     Landmark(
       id: id,
       book: book,
@@ -18,7 +19,7 @@ Landmark _lm(String id, String book, int from, int to, {String? art = 'x'}) =>
       title: id,
       short: id,
       ref: id,
-      art: art,
+      art: hasArt ? (art ?? id) : null,
     );
 
 void main() {
@@ -40,7 +41,7 @@ void main() {
 
   test('landmarks without art are not placed, and one landmark never repeats', () {
     final m = landmarksByDay(plan, [
-      _lm('noart', 'GEN', 1, 1, art: null),
+      _lm('noart', 'GEN', 1, 1, hasArt: false),
       _lm('garden', 'GEN', 1, 5),
     ]);
     expect(m.length, 1);
@@ -53,8 +54,26 @@ void main() {
       _lm('b', 'GEN', 2, 3),
     ]);
     expect(m[1]!.id, 'a');
-    expect(m.containsValue(m[1]), isTrue);
-    expect(m.length, 1);
+    // b touches day 1 too but loses it; it moves to day 2, which is free.
+    expect(m[2]!.id, 'b');
+    expect(m.length, 2);
+  });
+
+  test('a displaced landmark moves one day only, then is dropped', () {
+    final m = landmarksByDay(plan, [
+      _lm('a', 'GEN', 1, 1),
+      _lm('b', 'GEN', 1, 1),
+      _lm('c', 'GEN', 1, 1),
+    ]);
+    expect(m.values.map((l) => l.id), ['a', 'b']);
+  });
+
+  test('the same art is not repeated within a few days', () {
+    final m = landmarksByDay(plan, [
+      _lm('sinai', 'GEN', 1, 1, art: 'sinai'),
+      _lm('tablets', 'GEN', 4, 4, art: 'sinai'),
+    ]);
+    expect(m.values.map((l) => l.id), ['sinai']);
   });
 
   test('parseLandmarks reads the bundled compact format', () {

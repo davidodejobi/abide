@@ -54,23 +54,42 @@ List<Landmark> parseLandmarks(String json) => [
 ///
 /// A landmark is placed at the first day whose passages touch its chapters, so
 /// it arrives the moment the reader reaches that part of the Bible. One
-/// landmark per day: if two want the same day, the later one takes the next day
-/// that touches it, and is dropped if there is none. Landmarks without art are
-/// skipped.
-Map<int, Landmark> landmarksByDay(ReadingPlan plan, List<Landmark> all) {
+/// landmark per day: a landmark that loses its day to an earlier one moves to
+/// the next day if that day is free (the tomb follows the cross), and is
+/// dropped otherwise. A landmark whose art was used within the last
+/// [artGapDays] days is skipped so the road does not repeat itself. Landmarks
+/// without art are never placed.
+Map<int, Landmark> landmarksByDay(ReadingPlan plan, List<Landmark> all,
+    {int artGapDays = 4}) {
   final placed = <String>{};
+  final lastArtDay = <String, int>{};
   final out = <int, Landmark>{};
+  var displaced = <Landmark>[];
   for (final day in plan.days) {
-    for (final lm in all) {
-      if (lm.art == null || placed.contains(lm.id)) continue;
-      final touches = day.passages.any((p) =>
-          p.start.book == lm.book &&
-          p.start.chapter <= lm.toChapter &&
-          p.end.chapter >= lm.fromChapter);
-      if (!touches) continue;
+    bool touches(Landmark lm) => day.passages.any((p) =>
+        p.start.book == lm.book &&
+        p.start.chapter <= lm.toChapter &&
+        p.end.chapter >= lm.fromChapter);
+    final candidates = [
+      ...displaced,
+      for (final lm in all)
+        if (lm.art != null && !displaced.contains(lm) && touches(lm)) lm,
+    ];
+    displaced = [];
+    for (final lm in candidates) {
+      if (placed.contains(lm.id)) continue;
+      final last = lastArtDay[lm.art];
+      if (last != null && day.dayIndex - last < artGapDays) {
+        placed.add(lm.id); // same picture as a recent stop: drop, don't retry
+        continue;
+      }
+      if (out.containsKey(day.dayIndex)) {
+        if (touches(lm) && !displaced.contains(lm)) displaced.add(lm);
+        continue;
+      }
       out[day.dayIndex] = lm;
       placed.add(lm.id);
-      break;
+      lastArtDay[lm.art!] = day.dayIndex;
     }
   }
   return out;

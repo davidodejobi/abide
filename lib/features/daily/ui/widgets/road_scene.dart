@@ -53,13 +53,15 @@ class RoadScene extends StatefulWidget {
   static double heightFor(double width) => width * designHeight / designWidth;
 
   @override
-  State<RoadScene> createState() => _RoadSceneState();
+  State<RoadScene> createState() => RoadSceneState();
 }
 
 const _walkTime = Duration(milliseconds: 2600);
 const _duskTime = Duration(milliseconds: 900);
 
-class _RoadSceneState extends State<RoadScene> with TickerProviderStateMixin {
+@visibleForTesting
+class RoadSceneState extends State<RoadScene>
+    with TickerProviderStateMixin {
   late final AnimationController _walk =
       AnimationController(vsync: this, duration: _walkTime);
   // 96 s so the 2.4 s pulse and the cloud drift both wrap without a jump.
@@ -104,8 +106,19 @@ class _RoadSceneState extends State<RoadScene> with TickerProviderStateMixin {
     } else if (_landmarkPlan != plan.id) {
       _landmarks = landmarksByDay(plan, _art!.landmarks);
       _landmarkPlan = plan.id;
+      _art!.ensureLandmarks(_landmarks.values.map((l) => l.art)).then((_) {
+        if (mounted) setState(() {});
+      }, onError: (_) {});
     }
   }
+
+  /// The traveller's current fractional stop position, for tests.
+  @visibleForTesting
+  double get debugPos => _posNow;
+
+  /// Whether the ambient loop is running, for tests.
+  @visibleForTesting
+  bool get debugAmbientRunning => _ambient.isAnimating;
 
   double get _posNow => _from + (_to - _from) * Curves.easeInOutCubic.transform(_walk.value);
   double get _duskNow => _dusk0 + (_dusk1 - _dusk0) * _walk.value;
@@ -126,8 +139,8 @@ class _RoadSceneState extends State<RoadScene> with TickerProviderStateMixin {
   }
 
   @override
-  void didUpdateWidget(RoadScene old) {
-    super.didUpdateWidget(old);
+  void didUpdateWidget(RoadScene oldWidget) {
+    super.didUpdateWidget(oldWidget);
     _syncLandmarks();
     final target = _target, dusk = _duskTarget;
     if (target == _to && dusk == _dusk1) return;
@@ -208,6 +221,7 @@ class _RoadSceneState extends State<RoadScene> with TickerProviderStateMixin {
       height: RoadScene.heightFor(widget.width),
       child: GestureDetector(
         behavior: HitTestBehavior.translucent,
+        excludeFromSemantics: true,
         onTapUp: _onTap,
         child: FadeTransition(
           opacity: _fade,
@@ -243,7 +257,8 @@ class _RoadSceneState extends State<RoadScene> with TickerProviderStateMixin {
       final lm = _landmarks[n];
       if (lm == null) continue;
       final r = p.landmarkRect(n, cam);
-      if (r.bottom < 0 || r.top > RoadScene.designHeight) continue;
+      // Only what is visible above the reading panel (it starts near 392).
+      if (r.center.dy < 0 || r.center.dy > 380) continue;
       out.add(CustomPainterSemantics(
         rect: Rect.fromLTRB(r.left * k, r.top * k, r.right * k, r.bottom * k),
         properties: SemanticsProperties(
@@ -498,7 +513,7 @@ class _RoadPainter extends CustomPainter {
     s.color = _l(c.sceneRoadEdge, c.sceneDuskLand, dusk * .4);
     canvas.drawPath(cache.road!, s);
     s.strokeWidth = 23;
-    s.color = _l(c.sceneRoad, const Color(0xFFD9CDE6), dusk * .6);
+    s.color = _l(c.sceneRoad, dark ? c.sceneDuskLand : const Color(0xFFD9CDE6), dusk * .6);
     canvas.drawPath(cache.road!, s);
     canvas.restore();
   }
