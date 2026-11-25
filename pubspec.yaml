@@ -18,7 +18,8 @@ dependencies:
   logging: ^1.2.0
   toastification: ^3.0.3
   vector_graphics: ^1.1.19
-  phosphor_flutter: ^2.1.0
+  phosphor_flutter:
+    path: third_party/phosphor_flutter
   auto_size_text: ^3.0.0
   lottie: ^3.3.2
   auto_route: ^11.2.0
@@ -36,7 +37,8 @@ dependencies:
   path: ^1.9.1
   collection: ^1.18.0
   uuid: ^4.5.3
-  appflowy_editor: ^6.0.0
+  appflowy_editor:
+    path: third_party/appflowy_editor
   gal: ^2.3.3
   material_ui: ^1.11.1
   alchemist: ^0.15.0
