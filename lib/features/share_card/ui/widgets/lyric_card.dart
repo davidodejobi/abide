@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:openbaptisthymnal/core/theme/lum_theme.dart';
 import 'package:openbaptisthymnal/features/share_card/ui/share_card_style.dart';
 import 'package:openbaptisthymnal/features/share_card/ui/widgets/share_card_frame.dart';

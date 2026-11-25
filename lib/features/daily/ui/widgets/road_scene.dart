@@ -3,7 +3,7 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart' show ValueListenable;
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/semantics.dart';
 import 'package:openbaptisthymnal/core/theme/lum_theme.dart';
 
@@ -431,7 +431,7 @@ class RoadSceneState extends State<RoadScene> with TickerProviderStateMixin {
   /// Starts a queued walk once the tab is on screen: the Today tab stays alive
   /// off screen, and a walk run there would be over before it is seen.
   void _maybeStart() {
-    if (!_pending || !TickerMode.of(context)) return;
+    if (!_pending || !TickerMode.valuesOf(context).enabled) return;
     _pending = false;
     _walk.forward(from: 0);
   }
