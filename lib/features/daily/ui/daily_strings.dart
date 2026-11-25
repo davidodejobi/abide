@@ -36,6 +36,15 @@ abstract final class DailyStrings {
       'streak going. It shows as a leaf, never as a miss.';
   static const back = 'Back';
 
+  // Plan picker sheet
+  static const planSheetTitle = 'Reading plans';
+  static const planSheetBody =
+      'Your place in each plan is kept when you switch.';
+  static const plansLoadError = "Plans couldn't be loaded.";
+  static String daysRead(int n, int total) => '$n of $total days read';
+  static String resumesAt(int n, int total) =>
+      'Resumes at $n of $total days';
+
   static String chapters(int n) => n == 1 ? '1 chapter' : '$n chapters';
   static String doneCaps(String passage) => 'DONE · ${passage.toUpperCase()}';
   static String dayN(int n) => 'Day $n';
