@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:openbaptisthymnal/core/theme/lum_theme.dart';
 
 class HymnStanza extends StatelessWidget {
   final int number;
@@ -18,32 +19,33 @@ class HymnStanza extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Base reading size mirrors the lyric body style used elsewhere.
-    const baseSize = 16.0;
+    final c = context.lum;
+    const base = LumText.readingLyrics;
+    final size = base.fontSize! * textScale;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
+      padding: const EdgeInsets.symmetric(vertical: LumSpace.md),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (!isChorus)
             SizedBox(
-              width: 30,
+              width: 32,
               child: Text(
                 '$number.',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: baseSize * textScale,
-                ),
+                style: base.copyWith(
+                    fontSize: size,
+                    fontWeight: FontWeight.w700,
+                    color: c.textAccent),
               ),
             ),
           Expanded(
             child: Text(
               text,
-              style: TextStyle(
+              style: base.copyWith(
                 fontStyle: isChorus ? FontStyle.italic : FontStyle.normal,
-                fontWeight: isChorus ? FontWeight.w500 : FontWeight.normal,
-                fontSize: baseSize * textScale,
+                fontSize: size,
+                color: c.textPrimary,
               ),
             ),
           ),

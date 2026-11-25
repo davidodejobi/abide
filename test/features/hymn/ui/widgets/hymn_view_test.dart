@@ -25,8 +25,7 @@ HymnTranslation _hymn({
     );
 
 void main() {
-  Widget host(Widget child) =>
-      MaterialApp(home: Scaffold(body: child));
+  Widget host(Widget child) => MaterialApp(home: Scaffold(body: child));
 
   testWidgets('renders the title and every stanza', (tester) async {
     await tester.pumpWidget(host(HymnView(

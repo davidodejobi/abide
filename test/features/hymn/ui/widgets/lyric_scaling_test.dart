@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:openbaptisthymnal/features/hymn/ui/widgets/hymn_stanza.dart';
 import 'package:openbaptisthymnal/features/hymn/ui/widgets/stanza_card.dart';
 
-// The lyric base size is 16 (AppTextStyles.bodyLarge); the reader's font-size
+// The lyric base size is the reading style (LumText.readingLyrics, 20); the reader's font-size
 // preference multiplies it. These verify the literal requirement — lyric text
 // resizes — on the actual lyric widgets.
 void main() {
@@ -15,8 +15,9 @@ void main() {
       const StanzaCard(text: 'grace', displayIndex: 1, textScale: 1.5),
     ));
 
-    final style = tester.widget<SelectableText>(find.byType(SelectableText)).style;
-    expect(style?.fontSize, 16 * 1.5);
+    final style =
+        tester.widget<SelectableText>(find.byType(SelectableText)).style;
+    expect(style?.fontSize, 20 * 1.5);
   });
 
   testWidgets('StanzaCard defaults to the base size', (tester) async {
@@ -24,8 +25,9 @@ void main() {
       const StanzaCard(text: 'grace', displayIndex: 1),
     ));
 
-    final style = tester.widget<SelectableText>(find.byType(SelectableText)).style;
-    expect(style?.fontSize, 16);
+    final style =
+        tester.widget<SelectableText>(find.byType(SelectableText)).style;
+    expect(style?.fontSize, 20);
   });
 
   testWidgets('HymnStanza scales its lyric text by textScale', (tester) async {
@@ -33,6 +35,6 @@ void main() {
       const HymnStanza(number: 1, text: 'grace', textScale: 1.5),
     ));
 
-    expect(tester.widget<Text>(find.text('grace')).style?.fontSize, 16 * 1.5);
+    expect(tester.widget<Text>(find.text('grace')).style?.fontSize, 20 * 1.5);
   });
 }

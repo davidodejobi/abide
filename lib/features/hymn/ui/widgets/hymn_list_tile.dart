@@ -1,114 +1,172 @@
 import 'package:flutter/material.dart';
+import 'package:openbaptisthymnal/core/theme/lum_theme.dart';
+import 'package:openbaptisthymnal/features/hymn/ui/hymn_strings.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
-import 'package:openbaptisthymnal/core/theme/app_colors.dart';
-import 'package:openbaptisthymnal/core/theme/app_text_styles.dart';
 
+/// One hymn row (Figma Songs list): a gold-tint number badge, the title, the
+/// first line, and an optional heart. Rows sit inside a [LumGroupCard], so the
+/// tile draws only its own hairline.
 class HymnListTile extends StatelessWidget {
-  final String number;
-  final String title;
-  final VoidCallback? onTap;
-  final bool isFavorited;
-
   const HymnListTile({
     super.key,
     required this.number,
     required this.title,
+    this.subtitle,
     this.onTap,
     this.isFavorited = false,
+    this.onToggleFavorite,
+    this.showDivider = true,
+    this.borderRadius,
   });
+
+  final String number;
+  final String title;
+  final String? subtitle;
+  final VoidCallback? onTap;
+  final bool isFavorited;
+
+  /// When set the row shows a tappable heart; otherwise a filled heart appears
+  /// only if [isFavorited].
+  final VoidCallback? onToggleFavorite;
+  final bool showDivider;
+
+  /// Keeps the press highlight inside the group card's rounded corners.
+  final BorderRadius? borderRadius;
+
+  /// The corner radius for row [index] of [count] inside a [LumGroupCard].
+  static BorderRadius edgeRadius(int index, int count) {
+    const r = Radius.circular(LumRadius.xl);
+    return BorderRadius.vertical(
+      top: index == 0 ? r : Radius.zero,
+      bottom: index == count - 1 ? r : Radius.zero,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    // Warm charcoal + gold in dark mode (no navy); the existing cream card in
-    // light mode is already warm, so we only retune the dark palette here.
-    final cardColor = isDark ? AppColors.neutral800 : AppColors.secondary100;
-    // A hairline border gives each row a defined edge instead of letting the
-    // cards melt into the cream canvas — the main "professional" lift.
-    final cardBorder =
-        isDark ? AppColors.neutral700 : AppColors.secondary200;
-    // Number badge: a single gold-keyed squircle (was a white pill nested in a
-    // cream pill, which read as visually noisy). Gold numerals are the brand.
-    final badgeColor = isDark
-        ? AppColors.secondary.withValues(alpha: 0.16)
-        : AppColors.surfaceLight;
-    final badgeBorder = AppColors.secondary.withValues(alpha: 0.32);
-    const numberColor = AppColors.secondary;
-    final titleColor = isDark ? AppColors.neutral100 : AppColors.primary;
-    // Muted trailing chevron — a navigation affordance, not a focal point.
-    final trailingColor = isDark ? AppColors.neutral500 : AppColors.primary300;
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(18),
-        child: Ink(
-          height: 64,
-          decoration: BoxDecoration(
-            color: cardColor,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: cardBorder, width: 1),
+    final c = context.lum;
+    final heartColor = isFavorited ? c.textPrimary : c.textSecondary;
+    final label = [
+      'Hymn $number',
+      title,
+      if (isFavorited) 'favourite',
+    ].join(', ');
+    final content = Padding(
+      padding: const EdgeInsets.only(left: LumSpace.lg),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: c.bgAccentContainer,
+              borderRadius: BorderRadius.circular(LumRadius.md),
+            ),
+            alignment: Alignment.center,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Padding(
+                padding: const EdgeInsets.all(LumSpace.xs),
+                child: Text(
+                  number,
+                  textScaler: TextScaler.noScaling,
+                  style: LumText.roadDisplayStat28
+                      .copyWith(fontSize: 22, color: c.textOnAccentContainer),
+                ),
+              ),
+            ),
           ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 9),
-            child: Row(
-              children: [
-                // Hymn number badge — fixed square so 3- and 4-digit numbers
-                // stay vertically aligned down the list.
-                Container(
-                  width: 46,
-                  height: 46,
-                  decoration: BoxDecoration(
-                    color: badgeColor,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: badgeBorder, width: 1),
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    number.padLeft(3, '0'),
-                    style: AppTextStyles.titleSmall.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: numberColor,
-                      letterSpacing: 0.5,
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                // Hymn title
-                Expanded(
-                  child: Text(
-                    title,
-                    style: AppTextStyles.titleMedium.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: titleColor,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                // Favorite indicator
-                if (isFavorited) ...[
-                  Icon(
-                    PhosphorIcons.heart(PhosphorIconsStyle.fill),
-                    size: 16,
-                    color: AppColors.secondary,
-                  ),
-                  const SizedBox(width: 8),
+          const SizedBox(width: LumSpace.lg),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: LumSpace.md),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      style: LumText.headline.copyWith(color: c.textPrimary)),
+                  if (subtitle != null && subtitle!.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(subtitle!,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style:
+                            LumText.footnote.copyWith(color: c.textSecondary)),
+                  ],
                 ],
-                // Arrow icon
-                Icon(
-                  PhosphorIcons.caretRight(),
-                  size: 22,
-                  color: trailingColor,
-                ),
-                const SizedBox(width: 6),
-              ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    // The heart is its own control beside the row, so it keeps its own label
+    // for screen readers and never triggers the row.
+    final Widget trailing;
+    if (onToggleFavorite != null) {
+      trailing = Semantics(
+        button: true,
+        label: isFavorited
+            ? HymnStrings.removeFavourite
+            : HymnStrings.addFavourite,
+        excludeSemantics: true,
+        onTap: onToggleFavorite,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: onToggleFavorite,
+          child: SizedBox(
+            width: LumSize.touchTarget + 4,
+            height: LumSize.touchTarget + 8,
+            child: Icon(
+              isFavorited
+                  ? PhosphorIcons.heart(PhosphorIconsStyle.fill)
+                  : PhosphorIcons.heart(),
+              size: LumSize.iconMd,
+              color: heartColor,
             ),
           ),
         ),
+      );
+    } else if (isFavorited) {
+      trailing = Padding(
+        padding: const EdgeInsets.symmetric(horizontal: LumSpace.lg),
+        child: Icon(PhosphorIcons.heart(PhosphorIconsStyle.fill),
+            size: 18, color: heartColor),
+      );
+    } else {
+      trailing = const SizedBox(width: LumSpace.lg);
+    }
+
+    return Container(
+      constraints: const BoxConstraints(minHeight: 72),
+      decoration: BoxDecoration(
+        border: showDivider
+            ? Border(bottom: BorderSide(color: c.borderSubtle))
+            : null,
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Semantics(
+              button: true,
+              label: label,
+              excludeSemantics: true,
+              onTap: onTap,
+              child: Material(
+                type: MaterialType.transparency,
+                child: InkWell(
+                  borderRadius: borderRadius,
+                  onTap: onTap,
+                  child: content,
+                ),
+              ),
+            ),
+          ),
+          trailing,
+        ],
       ),
     );
   }
