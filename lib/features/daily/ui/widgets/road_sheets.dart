@@ -2,8 +2,8 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:openbaptisthymnal/core/theme/lum_theme.dart';
+import 'package:openbaptisthymnal/core/utils/services/share_service.dart';
 import 'package:openbaptisthymnal/core/widgets/lum_button.dart';
-import 'package:share_plus/share_plus.dart';
 
 import '../../domain/passage_label.dart';
 import '../../domain/plan_progress.dart';
@@ -321,12 +321,12 @@ class LandmarkSheet extends StatelessWidget {
             onPressed: () {
               // iPad needs an anchor for the share popover.
               final box = context.findRenderObject() as RenderBox?;
-              SharePlus.instance.share(ShareParams(
-                text: shareText,
+              ShareService().shareText(
+                shareText,
                 sharePositionOrigin: box == null || !box.hasSize
                     ? null
                     : box.localToGlobal(Offset.zero) & box.size,
-              ));
+              );
             },
           ),
         ),

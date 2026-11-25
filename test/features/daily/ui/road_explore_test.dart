@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:openbaptisthymnal/core/theme/app_theme.dart';
 import 'package:openbaptisthymnal/features/bible/domain/verse_ref.dart';
@@ -33,14 +34,17 @@ Widget _road({
   int day = 5,
   void Function(int)? onStop,
   void Function(Landmark, int)? onLandmark,
+  ReadingPlan? plan,
+  int total = 30,
+  bool noPlan = false,
 }) =>
     RoadScene(
       key: _key,
       width: 390,
       mood: RoadMood.day,
       currentDay: day,
-      totalDays: 30,
-      plan: _plan,
+      totalDays: total,
+      plan: noPlan ? null : (plan ?? _plan),
       onStopTap: onStop,
       onLandmarkTap: onLandmark,
     );
@@ -173,7 +177,8 @@ void main() {
     expect(taps.length, n);
   });
 
-  testWidgets('Given a landmark whose sprite is not in yet, Then its signpost is tappable',
+  testWidgets(
+      'Given a landmark whose sprite is not in yet, Then its signpost is tappable',
       (t) async {
     await loadArt(t);
     final taps = <(String, int)>[];
@@ -200,6 +205,78 @@ void main() {
     expect(find.semantics.byLabel('Day 11, read'), findsOneWidget);
     expect(find.semantics.byLabel('Abram and the stars, Genesis 15:5'),
         findsOneWidget);
+    sem.dispose();
+  });
+
+  testWidgets(
+      'Given a touch during a glide, Then it stops the camera and opens nothing',
+      (t) async {
+    await loadArt(t);
+    final taps = <int>[];
+    await t.pumpWidget(_app(_road(onStop: taps.add)));
+    await t.pump(const Duration(milliseconds: 50));
+    await t.fling(find.byType(RoadScene), const Offset(0, 200), 3000);
+    await t.pump(const Duration(milliseconds: 200));
+    final at = _state(t).debugLook;
+    const geo = RoadGeometry();
+    final s = geo.stop(at.round()), c = geo.camera(at);
+    await t.tapAt(Offset(s.x + c.x, s.y + c.y));
+    expect(taps, isEmpty, reason: 'the tap only stopped the glide');
+    await t.pump(const Duration(seconds: 2));
+    expect(_state(t).debugLook, closeTo(at, .05), reason: 'the glide is over');
+    // The next tap works as usual.
+    final look = _state(t).debugLook;
+    final s2 = geo.stop(look.round()), c2 = geo.camera(look);
+    await t.tapAt(Offset(s2.x + c2.x, s2.y + c2.y));
+    expect(taps, [look.round()]);
+  });
+
+  testWidgets(
+      'Given another plan or a shorter one, Then explore never strands the camera',
+      (t) async {
+    await loadArt(t);
+    await t.pumpWidget(_app(_road()));
+    await t.pump(const Duration(milliseconds: 50));
+    await t.drag(find.byType(RoadScene), const Offset(0, 1500));
+    await t.pump();
+    expect(_state(t).debugLook, greaterThan(20));
+    // Same day, shorter plan, same id: clamped to the new last day.
+    await t.pumpWidget(_app(_road(total: 10)));
+    await t.pump();
+    expect(_state(t).debugLook, lessThanOrEqualTo(10));
+    // Same day, a different plan: back with its traveller.
+    final other =
+        ReadingPlan(id: 'q', title: '', description: '', days: _plan.days);
+    await t.pumpWidget(_app(_road(plan: other)));
+    await t.pump();
+    expect(_state(t).debugExploring, isFalse);
+    expect(_state(t).debugLook, 5);
+  });
+
+  testWidgets('Given no plan, Then the road does not explore', (t) async {
+    await loadArt(t);
+    await t.pumpWidget(_app(_road(noPlan: true)));
+    await t.pump(const Duration(milliseconds: 50));
+    await t.drag(find.byType(RoadScene), const Offset(0, 300));
+    await t.pump();
+    expect(_state(t).debugExploring, isFalse);
+  });
+
+  testWidgets('Given a screen reader scrolls, Then down brings the road ahead',
+      (t) async {
+    await loadArt(t);
+    final sem = t.ensureSemantics();
+    await t.pumpWidget(_app(_road()));
+    await t.pump(const Duration(milliseconds: 50));
+    final id = find.semantics.byAction(SemanticsAction.scrollDown).evaluate().first.id;
+    // ignore: deprecated_member_use
+    final owner = t.binding.pipelineOwner.semanticsOwner!;
+    owner.performAction(id, SemanticsAction.scrollDown);
+    await t.pump();
+    expect(_state(t).debugLook, 10);
+    owner.performAction(id, SemanticsAction.scrollUp);
+    await t.pump();
+    expect(_state(t).debugLook, 5);
     sem.dispose();
   });
 

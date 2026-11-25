@@ -29,7 +29,8 @@ void main() {
     expect(art['lm_garden'], isNull);
   });
 
-  testWidgets('A landmark with its sprite decoded is tappable, and so is a failed one',
+  testWidgets(
+      'A landmark with its sprite decoded is tappable, and so is a failed one',
       (t) async {
     final plan = ReadingPlan(id: 'p', title: '', description: '', days: [
       for (var i = 1; i <= 30; i++)
@@ -57,7 +58,8 @@ void main() {
         ),
       ),
     ));
-    await t.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
+    await t
+        .runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
     await t.pump(const Duration(milliseconds: 100));
     final st = t.state<RoadSceneState>(find.byKey(const ValueKey('r')));
     expect(art['lm_ark'], isNotNull, reason: 'Noah stands at day 6');

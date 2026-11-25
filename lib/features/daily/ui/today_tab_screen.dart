@@ -261,10 +261,9 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
     final day = d.plan.dayAt(dayIndex);
     if (day == null) return;
     final current = d.day?.dayIndex;
-    final isDone = d.isFinished ||
-        (current != null && dayIndex < current) ||
-        (ref.read(planProgressProvider(d.plan.id)).valueOrNull ?? const <int>{})
-            .contains(dayIndex);
+    // The road's own rule: everything before the traveller is read, and
+    // everything from them on is still ahead (even a day read past a gap).
+    final isDone = d.isFinished || (current != null && dayIndex < current);
     final status = isDone
         ? StopStatus.done
         : dayIndex == current

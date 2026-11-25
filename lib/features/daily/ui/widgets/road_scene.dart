@@ -280,10 +280,11 @@ class RoadSceneState extends State<RoadScene> with TickerProviderStateMixin {
 
   /// A screen reader's scroll: move the camera by [stops] and settle.
   void _scrollBy(double stops) {
+    final here = _lookNow();
     _glide.stop();
     _back.stop();
     _back.value = 0;
-    _moveTo((_exploreAt ?? _lookNow()) + stops);
+    _moveTo(here + stops);
     setState(() {});
   }
 
@@ -307,6 +308,17 @@ class RoadSceneState extends State<RoadScene> with TickerProviderStateMixin {
     super.didUpdateWidget(oldWidget);
     _syncLandmarks();
     _syncWindow(_target);
+    if (_exploreAt != null) {
+      if (oldWidget.plan?.id != widget.plan?.id) {
+        // A different plan: its road starts afresh at its own traveller.
+        _glide.stop();
+        _back.stop();
+        _exploreAt = null;
+        _showBack = false;
+      } else {
+        _exploreAt = clampLook(_exploreAt!, widget.totalDays);
+      }
+    }
     final target = _target, dusk = _duskTarget;
     if (target == _to && dusk == _dusk1) return;
     // A day was read (or the plan changed) while exploring: bring the camera
@@ -359,7 +371,26 @@ class RoadSceneState extends State<RoadScene> with TickerProviderStateMixin {
     super.dispose();
   }
 
+  /// A touch that lands on a gliding camera only stops it: it must not also
+  /// open whatever stop slides under the finger.
+  bool _swallowTap = false;
+
+  void _pointerDown(PointerDownEvent e) {
+    _swallowTap = _glide.isAnimating || _back.isAnimating;
+    if (!_swallowTap) return;
+    final here = _lookNow();
+    _glide.stop();
+    _back.stop();
+    _back.value = 0;
+    _exploreAt = here;
+    setState(() => _showBack = (here - _posNow).abs() > 1.2);
+  }
+
   void _onTap(TapUpDetails d) {
+    if (_swallowTap) {
+      _swallowTap = false;
+      return;
+    }
     final k = widget.width / RoadScene.designWidth;
     final p = d.localPosition / k;
     // Landmarks stand in front of their stop, so they win the tap.
@@ -425,19 +456,26 @@ class RoadSceneState extends State<RoadScene> with TickerProviderStateMixin {
           Positioned.fill(
             child: Semantics(
               container: true,
-              // Screen-reader scrolling: five stops at a time.
-              onScrollUp: () => _scrollBy(5),
-              onScrollDown: () => _scrollBy(-5),
-              child: GestureDetector(
+              // Screen-reader scrolling, five stops at a time, in the direction of the
+              // matching drag: swipe down brings the road ahead into view.
+              onScrollUp: () => _scrollBy(-5),
+              onScrollDown: () => _scrollBy(5),
+              child: Listener(
                 behavior: HitTestBehavior.translucent,
-                excludeFromSemantics: true,
-                onTapUp: _onTap,
-                onVerticalDragStart: _dragStart,
-                onVerticalDragUpdate: _dragUpdate,
-                onVerticalDragEnd: _dragEnd,
-                child: FadeTransition(
-                  opacity: _fade,
-                  child: CustomPaint(painter: painter),
+                onPointerDown: _pointerDown,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.translucent,
+                  excludeFromSemantics: true,
+                  onTapUp: _onTap,
+                  // No plan, no road to explore.
+                  onVerticalDragStart: widget.plan == null ? null : _dragStart,
+                  onVerticalDragUpdate:
+                      widget.plan == null ? null : _dragUpdate,
+                  onVerticalDragEnd: widget.plan == null ? null : _dragEnd,
+                  child: FadeTransition(
+                    opacity: _fade,
+                    child: CustomPaint(painter: painter),
+                  ),
                 ),
               ),
             ),
