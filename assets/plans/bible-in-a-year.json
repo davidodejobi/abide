@@ -2,6 +2,8 @@
   "id": "bible-in-a-year",
   "title": "The Bible in a Year",
   "description": "Every book, cover to cover, in 365 days. About 85 verses a day.",
+  "startsOn": "01-01",
+  "firstRunYear": 2027,
   "days": [
     {
       "day": 1,

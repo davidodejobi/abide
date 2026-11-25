@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openbaptisthymnal/core/theme/lum_theme.dart';
+import 'package:openbaptisthymnal/features/daily/domain/plan_schedule.dart';
 import 'package:openbaptisthymnal/features/daily/domain/plan_summary.dart';
 import 'package:openbaptisthymnal/features/daily/providers/daily_providers.dart';
 import 'package:openbaptisthymnal/features/daily/ui/widgets/plan_option_tile.dart';
 
+import '../../domain/onboarding_defaults.dart';
 import '../../providers/onboarding_provider.dart';
 import '../onboarding_strings.dart';
 import '../widgets/onboarding_frame.dart';
@@ -63,26 +65,31 @@ class PlanScreen extends ConsumerWidget {
               ],
             ),
             data: (list) {
+              final today = ref.watch(planTodayProvider);
               final chosen = list.firstWhere((p) => p.id == planId,
-                  orElse: () => list.first);
+                  orElse: () => onboardingDefaultPlan(list, today));
               return Column(
                 children: [
                   for (final plan in list)
                     Padding(
                       padding: const EdgeInsets.only(bottom: LumSpace.sm),
-                      child: PlanOptionTile(
+                      child: PlanTile(
                         plan: plan,
                         selected: plan.id == chosen.id,
-                        onTap: () => ref
-                            .read(onboardingProvider.notifier)
-                            .setPlan(plan.id),
+                        onTap: () {
+                          if (!PlanSchedule(plan).isLocked(today)) {
+                            ref
+                                .read(onboardingProvider.notifier)
+                                .setPlan(plan.id);
+                          }
+                        },
                       ),
                     ),
                   const SizedBox(height: LumSpace.xs),
                   _GoalCard(
                     pace: PlanOptionTile.pace(chosen),
                     finish: OnboardingStrings.shortDate(
-                        planFinishDate(DateTime.now(), chosen.dayCount)),
+                        planFinishDate(today, chosen.dayCount)),
                   ),
                 ],
               );
@@ -119,10 +126,9 @@ class _GoalCard extends StatelessWidget {
             Container(
               width: 40,
               height: 40,
-              decoration: BoxDecoration(
-                  shape: BoxShape.circle, color: c.buttonGoldTop),
-              child:
-                  Icon(Icons.flag_rounded, size: 20, color: c.buttonOnGold),
+              decoration:
+                  BoxDecoration(shape: BoxShape.circle, color: c.buttonGoldTop),
+              child: Icon(Icons.flag_rounded, size: 20, color: c.buttonOnGold),
             ),
             const SizedBox(width: LumSpace.md),
             Expanded(

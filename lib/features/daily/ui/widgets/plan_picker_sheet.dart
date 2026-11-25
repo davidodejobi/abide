@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:openbaptisthymnal/core/storage/database/database_provider.dart';
 import 'package:openbaptisthymnal/core/theme/lum_theme.dart';
 
-import '../../domain/date_key.dart';
+import '../../domain/plan_schedule.dart';
 import '../../domain/reading_plan.dart';
 import '../../providers/daily_providers.dart';
 import '../daily_strings.dart';
@@ -80,13 +79,10 @@ class _PlanPickerSheet extends ConsumerWidget {
     WidgetRef ref,
     ReadingPlan plan,
   ) async {
-    // startPlan is idempotent and keeps existing progress, so re-picking the
+    // Starting is idempotent and keeps existing progress, so re-picking the
     // plan you are already on resumes rather than restarting. Wiping progress is
     // a separate, deliberate action -- never a side effect of a tap in a list.
-    await ref.read(readingPlansDaoProvider).startPlan(
-          planId: plan.id,
-          startDateKey: todayKey(),
-        );
+    await ref.read(startPlanProvider)(plan);
     if (context.mounted) Navigator.of(context).pop();
   }
 }
@@ -108,15 +104,21 @@ class _PlanRow extends ConsumerWidget {
     // put down months ago still knows where you were. Saying so here is the
     // point: without it, "Change" looks like it might throw away your place, and
     // nobody risks that to go and look.
-    final done =
-        ref.watch(planProgressProvider(plan.id)).valueOrNull ?? const <int>{};
-    return PlanOptionTile(
+    final today = ref.watch(planTodayProvider);
+    final sub = ref.watch(planSubscriptionProvider(plan.id)).valueOrNull;
+    final run = PlanSchedule(plan).runFor(sub?.startDateKey, today);
+    // An anchored plan's progress belongs to its run: a new year has none yet,
+    // so the footnote says nothing rather than quoting last year.
+    final done = ref.watch(planProgressProvider(run.progressId)).valueOrNull ??
+        const <int>{};
+    final shown = isActive && run.joined;
+    return PlanTile(
       plan: plan,
-      selected: isActive,
+      selected: shown,
       onTap: onTap,
       footnote: done.isEmpty
           ? null
-          : isActive
+          : shown
               ? DailyStrings.daysRead(done.length, plan.dayCount)
               : DailyStrings.resumesAt(done.length, plan.dayCount),
     );

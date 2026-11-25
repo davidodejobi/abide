@@ -13,12 +13,20 @@ class ReadingPlan {
     required this.title,
     required this.description,
     required this.days,
+    this.startsOn,
+    this.firstRunYear,
   });
 
   /// Stable slug, e.g. `bible-in-a-year`. Persisted, so it must not change.
   final String id;
   final String title;
   final String description;
+
+  /// Optional fixed start, "MM-DD", repeating yearly (see `PlanSchedule`).
+  final String? startsOn;
+
+  /// Year of the first run of a fixed-start plan; locked until its start date.
+  final int? firstRunYear;
 
   /// Day 1 first. Length is the plan's duration.
   final List<PlanDay> days;
@@ -40,6 +48,8 @@ class ReadingPlan {
       days: (json['days'] as List)
           .map((d) => PlanDay.fromJson(d as Map<String, dynamic>))
           .toList(growable: false),
+      startsOn: json['startsOn'] as String?,
+      firstRunYear: json['firstRunYear'] as int?,
     );
   }
 
@@ -47,6 +57,8 @@ class ReadingPlan {
         'id': id,
         'title': title,
         'description': description,
+        if (startsOn != null) 'startsOn': startsOn,
+        if (firstRunYear != null) 'firstRunYear': firstRunYear,
         'days': days.map((d) => d.toJson()).toList(growable: false),
       };
 }

@@ -20,6 +20,15 @@ class StorageService {
   static const String _defaultHymnLinkEditionKey = 'default_hymn_link_edition';
   static const String _appConfigCacheKey = 'app_config_cache';
   static const String _dismissedUpdateKey = 'dismissed_update_version';
+  static const String _planRemindersKey = 'plan_reminders';
+
+  /// Plan ids the user asked to be reminded about when they open.
+  Set<String> getPlanReminders() =>
+      (_prefs.getStringList(_planRemindersKey) ?? const <String>[]).toSet();
+
+  Future<void> savePlanReminders(Set<String> planIds) async {
+    await _prefs.setStringList(_planRemindersKey, planIds.toList()..sort());
+  }
 
   /// Save theme mode
   Future<void> saveThemeMode(ThemeMode mode) async {
