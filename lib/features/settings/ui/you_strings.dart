@@ -19,6 +19,13 @@ abstract final class YouStrings {
   static const english = 'English';
   static const yoruba = 'Yorùbá';
 
+  static const reminders = 'Reminders';
+  static const dailyReminder = 'Daily reading reminder';
+  static const reminderOff = 'Off';
+  static const reminderPickTime = 'Choose a time';
+  static const reminderDenied =
+      'Could not turn on the reminder. Check that notifications are allowed for Lumway in your phone settings.';
+
   static const voiceNotes = 'Voice notes';
   static const recordingQuality = 'Recording quality';
   static const qualityNote =

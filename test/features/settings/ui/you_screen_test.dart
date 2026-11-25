@@ -52,6 +52,8 @@ void main() {
     expect(find.text(YouStrings.title), findsOneWidget);
     expect(find.text(YouStrings.appearance.toUpperCase()), findsOneWidget);
     expect(find.text(YouStrings.linkBible), findsOneWidget);
+    expect(find.text(YouStrings.dailyReminder), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('Version 1.2.3'), 200);
     expect(find.text('Version 1.2.3'), findsOneWidget);
     expect(find.text('Settings'), findsNothing);
   });

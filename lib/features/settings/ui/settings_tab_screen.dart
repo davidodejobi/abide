@@ -1,4 +1,5 @@
 import 'package:auto_route/auto_route.dart';
+import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
@@ -13,6 +14,7 @@ import 'package:openbaptisthymnal/core/theme/theme_provider.dart';
 import 'package:openbaptisthymnal/core/widgets/lum_chip.dart';
 import 'package:openbaptisthymnal/features/bible/model/bible_edition.dart';
 import 'package:openbaptisthymnal/features/bible/providers/bible_providers.dart';
+import 'package:openbaptisthymnal/features/settings/providers/reading_reminder_provider.dart';
 import 'package:openbaptisthymnal/features/settings/ui/widgets/font_size_control.dart';
 import 'package:openbaptisthymnal/features/settings/ui/widgets/you_rows.dart';
 import 'package:openbaptisthymnal/features/settings/ui/you_strings.dart';
@@ -99,6 +101,16 @@ class _SettingsTabScreenState extends ConsumerState<SettingsTabScreen>
               _BibleLinkRow(),
               _HymnLinkRow(),
             ]),
+            if (!kIsWeb) ...[
+              const YouSectionLabel(YouStrings.reminders),
+              YouGroup(children: [
+                YouControlRow(
+                  icon: PhosphorIcons.bell(),
+                  title: YouStrings.dailyReminder,
+                  child: const _ReadingReminderControl(),
+                ),
+              ]),
+            ],
             const YouSectionLabel(YouStrings.voiceNotes),
             YouGroup(children: [
               YouControlRow(
@@ -156,6 +168,51 @@ class _SettingsTabScreenState extends ConsumerState<SettingsTabScreen>
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Off by default. Picking a time is the moment permission is asked.
+class _ReadingReminderControl extends ConsumerWidget {
+  const _ReadingReminderControl();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final minutes = ref.watch(readingReminderProvider);
+    final notifier = ref.read(readingReminderProvider.notifier);
+    final on = minutes != null;
+    return Wrap(
+      spacing: LumSpace.sm,
+      runSpacing: LumSpace.sm,
+      children: [
+        LumChip(
+          label: YouStrings.reminderOff,
+          selected: !on,
+          onTap: notifier.disable,
+        ),
+        LumChip(
+          label: on
+              ? TimeOfDay(hour: minutes ~/ 60, minute: minutes % 60)
+                  .format(context)
+              : YouStrings.reminderPickTime,
+          icon: PhosphorIcons.clock(),
+          selected: on,
+          onTap: () async {
+            final picked = await showTimePicker(
+              context: context,
+              initialTime: on
+                  ? TimeOfDay(hour: minutes ~/ 60, minute: minutes % 60)
+                  : const TimeOfDay(hour: 8, minute: 0),
+            );
+            if (picked == null) return;
+            final ok = await notifier.enable(picked.hour, picked.minute);
+            if (!ok && context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text(YouStrings.reminderDenied)));
+            }
+          },
+        ),
+      ],
     );
   }
 }

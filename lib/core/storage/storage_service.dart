@@ -21,6 +21,18 @@ class StorageService {
   static const String _appConfigCacheKey = 'app_config_cache';
   static const String _dismissedUpdateKey = 'dismissed_update_version';
   static const String _planRemindersKey = 'plan_reminders';
+  static const String _readingReminderKey = 'reading_reminder_minutes';
+
+  /// Minutes after midnight for the daily reading reminder; null when off.
+  int? getReadingReminderMinutes() => _prefs.getInt(_readingReminderKey);
+
+  Future<void> saveReadingReminderMinutes(int? minutes) async {
+    if (minutes == null) {
+      await _prefs.remove(_readingReminderKey);
+    } else {
+      await _prefs.setInt(_readingReminderKey, minutes);
+    }
+  }
 
   /// Plan ids the user asked to be reminded about when they open.
   Set<String> getPlanReminders() =>

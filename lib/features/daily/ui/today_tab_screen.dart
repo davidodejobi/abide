@@ -1249,9 +1249,8 @@ class _PlanNoteCard extends ConsumerWidget {
                 ),
                 const SizedBox(width: LumSpace.sm),
                 TextButton(
-                  onPressed: () => ref
-                      .read(planRemindersProvider.notifier)
-                      .toggle(p.id, false),
+                  onPressed: () =>
+                      ref.read(planRemindersProvider.notifier).toggle(p.id, false),
                   child: const Text(DailyStrings.dismiss),
                 ),
               ]),
