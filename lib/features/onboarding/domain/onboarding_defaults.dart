@@ -1,4 +1,6 @@
 import 'package:openbaptisthymnal/features/bible/model/bible_edition.dart';
+import 'package:openbaptisthymnal/features/daily/domain/plan_schedule.dart';
+import 'package:openbaptisthymnal/features/daily/domain/reading_plan.dart';
 
 /// Pure choices behind the onboarding defaults, kept out of the UI so they can
 /// be tested without a widget tree.
@@ -6,6 +8,17 @@ import 'package:openbaptisthymnal/features/bible/model/bible_edition.dart';
 /// The plan pre-selected on the plan step. The New Testament in 90 days is the
 /// one most people finish (see `kBundledPlanIds`).
 const kOnboardingDefaultPlanId = 'nt-90';
+
+/// The plan to pre-select: [kOnboardingDefaultPlanId], or the first open plan
+/// if that one is not available. Never a plan still locked on [today].
+ReadingPlan onboardingDefaultPlan(List<ReadingPlan> plans, DateTime today) {
+  final open = [
+    for (final p in plans)
+      if (!PlanSchedule(p).isLocked(today)) p,
+  ];
+  return open.firstWhere((p) => p.id == kOnboardingDefaultPlanId,
+      orElse: () => open.isEmpty ? plans.first : open.first);
+}
 
 /// Languages we ship a Bible edition for, first-seen order.
 List<String> onboardingLanguages([List<BibleEdition> editions = kBibleEditions]) {

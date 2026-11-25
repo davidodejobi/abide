@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openbaptisthymnal/core/theme/lum_theme.dart';
 
+import '../../domain/plan_schedule.dart';
 import '../../domain/plan_summary.dart';
 import '../../domain/reading_plan.dart';
+import '../../providers/daily_providers.dart';
+import '../daily_strings.dart';
 
 /// One plan as a row: title and pace on the left, the day count big on the
 /// right. Selected is the ink card with a gold number (Figma 1.04 / M10).
@@ -14,6 +18,9 @@ class PlanOptionTile extends StatelessWidget {
     required this.selected,
     required this.onTap,
     this.footnote,
+    this.lockedNote,
+    this.reminderOn = false,
+    this.onReminderChanged,
   });
 
   final ReadingPlan plan;
@@ -22,6 +29,12 @@ class PlanOptionTile extends StatelessWidget {
 
   /// Extra line under the pace, e.g. "Resumes at 4 of 90 days".
   final String? footnote;
+
+  /// Set when the plan is not open yet ("Starts 1 January · 37 days to go"):
+  /// the tile dims, shows a lock and the remind toggle, and ignores taps.
+  final String? lockedNote;
+  final bool reminderOn;
+  final ValueChanged<bool>? onReminderChanged;
 
   static String pace(ReadingPlan plan) {
     final n = averageChaptersPerDay(plan);
@@ -35,17 +48,19 @@ class PlanOptionTile extends StatelessWidget {
     final fgSoft =
         selected ? c.textOnPrimary.withValues(alpha: 0.75) : c.textSecondary;
     final number = selected ? c.buttonGoldTop : c.textPrimary;
+    final locked = lockedNote != null;
+    final note = lockedNote ?? footnote;
     final label = '${plan.title}, ${plan.dayCount} days, ${pace(plan)}'
-        '${footnote == null ? '' : ', $footnote'}';
+        '${note == null ? '' : ', $note'}';
     return Semantics(
       button: true,
       selected: selected,
       label: label,
-      excludeSemantics: true,
-      onTap: onTap,
+      excludeSemantics: !locked,
+      onTap: locked ? null : onTap,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTap: onTap,
+        onTap: locked ? null : onTap,
         child: AnimatedContainer(
           duration: LumMotion.fast,
           constraints: const BoxConstraints(minHeight: LumSize.rowMin + 16),
@@ -81,7 +96,32 @@ class PlanOptionTile extends StatelessWidget {
                     const SizedBox(height: LumSpace.xs),
                     Text(pace(plan),
                         style: LumText.footnote.copyWith(color: fgSoft)),
-                    if (footnote != null) ...[
+                    if (locked) ...[
+                      const SizedBox(height: LumSpace.xs),
+                      Row(children: [
+                        Icon(Icons.lock_outline_rounded,
+                            size: 16, color: c.textBrand),
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: Text(lockedNote!,
+                              style: LumText.footnoteEmphasized
+                                  .copyWith(color: c.textBrand)),
+                        ),
+                      ]),
+                      if (onReminderChanged != null)
+                        Row(children: [
+                          Expanded(
+                            child: Text(DailyStrings.remindMe,
+                                style: LumText.subheadline
+                                    .copyWith(color: c.textPrimary)),
+                          ),
+                          Switch.adaptive(
+                              value: reminderOn, onChanged: onReminderChanged),
+                        ]),
+                      Text(DailyStrings.warmUp,
+                          style:
+                              LumText.footnote.copyWith(color: fgSoft)),
+                    ] else if (footnote != null) ...[
                       const SizedBox(height: LumSpace.xs),
                       Text(footnote!,
                           style: LumText.footnoteEmphasized.copyWith(
@@ -110,6 +150,44 @@ class PlanOptionTile extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// A plan tile that knows about fixed-start plans: while the plan is locked it
+/// shows the countdown and the "Remind me" toggle, and taps do nothing.
+class PlanTile extends ConsumerWidget {
+  const PlanTile({
+    super.key,
+    required this.plan,
+    required this.selected,
+    required this.onTap,
+    this.footnote,
+  });
+
+  final ReadingPlan plan;
+  final bool selected;
+  final VoidCallback onTap;
+  final String? footnote;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final schedule = PlanSchedule(plan);
+    final today = ref.watch(planTodayProvider);
+    final locked = schedule.isLocked(today);
+    final remind = ref.watch(planRemindersProvider).contains(plan.id);
+    return PlanOptionTile(
+      plan: plan,
+      selected: selected && !locked,
+      onTap: onTap,
+      footnote: footnote,
+      lockedNote: locked
+          ? DailyStrings.startsOnLocked(
+              schedule.startLabel, schedule.daysToGo(today))
+          : null,
+      reminderOn: remind,
+      onReminderChanged: (on) =>
+          ref.read(planRemindersProvider.notifier).toggle(plan.id, on),
     );
   }
 }
