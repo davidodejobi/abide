@@ -23,10 +23,10 @@ final bottomNavVisibleProvider = StateProvider<bool>((ref) => true);
 /// A missing SVG throws at runtime, not at build.
 enum BottomNavTab {
   today(0, 'Today'),
-  tablets(1, 'Tablets'),
+  notes(1, 'Notes'),
   songs(2, 'Songs'),
   bible(3, 'Bible'),
-  settings(4, 'Settings');
+  settings(4, 'You');
 
   const BottomNavTab(this.tabIndex, this.label);
 

@@ -4,29 +4,39 @@ import 'dart:ui' as ui;
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:openbaptisthymnal/core/theme/app_colors.dart';
-import 'package:openbaptisthymnal/core/theme/app_text_styles.dart';
+import 'package:openbaptisthymnal/core/theme/lum_theme.dart';
 import 'package:openbaptisthymnal/core/utils/services/share_service.dart';
 import 'package:openbaptisthymnal/core/utils/toast_helper.dart';
+import 'package:openbaptisthymnal/core/widgets/lum_button.dart';
+import 'package:openbaptisthymnal/core/widgets/lum_chip.dart';
+import 'package:openbaptisthymnal/core/widgets/lum_circle_button.dart';
+import 'package:openbaptisthymnal/core/widgets/lum_page_background.dart';
 import 'package:openbaptisthymnal/features/share_card/ui/share_card_style.dart';
+import 'package:openbaptisthymnal/features/tablet/ui/notes_strings.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
-/// Reusable share composer: previews a 4:5 card, lets the reader pick a style
-/// preset, then captures the card as a PNG and hands it to [ShareService].
+/// Share composer (Figma M4-04): previews the card, lets the reader pick the
+/// look and shape, then captures it as a PNG and hands it to [ShareService].
 ///
-/// The card itself is supplied by [cardBuilder] so hymns and scripture can
-/// share the same composer chrome while rendering different content.
+/// The card is supplied by [cardBuilder] so hymns and scripture share this
+/// chrome while rendering different content.
 class ShareCardComposer extends StatefulWidget {
   const ShareCardComposer({
     super.key,
+    required this.title,
     required this.filename,
     required this.cardBuilder,
   });
 
+  /// Page title, e.g. "Share verse".
+  final String title;
+
   /// Base name for the exported PNG (no extension).
   final String filename;
 
-  /// Builds the card body for the chosen [ShareCardStyle].
-  final Widget Function(ShareCardStyle style) cardBuilder;
+  /// Builds the card body for the chosen look and shape.
+  final Widget Function(ShareCardStyle style, ShareCardFormat format)
+      cardBuilder;
 
   @override
   State<ShareCardComposer> createState() => _ShareCardComposerState();
@@ -35,6 +45,7 @@ class ShareCardComposer extends StatefulWidget {
 class _ShareCardComposerState extends State<ShareCardComposer> {
   final _cardKey = GlobalKey();
   late ShareCardStyle _style = ShareCardStyle.presets.first;
+  ShareCardFormat _format = ShareCardFormat.status;
   bool _sharing = false;
 
   Future<void> _share() async {
@@ -51,124 +62,120 @@ class _ShareCardComposerState extends State<ShareCardComposer> {
         sharePositionOrigin: origin,
       );
     } catch (e) {
-      if (mounted) {
-        ToastHelper.error(context, 'Could not create image to share');
-      }
+      if (mounted) ToastHelper.error(context, NotesStrings.shareError);
     } finally {
       if (mounted) setState(() => _sharing = false);
     }
   }
 
+  /// Exports 1080 px wide whatever the preview size (1080 x 1920 or 1080 x 1080).
   Future<Uint8List> _capture() async {
     final boundary =
         _cardKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
-    final image = await boundary.toImage(pixelRatio: 3.0);
+    final image =
+        await boundary.toImage(pixelRatio: 1080 / boundary.size.width);
     final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
     return byteData!.buffer.asUint8List();
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark ? AppColors.neutral900 : AppColors.neutral100;
-    final ink = isDark ? AppColors.neutral100 : AppColors.primaryDark;
-
+    final c = context.lum;
     return Scaffold(
-      backgroundColor: bg,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: const AutoLeadingButton(),
-        title:
-            Text('Share', style: AppTextStyles.titleLarge.copyWith(color: ink)),
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 32),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(24),
-                  child: RepaintBoundary(
-                    key: _cardKey,
-                    child: widget.cardBuilder(_style),
+      backgroundColor: Colors.transparent,
+      body: LumPageBackground(
+        child: SafeArea(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(LumSize.screenGutter,
+                LumSpace.md, LumSize.screenGutter, LumSpace.xl),
+            children: [
+              Row(
+                children: [
+                  LumCircleButton(
+                    icon: PhosphorIcons.caretLeft(),
+                    label: NotesStrings.back,
+                    onPressed: () => context.router.maybePop(),
+                  ),
+                  Expanded(
+                    child: Semantics(
+                      header: true,
+                      child: Text(
+                        widget.title,
+                        textAlign: TextAlign.center,
+                        style: LumText.headline.copyWith(color: c.textPrimary),
+                      ),
+                    ),
+                  ),
+                  // Balances the back button so the title stays centred.
+                  const SizedBox(width: LumSize.glassButton),
+                ],
+              ),
+              const SizedBox(height: LumSpace.xl),
+              Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 300),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(LumRadius.xl),
+                      boxShadow: [
+                        BoxShadow(
+                          color: c.glassEdgeShadow,
+                          blurRadius: 15,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(LumRadius.xl),
+                      // The export must not change with the reader's text size.
+                      child: MediaQuery(
+                        data: MediaQuery.of(context)
+                            .copyWith(textScaler: TextScaler.noScaling),
+                        child: RepaintBoundary(
+                          key: _cardKey,
+                          child: widget.cardBuilder(_style, _format),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
-          ),
-          SizedBox(
-            height: 64,
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  minWidth: MediaQuery.of(context).size.width,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    for (final preset in ShareCardStyle.presets)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 6),
-                        child: GestureDetector(
-                          onTap: () => setState(() => _style = preset),
-                          child: Container(
-                            width: 44,
-                            height: 44,
-                            decoration: BoxDecoration(
-                              gradient: preset.gradient,
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: preset.id == _style.id
-                                    ? AppColors.secondary
-                                    : Colors.transparent,
-                                width: 2.5,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
+              const SizedBox(height: LumSpace.xl),
+              Wrap(
+                alignment: WrapAlignment.center,
+                spacing: LumSpace.sm,
+                runSpacing: LumSpace.sm,
+                children: [
+                  for (final preset in ShareCardStyle.presets)
+                    LumChip(
+                      label: preset.label,
+                      selected: preset.id == _style.id,
+                      onTap: () => setState(() => _style = preset),
+                    ),
+                ],
               ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(32, 0, 32, 32),
-            child: SizedBox(
-              width: double.infinity,
-              child: FilledButton(
+              const SizedBox(height: LumSpace.sm),
+              Wrap(
+                alignment: WrapAlignment.center,
+                spacing: LumSpace.sm,
+                runSpacing: LumSpace.sm,
+                children: [
+                  for (final f in ShareCardFormat.values)
+                    LumChip(
+                      label: f.label,
+                      selected: f == _format,
+                      onTap: () => setState(() => _format = f),
+                    ),
+                ],
+              ),
+              const SizedBox(height: LumSpace.xl),
+              LumButton(
+                label: NotesStrings.shareImage,
                 onPressed: _sharing ? null : _share,
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                ),
-                child: _sharing
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: AppColors.neutral100,
-                        ),
-                      )
-                    : Text(
-                        'Share image',
-                        style: AppTextStyles.titleMedium.copyWith(
-                          color: AppColors.neutral100,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

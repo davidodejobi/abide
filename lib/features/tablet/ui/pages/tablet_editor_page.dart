@@ -11,16 +11,21 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:openbaptisthymnal/core/audio/audio_quality_provider.dart';
 import 'package:openbaptisthymnal/core/providers/service_providers.dart';
 import 'package:openbaptisthymnal/core/router/app_router.dart';
-import 'package:openbaptisthymnal/core/theme/app_colors.dart';
 import 'package:openbaptisthymnal/core/theme/font_scale_provider.dart';
+import 'package:openbaptisthymnal/core/theme/lum_theme.dart';
 import 'package:openbaptisthymnal/core/utils/services/file_storage_service.dart';
+import 'package:openbaptisthymnal/core/widgets/lum_circle_button.dart';
+import 'package:openbaptisthymnal/core/widgets/lum_glass_bar.dart';
+import 'package:openbaptisthymnal/core/widgets/lum_page_background.dart';
 import 'package:openbaptisthymnal/features/bible/ui/open_bible_link.dart';
 import 'package:openbaptisthymnal/features/hymn/ui/open_hymn_link.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/insert_audio_node.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/link_autocomplete.dart';
+import 'package:openbaptisthymnal/features/tablet/domain/note_date_label.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/parse_links.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/tablet_markdown_codec.dart';
 import 'package:openbaptisthymnal/features/tablet/providers/tablets_providers.dart';
+import 'package:openbaptisthymnal/features/tablet/ui/notes_strings.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/widgets/audio_block_component.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/widgets/audio_recorder_sheet.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/widgets/folder_picker_sheet.dart';
@@ -61,7 +66,7 @@ class TabletEditorPage extends HookConsumerWidget {
           data: (note) {
             if (note == null) {
               return const Scaffold(
-                body: Center(child: Text('Tablet not found')),
+                body: Center(child: Text(NotesStrings.noteNotFound)),
               );
             }
             // Keyed by id so the editor mounts once per note and ignores later
@@ -98,6 +103,7 @@ class _NoteEditorView extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final lum = context.lum;
     final textScale = ref.watch(fontScaleProvider).scale;
     final titleController = useTextEditingController(text: initialTitle);
     final currentId = useState<String?>(noteId);
@@ -324,9 +330,9 @@ class _NoteEditorView extends HookConsumerWidget {
         children.add(TextSpan(
           text: token,
           style: (baseStyle ?? const TextStyle()).copyWith(
-            color: AppColors.secondary,
+            color: context.lum.textAccent,
             decoration: TextDecoration.underline,
-            decorationColor: AppColors.secondary,
+            decorationColor: context.lum.textAccent,
           ),
           recognizer: parsed.isEmpty
               ? null
@@ -343,15 +349,14 @@ class _NoteEditorView extends HookConsumerWidget {
 
     final editorStyle = EditorStyle.mobile(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-      cursorColor: theme.colorScheme.primary,
-      selectionColor: theme.colorScheme.primary.withValues(alpha: 0.2),
+      cursorColor: lum.textAccent,
+      selectionColor: lum.textAccent.withValues(alpha: 0.2),
       textSpanDecorator: decorateWikilinks,
       textStyleConfiguration: TextStyleConfiguration(
-        text: TextStyle(
-          fontFamily: 'Geist',
+        text: LumText.body.copyWith(
           fontSize: 17 * textScale,
           height: 1.55,
-          color: theme.colorScheme.onSurface,
+          color: lum.textPrimary,
         ),
       ),
     );
@@ -365,27 +370,36 @@ class _NoteEditorView extends HookConsumerWidget {
       filled: false,
     );
 
+    final titleStyle = LumText.title1.copyWith(
+      fontSize: 28 * textScale,
+      color: lum.textPrimary,
+    );
     final titleField = Padding(
-      padding: const EdgeInsets.fromLTRB(24, 8, 24, 4),
-      child: TextField(
-        controller: titleController,
-        textCapitalization: TextCapitalization.sentences,
-        maxLines: null,
-        style: TextStyle(
-          fontFamily: 'Geist',
-          fontSize: 28 * textScale,
-          fontWeight: FontWeight.w700,
-          height: 1.2,
-        ),
-        decoration: noBorder.copyWith(
-          hintText: 'Title',
-          hintStyle: TextStyle(
-            fontFamily: 'Geist',
-            fontSize: 28 * textScale,
-            fontWeight: FontWeight.w700,
-            color: theme.hintColor.withValues(alpha: 0.4),
+      padding: const EdgeInsets.fromLTRB(24, 8, 24, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '${noteDateLabel(initialCreatedAt ?? DateTime.now(), DateTime.now())}'
+            ' · ${NotesStrings.savedOnPhone}',
+            style: LumText.footnote.copyWith(color: lum.textSecondary),
           ),
-        ),
+          const SizedBox(height: LumSpace.xs),
+          Semantics(
+            textField: true,
+            label: NotesStrings.titleHint,
+            child: TextField(
+              controller: titleController,
+              textCapitalization: TextCapitalization.sentences,
+              maxLines: null,
+              style: titleStyle,
+              decoration: noBorder.copyWith(
+                hintText: NotesStrings.titleHint,
+                hintStyle: titleStyle.copyWith(color: lum.textDisabled),
+              ),
+            ),
+          ),
+        ],
       ),
     );
 
@@ -418,109 +432,122 @@ class _NoteEditorView extends HookConsumerWidget {
       onPopInvokedWithResult: (didPop, _) {
         if (didPop) save();
       },
-      child: Scaffold(
-        appBar: AppBar(
-          elevation: 0,
-          scrolledUnderElevation: 0,
-          backgroundColor: theme.scaffoldBackgroundColor,
-          actions: [
-            IconButton(
-              icon: Icon(PhosphorIcons.folder()),
-              tooltip: 'Move to folder',
-              onPressed: () async {
-                await save();
-                final id = currentId.value;
-                if (id == null || !context.mounted) return;
-                showModalBottomSheet<void>(
-                  context: context,
-                  showDragHandle: true,
-                  backgroundColor: theme.colorScheme.surface,
-                  shape: const RoundedRectangleBorder(
-                    borderRadius:
-                        BorderRadius.vertical(top: Radius.circular(20)),
-                  ),
-                  builder: (_) => FolderPickerSheet(noteId: id),
-                );
-              },
-            ),
-            IconButton(
-              icon: Icon(PhosphorIcons.tag()),
-              tooltip: 'Tags',
-              onPressed: () async {
-                await save();
-                final id = currentId.value;
-                if (id == null || !context.mounted) return;
-                showModalBottomSheet<void>(
-                  context: context,
-                  showDragHandle: true,
-                  backgroundColor: theme.colorScheme.surface,
-                  shape: const RoundedRectangleBorder(
-                    borderRadius:
-                        BorderRadius.vertical(top: Radius.circular(20)),
-                  ),
-                  builder: (_) => TagPickerSheet(noteId: id),
-                );
-              },
-            ),
-            IconButton(
-              icon: Icon(PhosphorIcons.treeStructure()),
-              tooltip: 'Links & backlinks',
-              onPressed: () async {
-                await save();
-                if (!context.mounted) return;
-                showModalBottomSheet<void>(
-                  context: context,
-                  showDragHandle: true,
-                  isScrollControlled: true,
-                  backgroundColor: theme.colorScheme.surface,
-                  shape: const RoundedRectangleBorder(
-                    borderRadius:
-                        BorderRadius.vertical(top: Radius.circular(20)),
-                  ),
-                  builder: (_) => NoteLinksSheet(
-                    markdown: noteDocumentToMarkdown(editorState.document),
-                    title: titleController.text.trim(),
-                  ),
-                );
-              },
-            ),
-          ],
-        ),
-        body: SafeArea(
-          child: MobileToolbarV2(
-            editorState: editorState,
-            toolbarItems: toolbarItems,
-            backgroundColor: theme.colorScheme.surface,
-            foregroundColor: theme.colorScheme.onSurfaceVariant,
-            iconColor: theme.colorScheme.onSurface,
-            primaryColor: theme.colorScheme.primary,
-            outlineColor: theme.colorScheme.outlineVariant,
-            itemOutlineColor: theme.colorScheme.outlineVariant,
-            child: Stack(
-              children: [
-                AppFlowyEditor(
-                  editorState: editorState,
-                  editorStyle: editorStyle,
-                  autoFocus: noteId == null,
-                  header: titleField,
-                  blockComponentBuilders: {
-                    ...standardBlockComponentBuilderMap,
-                    ImageBlockKeys.type:
-                        MediaBlockComponentBuilder(editorState: editorState),
-                  },
-                ),
-                if (linkQuery.value != null)
-                  Positioned(
-                    left: 16,
-                    right: 16,
-                    bottom: 8,
-                    child: LinkSuggestions(
-                      query: linkQuery.value!,
-                      currentNoteId: currentId.value,
-                      onSelected: completeLink,
+      child: LumPageBackground(
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          appBar: PreferredSize(
+            preferredSize: const Size.fromHeight(LumSize.touchTarget + 24),
+            child: SafeArea(
+              bottom: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                    LumSize.screenGutter, LumSpace.md, LumSize.screenGutter, 0),
+                child: Row(
+                  children: [
+                    LumCircleButton(
+                      icon: PhosphorIcons.caretLeft(),
+                      label: NotesStrings.back,
+                      onPressed: () => context.router.maybePop(),
                     ),
+                    const Spacer(),
+                    LumGlassBar(
+                      height: LumSize.touchTarget,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          LumCircleButton(
+                            plain: true,
+                            icon: PhosphorIcons.folder(),
+                            label: NotesStrings.moveToFolder,
+                            onPressed: () async {
+                              await save();
+                              final id = currentId.value;
+                              if (id == null || !context.mounted) return;
+                              showModalBottomSheet<void>(
+                                context: context,
+                                showDragHandle: true,
+                                builder: (_) => FolderPickerSheet(noteId: id),
+                              );
+                            },
+                          ),
+                          LumCircleButton(
+                            plain: true,
+                            icon: PhosphorIcons.tag(),
+                            label: NotesStrings.noteTags,
+                            onPressed: () async {
+                              await save();
+                              final id = currentId.value;
+                              if (id == null || !context.mounted) return;
+                              showModalBottomSheet<void>(
+                                context: context,
+                                showDragHandle: true,
+                                builder: (_) => TagPickerSheet(noteId: id),
+                              );
+                            },
+                          ),
+                          LumCircleButton(
+                            plain: true,
+                            icon: PhosphorIcons.treeStructure(),
+                            label: NotesStrings.linksAndBacklinks,
+                            onPressed: () async {
+                              await save();
+                              if (!context.mounted) return;
+                              showModalBottomSheet<void>(
+                                context: context,
+                                showDragHandle: true,
+                                isScrollControlled: true,
+                                builder: (_) => NoteLinksSheet(
+                                  markdown: noteDocumentToMarkdown(
+                                      editorState.document),
+                                  title: titleController.text.trim(),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          body: SafeArea(
+            child: MobileToolbarV2(
+              editorState: editorState,
+              toolbarItems: toolbarItems,
+              backgroundColor: lum.glassFillOpaque,
+              foregroundColor: lum.textSecondary,
+              iconColor: lum.textPrimary,
+              primaryColor: lum.bgPrimary,
+              outlineColor: lum.borderSubtle,
+              itemOutlineColor: lum.borderSubtle,
+              child: Stack(
+                children: [
+                  AppFlowyEditor(
+                    editorState: editorState,
+                    editorStyle: editorStyle,
+                    autoFocus: noteId == null,
+                    header: titleField,
+                    blockComponentBuilders: {
+                      ...standardBlockComponentBuilderMap,
+                      ImageBlockKeys.type:
+                          MediaBlockComponentBuilder(editorState: editorState),
+                    },
                   ),
-              ],
+                  if (linkQuery.value != null)
+                    Positioned(
+                      left: 16,
+                      right: 16,
+                      bottom: 8,
+                      child: LinkSuggestions(
+                        query: linkQuery.value!,
+                        currentNoteId: currentId.value,
+                        onSelected: completeLink,
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
         ),

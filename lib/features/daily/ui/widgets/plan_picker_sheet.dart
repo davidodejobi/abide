@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openbaptisthymnal/core/storage/database/database_provider.dart';
-import 'package:openbaptisthymnal/core/theme/app_colors.dart';
-import 'package:openbaptisthymnal/core/theme/app_text_styles.dart';
+import 'package:openbaptisthymnal/core/theme/lum_theme.dart';
 
 import '../../domain/date_key.dart';
 import '../../domain/reading_plan.dart';
 import '../../providers/daily_providers.dart';
+import '../daily_strings.dart';
+import 'plan_option_tile.dart';
 
 Future<void> showPlanPickerSheet(BuildContext context) {
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     showDragHandle: true,
+    backgroundColor: context.lum.bgPage,
     builder: (_) => const _PlanPickerSheet(),
   );
 }
@@ -22,42 +24,47 @@ class _PlanPickerSheet extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final c = context.lum;
     final plans = ref.watch(availablePlansProvider);
     final active = ref.watch(activePlanSubscriptionProvider).valueOrNull;
 
     return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(
+            LumSize.screenGutter, 0, LumSize.screenGutter, LumSpace.lg),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Reading plans',
-              style: AppTextStyles.titleLarge.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+            Semantics(
+              header: true,
+              child: Text(DailyStrings.planSheetTitle,
+                  style: LumText.title2.copyWith(color: c.textPrimary)),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: LumSpace.xs),
+            Text(DailyStrings.planSheetBody,
+                style: LumText.subheadline.copyWith(color: c.textSecondary)),
+            const SizedBox(height: LumSpace.lg),
             plans.when(
               loading: () => const Padding(
-                padding: EdgeInsets.all(24),
+                padding: EdgeInsets.all(LumSpace.xl),
                 child: Center(child: CircularProgressIndicator.adaptive()),
               ),
-              error: (e, _) => const Padding(
-                padding: EdgeInsets.all(24),
-                child: Text(
-                  "Plans couldn't be loaded.",
-                  style: AppTextStyles.bodyMedium,
-                ),
+              error: (e, _) => Padding(
+                padding: const EdgeInsets.all(LumSpace.xl),
+                child: Text(DailyStrings.plansLoadError,
+                    style: LumText.body.copyWith(color: c.textSecondary)),
               ),
               data: (list) => Column(
                 children: [
                   for (final plan in list)
-                    _PlanTile(
-                      plan: plan,
-                      isActive: plan.id == active?.planId,
-                      onTap: () => _start(context, ref, plan),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: LumSpace.sm),
+                      child: _PlanRow(
+                        plan: plan,
+                        isActive: plan.id == active?.planId,
+                        onTap: () => _start(context, ref, plan),
+                      ),
                     ),
                 ],
               ),
@@ -84,8 +91,8 @@ class _PlanPickerSheet extends ConsumerWidget {
   }
 }
 
-class _PlanTile extends ConsumerWidget {
-  const _PlanTile({
+class _PlanRow extends ConsumerWidget {
+  const _PlanRow({
     required this.plan,
     required this.isActive,
     required this.onTap,
@@ -97,73 +104,21 @@ class _PlanTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     // Progress is kept per plan and is never cleared by switching, so a plan you
     // put down months ago still knows where you were. Saying so here is the
     // point: without it, "Change" looks like it might throw away your place, and
     // nobody risks that to go and look.
     final done =
         ref.watch(planProgressProvider(plan.id)).valueOrNull ?? const <int>{};
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Material(
-        color: isDark
-            ? colorScheme.surfaceContainerHighest
-            : AppColors.secondary100,
-        borderRadius: BorderRadius.circular(16),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        plan.title,
-                        style: AppTextStyles.titleSmall.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        plan.description,
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color:
-                              colorScheme.onSurface.withValues(alpha: 0.7),
-                        ),
-                      ),
-                      if (done.isNotEmpty) ...[
-                        const SizedBox(height: 8),
-                        Text(
-                          isActive
-                              ? '${done.length} of ${plan.dayCount} days read'
-                              : 'Resumes at ${done.length} of '
-                                  '${plan.dayCount} days',
-                          style: AppTextStyles.labelSmall.copyWith(
-                            color: AppColors.secondary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-                if (isActive) ...[
-                  const SizedBox(width: 12),
-                  const Icon(Icons.check_circle, color: AppColors.secondary),
-                ],
-              ],
-            ),
-          ),
-        ),
-      ),
+    return PlanOptionTile(
+      plan: plan,
+      selected: isActive,
+      onTap: onTap,
+      footnote: done.isEmpty
+          ? null
+          : isActive
+              ? DailyStrings.daysRead(done.length, plan.dayCount)
+              : DailyStrings.resumesAt(done.length, plan.dayCount),
     );
   }
 }

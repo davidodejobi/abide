@@ -11,6 +11,7 @@ class StorageService {
   static const String _themeKey = 'theme_mode';
   static const String _onboardingCompleteKey = 'onboarding_complete';
   static const String _userNameKey = 'user_name';
+  static const String _songLanguageKey = 'song_language';
   static const String _fontScaleKey = 'font_scale';
   static const String _audioQualityKey = 'audio_quality';
   static const String _welcomeNoteSeededKey = 'welcome_note_seeded';
@@ -54,6 +55,13 @@ class StorageService {
   /// Get the user's chosen name (null if not set)
   String? getUserName() {
     return _prefs.getString(_userNameKey);
+  }
+
+  /// The language pack the Songs tab reads (`en` or `yo`); null until chosen.
+  String? getSongLanguage() => _prefs.getString(_songLanguageKey);
+
+  Future<void> saveSongLanguage(String code) async {
+    await _prefs.setString(_songLanguageKey, code);
   }
 
   /// Save the reading font-size preference

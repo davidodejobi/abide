@@ -78,4 +78,14 @@ void main() {
     final notes = await repo.watchNotes().first;
     expect(notes.map((n) => n.id), [second, first]);
   });
+
+  test('restoreNote brings a deleted note back in its old place', () async {
+    final id = await repo.createNote(title: 'Manna', contentMarkdown: 'x');
+    await repo.deleteNote(id);
+    expect(await repo.watchNotes().first, isEmpty);
+
+    await repo.restoreNote(id);
+    final notes = await repo.watchNotes().first;
+    expect(notes.map((n) => n.id), [id]);
+  });
 }
