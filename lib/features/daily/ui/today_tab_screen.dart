@@ -22,6 +22,7 @@ import '../domain/plan_progress.dart';
 import '../domain/reading_plan.dart';
 import '../domain/road_days.dart';
 import '../domain/road_landmarks.dart';
+import '../domain/world_company.dart';
 import '../providers/daily_providers.dart';
 import 'daily_strings.dart';
 import 'widgets/lamp_icon.dart';
@@ -30,6 +31,7 @@ import 'widgets/road_art.dart';
 import 'widgets/road_scene.dart';
 import 'widgets/road_sheets.dart';
 import 'widgets/streak_chip.dart';
+import 'widgets/world_company_line.dart';
 
 /// The Today tab: the road scene, today's reading and the one button that
 /// starts it. After "Mark as read" the same screen says well done (or rest
@@ -126,6 +128,18 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
       total = data.plan.dayCount;
     }
 
+    final worldDay = done ? doneIndex : currentDay;
+    final companions = hasPlan && worldDay != null
+        ? companionSpots(
+            ref
+                    .watch(worldCompanyProvider(
+                        (planKey: data.progressKey, day: worldDay)))
+                    .valueOrNull
+                    ?.readersOnDay ??
+                0,
+            worldDay)
+        : const <CompanionSpot>[];
+
     // The collapsed panel's chip: today's day and passage, or tomorrow's once
     // today is read.
     final nextPassage = hasPlan && !data.isFinished
@@ -206,6 +220,7 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
                   mood: mood,
                   currentDay: currentDay,
                   totalDays: total,
+                  companions: companions,
                   plan: data?.plan,
                   showTomorrowTag: done,
                   statuses: data?.statuses,
@@ -318,11 +333,20 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
                                           onReadAhead: () =>
                                               setState(() => _readAhead = true),
                                         )
-                                      : _Reading(
-                                          reading: d,
-                                          bookNames: bookNames,
-                                          onChange: _choosePlan,
-                                          onStart: () => _startReading(d),
+                                      : Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            _Reading(
+                                              reading: d,
+                                              bookNames: bookNames,
+                                              onChange: _choosePlan,
+                                              onStart: () => _startReading(d),
+                                            ),
+                                            WorldCompanyLine(
+                                                planKey: d.progressKey,
+                                                day: d.day!.dayIndex),
+                                          ],
                                         ),
                         ),
                         _PlanNoteCard(
@@ -1010,6 +1034,8 @@ class _DayDone extends ConsumerWidget {
         if (next > doneIndex)
           Text(DailyStrings.tomorrowDay(next),
               style: LumText.callout.copyWith(color: c.textSecondary)),
+        WorldCompanyLine(
+            planKey: reading.progressKey, day: doneIndex, finished: true),
         const SizedBox(height: 16),
         Row(
           children: [
