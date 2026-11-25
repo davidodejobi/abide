@@ -28,18 +28,64 @@ class BibleCreditsRoute extends PageRouteInfo<void> {
 
 /// generated route for
 /// [BibleReaderPage]
-class BibleReaderRoute extends PageRouteInfo<void> {
-  const BibleReaderRoute({List<PageRouteInfo>? children})
-      : super(BibleReaderRoute.name, initialChildren: children);
+class BibleReaderRoute extends PageRouteInfo<BibleReaderRouteArgs> {
+  BibleReaderRoute({
+    Key? key,
+    String? planId,
+    int? dayIndex,
+    List<PageRouteInfo>? children,
+  }) : super(
+          BibleReaderRoute.name,
+          args: BibleReaderRouteArgs(
+            key: key,
+            planId: planId,
+            dayIndex: dayIndex,
+          ),
+          initialChildren: children,
+        );
 
   static const String name = 'BibleReaderRoute';
 
   static PageInfo page = PageInfo(
     name,
     builder: (data) {
-      return const BibleReaderPage();
+      final args = data.argsAs<BibleReaderRouteArgs>(
+        orElse: () => const BibleReaderRouteArgs(),
+      );
+      return BibleReaderPage(
+        key: args.key,
+        planId: args.planId,
+        dayIndex: args.dayIndex,
+      );
     },
   );
+}
+
+class BibleReaderRouteArgs {
+  const BibleReaderRouteArgs({this.key, this.planId, this.dayIndex});
+
+  final Key? key;
+
+  final String? planId;
+
+  final int? dayIndex;
+
+  @override
+  String toString() {
+    return 'BibleReaderRouteArgs{key: $key, planId: $planId, dayIndex: $dayIndex}';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! BibleReaderRouteArgs) return false;
+    return key == other.key &&
+        planId == other.planId &&
+        dayIndex == other.dayIndex;
+  }
+
+  @override
+  int get hashCode => key.hashCode ^ planId.hashCode ^ dayIndex.hashCode;
 }
 
 /// generated route for
@@ -48,10 +94,17 @@ class BibleTabRoute extends PageRouteInfo<BibleTabRouteArgs> {
   BibleTabRoute({
     Key? key,
     bool controlsAppNav = true,
+    String? planId,
+    int? dayIndex,
     List<PageRouteInfo>? children,
   }) : super(
           BibleTabRoute.name,
-          args: BibleTabRouteArgs(key: key, controlsAppNav: controlsAppNav),
+          args: BibleTabRouteArgs(
+            key: key,
+            controlsAppNav: controlsAppNav,
+            planId: planId,
+            dayIndex: dayIndex,
+          ),
           initialChildren: children,
         );
 
@@ -63,32 +116,53 @@ class BibleTabRoute extends PageRouteInfo<BibleTabRouteArgs> {
       final args = data.argsAs<BibleTabRouteArgs>(
         orElse: () => const BibleTabRouteArgs(),
       );
-      return BibleTabScreen(key: args.key, controlsAppNav: args.controlsAppNav);
+      return BibleTabScreen(
+        key: args.key,
+        controlsAppNav: args.controlsAppNav,
+        planId: args.planId,
+        dayIndex: args.dayIndex,
+      );
     },
   );
 }
 
 class BibleTabRouteArgs {
-  const BibleTabRouteArgs({this.key, this.controlsAppNav = true});
+  const BibleTabRouteArgs({
+    this.key,
+    this.controlsAppNav = true,
+    this.planId,
+    this.dayIndex,
+  });
 
   final Key? key;
 
   final bool controlsAppNav;
 
+  final String? planId;
+
+  final int? dayIndex;
+
   @override
   String toString() {
-    return 'BibleTabRouteArgs{key: $key, controlsAppNav: $controlsAppNav}';
+    return 'BibleTabRouteArgs{key: $key, controlsAppNav: $controlsAppNav, planId: $planId, dayIndex: $dayIndex}';
   }
 
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
     if (other is! BibleTabRouteArgs) return false;
-    return key == other.key && controlsAppNav == other.controlsAppNav;
+    return key == other.key &&
+        controlsAppNav == other.controlsAppNav &&
+        planId == other.planId &&
+        dayIndex == other.dayIndex;
   }
 
   @override
-  int get hashCode => key.hashCode ^ controlsAppNav.hashCode;
+  int get hashCode =>
+      key.hashCode ^
+      controlsAppNav.hashCode ^
+      planId.hashCode ^
+      dayIndex.hashCode;
 }
 
 /// generated route for

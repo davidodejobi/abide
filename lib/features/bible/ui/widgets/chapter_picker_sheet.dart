@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:openbaptisthymnal/core/theme/app_text_styles.dart';
+import 'package:openbaptisthymnal/core/theme/lum_theme.dart';
 
 /// Shows a grid of chapter numbers for [bookName]. Returns the chosen 1-based
 /// chapter via [Navigator.pop], or null if dismissed.
@@ -38,16 +38,16 @@ class _ChapterPickerSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final c = context.lum;
     return CustomScrollView(
       slivers: [
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-            child: Text(
-              bookName,
-              style: AppTextStyles.headlineSmall
-                  .copyWith(fontWeight: FontWeight.w600),
+            child: Semantics(
+              header: true,
+              child: Text(bookName,
+                  style: LumText.title2.copyWith(color: c.textPrimary)),
             ),
           ),
         ),
@@ -64,22 +64,24 @@ class _ChapterPickerSheet extends StatelessWidget {
               (context, index) {
                 final chapter = index + 1;
                 final selected = chapter == currentChapter;
-                return Material(
-                  color: selected
-                      ? colorScheme.primary
-                      : colorScheme.surfaceContainerHighest
-                          .withValues(alpha: 0.4),
-                  borderRadius: BorderRadius.circular(10),
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(10),
-                    onTap: () => Navigator.of(context).pop(chapter),
-                    child: Center(
-                      child: Text(
-                        '$chapter',
-                        style: AppTextStyles.bodyLarge.copyWith(
-                          fontWeight:
-                              selected ? FontWeight.w700 : FontWeight.w500,
-                          color: selected ? colorScheme.onPrimary : null,
+                return Semantics(
+                  button: true,
+                  selected: selected,
+                  label: '$chapter',
+                  excludeSemantics: true,
+                  onTap: () => Navigator.of(context).pop(chapter),
+                  child: Material(
+                    color: selected ? c.bgPrimary : c.bgSurface,
+                    borderRadius: BorderRadius.circular(LumRadius.md),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(LumRadius.md),
+                      onTap: () => Navigator.of(context).pop(chapter),
+                      child: Center(
+                        child: Text(
+                          '$chapter',
+                          style: LumText.bodyEmphasized.copyWith(
+                              color:
+                                  selected ? c.textOnPrimary : c.textPrimary),
                         ),
                       ),
                     ),

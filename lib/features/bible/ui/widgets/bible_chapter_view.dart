@@ -1,19 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:openbaptisthymnal/core/storage/database/app_database.dart';
-import 'package:openbaptisthymnal/core/theme/app_text_styles.dart';
-import 'package:openbaptisthymnal/core/utils/extensions/num_extensions.dart';
-import 'package:openbaptisthymnal/core/utils/extensions/widget_extensions.dart';
+import 'package:openbaptisthymnal/core/theme/lum_theme.dart';
 import 'package:openbaptisthymnal/features/bible/domain/highlight_palette.dart';
 import 'package:openbaptisthymnal/features/bible/model/bible_chapter.dart';
 import 'package:openbaptisthymnal/features/bible/providers/bible_providers.dart';
 import 'package:openbaptisthymnal/features/bible/providers/pending_verse_highlight_provider.dart';
+import 'package:openbaptisthymnal/features/bible/ui/bible_strings.dart';
+import 'package:openbaptisthymnal/features/bible/ui/widgets/highlight_colors.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 /// Public chapter renderer. Used by the main reader and by either pane of the
-/// split view. Verse interaction (select/long-press) is optional — pass nulls
+/// split view. Verse interaction (select/long-press) is optional: pass nulls
 /// to render in read-only mode (the secondary split pane).
+///
+/// Scripture is always set in the reading style on the calm page colour, never
+/// over art. [header] scrolls with the text (the big chapter title).
 ///
 /// Honours a one-shot [pendingVerseHighlightProvider]: if the active request
 /// matches this view's edition+chapter, the verses in its range get a soft
@@ -32,12 +35,9 @@ class BibleChapterView extends ConsumerWidget {
     this.backlinkVerses = const <int>{},
     this.onTapBacklink,
     this.highlights = const <int, BibleAnnotation>{},
-    this.padding = const EdgeInsets.fromLTRB(16, 8, 16, 120),
-    this.onPrev,
-    this.onNext,
-    this.hasPrev = false,
-    this.hasNext = false,
-    this.bookName,
+    this.padding = const EdgeInsets.fromLTRB(
+        LumSize.screenGutter - 4, LumSpace.sm, LumSize.screenGutter - 4, 200),
+    this.header,
   });
 
   final String editionId;
@@ -56,19 +56,13 @@ class BibleChapterView extends ConsumerWidget {
   /// Verse number -> saved highlight annotation. Edition-independent.
   final Map<int, BibleAnnotation> highlights;
   final EdgeInsetsGeometry padding;
-
-  /// Chapter navigation callbacks (shown at the bottom of the verse list).
-  final VoidCallback? onPrev;
-  final VoidCallback? onNext;
-  final bool hasPrev;
-  final bool hasNext;
-  final String? bookName;
+  final Widget? header;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final query = (editionId: editionId, bookCode: bookCode, chapter: chapter);
     final chapterAsync = ref.watch(bibleChapterProvider(query));
-    final colorScheme = Theme.of(context).colorScheme;
+    final c = context.lum;
 
     // Read-only peek at any pending highlight. Clearing happens in the
     // stateful child's post-frame callback so we never mutate a provider
@@ -83,9 +77,12 @@ class BibleChapterView extends ConsumerWidget {
 
     return chapterAsync.when(
       loading: () => Center(
-        child: CircularProgressIndicator(color: colorScheme.primary),
+        child: CircularProgressIndicator(color: c.textSecondary),
       ),
-      error: (e, _) => const Center(child: Text('Failed to load this chapter')),
+      error: (e, _) => Center(
+        child: Text(BibleStrings.chapterLoadError,
+            style: LumText.body.copyWith(color: c.textSecondary)),
+      ),
       data: (data) => _VerseList(
         chapter: data,
         textScale: textScale,
@@ -98,11 +95,7 @@ class BibleChapterView extends ConsumerWidget {
         padding: padding,
         highlightFrom: matches ? pending.fromVerse : null,
         highlightTo: matches ? pending.toVerse : null,
-        onPrev: onPrev,
-        onNext: onNext,
-        hasPrev: hasPrev,
-        hasNext: hasNext,
-        bookName: bookName,
+        header: header,
       ),
     );
   }
@@ -121,11 +114,7 @@ class _VerseList extends ConsumerStatefulWidget {
     required this.padding,
     required this.highlightFrom,
     required this.highlightTo,
-    this.onPrev,
-    this.onNext,
-    this.hasPrev = false,
-    this.hasNext = false,
-    this.bookName,
+    required this.header,
   });
 
   final BibleChapter chapter;
@@ -139,11 +128,7 @@ class _VerseList extends ConsumerStatefulWidget {
   final EdgeInsetsGeometry padding;
   final int? highlightFrom;
   final int? highlightTo;
-  final VoidCallback? onPrev;
-  final VoidCallback? onNext;
-  final bool hasPrev;
-  final bool hasNext;
-  final String? bookName;
+  final Widget? header;
 
   @override
   ConsumerState<_VerseList> createState() => _VerseListState();
@@ -173,7 +158,7 @@ class _VerseListState extends ConsumerState<_VerseList> {
           );
           _controller.animateTo(
             estimated,
-            duration: const Duration(milliseconds: 280),
+            duration: LumMotion.base,
             curve: Curves.easeOutCubic,
           );
         }
@@ -190,178 +175,98 @@ class _VerseListState extends ConsumerState<_VerseList> {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final c = context.lum;
     final hiFrom = widget.highlightFrom;
     final hiTo = widget.highlightTo;
-
-    final showNav = widget.onNext != null || widget.onPrev != null;
+    final hasHeader = widget.header != null;
+    final scripture = LumText.readingScripture.copyWith(
+      fontSize: LumText.readingScripture.fontSize! * widget.textScale,
+      color: c.textPrimary,
+    );
+    final number = LumText.readingVerseNumber.copyWith(
+      fontSize: LumText.readingVerseNumber.fontSize! * widget.textScale,
+      color: c.textSecondary,
+    );
 
     return ListView.builder(
       controller: _controller,
       key: ValueKey('${widget.chapter.book}.${widget.chapter.chapter}'),
       padding: widget.padding,
-      itemCount: widget.chapter.verses.length + (showNav ? 1 : 0),
+      itemCount: widget.chapter.verses.length + (hasHeader ? 1 : 0),
       itemBuilder: (context, index) {
-        if (showNav && index == widget.chapter.verses.length) {
-          return _ChapterNavFooter(
-            onPrev: widget.hasPrev ? widget.onPrev : null,
-            onNext: widget.hasNext ? widget.onNext : null,
-            bookName: widget.bookName,
-            chapter: widget.chapter.chapter,
-          );
-        }
-
-        final verse = widget.chapter.verses[index];
+        if (hasHeader && index == 0) return widget.header!;
+        final verse = widget.chapter.verses[index - (hasHeader ? 1 : 0)];
         final isSelected = widget.selected.contains(verse.number);
         final hasBacklink = widget.backlinkVerses.contains(verse.number);
-        final highlightSwatch =
-            HighlightColor.fromKey(widget.highlights[verse.number]?.color)
-                ?.swatch;
-        final isHighlighted = hiFrom != null &&
+        final marked =
+            HighlightColor.fromKey(widget.highlights[verse.number]?.color);
+        final isFlashing = hiFrom != null &&
             verse.number >= hiFrom &&
             verse.number <= (hiTo ?? hiFrom);
-        return GestureDetector(
-          behavior: HitTestBehavior.opaque,
+        final fill = isSelected
+            ? c.bgAccentContainer
+            : isFlashing
+                ? c.bgAccentContainer
+                : marked != null
+                    ? highlightColorFor(c, marked)
+                    : Colors.transparent;
+        final text = Text.rich(
+          TextSpan(
+            style: scripture,
+            children: [
+              TextSpan(text: '${verse.number} ', style: number),
+              if (hasBacklink)
+                WidgetSpan(
+                  alignment: PlaceholderAlignment.middle,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: widget.onTapBacklink == null
+                        ? null
+                        : () => widget.onTapBacklink!(verse.number),
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: LumSpace.xs),
+                      child: Icon(
+                        PhosphorIcons.chatTeardropText(),
+                        size: 14 * widget.textScale,
+                        color: c.iconAccent,
+                      ),
+                    ),
+                  ),
+                ),
+              TextSpan(text: verse.text),
+            ],
+          ),
+        );
+        return Semantics(
+          selected: isSelected,
           onTap: widget.onTapVerse == null
               ? null
               : () => widget.onTapVerse!(verse.number),
           onLongPress: widget.onLongPressVerse == null
               ? null
               : () => widget.onLongPressVerse!(verse.number),
-          child: Container(
-            margin: const EdgeInsets.only(bottom: 6),
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-            decoration: BoxDecoration(
-              color: isSelected
-                  ? colorScheme.primary.withValues(alpha: 0.14)
-                  : isHighlighted
-                      ? colorScheme.secondary.withValues(alpha: 0.18)
-                      : highlightSwatch != null
-                          ? highlightSwatch.withValues(alpha: 0.35)
-                          : Colors.transparent,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: RichText(
-              text: TextSpan(
-                style: TextStyle(
-                  fontFamily: AppTextStyles.fontFamilyGeist,
-                  fontSize: 16 * widget.textScale,
-                  height: 1.5,
-                  color: colorScheme.onSurface,
-                ),
-                children: [
-                  TextSpan(
-                    text: '${verse.number}  ',
-                    style: TextStyle(
-                      fontSize: 13 * widget.textScale,
-                      color: colorScheme.primary,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  if (hasBacklink)
-                    WidgetSpan(
-                      alignment: PlaceholderAlignment.middle,
-                      child: GestureDetector(
-                        behavior: HitTestBehavior.opaque,
-                        onTap: widget.onTapBacklink == null
-                            ? null
-                            : () => widget.onTapBacklink!(verse.number),
-                        child: Padding(
-                          padding: const EdgeInsets.only(right: 4),
-                          child: Icon(
-                            PhosphorIcons.chatTeardropText(),
-                            size: 13 * widget.textScale,
-                            color: colorScheme.secondary,
-                          ),
-                        ),
-                      ),
-                    ),
-                  TextSpan(text: verse.text),
-                ],
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: widget.onTapVerse == null
+                ? null
+                : () => widget.onTapVerse!(verse.number),
+            onLongPress: widget.onLongPressVerse == null
+                ? null
+                : () => widget.onLongPressVerse!(verse.number),
+            child: AnimatedContainer(
+              duration: LumMotion.fast,
+              margin: const EdgeInsets.only(bottom: LumSpace.xs),
+              padding: const EdgeInsets.symmetric(
+                  horizontal: LumSpace.sm, vertical: LumSpace.xs),
+              decoration: BoxDecoration(
+                color: fill,
+                borderRadius: BorderRadius.circular(LumRadius.md),
               ),
+              child: text,
             ),
           ),
         );
       },
-    );
-  }
-}
-
-/// Inline prev/next buttons rendered at the bottom of the verse list so
-/// readers can advance without scrolling back to the header or the bottom bar.
-class _ChapterNavFooter extends StatelessWidget {
-  const _ChapterNavFooter({
-    required this.onPrev,
-    required this.onNext,
-    required this.bookName,
-    required this.chapter,
-  });
-
-  final VoidCallback? onPrev;
-  final VoidCallback? onNext;
-  final String? bookName;
-  final int chapter;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    // Gold reads on both grounds; primary sinks into the dark background.
-    final disabled = colorScheme.onSurface.withValues(alpha: 0.3);
-    final prevColor = onPrev != null ? colorScheme.secondary : disabled;
-    final nextColor = onNext != null ? colorScheme.secondary : disabled;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: onPrev,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(PhosphorIcons.caretLeft(), color: prevColor),
-                4.w,
-                Text(
-                  'Previous',
-                  style: AppTextStyles.bodyMedium.copyWith(color: prevColor),
-                ),
-              ],
-            ).padSymmetric(
-              vertical: 4,
-              horizontal: 8,
-            ),
-          ),
-          Flexible(
-            child: Text(
-              '${bookName ?? ''} $chapter',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: colorScheme.onSurface.withValues(alpha: 0.5),
-              ),
-            ),
-          ),
-          GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: onNext,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Next',
-                  style: AppTextStyles.bodyMedium.copyWith(color: nextColor),
-                ),
-                4.w,
-                Icon(PhosphorIcons.caretRight(), color: nextColor),
-              ],
-            ).padSymmetric(
-              vertical: 4,
-              horizontal: 8,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

@@ -4,14 +4,12 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openbaptisthymnal/core/router/app_router.dart';
-import 'package:openbaptisthymnal/core/storage/database/database_provider.dart';
 import 'package:openbaptisthymnal/core/theme/lum_theme.dart';
 import 'package:openbaptisthymnal/core/utils/time_greeting.dart';
 import 'package:openbaptisthymnal/core/widgets/lum_button.dart';
 import 'package:openbaptisthymnal/features/bible/ui/open_bible_link.dart';
 import 'package:openbaptisthymnal/features/onboarding/providers/onboarding_provider.dart';
 
-import '../domain/date_key.dart';
 import '../domain/passage_label.dart';
 import '../domain/plan_progress.dart';
 import '../domain/reading_plan.dart';
@@ -227,7 +225,7 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
                                             reading: d,
                                             bookNames: bookNames,
                                             onChange: _choosePlan,
-                                            onMarkRead: () => _markRead(d),
+                                            onStart: () => _startReading(d),
                                           ),
                           ),
                         ),
@@ -245,18 +243,17 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
 
   Future<void> _choosePlan() => showPlanPickerSheet(context);
 
-  Future<void> _markRead(TodaysReading d) {
-    final now = DateTime.now();
-    // One transaction: the calendar day feeds the streak, the plan day advances
-    // the plan. Three marks in one evening is three plan days and one streak day.
-    setState(() => _readAhead = false);
-    return ref.read(readingPlansDaoProvider).markReadingComplete(
-          dateKey: dayKey(now),
-          source: 'plan',
-          planId: d.plan.id,
-          dayIndex: d.day!.dayIndex,
-          completedAt: now,
-        );
+  /// Opens the reader on today's plan day. Mark read lives there; when it was
+  /// marked, "read ahead" is over and Today turns to evening.
+  Future<void> _startReading(TodaysReading d) async {
+    final marked = await openBibleLink(
+      context,
+      ref,
+      targetKey: openingRefFor(d.day!),
+      planId: d.plan.id,
+      dayIndex: d.day!.dayIndex,
+    );
+    if (marked == true && mounted) setState(() => _readAhead = false);
   }
 }
 
@@ -298,13 +295,13 @@ class _Reading extends ConsumerWidget {
     required this.reading,
     required this.bookNames,
     required this.onChange,
-    required this.onMarkRead,
+    required this.onStart,
   });
 
   final TodaysReading reading;
   final Map<String, String> bookNames;
   final VoidCallback onChange;
-  final VoidCallback onMarkRead;
+  final VoidCallback onStart;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -394,8 +391,7 @@ class _Reading extends ConsumerWidget {
                         style: style.copyWith(color: c.textPrimary)),
                 const SizedBox(height: 4),
                 Text(DailyStrings.chapters(_chapters(day)),
-                    style:
-                        LumText.footnote.copyWith(color: c.textSecondary)),
+                    style: LumText.footnote.copyWith(color: c.textSecondary)),
               ],
             );
             if (below) {
@@ -423,20 +419,7 @@ class _Reading extends ConsumerWidget {
         LumButton(
           label: DailyStrings.startReading,
           icon: const Icon(Icons.menu_book_outlined),
-          onPressed: () => openBibleLink(
-            context,
-            ref,
-            targetKey: openingRefFor(day),
-          ),
-        ),
-        const SizedBox(height: 12),
-        // "Mark as read" lives here until the reader (step 3) carries it; the
-        // Figma Today has only Start reading.
-        LumButton(
-          label: DailyStrings.markRead,
-          kind: LumButtonKind.secondary,
-          icon: const Icon(Icons.check_rounded),
-          onPressed: onMarkRead,
+          onPressed: onStart,
         ),
         const SizedBox(height: 8),
         Wrap(
