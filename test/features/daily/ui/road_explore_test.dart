@@ -1,9 +1,12 @@
+import 'dart:io';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:openbaptisthymnal/core/theme/app_theme.dart';
 import 'package:openbaptisthymnal/features/bible/domain/verse_ref.dart';
 import 'package:openbaptisthymnal/features/daily/domain/reading_plan.dart';
+import 'package:openbaptisthymnal/features/daily/domain/road_atlas.dart';
 import 'package:openbaptisthymnal/features/daily/domain/road_days.dart';
 import 'package:openbaptisthymnal/features/daily/domain/road_geometry.dart';
 import 'package:openbaptisthymnal/features/daily/domain/road_landmarks.dart';
@@ -324,6 +327,55 @@ void main() {
       await t.pumpAndSettle();
       expect(got?.targetKey, 'GEN.7.1');
       expect(got?.planId, isNull, reason: 'a preview never offers Mark read');
+    });
+
+    testWidgets('the day sheet lists its chapters under the region name',
+        (t) async {
+      final content = DayContent(
+        chapters: [
+          AtlasChapter.fallback('GEN', 1),
+          const AtlasChapter(
+              book: 'GEN',
+              chapter: 2,
+              regionKey: 'Eden',
+              region: 'Eden',
+              biome: 'garden',
+              tier: AtlasTier.scenic,
+              event: 'The garden'),
+        ],
+        biome: 'road',
+        tier: AtlasTier.scenic,
+        props: const [],
+        gateway: false,
+      );
+      // First chapter has no region, so the sheet shows no region row for it.
+      await open(
+          t,
+          (c) async => showStopSheet(c,
+              plan: _plan,
+              day: day,
+              status: StopStatus.ahead,
+              date: null,
+              bookNames: names,
+              content: content));
+      expect(find.text('Genesis 1'), findsOneWidget);
+      expect(find.text('Genesis 2 · The garden'), findsOneWidget);
+    });
+
+    testWidgets('the day sheet shows the region name', (t) async {
+      final atlas = RoadAtlas.parse(
+          File('assets/images/road/road_atlas.json').readAsStringSync());
+      final content = resolveDays(_plan, atlas, const {})[7]!;
+      await open(
+          t,
+          (c) async => showStopSheet(c,
+              plan: _plan,
+              day: day,
+              status: StopStatus.ahead,
+              date: null,
+              bookNames: names,
+              content: content));
+      expect(find.text(content.region!), findsOneWidget);
     });
 
     testWidgets('today can be read and marked from the road', (t) async {

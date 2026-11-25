@@ -87,6 +87,7 @@ abstract final class DailyStrings {
   static String daysRead(int n, int total) => '$n of $total days read';
   static String resumesAt(int n, int total) => 'Resumes at $n of $total days';
 
+  static String moreChapters(int n) => '+ $n more';
   static String chapters(int n) => n == 1 ? '1 chapter' : '$n chapters';
   static String doneCaps(String passage) => 'DONE · ${passage.toUpperCase()}';
   static String dayN(int n) => 'Day $n';

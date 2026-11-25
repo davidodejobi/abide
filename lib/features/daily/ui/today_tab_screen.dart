@@ -542,6 +542,7 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
     }
     final open = await showStopSheet(
       context,
+      contentLoad: roadDayContent(d.plan, dayIndex),
       plan: d.plan,
       day: day,
       status: status,
