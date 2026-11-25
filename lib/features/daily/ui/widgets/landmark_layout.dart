@@ -22,6 +22,10 @@ Rect stopFootprint(double x, double y) =>
 /// last is about 55% of the original art size).
 const landmarkScaleSteps = [1.0, .93, .86, .79];
 
+/// Landmarks the road never drops while any room exists (nativity, cross,
+/// empty tomb): placed before all others.
+const landmarkPriority = ['mat-tomb', 'mat-cross', 'mat-manger'];
+
 /// World rect (camera dy = 0, camera dx = 195) of every landmark that fits on
 /// the road, by id. A landmark stays within its own day's stretch of road
 /// (halfway to the stops either side of its own, any distance from the road
@@ -45,10 +49,21 @@ Map<String, Rect> layoutLandmarks(Map<int, List<Landmark>> byDay,
     }
   }
   moves.sort((a, b) => a.cost.compareTo(b.cost));
-  for (var slot = 0; slot < 2; slot++) {
-    for (final n in days) {
+  // Placement order: must-keep landmarks, then every day's first, then seconds.
+  final order = <(int, int)>[
+    for (final id in landmarkPriority)
+      for (final n in days)
+        for (var i = 0; i < byDay[n]!.length; i++)
+          if (byDay[n]![i].id == id) (n, i),
+    for (var slot = 0; slot < 2; slot++)
+      for (final n in days)
+        if (slot < byDay[n]!.length &&
+            !landmarkPriority.contains(byDay[n]![slot].id))
+          (n, slot),
+  ];
+  {
+    for (final (n, slot) in order) {
       final lms = byDay[n]!;
-      if (slot >= lms.length) continue;
       final st = geo.stop(n);
       final own = Offset(centreX + st.x, st.y);
       final pref = (st.x > 0 ? 1.0 : -1.0) * (slot == 0 ? 1 : -1);
