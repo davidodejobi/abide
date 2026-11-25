@@ -8,7 +8,7 @@ import 'package:openbaptisthymnal/features/tablet/ui/widgets/tag_picker_sheet.da
 
 enum _ManageAction { rename, delete }
 
-/// Bottom sheet that consolidates folder and tag filtering for the tablets tab.
+/// Bottom sheet that consolidates folder and tag filtering for the notes tab.
 /// Folder and tag filters are mutually exclusive: picking one clears the other.
 /// Also the home for folder/tag management (create, rename, delete), so removing
 /// the on-screen chip rows loses no functionality.
@@ -49,7 +49,7 @@ class TabletFilterSheet extends ConsumerWidget {
       final action = await _showManageSheet(
         context,
         deleteLabel: 'Delete folder',
-        deleteSubtitle: 'Tablets are kept and unfiled',
+        deleteSubtitle: 'Notes are kept and unfiled',
       );
       final repo = ref.read(tabletsRepositoryProvider);
       if (action == _ManageAction.rename) {
@@ -70,7 +70,7 @@ class TabletFilterSheet extends ConsumerWidget {
       final action = await _showManageSheet(
         context,
         deleteLabel: 'Delete tag',
-        deleteSubtitle: 'Tablets are kept and untagged',
+        deleteSubtitle: 'Notes are kept and untagged',
       );
       final repo = ref.read(tabletsRepositoryProvider);
       if (action == _ManageAction.rename) {
@@ -94,7 +94,7 @@ class TabletFilterSheet extends ConsumerWidget {
         children: [
           _SectionHeader(label: 'Folders', theme: theme),
           _FilterOption(
-            label: 'All tablets',
+            label: 'All notes',
             icon: PhosphorIcons.tray(),
             selected: activeFolder == null && activeTag == null,
             onTap: () => selectFolder(null),

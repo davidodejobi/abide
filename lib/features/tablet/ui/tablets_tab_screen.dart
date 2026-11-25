@@ -41,6 +41,19 @@ class TabletsTabScreen extends HookConsumerWidget {
     final total = all.valueOrNull?.length;
     final c = context.lum;
 
+    // The count follows whatever list is on screen: search hits, the active
+    // tag or folder, or every note.
+    final int? shown = query.isNotEmpty
+        ? ref.watch(tabletSearchProvider(query)).valueOrNull?.length
+        : activeTag != null
+            ? ref.watch(notesWithTagProvider(activeTag)).valueOrNull?.length
+            : activeFolder != null
+                ? ref
+                    .watch(tabletsInFolderProvider(activeFolder))
+                    .valueOrNull
+                    ?.length
+                : total;
+
     // A brand-new notebook: no notes at all, nothing typed, no filter.
     final isEmpty = total == 0 && query.isEmpty && !hasFilter;
 
@@ -111,9 +124,10 @@ class TabletsTabScreen extends HookConsumerWidget {
                           ),
                           const SizedBox(height: LumSpace.xs),
                           Text(
-                            total == null || total == 0
+                            shown == null ||
+                                    (shown == 0 && !hasFilter && query.isEmpty)
                                 ? NotesStrings.noNotesYet
-                                : NotesStrings.count(total),
+                                : NotesStrings.count(shown),
                             style: LumText.subheadline
                                 .copyWith(color: c.textSecondary),
                           ),
@@ -132,7 +146,7 @@ class TabletsTabScreen extends HookConsumerWidget {
                     onChanged: (value) => searchQuery.value = value,
                   ),
                   const SizedBox(height: LumSpace.md),
-                  const _FilterRow(),
+                  _FilterRow(showActive: query.isEmpty),
                 ],
               ],
             ),
@@ -176,7 +190,10 @@ class _NewNoteButton extends StatelessWidget {
 /// Filter chip plus, when a folder or tag is active, a selected chip naming it
 /// (tap to clear). Reuses the existing folder and tag filter sheet.
 class _FilterRow extends ConsumerWidget {
-  const _FilterRow();
+  const _FilterRow({required this.showActive});
+
+  /// The active-filter chip is hidden while a search is typed (search wins).
+  final bool showActive;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -214,7 +231,7 @@ class _FilterRow extends ConsumerWidget {
             builder: (_) => const TabletFilterSheet(),
           ),
         ),
-        if (label != null)
+        if (label != null && showActive)
           LumChip(
             label: label,
             selected: true,
@@ -436,7 +453,20 @@ class NoteCard extends ConsumerWidget {
             ? NotesStrings.voiceNote
             : (imagePath != null ? NotesStrings.photo : ''));
 
-    void delete() => ref.read(tabletsRepositoryProvider).deleteNote(note.id);
+    final repo = ref.read(tabletsRepositoryProvider);
+    final messenger = ScaffoldMessenger.of(context);
+    void delete() {
+      repo.deleteNote(note.id);
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(
+          content: const Text(NotesStrings.noteDeleted),
+          action: SnackBarAction(
+            label: NotesStrings.undo,
+            onPressed: () => repo.restoreNote(note.id),
+          ),
+        ));
+    }
 
     return Semantics(
       customSemanticsActions: {
@@ -504,7 +534,13 @@ class NoteCard extends ConsumerWidget {
                       ),
                     ],
                     const SizedBox(height: LumSpace.sm),
-                    Text(noteDateLabel(note.updatedAt, now ?? DateTime.now()),
+                    Text(
+                        noteDateLabel(
+                          note.updatedAt,
+                          now ?? DateTime.now(),
+                          use24Hour:
+                              MediaQuery.alwaysUse24HourFormatOf(context),
+                        ),
                         style:
                             LumText.footnote.copyWith(color: c.textSecondary)),
                   ],

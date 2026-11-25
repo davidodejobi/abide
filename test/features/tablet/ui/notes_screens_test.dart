@@ -1,8 +1,17 @@
+import 'dart:async';
+
+import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:openbaptisthymnal/core/storage/database/app_database.dart';
 import 'package:openbaptisthymnal/core/theme/app_theme.dart';
+import 'package:openbaptisthymnal/core/storage/database/daos/folders_dao.dart';
+import 'package:openbaptisthymnal/core/storage/database/daos/note_links_dao.dart';
+import 'package:openbaptisthymnal/core/storage/database/daos/notes_dao.dart';
+import 'package:openbaptisthymnal/core/storage/database/daos/tags_dao.dart';
+import 'package:openbaptisthymnal/features/tablet/data/repositories/tablets_repository.dart';
+import 'package:openbaptisthymnal/features/tablet/data/sources/local/tablets_local_source.dart';
 import 'package:openbaptisthymnal/features/tablet/providers/tablets_providers.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/notes_strings.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/tablets_tab_screen.dart';
@@ -24,6 +33,25 @@ List<Override> _overrides(List<Note> notes) => [
       foldersProvider.overrideWith((ref) => Stream.value(const [])),
       tagsForNoteProvider.overrideWith((ref, id) => Stream.value(const [])),
     ];
+
+/// Records delete and restore, and keeps the on-screen list in step.
+class _FakeRepo extends TabletsRepository {
+  _FakeRepo(super.local, this.list, this.out);
+
+  final List<Note> list;
+  final StreamController<List<Note>> out;
+  final calls = <String>[];
+
+  @override
+  Future<void> deleteNote(String id) async {
+    calls.add('delete $id');
+    list.removeWhere((n) => n.id == id);
+    out.add(List.of(list));
+  }
+
+  @override
+  Future<void> restoreNote(String id) async => calls.add('restore $id');
+}
 
 void main() {
   const sizes = [
@@ -86,5 +114,40 @@ void main() {
     } finally {
       semantics.dispose();
     }
+  });
+
+  testWidgets('swipe delete offers undo that restores the note', (t) async {
+    setView(t, const Size(390, 844));
+    final db = AppDatabase.forTesting(NativeDatabase.memory());
+    addTearDown(db.close);
+    final list = [_note('a', 'Abiding', 'Fruit.'), _note('b', 'Prayer', 'x')];
+    final out = StreamController<List<Note>>.broadcast();
+    addTearDown(out.close);
+    final repo = _FakeRepo(
+        TabletsLocalSource(
+            NotesDao(db), NoteLinksDao(db), FoldersDao(db), TagsDao(db)),
+        list,
+        out);
+    Stream<List<Note>> feed() async* {
+      yield List.of(list);
+      yield* out.stream;
+    }
+
+    await t.pumpWidget(appFor([
+      ..._overrides(const []),
+      tabletsListProvider.overrideWith((ref) => feed()),
+      tabletsRepositoryProvider.overrideWithValue(repo),
+    ], screen));
+    await settle(t);
+
+    await t.drag(find.text('Abiding'), const Offset(-500, 0));
+    await settle(t);
+    expect(repo.calls, ['delete a']);
+    expect(find.text(NotesStrings.noteDeleted), findsOneWidget);
+
+    await t.pump(const Duration(seconds: 1));
+    await t.tap(find.text(NotesStrings.undo));
+    await settle(t);
+    expect(repo.calls, ['delete a', 'restore a']);
   });
 }

@@ -12,6 +12,8 @@ abstract final class NotesStrings {
   static const photo = 'Photo';
   static const savedOnPhone = 'Saved on this phone';
   static const deleteNote = 'Delete note';
+  static const noteDeleted = 'Note deleted';
+  static const undo = 'Undo';
   static const emptyTitle = 'Your notes live here';
   static const emptyBody =
       'Write what you notice as you read. Link a verse or a hymn and it '
