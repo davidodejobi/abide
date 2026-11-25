@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:openbaptisthymnal/core/audio/audio_quality.dart';
+import 'package:openbaptisthymnal/features/account/providers/account_providers.dart';
+import 'package:openbaptisthymnal/features/account/ui/account_strings.dart';
+import 'package:openbaptisthymnal/features/account/ui/save_road_sheet.dart';
 import 'package:openbaptisthymnal/core/audio/audio_quality_provider.dart';
 import 'package:openbaptisthymnal/core/preferences/linking_preferences.dart';
 import 'package:openbaptisthymnal/core/providers/app_info_provider.dart';
@@ -59,6 +62,8 @@ class _SettingsTabScreenState extends ConsumerState<SettingsTabScreen>
               child: Text(YouStrings.title,
                   style: LumText.largeTitle.copyWith(color: c.textPrimary)),
             ),
+            const YouSectionLabel(AccountStrings.youSection),
+            YouGroup(children: [_AccountRow()]),
             const YouSectionLabel(YouStrings.appearance),
             YouGroup(children: [
               YouControlRow(
@@ -239,5 +244,25 @@ class _HymnLinkRow extends ConsumerWidget {
             .setDefaultHymnEdition(picked.id);
       },
     );
+  }
+}
+
+/// "Saved as x@y" once the road is saved, otherwise the way into the sheet.
+class _AccountRow extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final email = ref.watch(accountProvider).valueOrNull?.email;
+    return email != null
+        ? YouRow(
+            icon: PhosphorIcons.userCheck(),
+            title: AccountStrings.savedAs(email),
+            subtitle: AccountStrings.savedHint,
+          )
+        : YouRow(
+            icon: PhosphorIcons.userCirclePlus(),
+            title: AccountStrings.saveRow,
+            subtitle: AccountStrings.saveRowHint,
+            onTap: () => showSaveRoadSheet(context),
+          );
   }
 }
