@@ -186,7 +186,8 @@ class RoadSceneState extends State<RoadScene> with TickerProviderStateMixin {
     } else if (_landmarkPlan != plan.id) {
       _landmarks = landmarksByDay(plan, _art!.landmarks, placeArtless: true);
       final atlas = _atlas;
-      _days = atlas == null ? const {} : resolveDays(plan, atlas, _landmarks);
+      _days =
+          atlas == null ? const {} : resolvedDaysFor(plan, atlas, _landmarks);
       _landmarkPlan = plan.id;
       _windowAt = null;
       _syncWindow(_lookNow());
@@ -475,8 +476,11 @@ class RoadSceneState extends State<RoadScene> with TickerProviderStateMixin {
     final origin = box is RenderBox && box.attached
         ? box.localToGlobal(Offset.zero)
         : Offset.zero;
-    cb(lm, n, Rect.fromLTWH(r.left * k, r.top * k, r.width * k, r.height * k)
-        .shift(origin));
+    cb(
+        lm,
+        n,
+        Rect.fromLTWH(r.left * k, r.top * k, r.width * k, r.height * k)
+            .shift(origin));
   }
 
   void _onTap(TapUpDetails d) {
@@ -612,8 +616,8 @@ class RoadSceneState extends State<RoadScene> with TickerProviderStateMixin {
             child: _PanelRider(
               panelTop: widget.visibleBottom,
               fallback: 392 * _k,
-              builder: (hidden) => _BackPill(
-                  visible: _showBack && !hidden, onTap: backToToday),
+              builder: (hidden) =>
+                  _BackPill(visible: _showBack && !hidden, onTap: backToToday),
               hide: widget.hideBack,
             ),
           ),
@@ -795,9 +799,13 @@ class _Hit {
 /// Things that outlive a painter instance: shaders, paints, text layouts.
 class _Cache {
   final hits = <_Hit>[];
+
   /// Ids of the landmark sprites drawn in the last paint, for tests.
   final drawn = <String>{};
   final text = <String, TextPainter>{};
+  final arch = Path();
+  TextStyle? gateStyle;
+  bool gateStyleDark = false;
   final filters = <int, ColorFilter>{};
   final sprite = Paint()..filterQuality = FilterQuality.medium;
   final fill = Paint();
@@ -840,13 +848,38 @@ const _propScale = {
 };
 const _water = {'spring', 'well', 'water-jar', 'boat', 'cup'};
 const _stone = {
-  'rock', 'cairn', 'river-stones', 'tablet', 'ruins', 'tomb-stone', 'wall',
-  'cave-mouth', 'altar', 'city-gate', 'tower', 'broken-spear', 'chain-broken',
+  'rock',
+  'cairn',
+  'river-stones',
+  'tablet',
+  'ruins',
+  'tomb-stone',
+  'wall',
+  'cave-mouth',
+  'altar',
+  'city-gate',
+  'tower',
+  'broken-spear',
+  'chain-broken',
 };
 const _leafy = {
-  'cedar', 'fig-tree', 'olive-tree', 'palm', 'fruit-tree', 'vine', 'tree',
+  'cedar',
+  'fig-tree',
+  'olive-tree',
+  'palm',
+  'fruit-tree',
+  'vine',
+  'tree',
 };
-const _bloom = {'lily', 'wheat-sheaf', 'seed', 'bread', 'sheep', 'lamb', 'dove'};
+const _bloom = {
+  'lily',
+  'wheat-sheaf',
+  'seed',
+  'bread',
+  'sheep',
+  'lamb',
+  'dove'
+};
 
 /// The generic sprite that stands in for an atlas prop until it has art of its
 /// own; anything unlisted is a bush.
@@ -1008,6 +1041,7 @@ class _RoadPainter extends CustomPainter {
       sp.color = const Color(0xFFFFFFFF);
     }
     _ground(canvas, dusk, cam);
+    _washes(canvas, look, cam, dusk);
     _road(canvas, look, dusk, cam);
     _worldSprites(canvas, sp, pos, look, cam, pulse, dusk, tint);
     _mist(canvas, dusk);
@@ -1074,28 +1108,32 @@ class _RoadPainter extends CustomPainter {
       final landLow = _l(c.sceneMeadowBottom, c.sceneDuskLand, dusk);
       final clear = land.withValues(alpha: 0);
       cache.groundPaint = Paint()
-        ..shader = ui.Gradient.linear(
-            const Offset(0, 120),
-            Offset(0, ch),
-            [
-              clear,
-              land.withValues(alpha: .25),
-              land.withValues(alpha: .7),
-              land,
-              landLow
-            ],
-            const [0, .07, .15, .27, 1]);
+        ..shader = ui.Gradient.linear(const Offset(0, 120), Offset(0, ch), [
+          clear,
+          land.withValues(alpha: .25),
+          land.withValues(alpha: .7),
+          land,
+          landLow
+        ], const [
+          0,
+          .07,
+          .15,
+          .27,
+          1
+        ]);
       cache.mistPaint = Paint()
-        ..shader = ui.Gradient.linear(
-            const Offset(0, 30),
-            const Offset(0, 240),
-            [
-              hor.withValues(alpha: .98),
-              hor.withValues(alpha: .7),
-              hor.withValues(alpha: .28),
-              hor.withValues(alpha: 0),
-            ],
-            const [0, .4, .75, 1]);
+        ..shader =
+            ui.Gradient.linear(const Offset(0, 30), const Offset(0, 240), [
+          hor.withValues(alpha: .98),
+          hor.withValues(alpha: .7),
+          hor.withValues(alpha: .28),
+          hor.withValues(alpha: 0),
+        ], const [
+          0,
+          .4,
+          .75,
+          1
+        ]);
       cache.dusk = settled ? dusk : null;
       cache.dark = dark;
       cache.ch = ch;
@@ -1212,7 +1250,6 @@ class _RoadPainter extends CustomPainter {
       // Above the haze nothing shows: skip it, and its hit target with it.
       if (y < 24) continue;
       final day = days[n];
-      if (day != null) _wash(canvas, n, day, cam, dusk);
       if (lms == null || lms.length < 2) _props(canvas, sp, n, cam, day);
       if (n < 1 || n > total) continue;
       if (day != null && day.gateway) _gateway(canvas, n, day, cam, dusk);
@@ -1225,19 +1262,30 @@ class _RoadPainter extends CustomPainter {
     }
   }
 
-  /// A soft patch of the day's biome colour on the meadow beside the stop: one
-  /// oval each side, so a region reads as a change of ground.
-  void _wash(Canvas canvas, int n, DayContent day, Offset cam, double dusk) {
-    final col = _biomeWash[day.biome];
-    if (col == null) return;
-    final s = _stopAt(n, cam);
-    final f = cache.fill
-      ..color = col.withValues(alpha: (dark ? .16 : .22) * (1 - dusk * .4));
-    for (final side in const [-1.0, 1.0]) {
-      canvas.drawOval(
-          Rect.fromCenter(
-              center: Offset(195 + side * 112, s.dy + 8), width: 150, height: 60),
-          f);
+  /// Soft patches of each day's biome colour on the meadow beside its stop (one
+  /// oval each side), so a region reads as a change of ground. Its own pass,
+  /// after the ground and before the road, so it never tints the road or any
+  /// sprite.
+  void _washes(Canvas canvas, double look, Offset cam, double dusk) {
+    if (days.isEmpty) return;
+    final v =
+        geo.visibleStops(look, top: 20, bottom: ch + 40, focus: focusOf());
+    final a = (dark ? .16 : .22) * (1 - dusk * .4);
+    final f = cache.fill;
+    for (var n = v.last; n >= v.first; n--) {
+      final col = _biomeWash[days[n]?.biome];
+      if (col == null) continue;
+      final y = _stopAt(n, cam).dy;
+      if (y < 24) continue;
+      f.color = col.withValues(alpha: a);
+      for (final side in const [-1.0, 1.0]) {
+        canvas.drawOval(
+            Rect.fromCenter(
+                center: Offset(195 + side * 112, y + 8),
+                width: 150,
+                height: 60),
+            f);
+      }
     }
   }
 
@@ -1252,23 +1300,27 @@ class _RoadPainter extends CustomPainter {
       ..strokeWidth = 4
       ..color = wood;
     const half = 24.0, rise = 30.0;
-    canvas.drawLine(base.translate(-half, 0), base.translate(-half, -rise), post);
+    canvas.drawLine(
+        base.translate(-half, 0), base.translate(-half, -rise), post);
     canvas.drawLine(base.translate(half, 0), base.translate(half, -rise), post);
     canvas.drawPath(
-        Path()
+        cache.arch
+          ..reset()
           ..moveTo(base.dx - half - 5, base.dy - rise + 3)
-          ..quadraticBezierTo(
-              base.dx, base.dy - rise - 16, base.dx + half + 5, base.dy - rise + 3),
+          ..quadraticBezierTo(base.dx, base.dy - rise - 16, base.dx + half + 5,
+              base.dy - rise + 3),
         post..strokeWidth = 5);
     final name = day.region;
     if (name == null) return;
-    final tp = _text(
-        'g$n',
-        name,
-        LumText.roadLabelCaps11.copyWith(
-            color: dark ? const Color(0xFFF4F6FA) : c.sceneStopOnUpcoming,
-            shadows: const [Shadow(color: Color(0x88000000), blurRadius: 3)]),
-        maxWidth: 150);
+    if (cache.gateStyle == null || cache.gateStyleDark != dark) {
+      cache.gateStyleDark = dark;
+      cache.gateStyle = LumText.roadLabelCaps11.copyWith(
+          color: dark ? const Color(0xFFF4F6FA) : c.sceneStopOnUpcoming,
+          shadows: const [Shadow(color: Color(0x88000000), blurRadius: 3)]);
+    }
+    // Keyed by the name, not the stop: the same stop number means another
+    // region once the plan changes.
+    final tp = _text('g$name', name, cache.gateStyle!, maxWidth: 150);
     tp.paint(canvas,
         Offset(base.dx - tp.width / 2, base.dy - rise - 18 - tp.height));
   }
@@ -1283,14 +1335,11 @@ class _RoadPainter extends CustomPainter {
     // A minor day shows its atlas prop (nearest generic sprite) each side; any
     // other day keeps the old hashed scatter.
     final atlas = day?.props ?? const <String>[];
-    final kinds = atlas.isEmpty
-        ? [_propKinds[h % _propKinds.length]]
-        : [
-            for (final p in atlas) _genericFor(p),
-            if (atlas.length == 1) _genericFor(atlas.first),
-          ];
-    for (var i = 0; i < kinds.length; i++) {
-      final kind = kinds[i];
+    final count = atlas.isEmpty ? 1 : 2;
+    for (var i = 0; i < count; i++) {
+      final kind = atlas.isEmpty
+          ? _propKinds[h % _propKinds.length]
+          : _genericFor(atlas[i < atlas.length ? i : 0]);
       final img = art?[kind];
       if (img == null) continue;
       final hh2 = _hash(n * 3 + i + 77);

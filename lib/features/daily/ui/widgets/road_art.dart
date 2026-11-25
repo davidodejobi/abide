@@ -1,5 +1,6 @@
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart' show compute;
 import 'package:flutter/services.dart';
 
 import '../../domain/reading_plan.dart';
@@ -113,20 +114,36 @@ Future<RoadAtlas>? _atlasMemo;
 /// kept, so a later mount can retry.
 Future<RoadAtlas> loadRoadAtlas() => _atlasMemo ??= rootBundle
         .loadString('assets/images/road/road_atlas.json')
-        .then(RoadAtlas.parse)
+        .then((s) => compute(RoadAtlas.parse, s))
         .catchError((Object e) {
       _atlasMemo = null;
       throw e;
     });
 
+ReadingPlan? _resolvedPlan;
+Map<int, DayContent> _resolvedDays = const {};
+
+/// Resolves [plan] against [atlas], remembering the last result so the scene
+/// and the day sheet share one resolution instead of each computing it.
+Map<int, DayContent> resolvedDaysFor(
+    ReadingPlan plan, RoadAtlas atlas, Map<int, List<Landmark>> landmarks) {
+  if (!identical(_resolvedPlan, plan)) {
+    _resolvedDays = resolveDays(plan, atlas, landmarks);
+    _resolvedPlan = plan;
+  }
+  return _resolvedDays;
+}
+
 /// What the road shows at [dayIndex] of [plan] (region, chapters), or null if
-/// the art or atlas cannot load. Same resolution the painter uses.
+/// the art or atlas cannot load. Reuses the scene's resolution when it has one.
 Future<DayContent?> roadDayContent(ReadingPlan plan, int dayIndex) async {
   try {
     final art = await RoadArt.load();
     final atlas = await loadRoadAtlas();
-    final lms = landmarksByDay(plan, art.landmarks, placeArtless: true);
-    return resolveDays(plan, atlas, lms)[dayIndex];
+    final lms = identical(_resolvedPlan, plan)
+        ? const <int, List<Landmark>>{}
+        : landmarksByDay(plan, art.landmarks, placeArtless: true);
+    return resolvedDaysFor(plan, atlas, lms)[dayIndex];
   } catch (_) {
     return null;
   }
