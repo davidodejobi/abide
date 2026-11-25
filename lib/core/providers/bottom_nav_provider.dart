@@ -26,7 +26,7 @@ enum BottomNavTab {
   notes(1, 'Notes'),
   songs(2, 'Songs'),
   bible(3, 'Bible'),
-  settings(4, 'Settings');
+  settings(4, 'You');
 
   const BottomNavTab(this.tabIndex, this.label);
 
