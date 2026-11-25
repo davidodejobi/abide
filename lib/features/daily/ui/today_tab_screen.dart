@@ -115,14 +115,18 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
       total = data.plan.dayCount;
     }
 
-    final doneDay = done ? data.plan.dayAt(doneIndex) : null;
+    // The collapsed panel's chip: today's day and passage, or tomorrow's once
+    // today is read.
+    final nextPassage = hasPlan && !data.isFinished
+        ? formatPassages(data.day!.passages, bookNames)
+        : '';
     final peekLabel = !hasPlan
         ? DailyStrings.choosePlan
         : data.isFinished
             ? DailyStrings.planCompleteTitle
             : done
-                ? '${DailyStrings.dayN(doneIndex)} · ${doneDay == null ? '' : formatPassages(doneDay.passages, bookNames)}'
-                : '${DailyStrings.dayN(data.day!.dayIndex)} · ${formatPassages(data.day!.passages, bookNames)}';
+                ? '${DailyStrings.tomorrow} · $nextPassage'
+                : '${DailyStrings.dayN(data.day!.dayIndex)} · $nextPassage';
 
     // At large text the chip would squeeze the greeting to a sliver: it drops
     // under it instead.
@@ -155,18 +159,26 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
               ((done ? 404 : 392) * k - inset).clamp(0.0, h * .55).toDouble();
           // Large text: the header below the status bar pushes the panel down
           // rather than sliding under it.
-          panelTop = math.max(
-              panelTop,
-              math.min(_headerHeight(context, headText, width, streak.isActive, stackChip),
-                  h * .7));
-          final defaultF = ((h - panelTop) / h).clamp(.2, .9).toDouble();
-          // Peek: a chip above the floating tab bar.
+          // The measured greeting block once laid out, an estimate before.
+          final headerH = _headerH ??
+              _headerHeight(
+                  context, headText, width, streak.isActive, stackChip);
+          panelTop = math.max(panelTop, math.min(headerH, h * .7));
+          // Peek: a chip above the floating tab bar; the default panel always
+          // stands clear above it.
           final tabClear = LumSize.tabBar +
               math.max(vp.bottom / view.devicePixelRatio, 8) +
               12;
-          final peekF = math.min((_peekChip + tabClear) / h, defaultF * .8);
-          final expandedF = math.max((h - 96) / h, defaultF + .05).clamp(0, 1);
+          final peekF = ((_peekChip + tabClear) / h).clamp(.1, .6).toDouble();
+          final defaultF =
+              ((h - panelTop) / h).clamp(peekF + .08, .9).toDouble();
+          // Expanded stops under the greeting, never over it.
+          final expandedF = math.max((h - headerH) / h, defaultF).clamp(0, 1);
+          if (_snap.length != 1 || _snap.first != defaultF) {
+            _snap = [defaultF];
+          }
           _layout(h, inset, defaultF, peekF);
+          WidgetsBinding.instance.addPostFrameCallback((_) => _measureHeader());
           final reduce = MediaQuery.disableAnimationsOf(context);
 
           return Stack(
@@ -179,6 +191,7 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
                   width: width,
                   height: h + inset,
                   visibleBottom: _vb,
+                  hideBack: _expanded,
                   mood: mood,
                   currentDay: currentDay,
                   totalDays: total,
@@ -200,10 +213,16 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
                   valueListenable: _collapse,
                   builder: (_, p, child) => IgnorePointer(
                     ignoring: p > .3,
-                    child: Opacity(
-                        opacity: (1 - p * 2.5).clamp(0.0, 1.0), child: child),
+                    // Covered by the panel (or hidden), the greeting is not
+                    // for a screen reader either.
+                    child: ExcludeSemantics(
+                      excluding: p > .3 || p < -.05,
+                      child: Opacity(
+                          opacity: (1 - p * 2.5).clamp(0.0, 1.0), child: child),
+                    ),
                   ),
                   child: Padding(
+                    key: _headerKey,
                     padding: const EdgeInsets.fromLTRB(LumSize.screenGutter + 4,
                         24, LumSize.screenGutter + 4, LumSpace.lg),
                     child: Flex(
@@ -249,7 +268,7 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
                   minChildSize: peekF,
                   maxChildSize: expandedF.toDouble(),
                   snap: true,
-                  snapSizes: [defaultF],
+                  snapSizes: _snap,
                   snapAnimationDuration:
                       Duration(milliseconds: reduce ? 1 : 280),
                   shouldCloseOnMinExtent: false,
@@ -307,9 +326,40 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
   final _sheet = DraggableScrollableController();
   late final _vb = ValueNotifier<double>(_vbNow());
   final _collapse = ValueNotifier<double>(0);
+  final _expanded = ValueNotifier<bool>(false);
   double _h = 0, _inset = 0, _defaultF = .5, _peekF = .2;
+  List<double> _snap = const [.5];
 
-  double _vbNow() => (1 - _fraction) * _h + _inset;
+  /// The greeting block, measured; null until the first layout.
+  final _headerKey = GlobalKey();
+  double? _headerH;
+
+  void _measureHeader() {
+    final box = _headerKey.currentContext?.findRenderObject() as RenderBox?;
+    if (!mounted || box == null || !box.hasSize) return;
+    if ((_headerH ?? -9) != box.size.height &&
+        ((_headerH ?? 0) - box.size.height).abs() > 1) {
+      setState(() => _headerH = box.size.height);
+    }
+  }
+
+  /// 0 at the default size, 1 at the peek, below 0 when expanded.
+  double _progress() {
+    final span = _peekF - _defaultF;
+    return span == 0
+        ? 0
+        : ((_fraction - _defaultF) / span).clamp(-1.0, 1.0).toDouble();
+  }
+
+  /// Where the road's usable area ends (px from the scene's top): the panel's
+  /// top, less the peek chip as it collapses so no stop hides under it, and
+  /// never above the default so the road does not scroll up behind a panel
+  /// that is expanding.
+  double _vbNow() {
+    final raw = (1 - _fraction) * _h + _inset;
+    final base = (1 - _defaultF) * _h + _inset;
+    return math.max(raw - _peekChip * math.max(_progress(), 0), base);
+  }
 
   double get _fraction => _sheet.isAttached ? _sheet.size : _defaultF;
 
@@ -334,9 +384,8 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
   void _sync() {
     if (!mounted || _h == 0) return;
     _vb.value = _vbNow();
-    final span = _peekF - _defaultF;
-    _collapse.value =
-        span == 0 ? 0 : ((_fraction - _defaultF) / span).clamp(0.0, 1.0);
+    _collapse.value = _progress();
+    _expanded.value = _progress() < -.05;
   }
 
   void _onSheet() {
@@ -371,6 +420,7 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
     _sheet.dispose();
     _vb.dispose();
     _collapse.dispose();
+    _expanded.dispose();
     super.dispose();
   }
 
@@ -489,6 +539,8 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
 /// bottom sheet: dragged down it melts into a small "Day N · passage" chip
 /// above the tab bar so the road fills the screen; the chip (or a drag) brings
 /// it back. [collapse] runs 0 (open) to 1 (chip).
+const double _peekChipHeight = 64;
+
 class _Sheet extends StatelessWidget {
   const _Sheet({
     required this.scroll,
@@ -535,7 +587,8 @@ class _Sheet extends StatelessWidget {
           clipBehavior: Clip.none,
           children: [
             Positioned.fill(
-              child: DecoratedBox(
+              child: IgnorePointer(
+                child: DecoratedBox(
                 decoration: BoxDecoration(
                   color: c.scenePanel.withValues(alpha: open),
                   borderRadius:
@@ -550,10 +603,22 @@ class _Sheet extends StatelessWidget {
                   ],
                 ),
               ),
+              ),
             ),
+            // At the peek only a narrow strip around the chip takes touches;
+            // the rest of the (transparent) sheet lets the road through.
             Positioned.fill(
-              child: Opacity(
-                  opacity: (1 - p * 2.5).clamp(0.0, 1.0), child: content),
+              child: LayoutBuilder(
+                builder: (_, box) => Align(
+                  alignment: Alignment.topCenter,
+                  child: SizedBox(
+                    height: p > .9 ? _peekChipHeight : box.maxHeight,
+                    child: Opacity(
+                        opacity: (1 - p * 2.5).clamp(0.0, 1.0),
+                        child: content),
+                  ),
+                ),
+              ),
             ),
             Positioned(
               top: 9,
@@ -614,6 +679,7 @@ class _PeekChip extends StatelessWidget {
       child: Semantics(
         button: true,
         label: label,
+        hint: DailyStrings.opensReading,
         excludeSemantics: true,
         onTap: onTap,
         child: GestureDetector(

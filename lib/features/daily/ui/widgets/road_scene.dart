@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
@@ -43,6 +44,7 @@ class RoadScene extends StatefulWidget {
     this.showTomorrowTag = false,
     this.height,
     this.visibleBottom,
+    this.hideBack,
     this.onStopTap,
     this.onLandmarkTap,
   });
@@ -56,6 +58,10 @@ class RoadScene extends StatefulWidget {
   /// road above it, so the scene resizes smoothly with the panel. Null: the
   /// panel sits at its design position.
   final ValueListenable<double>? visibleBottom;
+
+  /// True while the panel covers the top of the scene: "Back to today"
+  /// would sit under the greeting, so it hides.
+  final ValueListenable<bool>? hideBack;
 
   /// Called with the day number of a tapped stop.
   final void Function(int day)? onStopTap;
@@ -129,6 +135,7 @@ class RoadSceneState extends State<RoadScene> with TickerProviderStateMixin {
     super.initState();
     _from = _to = _target;
     _dusk0 = _dusk1 = _duskTarget;
+    widget.visibleBottom?.addListener(_panelMoved);
     RoadArt.load().then((a) {
       if (!mounted) return;
       setState(() {
@@ -319,6 +326,10 @@ class RoadSceneState extends State<RoadScene> with TickerProviderStateMixin {
   @override
   void didUpdateWidget(RoadScene oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.visibleBottom != widget.visibleBottom) {
+      oldWidget.visibleBottom?.removeListener(_panelMoved);
+      widget.visibleBottom?.addListener(_panelMoved);
+    }
     _syncLandmarks();
     _syncWindow(_target);
     if (_exploreAt != null) {
@@ -374,6 +385,8 @@ class RoadSceneState extends State<RoadScene> with TickerProviderStateMixin {
 
   @override
   void dispose() {
+    widget.visibleBottom?.removeListener(_panelMoved);
+    _settle?.cancel();
     _walk.dispose();
     _ambient.dispose();
     _fade.dispose();
@@ -435,6 +448,17 @@ class RoadSceneState extends State<RoadScene> with TickerProviderStateMixin {
   Offset _cameraAt(double look) {
     final c = _geo.camera(look, focus: _focus);
     return Offset(c.x, c.y);
+  }
+
+  Timer? _settle;
+
+  /// The panel moves by repaint only; once it rests, rebuild so the semantics
+  /// map (which stops are above the panel) follows it.
+  void _panelMoved() {
+    _settle?.cancel();
+    _settle = Timer(const Duration(milliseconds: 160), () {
+      if (mounted) setState(() {});
+    });
   }
 
   double get _k => widget.width / RoadScene.designWidth;
@@ -518,7 +542,9 @@ class RoadSceneState extends State<RoadScene> with TickerProviderStateMixin {
             child: _PanelRider(
               panelTop: widget.visibleBottom,
               fallback: 392 * _k,
-              child: _BackPill(visible: _showBack, onTap: backToToday),
+              builder: (hidden) => _BackPill(
+                  visible: _showBack && !hidden, onTap: backToToday),
+              hide: widget.hideBack,
             ),
           ),
         ],
@@ -543,7 +569,7 @@ class RoadSceneState extends State<RoadScene> with TickerProviderStateMixin {
     for (var n = first; n <= last; n++) {
       final s = _geo.stop(n);
       final c = Offset(s.x + cam.dx, s.y + cam.dy);
-      if (c.dy < 0 || c.dy > limit) continue;
+      if (c.dy < 24 || c.dy > limit) continue;
       final state = current == null || n < current
           ? DailyStrings.stopDone
           : n == current
@@ -584,11 +610,15 @@ class RoadSceneState extends State<RoadScene> with TickerProviderStateMixin {
 /// Puts [child] bottom-right, resting 12 px above the panel's top edge.
 class _PanelRider extends StatelessWidget {
   const _PanelRider(
-      {required this.panelTop, required this.fallback, required this.child});
+      {required this.panelTop,
+      required this.fallback,
+      required this.builder,
+      this.hide});
 
   final ValueListenable<double>? panelTop;
   final double fallback;
-  final Widget child;
+  final Widget Function(bool hidden) builder;
+  final ValueListenable<bool>? hide;
 
   @override
   Widget build(BuildContext context) {
@@ -598,7 +628,11 @@ class _PanelRider extends StatelessWidget {
             child: Padding(
               padding: EdgeInsets.only(
                   bottom: (box.maxHeight - top + 12).clamp(0.0, box.maxHeight)),
-              child: child,
+              child: hide == null
+                  ? builder(false)
+                  : ValueListenableBuilder<bool>(
+                      valueListenable: hide!,
+                      builder: (_, h, __) => builder(h)),
             ),
           );
       final l = panelTop;
@@ -689,7 +723,7 @@ class _Cache {
     ..strokeCap = StrokeCap.round
     ..strokeJoin = StrokeJoin.round;
   final glow = Paint();
-  final layer = Paint();
+  final soft = const MaskFilter.blur(BlurStyle.normal, 3);
   final shadow = Paint()..color = const Color(0x33000000);
 
   bool? dark;
@@ -800,7 +834,9 @@ class _RoadPainter extends CustomPainter {
     final st = geo.stop(n);
     final side = (st.x > 0 ? 1.0 : -1.0) * (slot == 0 ? 1 : -1);
     const w = 672 * _s * _landmarkScale, h = 576 * _s * _landmarkScale;
-    final cx = st.x + cam.dx + side * 78, bottom = st.y + cam.dy + 18;
+    // Locked camera x: pull an outboard sprite in so all of it stays on screen.
+    final cx = (st.x + cam.dx + side * 78).clamp(w / 2 + 4, 390 - w / 2 - 4),
+        bottom = st.y + cam.dy + 18;
     return Rect.fromLTWH(cx - w / 2, bottom - h * .86, w, h);
   }
 
@@ -907,8 +943,16 @@ class _RoadPainter extends CustomPainter {
         ..shader = ui.Gradient.linear(const Offset(0, 120), Offset(0, ch),
             [clear, land, landLow], [0, .2, 1]);
       cache.mistPaint = Paint()
-        ..shader = ui.Gradient.linear(const Offset(0, 40), const Offset(0, 215),
-            [hor.withValues(alpha: .96), hor.withValues(alpha: 0)]);
+        ..shader = ui.Gradient.linear(
+            const Offset(0, 30),
+            const Offset(0, 240),
+            [
+              hor.withValues(alpha: .98),
+              hor.withValues(alpha: .7),
+              hor.withValues(alpha: .28),
+              hor.withValues(alpha: 0),
+            ],
+            const [0, .4, .75, 1]);
       cache.dusk = settled ? dusk : null;
       cache.dark = dark;
       cache.ch = ch;
@@ -922,19 +966,29 @@ class _RoadPainter extends CustomPainter {
     final src =
         Rect.fromLTWH(0, 0, cloud.width.toDouble(), cloud.height.toDouble());
     // The top layer of the sky: they drift over the far road, thin enough that
-    // a stop under one still reads. Dark mode: dim wisps, not grey blobs.
-    final alpha = dark ? .2 : .5;
+    // a stop under one still reads. Night: faint blue wisps with soft edges.
+    final saved = sp.colorFilter;
+    if (dark) {
+      sp
+        ..colorFilter = cache.filter(const Color(0xFF6B7BA8))
+        ..maskFilter = cache.soft;
+    }
     for (var i = 0; i < 3; i++) {
       // 96 s at 12 or 6 px/s is a whole number of 576 px laps, so the loop
       // restarts unseen, and the lap starts and ends off screen (no pop-in).
       final x = ((secs * (i == 0 ? 12 : 6) + i * 200) % 576) - 190;
       final y = 46.0 + i * 34 + _drift(cam, 12);
       final w = (170 - i * 28).toDouble();
-      // Smaller, farther clouds are fainter.
-      sp.color = Color.fromRGBO(255, 255, 255, alpha * (1 - i * .18));
+      // Smaller, farther clouds are fainter; lower ones, over the road band,
+      // fainter still.
+      final a = (dark ? .13 : .5) * (1 - i * .18) * (y > 90 ? .6 : 1);
+      sp.color = Color.fromRGBO(255, 255, 255, a);
       canvas.drawImageRect(cloud, src, Rect.fromLTWH(x, y, w, w * 0.48), sp);
     }
-    sp.color = const Color(0xFFFFFFFF);
+    sp
+      ..maskFilter = null
+      ..colorFilter = saved
+      ..color = const Color(0xFFFFFFFF);
   }
 
   int _hash(int n) {
@@ -1012,39 +1066,17 @@ class _RoadPainter extends CustomPainter {
       final lms = landmarks[n];
       // Two landmarks take both sides of the stop: no prop to crowd them.
       final y = _stopAt(n, cam).dy;
-      if (y < -60) continue; // fully inside the haze
-      if (lms == null || lms.length < 2) {
-        final l = _fadeIn(canvas, y + 30);
-        _props(canvas, sp, n, cam);
-        if (l) canvas.restore();
-      }
+      // Above the haze nothing shows: skip it, and its hit target with it.
+      if (y < 24) continue;
+      if (lms == null || lms.length < 2) _props(canvas, sp, n, cam);
       if (n < 1 || n > total) continue;
       if (lms != null) {
         for (var i = 0; i < lms.length; i++) {
-          final l = _fadeIn(canvas, y + 18);
           _landmark(canvas, sp, n, lms[i], i, pos, cam, pulse, tint);
-          if (l) canvas.restore();
         }
       }
-      final l = _fadeIn(canvas, y);
       _stop(canvas, sp, n, pos, cam, pulse, dusk);
-      if (l) canvas.restore();
     }
-  }
-
-  /// Things rise out of the horizon haze instead of popping in at the edge of
-  /// the window: opaque below y 160, clear above 50 (under the greeting).
-  static double _rise(double y) => ((y - 50) / 110).clamp(0.0, 1.0);
-
-  /// Opens a fade layer for something standing at screen [y] when it is in the
-  /// haze band; returns whether the caller must `restore()`. Only the one or
-  /// two items at the edge ever pay for the layer.
-  bool _fadeIn(Canvas canvas, double y) {
-    final a = _rise(y);
-    if (a >= 1) return false;
-    canvas.saveLayer(Rect.fromLTRB(-40, y - 140, 430, y + 90),
-        cache.layer..color = Color.fromRGBO(0, 0, 0, a));
-    return true;
   }
 
   void _props(Canvas canvas, Paint sp, int n, Offset cam) {
@@ -1235,7 +1267,7 @@ class _RoadPainter extends CustomPainter {
   }
 
   void _mist(Canvas canvas, double dusk) {
-    canvas.drawRect(const Rect.fromLTWH(0, 0, 390, 215), cache.mistPaint!);
+    canvas.drawRect(const Rect.fromLTWH(0, 0, 390, 240), cache.mistPaint!);
   }
 
   // -------------------------------------------------------------- traveller
@@ -1286,16 +1318,21 @@ class _RoadPainter extends CustomPainter {
           ..layout(maxWidth: maxWidth));
   }
 
-  Rect _chip(
-      Canvas canvas, Offset anchorBottomCenter, TextPainter tp, double alpha) {
+  /// Where a chip anchored at [anchorBottomCenter] lands (x kept on screen).
+  RRect _chipRect(Offset anchorBottomCenter, TextPainter tp) {
     final w = tp.width + 20;
     final cx = anchorBottomCenter.dx.clamp(8 + w / 2, 382 - w / 2).toDouble();
-    final r = RRect.fromRectAndRadius(
+    return RRect.fromRectAndRadius(
         Rect.fromCenter(
             center: Offset(cx, anchorBottomCenter.dy - 12),
             width: w,
             height: tp.height + 10),
         const Radius.circular(LumRadius.full));
+  }
+
+  Rect _chip(
+      Canvas canvas, Offset anchorBottomCenter, TextPainter tp, double alpha) {
+    final r = _chipRect(anchorBottomCenter, tp);
     cache.fill.color = c.scenePanel.withValues(alpha: alpha);
     canvas.drawRRect(r, cache.fill);
     final s = cache.stroke
@@ -1308,7 +1345,7 @@ class _RoadPainter extends CustomPainter {
 
   void _labels(Canvas canvas, double pos, Offset cam) {
     final settled = walk.value == 0 || walk.value == 1;
-    Rect? taken;
+    final taken = <Rect>[];
     for (final h in cache.hits) {
       final here = settled && (pos - h.n).abs() < .01;
       if (!here) continue;
@@ -1318,7 +1355,8 @@ class _RoadPainter extends CustomPainter {
           LumText.caption
               .copyWith(color: c.textPrimary, fontWeight: FontWeight.w600),
           maxWidth: 220);
-      taken = _chip(canvas, Offset(h.rect.center.dx, h.rect.top + 8), tp, 1);
+      taken.add(_chip(
+          canvas, Offset(h.rect.center.dx, h.rect.top + 8), tp, 1));
     }
     if (showTomorrowTag && settled) {
       final s = _stopAt(to.round(), cam);
@@ -1328,14 +1366,13 @@ class _RoadPainter extends CustomPainter {
           LumText.caption
               .copyWith(color: c.textPrimary, fontWeight: FontWeight.w600));
       var at = Offset(s.dx, s.dy - 40);
-      // Never on top of the landmark chip: stand above it.
-      if (taken != null) {
-        final w = tp.width + 20, hh = tp.height + 10;
-        final mine = Rect.fromCenter(
-            center: at.translate(0, -12), width: w, height: hh);
-        if (mine.overlaps(taken.inflate(2))) {
-          at = Offset(at.dx, taken.top - 4 - hh / 2 + 12);
-        }
+      // Never on top of a landmark chip: climb above every one it meets.
+      for (var i = 0; i <= taken.length; i++) {
+        final mine = _chipRect(at, tp).outerRect.inflate(2);
+        final hit = taken.where(mine.overlaps).toList();
+        if (hit.isEmpty) break;
+        final top = hit.map((r) => r.top).reduce(math.min);
+        at = Offset(at.dx, top - 4 - mine.height / 2 + 14);
       }
       _chip(canvas, at, tp, 1);
     }
