@@ -26,6 +26,7 @@ abstract final class DailyStrings {
 
   // Road explore
   static const backToToday = 'Back to today';
+  static const opensReading = "Opens today's reading";
   static const stopDone = 'read';
   static const stopToday = 'today';
   static const stopAhead = 'coming up';

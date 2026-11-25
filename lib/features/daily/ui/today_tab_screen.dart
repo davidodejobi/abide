@@ -1,8 +1,11 @@
+import 'dart:math' as math;
 import 'dart:ui' as ui show Image;
 import 'dart:ui' show ViewPadding;
 
 import 'package:auto_route/auto_route.dart';
+import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openbaptisthymnal/core/router/app_router.dart';
 import 'package:openbaptisthymnal/core/theme/lum_theme.dart';
@@ -112,6 +115,34 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
       total = data.plan.dayCount;
     }
 
+    // The collapsed panel's chip: today's day and passage, or tomorrow's once
+    // today is read.
+    final nextPassage = hasPlan && !data.isFinished
+        ? formatPassages(data.day!.passages, bookNames)
+        : '';
+    final peekLabel = !hasPlan
+        ? DailyStrings.choosePlan
+        : data.isFinished
+            ? DailyStrings.planCompleteTitle
+            : done
+                ? '${DailyStrings.tomorrow} · $nextPassage'
+                : '${DailyStrings.dayN(data.day!.dayIndex)} · $nextPassage';
+
+    // At large text the chip would squeeze the greeting to a sliver: it drops
+    // under it instead.
+    final stackChip = MediaQuery.textScalerOf(context).scale(16) > 22;
+    final streakChip = streak.isActive
+        ? Padding(
+            padding: stackChip
+                ? const EdgeInsets.only(top: LumSpace.sm)
+                : const EdgeInsets.only(left: LumSpace.md),
+            child: StreakChip(
+              days: streak.current,
+              onTap: () => context.router.push(const StreakRoute()),
+            ),
+          )
+        : null;
+
     return Align(
       alignment: Alignment.topCenter,
       // The road is drawn for a phone: on a tablet or in landscape it stays
@@ -120,136 +151,305 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
         constraints: const BoxConstraints(maxWidth: _maxSceneWidth),
         child: LayoutBuilder(builder: (context, box) {
           final width = box.maxWidth;
+          final h = box.maxHeight;
           final k = width / RoadScene.designWidth;
           // Where the scene hands over to the panel, capped so landscape keeps
-          // room for the reading; the header below can push it further down.
-          final panelTop =
-              ((done ? 404 : 392) * k - inset).clamp(0.0, box.maxHeight * 0.55);
-          return SingleChildScrollView(
+          // room for the reading.
+          var panelTop =
+              ((done ? 404 : 392) * k - inset).clamp(0.0, h * .55).toDouble();
+          // Large text: the header below the status bar pushes the panel down
+          // rather than sliding under it.
+          // The measured greeting block once laid out, an estimate before.
+          final headerH = _headerH ??
+              _headerHeight(
+                  context, headText, width, streak.isActive, stackChip);
+          panelTop = math.max(panelTop, math.min(headerH, h * .7));
+          // Peek: a chip above the floating tab bar; the default panel always
+          // stands clear above it.
+          final tabClear = LumSize.tabBar +
+              math.max(vp.bottom / view.devicePixelRatio, 8) +
+              12;
+          final peekF = ((_peekChip + tabClear) / h).clamp(.1, .6).toDouble();
+          final defaultF =
+              ((h - panelTop) / h).clamp(peekF + .08, .9).toDouble();
+          // Expanded stops under the greeting, never over it.
+          final expandedF = math.max((h - headerH) / h, defaultF).clamp(0, 1);
+          if (_snap.length != 1 || _snap.first != defaultF) {
+            _snap = [defaultF];
+          }
+          _layout(h, inset, defaultF, peekF);
+          WidgetsBinding.instance.addPostFrameCallback((_) => _measureHeader());
+          final reduce = MediaQuery.disableAnimationsOf(context);
+
+          return Stack(
             clipBehavior: Clip.none,
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: box.maxHeight),
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Positioned(
-                    top: -inset,
-                    left: 0,
-                    child: RoadScene(
-                      width: width,
-                      mood: mood,
-                      currentDay: currentDay,
-                      totalDays: total,
-                      plan: data?.plan,
-                      showTomorrowTag: done,
-                      onStopTap: data == null
-                          ? null
-                          : (day) => _openStop(data, day, evening: done),
-                      onLandmarkTap: data == null ? null : _openLandmark,
+            children: [
+              Positioned(
+                top: -inset,
+                left: 0,
+                child: RoadScene(
+                  width: width,
+                  height: h + inset,
+                  visibleBottom: _vb,
+                  hideBack: _expanded,
+                  mood: mood,
+                  currentDay: currentDay,
+                  totalDays: total,
+                  plan: data?.plan,
+                  showTomorrowTag: done,
+                  onStopTap: data == null
+                      ? null
+                      : (day) => _openStop(data, day, evening: done),
+                  onLandmarkTap: data == null ? null : _openLandmark,
+                ),
+              ),
+              // Greeting and streak: the sky's text, gone when the road
+              // fills the screen.
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: ValueListenableBuilder<double>(
+                  valueListenable: _collapse,
+                  builder: (_, p, child) => IgnorePointer(
+                    ignoring: p > .3,
+                    // Covered by the panel (or hidden), the greeting is not
+                    // for a screen reader either.
+                    child: ExcludeSemantics(
+                      excluding: p > .3 || p < -.05,
+                      child: Opacity(
+                          opacity: (1 - p * 2.5).clamp(0.0, 1.0), child: child),
                     ),
                   ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // The header is part of the layout: the panel starts at the
-                      // scene's handover or just under the header, whichever is
-                      // lower, so large text never slides under the panel.
-                      ConstrainedBox(
-                        constraints: BoxConstraints(minHeight: panelTop),
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(
-                              LumSize.screenGutter + 4,
-                              24,
-                              LumSize.screenGutter + 4,
-                              LumSpace.lg),
-                          child: Row(
+                  child: Padding(
+                    key: _headerKey,
+                    padding: const EdgeInsets.fromLTRB(LumSize.screenGutter + 4,
+                        24, LumSize.screenGutter + 4, LumSpace.lg),
+                    child: Flex(
+                      direction: stackChip ? Axis.vertical : Axis.horizontal,
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _Roomy(
+                          expand: !stackChip,
+                          child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      done
-                                          ? DailyStrings.eveningCaps(now)
-                                          : DailyStrings.dateCaps(now),
-                                      style: LumText.roadLabelCaps11
-                                          .copyWith(color: overSkySecondary),
-                                    ),
-                                    const SizedBox(height: 10),
-                                    Semantics(
-                                      header: true,
-                                      child: Text(
-                                        headText,
-                                        style: LumText.title1
-                                            .copyWith(color: overSky),
-                                      ),
-                                    ),
-                                  ],
+                              const SizedBox(height: 4),
+                              Text(
+                                done
+                                    ? DailyStrings.eveningCaps(now)
+                                    : DailyStrings.dateCaps(now),
+                                style: LumText.roadLabelCaps11
+                                    .copyWith(color: overSkySecondary),
+                              ),
+                              const SizedBox(height: 10),
+                              Semantics(
+                                header: true,
+                                child: Text(
+                                  headText,
+                                  style:
+                                      LumText.title1.copyWith(color: overSky),
                                 ),
                               ),
-                              if (streak.isActive)
-                                Padding(
-                                  padding:
-                                      const EdgeInsets.only(left: LumSpace.md),
-                                  child: StreakChip(
-                                    days: streak.current,
-                                    onTap: () => context.router
-                                        .push(const StreakRoute()),
-                                  ),
-                                ),
                             ],
                           ),
                         ),
-                      ),
-                      ConstrainedBox(
-                        constraints: BoxConstraints(
-                          minHeight: (box.maxHeight - panelTop).clamp(0, 4000),
-                        ),
-                        child: _Panel(
-                          child: reading.when(
-                            loading: () => const SizedBox(height: 160),
-                            error: (e, _) => Text(
-                              DailyStrings.loadError,
-                              style:
-                                  LumText.body.copyWith(color: c.textSecondary),
-                            ),
-                            data: (d) => d == null
-                                ? _NoPlan(onChoose: _choosePlan)
-                                : d.isFinished
-                                    ? _Finished(
-                                        reading: d,
-                                        bookNames: bookNames,
-                                        onChoose: _choosePlan,
-                                      )
-                                    : done
-                                        ? _DayDone(
-                                            reading: d,
-                                            doneIndex: doneIndex,
-                                            bookNames: bookNames,
-                                            streakDays: streak.current,
-                                            onReadAhead: () => setState(
-                                                () => _readAhead = true),
-                                          )
-                                        : _Reading(
-                                            reading: d,
-                                            bookNames: bookNames,
-                                            onChange: _choosePlan,
-                                            onStart: () => _startReading(d),
-                                          ),
-                          ),
-                        ),
-                      ),
-                    ],
+                        if (streakChip != null) streakChip,
+                      ],
+                    ),
                   ),
-                ],
+                ),
               ),
-            ),
+              Positioned.fill(
+                child: DraggableScrollableSheet(
+                  controller: _sheet,
+                  initialChildSize: defaultF,
+                  minChildSize: peekF,
+                  maxChildSize: expandedF.toDouble(),
+                  snap: true,
+                  snapSizes: _snap,
+                  snapAnimationDuration:
+                      Duration(milliseconds: reduce ? 1 : 280),
+                  shouldCloseOnMinExtent: false,
+                  builder: (context, scroll) => _Sheet(
+                    scroll: scroll,
+                    collapse: _collapse,
+                    peekLabel: peekLabel,
+                    onPeekTap: () => _showPanel(defaultF, reduce),
+                    child: reading.when(
+                      loading: () => const SizedBox(height: 160),
+                      error: (e, _) => Text(
+                        DailyStrings.loadError,
+                        style: LumText.body.copyWith(color: c.textSecondary),
+                      ),
+                      data: (d) => d == null
+                          ? _NoPlan(onChoose: _choosePlan)
+                          : d.isFinished
+                              ? _Finished(
+                                  reading: d,
+                                  bookNames: bookNames,
+                                  onChoose: _choosePlan,
+                                )
+                              : done
+                                  ? _DayDone(
+                                      reading: d,
+                                      doneIndex: doneIndex,
+                                      bookNames: bookNames,
+                                      streakDays: streak.current,
+                                      onReadAhead: () =>
+                                          setState(() => _readAhead = true),
+                                    )
+                                  : _Reading(
+                                      reading: d,
+                                      bookNames: bookNames,
+                                      onChange: _choosePlan,
+                                      onStart: () => _startReading(d),
+                                    ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           );
         }),
       ),
     );
+  }
+
+  // ------------------------------------------------------------- the sheet
+  static const double _peekChip = 56;
+
+  /// The reading panel, in the sheet's own coordinates: [_vb] is where its top
+  /// edge is in px from the scene's top (the scene keys its camera off it) and
+  /// [_collapse] runs 0 (default) to 1 (peek) for the fades.
+  final _sheet = DraggableScrollableController();
+  late final _vb = ValueNotifier<double>(_vbNow());
+  final _collapse = ValueNotifier<double>(0);
+  final _expanded = ValueNotifier<bool>(false);
+  double _h = 0, _inset = 0, _defaultF = .5, _peekF = .2;
+  List<double> _snap = const [.5];
+
+  /// The greeting block, measured; null until the first layout.
+  final _headerKey = GlobalKey();
+  double? _headerH;
+
+  void _measureHeader() {
+    final box = _headerKey.currentContext?.findRenderObject() as RenderBox?;
+    if (!mounted || box == null || !box.hasSize) return;
+    if ((_headerH ?? -9) != box.size.height &&
+        ((_headerH ?? 0) - box.size.height).abs() > 1) {
+      setState(() => _headerH = box.size.height);
+    }
+  }
+
+  /// 0 at the default size, 1 at the peek, below 0 when expanded.
+  double _progress() {
+    final span = _peekF - _defaultF;
+    return span == 0
+        ? 0
+        : ((_fraction - _defaultF) / span).clamp(-1.0, 1.0).toDouble();
+  }
+
+  /// Where the road's usable area ends (px from the scene's top): the panel's
+  /// top, less the peek chip as it collapses so no stop hides under it, and
+  /// never above the default so the road does not scroll up behind a panel
+  /// that is expanding.
+  double _vbNow() {
+    final raw = (1 - _fraction) * _h + _inset;
+    final base = (1 - _defaultF) * _h + _inset;
+    return math.max(raw - _peekChip * math.max(_progress(), 0), base);
+  }
+
+  double get _fraction => _sheet.isAttached ? _sheet.size : _defaultF;
+
+  /// Called from build with the current box; syncs the notifiers (after the
+  /// frame if the box changed, so nothing is notified mid-build).
+  void _layout(double h, double inset, double defaultF, double peekF) {
+    final first = _h == 0;
+    final changed =
+        h != _h || inset != _inset || defaultF != _defaultF || peekF != _peekF;
+    _h = h;
+    _inset = inset;
+    _defaultF = defaultF;
+    _peekF = peekF;
+    if (first) {
+      _vb.value = _vbNow();
+      _collapse.value = 0;
+    } else if (changed || !_sheet.isAttached) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _sync());
+    }
+  }
+
+  void _sync() {
+    if (!mounted || _h == 0) return;
+    _vb.value = _vbNow();
+    _collapse.value = _progress();
+    _expanded.value = _progress() < -.05;
+  }
+
+  void _onSheet() {
+    if (SchedulerBinding.instance.schedulerPhase ==
+        SchedulerPhase.persistentCallbacks) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _sync());
+    } else {
+      _sync();
+    }
+  }
+
+  void _showPanel(double defaultF, bool reduce) {
+    if (!_sheet.isAttached) return;
+    if (reduce) {
+      _sheet.jumpTo(defaultF);
+    } else {
+      _sheet.animateTo(defaultF,
+          duration: const Duration(milliseconds: 320),
+          curve: Curves.easeOutCubic);
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _sheet.addListener(_onSheet);
+  }
+
+  @override
+  void dispose() {
+    _sheet.removeListener(_onSheet);
+    _sheet.dispose();
+    _vb.dispose();
+    _collapse.dispose();
+    _expanded.dispose();
+    super.dispose();
+  }
+
+  /// Height of the greeting block at the current text size, so the panel never
+  /// starts over it.
+  double _headerHeight(
+      BuildContext context, String headText, double width, bool streak,
+      bool stackChip) {
+    final scaler = MediaQuery.textScalerOf(context);
+    final p = TextPainter(
+      text: TextSpan(text: headText, style: LumText.title1),
+      textDirection: TextDirection.ltr,
+      textScaler: scaler,
+    )..layout(
+        maxWidth: width -
+        2 * (LumSize.screenGutter + 4) -
+        (streak && !stackChip ? 120 : 0));
+    final caps = TextPainter(
+      text: const TextSpan(text: 'X', style: LumText.roadLabelCaps11),
+      textDirection: TextDirection.ltr,
+      textScaler: scaler,
+    )..layout();
+    return 24 +
+        4 +
+        caps.height +
+        10 +
+        p.height +
+        (streak && stackChip ? LumSpace.sm + 52 : 0) +
+        LumSpace.lg;
   }
 
   Future<void> _choosePlan() => showPlanPickerSheet(context);
@@ -335,31 +535,188 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
   }
 }
 
-/// The rounded panel the reading sits on, over the lower scene.
-class _Panel extends StatelessWidget {
-  const _Panel({required this.child});
+/// The rounded panel the reading sits on, over the lower scene. A snapping
+/// bottom sheet: dragged down it melts into a small "Day N · passage" chip
+/// above the tab bar so the road fills the screen; the chip (or a drag) brings
+/// it back. [collapse] runs 0 (open) to 1 (chip).
+const double _peekChipHeight = 64;
 
+class _Sheet extends StatelessWidget {
+  const _Sheet({
+    required this.scroll,
+    required this.collapse,
+    required this.peekLabel,
+    required this.onPeekTap,
+    required this.child,
+  });
+
+  final ScrollController scroll;
+  final ValueListenable<double> collapse;
+  final String peekLabel;
+  final VoidCallback onPeekTap;
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
     final c = context.lum;
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: c.scenePanel,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-        boxShadow: [
-          BoxShadow(
-            color: c.sceneShadow,
-            blurRadius: 28,
-            offset: const Offset(0, -8),
+    final grab = c.textSecondary.withValues(alpha: .4);
+    return ValueListenableBuilder<double>(
+      valueListenable: collapse,
+      child: SingleChildScrollView(
+        controller: scroll,
+        // Always draggable, even when the reading is shorter than the panel.
+        physics: const AlwaysScrollableScrollPhysics(
+            parent: ClampingScrollPhysics()),
+        child: ValueListenableBuilder<double>(
+          valueListenable: collapse,
+          // Hidden content must not be tappable; the scroll view itself still
+          // takes the drag that opens the panel again.
+          builder: (_, p, child) =>
+              IgnorePointer(ignoring: p > .3, child: child),
+          // 120 at the bottom clears the floating tab bar.
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 28, 24, 120),
+            child: child,
           ),
-        ],
+        ),
       ),
-      // 120 at the bottom clears the floating tab bar.
-      padding: const EdgeInsets.fromLTRB(24, 24, 24, 120),
-      child: child,
+      builder: (context, p, content) {
+        final open = (1 - p).clamp(0.0, 1.0);
+        final chip = ((p - .6) / .4).clamp(0.0, 1.0);
+        return Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Positioned.fill(
+              child: IgnorePointer(
+                child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: c.scenePanel.withValues(alpha: open),
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(32)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: c.sceneShadow
+                          .withValues(alpha: c.sceneShadow.a * open),
+                      blurRadius: 28,
+                      offset: const Offset(0, -8),
+                    ),
+                  ],
+                ),
+              ),
+              ),
+            ),
+            // At the peek only a narrow strip around the chip takes touches;
+            // the rest of the (transparent) sheet lets the road through.
+            Positioned.fill(
+              child: LayoutBuilder(
+                builder: (_, box) => Align(
+                  alignment: Alignment.topCenter,
+                  child: SizedBox(
+                    height: p > .9 ? _peekChipHeight : box.maxHeight,
+                    child: Opacity(
+                        opacity: (1 - p * 2.5).clamp(0.0, 1.0),
+                        child: content),
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              top: 9,
+              left: 0,
+              right: 0,
+              child: IgnorePointer(
+                child: Opacity(
+                  opacity: (1 - p * 2).clamp(0.0, 1.0),
+                  child: Center(
+                    child: Container(
+                      width: 36,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: grab,
+                        borderRadius: BorderRadius.circular(3),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            if (chip > 0)
+            Positioned(
+              top: 6,
+              left: LumSpace.lg,
+              right: LumSpace.lg,
+              child: IgnorePointer(
+                ignoring: chip < .5,
+                child: Opacity(
+                  opacity: chip,
+                  child: Align(
+                    alignment: Alignment.topCenter,
+                    child: _PeekChip(label: peekLabel, onTap: onPeekTap),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+/// The collapsed panel: today's day and passage, with a chevron that says it
+/// opens upwards.
+class _PeekChip extends StatelessWidget {
+  const _PeekChip({required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.lum;
+    return MediaQuery.withClampedTextScaling(
+      maxScaleFactor: 1.3,
+      child: Semantics(
+        button: true,
+        label: label,
+        hint: DailyStrings.opensReading,
+        excludeSemantics: true,
+        onTap: onTap,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: onTap,
+          child: Container(
+            height: LumSize.touchTarget,
+            padding: const EdgeInsets.symmetric(horizontal: LumSpace.lg),
+            decoration: BoxDecoration(
+              color: c.scenePanel,
+              borderRadius: BorderRadius.circular(LumRadius.full),
+              border: Border.all(color: c.borderSubtle),
+              boxShadow: [
+                BoxShadow(
+                    color: c.sceneShadow,
+                    blurRadius: 14,
+                    offset: const Offset(0, 4)),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.keyboard_arrow_up_rounded,
+                    size: LumSize.iconSm, color: c.textSecondary),
+                const SizedBox(width: LumSpace.sm),
+                Flexible(
+                  child: Text(label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: LumText.footnoteEmphasized
+                          .copyWith(color: c.textPrimary)),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -760,4 +1117,16 @@ class _Finished extends StatelessWidget {
       ],
     );
   }
+}
+
+/// [child] filling the row ([Expanded]) or just itself when stacked.
+class _Roomy extends StatelessWidget {
+  const _Roomy({required this.expand, required this.child});
+
+  final bool expand;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) =>
+      expand ? Expanded(child: child) : child;
 }
