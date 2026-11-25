@@ -59,6 +59,7 @@ flutter:
   assets:
     - assets/hymnal/
     - assets/hymnal/languages/
+    - assets/hymnal/pairs/
     - assets/bible/en-kjv/
     - assets/bible/en-kjv/books/
     - assets/bible/yo-bmy/

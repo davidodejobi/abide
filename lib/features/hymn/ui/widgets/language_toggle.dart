@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:openbaptisthymnal/core/theme/app_colors.dart';
-import 'package:openbaptisthymnal/core/theme/app_text_styles.dart';
+import 'package:openbaptisthymnal/core/widgets/lum_chip.dart';
+import 'package:openbaptisthymnal/features/hymn/ui/hymn_strings.dart';
 
 /// A language option the hymnal can switch between.
 class LanguageOption {
@@ -9,100 +9,44 @@ class LanguageOption {
   /// Language code stored in state (e.g. 'yo', 'en').
   final String code;
 
-  /// Human-friendly chip label (e.g. 'Yoruba').
+  /// Human-friendly chip label (e.g. 'Yorùbá').
   final String label;
 }
 
-/// Horizontal, scrollable row of language chips. Renders the languages it is
-/// given today and grows gracefully as more are added in future releases —
-/// no fixed two-tab assumption.
+/// Wrapping row of language chips, plus an optional trailing action chip
+/// (Favourites). Renders the languages it is given today and grows as more are
+/// added: it wraps instead of overflowing.
 class LanguageToggle extends StatelessWidget {
-  final String selectedLanguage;
-  final ValueChanged<String> onLanguageChanged;
-  final List<LanguageOption> languages;
-
   const LanguageToggle({
     super.key,
     required this.selectedLanguage,
     required this.onLanguageChanged,
     this.languages = const [
-      LanguageOption(code: 'yo', label: 'Yoruba'),
-      LanguageOption(code: 'en', label: 'English'),
+      LanguageOption(code: 'en', label: HymnStrings.english),
+      LanguageOption(code: 'yo', label: HymnStrings.yoruba),
     ],
+    this.trailing,
   });
+
+  final String selectedLanguage;
+  final ValueChanged<String> onLanguageChanged;
+  final List<LanguageOption> languages;
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 40,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        padding: EdgeInsets.zero,
-        itemCount: languages.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 10),
-        itemBuilder: (context, index) {
-          final language = languages[index];
-          return _LanguageChip(
+    return Wrap(
+      spacing: 10,
+      runSpacing: 10,
+      children: [
+        for (final language in languages)
+          LumChip(
             label: language.label,
             selected: language.code == selectedLanguage,
             onTap: () => onLanguageChanged(language.code),
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _LanguageChip extends StatelessWidget {
-  const _LanguageChip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    final fill = selected
-        ? AppColors.secondary
-        : (isDark ? AppColors.neutral800 : AppColors.secondary50);
-    final textColor = selected
-        ? AppColors.primaryDark
-        : (isDark ? AppColors.neutral300 : AppColors.primary);
-    final border = selected
-        ? AppColors.secondary
-        : (isDark ? AppColors.neutral700 : AppColors.secondary200);
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          curve: Curves.easeOut,
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: fill,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: border, width: 1),
           ),
-          child: Text(
-            label,
-            style: AppTextStyles.labelLarge.copyWith(
-              color: textColor,
-              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-            ),
-          ),
-        ),
-      ),
+        if (trailing != null) trailing!,
+      ],
     );
   }
 }

@@ -14,12 +14,8 @@ import '../../../../support/pump_app.dart';
 void main() {
   const query = (editionId: 'en-kjv', bookCode: 'GEN', chapter: 1);
 
-  Widget subject({
-    VoidCallback? onPrev,
-    VoidCallback? onNext,
-    bool hasPrev = false,
-    bool hasNext = false,
-  }) {
+  Widget subject(
+      {ValueChanged<int>? onTapVerse, Set<int> selected = const {}}) {
     return ProviderScope(
       overrides: [
         bibleChapterProvider(query).overrideWith((ref) async => bibleChapter()),
@@ -29,11 +25,9 @@ void main() {
         bookCode: query.bookCode,
         chapter: query.chapter,
         textScale: 1,
-        bookName: 'Genesis',
-        onPrev: onPrev,
-        onNext: onNext,
-        hasPrev: hasPrev,
-        hasNext: hasNext,
+        onTapVerse: onTapVerse,
+        selected: selected,
+        header: const Text('Genesis 1'),
       ),
     );
   }
@@ -61,35 +55,24 @@ void main() {
       });
     });
 
-    group('When it is the first chapter of the Bible', () {
-      testWidgets('Then Previous is present but not tappable', (tester) async {
-        var prevTaps = 0;
-        await tester.pumpApp(subject(
-          onPrev: () => prevTaps++,
-          onNext: () {},
-          hasNext: true,
-          // hasPrev is false: Genesis 1 has nothing before it.
-        ));
-
-        await tester.tap(find.text('Previous'), warnIfMissed: false);
-        await tester.pump();
-
-        expect(prevTaps, 0, reason: 'Previous must be inert on Genesis 1');
+    group('When the chapter has a header', () {
+      testWidgets('Then it scrolls with the text', (tester) async {
+        await tester.pumpApp(subject());
+        expect(find.text('Genesis 1'), findsOneWidget);
       });
     });
 
-    group('When a next chapter exists', () {
-      testWidgets('Then tapping Next advances the reader', (tester) async {
-        var nextTaps = 0;
-        await tester.pumpApp(subject(
-          onNext: () => nextTaps++,
-          hasNext: true,
-        ));
+    group('When a verse is tapped', () {
+      testWidgets('Then the reader is told which verse', (tester) async {
+        int? tapped;
+        await tester.pumpApp(subject(onTapVerse: (n) => tapped = n));
 
-        await tester.tap(find.text('Next'));
+        await tester.tap(
+          find.textContaining('Let there be light', findRichText: true),
+        );
         await tester.pump();
 
-        expect(nextTaps, 1);
+        expect(tapped, isNotNull);
       });
     });
   });

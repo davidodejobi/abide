@@ -1,10 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openbaptisthymnal/core/preferences/linking_preferences.dart';
+import 'package:openbaptisthymnal/features/hymn/domain/hymn_pair_resolver.dart';
 import 'package:openbaptisthymnal/features/hymn/providers/hymnal_provider.dart';
 
-/// Where a tablet `[[hymn:...]]` link should open. The hymn id is stable
-/// across language packs (the same `hymn_0001` exists in `en` and `yo` today),
-/// so the resolver's only job today is picking the language to open in.
+/// Where a tablet `[[hymn:...]]` link should open. A link holds the canonical
+/// hymn id in the pack named by its edition pin; an unpinned link is English
+/// (legacy links were written before pins existed). Pack ids are NOT shared
+/// across languages, so the resolver picks the language to open in and maps
+/// the id into that pack by content, falling back to the source pack when the
+/// chosen language has no confirmed version of the hymn.
 ///
 /// The model is deliberately broader than that: [editionId] holds whatever
 /// will identify a hymnal edition in the future (e.g. `baptist-en`,
@@ -39,10 +43,10 @@ class HymnLinkResolver {
   ///   1. user's default-hymn-edition setting
   ///   2. the user's current reading language
   ///   3. the first known edition
-  HymnNavigationTarget? resolve(
+  Future<HymnNavigationTarget?> resolve(
     String hymnId, {
     String? editionPin,
-  }) {
+  }) async {
     if (hymnId.isEmpty) return null;
 
     final installed = _installedEditions();
@@ -63,8 +67,26 @@ class HymnLinkResolver {
       chosen = _pickFallback(installed);
     }
 
+    // The id belongs to the pack the pin names; unpinned links are English.
+    final source = (editionPin == null
+            ? _matchEdition(installed, _hymnLinkDefault)
+            : _matchEdition(installed, editionPin)) ??
+        _hymnLinkDefault;
+    final packId = await HymnPairResolver(_ref.read(hymnalRepositoryProvider))
+        .idIn(chosen, hymnId, fromLanguage: source);
+    if (packId == null) {
+      // No confirmed version in that language: open the source pack
+      // rather than a different song that happens to share the id.
+      return HymnNavigationTarget(
+        hymnId: hymnId,
+        editionId: source,
+        toastMessage: 'No ${_languageName(chosen)} version of this hymn yet. '
+            'Showing the ${_languageName(source)} one.',
+      );
+    }
+
     return HymnNavigationTarget(
-      hymnId: hymnId,
+      hymnId: packId,
       editionId: chosen,
       toastMessage: toast,
     );
@@ -81,6 +103,9 @@ class HymnLinkResolver {
   /// intentionally use English here: a tablet shared between users (or read
   /// months later) opens in the most widely understood pack by default.
   static const _hymnLinkDefault = 'en';
+
+  static String _languageName(String code) =>
+      const {'en': 'English', 'yo': 'Yoruba'}[code] ?? code;
 
   String? _matchEdition(List<String> installed, String id) {
     final needle = id.toLowerCase();

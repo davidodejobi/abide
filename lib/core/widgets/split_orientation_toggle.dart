@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
-import 'package:openbaptisthymnal/core/theme/app_colors.dart';
+import 'package:openbaptisthymnal/core/theme/lum_theme.dart';
 import 'package:openbaptisthymnal/core/widgets/split_pane.dart';
 
 /// Small segmented control to flip a [SplitPane] between vertical and
-/// horizontal orientations.
+/// horizontal orientations. Each segment is a 48pt touch target.
 class SplitOrientationToggle extends StatelessWidget {
   const SplitOrientationToggle({
     super.key,
@@ -17,10 +17,7 @@ class SplitOrientationToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark ? AppColors.neutral850 : AppColors.secondary50;
-    final fg = isDark ? AppColors.neutral100 : AppColors.primaryDark;
-    final selectedBg = isDark ? AppColors.neutral700 : Colors.white;
+    final c = context.lum;
 
     Widget segment({
       required SplitOrientation value,
@@ -28,29 +25,40 @@ class SplitOrientationToggle extends StatelessWidget {
       required String tooltip,
     }) {
       final selected = orientation == value;
-      return Tooltip(
-        message: tooltip,
-        child: GestureDetector(
-          onTap: () => onChanged(value),
-          behavior: HitTestBehavior.opaque,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 160),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            decoration: BoxDecoration(
-              color: selected ? selectedBg : Colors.transparent,
-              borderRadius: BorderRadius.circular(18),
+      return Semantics(
+        button: true,
+        selected: selected,
+        label: tooltip,
+        excludeSemantics: true,
+        onTap: () => onChanged(value),
+        child: Tooltip(
+          message: tooltip,
+          child: GestureDetector(
+            onTap: () => onChanged(value),
+            behavior: HitTestBehavior.opaque,
+            child: AnimatedContainer(
+              duration: LumMotion.fast,
+              width: LumSize.touchTarget,
+              height: LumSize.touchTarget - 8,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: selected ? c.bgPrimary : Colors.transparent,
+                borderRadius: BorderRadius.circular(LumRadius.full),
+              ),
+              child: Icon(icon,
+                  size: 20, color: selected ? c.textOnPrimary : c.textPrimary),
             ),
-            child: Icon(icon, size: 18, color: fg),
           ),
         ),
       );
     }
 
     return Container(
-      padding: const EdgeInsets.all(3),
+      padding: const EdgeInsets.all(LumSpace.xs),
       decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(22),
+        color: c.bgSurface,
+        borderRadius: BorderRadius.circular(LumRadius.full),
+        border: Border.all(color: c.borderSubtle),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

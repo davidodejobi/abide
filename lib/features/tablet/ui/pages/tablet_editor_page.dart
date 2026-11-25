@@ -15,8 +15,7 @@ import 'package:openbaptisthymnal/core/theme/app_colors.dart';
 import 'package:openbaptisthymnal/core/theme/font_scale_provider.dart';
 import 'package:openbaptisthymnal/core/utils/services/file_storage_service.dart';
 import 'package:openbaptisthymnal/features/bible/ui/open_bible_link.dart';
-import 'package:openbaptisthymnal/features/hymn/domain/hymn_link_resolver.dart';
-import 'package:openbaptisthymnal/features/hymn/providers/hymnal_provider.dart';
+import 'package:openbaptisthymnal/features/hymn/ui/open_hymn_link.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/insert_audio_node.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/link_autocomplete.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/parse_links.dart';
@@ -115,20 +114,12 @@ class _NoteEditorView extends HookConsumerWidget {
     Future<void> navigateToLink(ParsedLink link) async {
       switch (link.type) {
         case NoteLinkType.hymn:
-          final target = ref
-              .read(hymnLinkResolverProvider)
-              .resolve(link.targetKey, editionPin: link.editionPin);
-          if (target == null) return;
-          // The hymn detail page reads `languageProvider`, so set it before
-          // pushing so the resolved edition is the one that opens.
-          ref.read(languageProvider.notifier).state = target.editionId;
-          if (!context.mounted) return;
-          if (target.toastMessage != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(target.toastMessage!)),
-            );
-          }
-          context.router.push(HymnDetailRoute(hymnId: target.hymnId));
+          await openHymnLink(
+            context,
+            ref,
+            targetKey: link.targetKey,
+            editionPin: link.editionPin,
+          );
         case NoteLinkType.bible:
           await openBibleLink(
             context,

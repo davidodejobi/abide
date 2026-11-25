@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:openbaptisthymnal/core/theme/lum_theme.dart';
 
 /// Orientation of a [SplitPane].
 enum SplitOrientation {
@@ -35,9 +36,10 @@ class SplitPane extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final divider = Container(
-      color: dividerColor ?? Theme.of(context).dividerColor.withValues(alpha: 0.4),
+      color: dividerColor ?? context.lum.borderSubtle,
       width: orientation == SplitOrientation.vertical ? dividerThickness : null,
-      height: orientation == SplitOrientation.horizontal ? dividerThickness : null,
+      height:
+          orientation == SplitOrientation.horizontal ? dividerThickness : null,
     );
 
     final children = <Widget>[

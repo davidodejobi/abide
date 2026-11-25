@@ -74,7 +74,8 @@ class TodayKeyNotifier extends Notifier<String> with WidgetsBindingObserver {
     _timer?.cancel();
     final now = DateTime.now();
     // A second past midnight, so the timer never fires on the old day.
-    _timer = Timer(nextDay(now).difference(now) + const Duration(seconds: 1), () {
+    _timer =
+        Timer(nextDay(now).difference(now) + const Duration(seconds: 1), () {
       refresh();
     });
   }
@@ -126,12 +127,12 @@ final isTodayCompleteProvider = Provider<bool>(
 /// different states that the UI must not conflate, so it checks
 /// [activePlanSubscriptionProvider] to tell them apart.
 final todaysReadingProvider = FutureProvider<TodaysReading?>((ref) async {
-  final subscription =
-      await ref.watch(activePlanSubscriptionProvider.future);
+  final subscription = await ref.watch(activePlanSubscriptionProvider.future);
   if (subscription == null) return null;
 
   final plan = await ref.watch(planByIdProvider(subscription.planId).future);
-  final done = await ref.watch(planProgressProvider(subscription.planId).future);
+  final done =
+      await ref.watch(planProgressProvider(subscription.planId).future);
 
   final next = nextPlanDayIndex(done, plan.dayCount);
   if (next == null) {
@@ -164,6 +165,22 @@ class TodaysReading {
 
   /// 0.0 to 1.0. Guarded against an empty plan, which cannot happen today but
   /// would divide by zero if a future plan ever shipped with no days.
-  double get progress =>
-      plan.dayCount == 0 ? 0 : completedDays / plan.dayCount;
+  double get progress => plan.dayCount == 0 ? 0 : completedDays / plan.dayCount;
 }
+
+/// Marks a plan day read in the one transaction Today uses: the calendar day
+/// feeds the streak, the plan day advances the plan. The UI calls this rather
+/// than reaching for the DAO.
+final markPlanDayReadProvider =
+    Provider<Future<void> Function(String planId, int dayIndex)>((ref) {
+  return (planId, dayIndex) {
+    final now = DateTime.now();
+    return ref.read(readingPlansDaoProvider).markReadingComplete(
+          dateKey: dayKey(now),
+          source: 'plan',
+          planId: planId,
+          dayIndex: dayIndex,
+          completedAt: now,
+        );
+  };
+});

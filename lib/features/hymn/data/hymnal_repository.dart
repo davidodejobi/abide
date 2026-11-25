@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show FlutterError;
 import 'package:openbaptisthymnal/core/utils/json_loader.dart';
 import 'package:openbaptisthymnal/features/hymn/model/hymnal_core.dart';
 import 'package:openbaptisthymnal/features/hymn/model/hymnal_index.dart';
@@ -7,6 +8,10 @@ abstract class HymnalRepository {
   Future<HymnalCore> getHymnalCore();
   Future<HymnalIndex> getHymnalIndex();
   Future<LanguagePack> getLanguagePack(String languageCode);
+
+  /// Canonical (yo) hymn id -> that language's hymn id, confirmed ("high")
+  /// pairs only. Empty when the language has no pair table.
+  Future<Map<String, String>> getPairTable(String languageCode);
 }
 
 class HymnalRepositoryImpl implements HymnalRepository {
@@ -31,5 +36,25 @@ class HymnalRepositoryImpl implements HymnalRepository {
     final data = await _jsonLoader
         .loadJson('assets/hymnal/languages/$languageCode.json');
     return LanguagePack.fromJson(data);
+  }
+
+  @override
+  Future<Map<String, String>> getPairTable(String languageCode) async {
+    final Map<String, dynamic> data;
+    try {
+      data = await _jsonLoader
+          .loadJson('assets/hymnal/pairs/yo_$languageCode.json');
+    } on FlutterError {
+      return const {}; // no table shipped for this language
+    }
+    // A table that exists but is malformed throws: silently losing every pair
+    // would make cross-language links fall back without any signal.
+    final pairs = (data['pairs'] as Map<String, dynamic>?) ?? const {};
+    return {
+      for (final e in pairs.entries)
+        // "medium" pairs stay in the file for review but are never used.
+        if ((e.value as Map)['confidence'] == 'high')
+          e.key: (e.value as Map)[languageCode] as String,
+    };
   }
 }

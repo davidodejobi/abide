@@ -2,16 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:openbaptisthymnal/core/theme/app_colors.dart';
-import 'package:openbaptisthymnal/core/theme/app_text_styles.dart';
+import 'package:openbaptisthymnal/core/theme/lum_theme.dart';
+import 'package:openbaptisthymnal/features/hymn/ui/hymn_strings.dart';
 import 'package:openbaptisthymnal/features/hymn/providers/hymnal_provider.dart';
 import 'package:openbaptisthymnal/features/hymn/ui/widgets/hymn_list_tile.dart';
 
 /// Provider that loads all hymns for a specific language pack. Used by the
 /// inline picker so the user can pick a hymn in either available language.
 final hymnsForLanguageProvider =
-    FutureProvider.family<List<_PickerHymnEntry>, String>((ref, language) async {
-  final pack = await ref.read(hymnalRepositoryProvider).getLanguagePack(language);
+    FutureProvider.family<List<_PickerHymnEntry>, String>(
+        (ref, language) async {
+  final pack =
+      await ref.read(hymnalRepositoryProvider).getLanguagePack(language);
   final entries = pack.hymns.entries
       .map((e) => _PickerHymnEntry(
             id: e.key,
@@ -56,23 +58,21 @@ class HymnPickerInline extends HookConsumerWidget {
     final searchController = useTextEditingController();
     final query = useState('');
     final entriesAsync = ref.watch(hymnsForLanguageProvider(language));
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final ink = isDark ? AppColors.neutral100 : AppColors.neutral700;
+    final c = context.lum;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+          padding: const EdgeInsets.fromLTRB(
+              LumSpace.lg, LumSpace.sm, LumSpace.lg, LumSpace.md),
           child: Row(
             children: [
               Expanded(
-                child: Text(
-                  'Pick a hymn',
-                  style: AppTextStyles.titleMedium.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: ink,
-                  ),
+                child: Semantics(
+                  header: true,
+                  child: Text(HymnStrings.pickHymn,
+                      style: LumText.title3.copyWith(color: c.textPrimary)),
                 ),
               ),
               if (onLanguageChanged != null && availableLanguages.length > 1)
@@ -85,31 +85,37 @@ class HymnPickerInline extends HookConsumerWidget {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: LumSpace.lg),
           child: TextField(
             controller: searchController,
             onChanged: (v) => query.value = v.trim().toLowerCase(),
-            style: AppTextStyles.bodyMedium.copyWith(color: ink),
+            style: LumText.body.copyWith(color: c.textPrimary),
             decoration: InputDecoration(
-              hintText: 'Search by number or title',
+              hintText: HymnStrings.pickSearchHint,
+              hintStyle: LumText.body.copyWith(color: c.textSecondary),
               prefixIcon: Icon(PhosphorIcons.magnifyingGlass(), size: 20),
               filled: true,
-              fillColor:
-                  isDark ? AppColors.neutral850 : AppColors.secondary50,
+              fillColor: c.bgSurface,
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(24),
-                borderSide: BorderSide.none,
+                borderRadius: BorderRadius.circular(LumRadius.full),
+                borderSide: BorderSide(color: c.borderSubtle),
               ),
-              contentPadding: const EdgeInsets.symmetric(vertical: 0),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(LumRadius.full),
+                borderSide: BorderSide(color: c.borderSubtle),
+              ),
+              contentPadding: const EdgeInsets.symmetric(vertical: 14),
             ),
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: LumSpace.md),
         Expanded(
           child: entriesAsync.when(
-            loading: () =>
-                const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Center(child: Text('Could not load hymns: $e')),
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (e, _) => Center(
+              child: Text(HymnStrings.loadError,
+                  style: LumText.body.copyWith(color: c.textSecondary)),
+            ),
             data: (entries) {
               final q = query.value;
               final filtered = q.isEmpty
@@ -121,18 +127,28 @@ class HymnPickerInline extends HookConsumerWidget {
                           e.number.toString().contains(q);
                     }).toList();
               if (filtered.isEmpty) {
-                return const Center(child: Text('No matches.'));
+                return Center(
+                  child: Text(HymnStrings.noMatches,
+                      style: LumText.body.copyWith(color: c.textSecondary)),
+                );
               }
-              return ListView.separated(
-                padding: const EdgeInsets.fromLTRB(12, 0, 12, 24),
+              return ListView.builder(
+                padding:
+                    const EdgeInsets.fromLTRB(LumSpace.md, 0, LumSpace.md, 120),
                 itemCount: filtered.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 6),
                 itemBuilder: (context, i) {
                   final e = filtered[i];
-                  return HymnListTile(
-                    number: e.number.toString(),
-                    title: e.title,
-                    onTap: () => onSelected(e.id, language),
+                  return DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: c.bgSurface,
+                      borderRadius: HymnListTile.edgeRadius(i, filtered.length),
+                    ),
+                    child: HymnListTile(
+                      number: e.number.toString(),
+                      title: e.title,
+                      showDivider: i < filtered.length - 1,
+                      onTap: () => onSelected(e.id, language),
+                    ),
                   );
                 },
               );
@@ -157,37 +173,41 @@ class _LanguageSwitch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark ? AppColors.neutral850 : AppColors.secondary50;
-    final fg = isDark ? AppColors.neutral100 : AppColors.primaryDark;
-    final selectedBg = isDark ? AppColors.neutral700 : Colors.white;
+    final c = context.lum;
     return Container(
-      padding: const EdgeInsets.all(3),
+      padding: const EdgeInsets.all(LumSpace.xs),
       decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(18),
+        color: c.bgSurface,
+        borderRadius: BorderRadius.circular(LumRadius.full),
+        border: Border.all(color: c.borderSubtle),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: options.map((o) {
           final selected = o == value;
-          return GestureDetector(
+          return Semantics(
+            button: true,
+            selected: selected,
+            label: HymnStrings.languageName(o),
+            excludeSemantics: true,
             onTap: () => onChanged(o),
-            behavior: HitTestBehavior.opaque,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 160),
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: selected ? selectedBg : Colors.transparent,
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Text(
-                o.toUpperCase(),
-                style: TextStyle(
-                  color: fg,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 12,
+            child: GestureDetector(
+              onTap: () => onChanged(o),
+              behavior: HitTestBehavior.opaque,
+              child: AnimatedContainer(
+                duration: LumMotion.fast,
+                constraints: const BoxConstraints(
+                    minWidth: LumSize.touchTarget - 8, minHeight: 40),
+                alignment: Alignment.center,
+                padding: const EdgeInsets.symmetric(horizontal: LumSpace.md),
+                decoration: BoxDecoration(
+                  color: selected ? c.bgPrimary : Colors.transparent,
+                  borderRadius: BorderRadius.circular(LumRadius.full),
+                ),
+                child: Text(
+                  o.toUpperCase(),
+                  style: LumText.footnoteEmphasized.copyWith(
+                      color: selected ? c.textOnPrimary : c.textPrimary),
                 ),
               ),
             ),

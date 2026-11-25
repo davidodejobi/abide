@@ -31,6 +31,10 @@ class _FakeHymnalRepository implements HymnalRepository {
   @override
   Future<LanguagePack> getLanguagePack(String languageCode) async =>
       packs[languageCode]!;
+
+  @override
+  Future<Map<String, String>> getPairTable(String languageCode) async =>
+      const {};
 }
 
 // ---------------------------------------------------------------------------

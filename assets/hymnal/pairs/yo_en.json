@@ -1,0 +1,381 @@
+{
+  "schema_version": 1,
+  "pairs": {
+    "hymn_0001": {
+      "en": "hymn_0252",
+      "confidence": "medium"
+    },
+    "hymn_0003": {
+      "en": "hymn_0004",
+      "confidence": "high"
+    },
+    "hymn_0008": {
+      "en": "hymn_0015",
+      "confidence": "high"
+    },
+    "hymn_0014": {
+      "en": "hymn_0012",
+      "confidence": "high"
+    },
+    "hymn_0015": {
+      "en": "hymn_0029",
+      "confidence": "medium"
+    },
+    "hymn_0057": {
+      "en": "hymn_0001",
+      "confidence": "high"
+    },
+    "hymn_0077": {
+      "en": "hymn_0020",
+      "confidence": "medium"
+    },
+    "hymn_0087": {
+      "en": "hymn_0086",
+      "confidence": "high"
+    },
+    "hymn_0088": {
+      "en": "hymn_0076",
+      "confidence": "high"
+    },
+    "hymn_0091": {
+      "en": "hymn_0085",
+      "confidence": "medium"
+    },
+    "hymn_0095": {
+      "en": "hymn_0087",
+      "confidence": "high"
+    },
+    "hymn_0098": {
+      "en": "hymn_0088",
+      "confidence": "high"
+    },
+    "hymn_0100": {
+      "en": "hymn_0093",
+      "confidence": "medium"
+    },
+    "hymn_0102": {
+      "en": "hymn_0090",
+      "confidence": "medium"
+    },
+    "hymn_0103": {
+      "en": "hymn_0075",
+      "confidence": "high"
+    },
+    "hymn_0108": {
+      "en": "hymn_0147",
+      "confidence": "high"
+    },
+    "hymn_0110": {
+      "en": "hymn_0605",
+      "confidence": "high"
+    },
+    "hymn_0113": {
+      "en": "hymn_0144",
+      "confidence": "high"
+    },
+    "hymn_0115": {
+      "en": "hymn_0125",
+      "confidence": "high"
+    },
+    "hymn_0118": {
+      "en": "hymn_0158",
+      "confidence": "high"
+    },
+    "hymn_0123": {
+      "en": "hymn_0171",
+      "confidence": "high"
+    },
+    "hymn_0136": {
+      "en": "hymn_0199",
+      "confidence": "medium"
+    },
+    "hymn_0140": {
+      "en": "hymn_0190",
+      "confidence": "high"
+    },
+    "hymn_0145": {
+      "en": "hymn_0198",
+      "confidence": "high"
+    },
+    "hymn_0157": {
+      "en": "hymn_0251",
+      "confidence": "medium"
+    },
+    "hymn_0196": {
+      "en": "hymn_0322",
+      "confidence": "medium"
+    },
+    "hymn_0205": {
+      "en": "hymn_0292",
+      "confidence": "high"
+    },
+    "hymn_0222": {
+      "en": "hymn_0306",
+      "confidence": "high"
+    },
+    "hymn_0229": {
+      "en": "hymn_0116",
+      "confidence": "high"
+    },
+    "hymn_0230": {
+      "en": "hymn_0289",
+      "confidence": "high"
+    },
+    "hymn_0232": {
+      "en": "hymn_0141",
+      "confidence": "high"
+    },
+    "hymn_0235": {
+      "en": "hymn_0341",
+      "confidence": "high"
+    },
+    "hymn_0237": {
+      "en": "hymn_0179",
+      "confidence": "high"
+    },
+    "hymn_0242": {
+      "en": "hymn_0271",
+      "confidence": "high"
+    },
+    "hymn_0251": {
+      "en": "hymn_0341",
+      "confidence": "medium"
+    },
+    "hymn_0256": {
+      "en": "hymn_0405",
+      "confidence": "high"
+    },
+    "hymn_0264": {
+      "en": "hymn_0188",
+      "confidence": "medium"
+    },
+    "hymn_0268": {
+      "en": "hymn_0452",
+      "confidence": "high"
+    },
+    "hymn_0273": {
+      "en": "hymn_0276",
+      "confidence": "high"
+    },
+    "hymn_0276": {
+      "en": "hymn_0014",
+      "confidence": "high"
+    },
+    "hymn_0277": {
+      "en": "hymn_0446",
+      "confidence": "high"
+    },
+    "hymn_0285": {
+      "en": "hymn_0524",
+      "confidence": "high"
+    },
+    "hymn_0286": {
+      "en": "hymn_0550",
+      "confidence": "high"
+    },
+    "hymn_0288": {
+      "en": "hymn_0224",
+      "confidence": "high"
+    },
+    "hymn_0289": {
+      "en": "hymn_0072",
+      "confidence": "medium"
+    },
+    "hymn_0291": {
+      "en": "hymn_0215",
+      "confidence": "high"
+    },
+    "hymn_0302": {
+      "en": "hymn_0033",
+      "confidence": "high"
+    },
+    "hymn_0309": {
+      "en": "hymn_0457",
+      "confidence": "high"
+    },
+    "hymn_0313": {
+      "en": "hymn_0444",
+      "confidence": "high"
+    },
+    "hymn_0314": {
+      "en": "hymn_0415",
+      "confidence": "high"
+    },
+    "hymn_0318": {
+      "en": "hymn_0386",
+      "confidence": "high"
+    },
+    "hymn_0333": {
+      "en": "hymn_0409",
+      "confidence": "medium"
+    },
+    "hymn_0335": {
+      "en": "hymn_0055",
+      "confidence": "high"
+    },
+    "hymn_0337": {
+      "en": "hymn_0275",
+      "confidence": "high"
+    },
+    "hymn_0347": {
+      "en": "hymn_0558",
+      "confidence": "high"
+    },
+    "hymn_0348": {
+      "en": "hymn_0480",
+      "confidence": "high"
+    },
+    "hymn_0353": {
+      "en": "hymn_0492",
+      "confidence": "high"
+    },
+    "hymn_0356": {
+      "en": "hymn_0484",
+      "confidence": "high"
+    },
+    "hymn_0359": {
+      "en": "hymn_0259",
+      "confidence": "high"
+    },
+    "hymn_0368": {
+      "en": "hymn_0470",
+      "confidence": "high"
+    },
+    "hymn_0376": {
+      "en": "hymn_0438",
+      "confidence": "high"
+    },
+    "hymn_0378": {
+      "en": "hymn_0493",
+      "confidence": "high"
+    },
+    "hymn_0396": {
+      "en": "hymn_0143",
+      "confidence": "high"
+    },
+    "hymn_0403": {
+      "en": "hymn_0134",
+      "confidence": "high"
+    },
+    "hymn_0420": {
+      "en": "hymn_0466",
+      "confidence": "high"
+    },
+    "hymn_0421": {
+      "en": "hymn_0307",
+      "confidence": "high"
+    },
+    "hymn_0443": {
+      "en": "hymn_0355",
+      "confidence": "medium"
+    },
+    "hymn_0445": {
+      "en": "hymn_0590",
+      "confidence": "high"
+    },
+    "hymn_0453": {
+      "en": "hymn_0586",
+      "confidence": "high"
+    },
+    "hymn_0460": {
+      "en": "hymn_0580",
+      "confidence": "high"
+    },
+    "hymn_0472": {
+      "en": "hymn_0637",
+      "confidence": "high"
+    },
+    "hymn_0487": {
+      "en": "hymn_0517",
+      "confidence": "high"
+    },
+    "hymn_0498": {
+      "en": "hymn_0073",
+      "confidence": "medium"
+    },
+    "hymn_0525": {
+      "en": "hymn_0526",
+      "confidence": "medium"
+    },
+    "hymn_0538": {
+      "en": "hymn_0528",
+      "confidence": "high"
+    },
+    "hymn_0574": {
+      "en": "hymn_0290",
+      "confidence": "high"
+    },
+    "hymn_0578": {
+      "en": "hymn_0187",
+      "confidence": "high"
+    },
+    "hymn_0580": {
+      "en": "hymn_0343",
+      "confidence": "high"
+    },
+    "hymn_0593": {
+      "en": "hymn_0636",
+      "confidence": "high"
+    },
+    "hymn_0594": {
+      "en": "hymn_0397",
+      "confidence": "high"
+    },
+    "hymn_0599": {
+      "en": "hymn_0062",
+      "confidence": "high"
+    },
+    "hymn_0603": {
+      "en": "hymn_0060",
+      "confidence": "high"
+    },
+    "hymn_0609": {
+      "en": "hymn_0311",
+      "confidence": "high"
+    },
+    "hymn_0616": {
+      "en": "hymn_0274",
+      "confidence": "high"
+    },
+    "hymn_0618": {
+      "en": "hymn_0599",
+      "confidence": "high"
+    },
+    "hymn_0621": {
+      "en": "hymn_0068",
+      "confidence": "high"
+    },
+    "hymn_0632": {
+      "en": "hymn_0450",
+      "confidence": "high"
+    },
+    "hymn_0633": {
+      "en": "hymn_0410",
+      "confidence": "high"
+    },
+    "hymn_0645": {
+      "en": "hymn_0183",
+      "confidence": "high"
+    },
+    "hymn_0646": {
+      "en": "hymn_0180",
+      "confidence": "high"
+    },
+    "hymn_0653": {
+      "en": "hymn_0534",
+      "confidence": "high"
+    },
+    "hymn_0654": {
+      "en": "hymn_0063",
+      "confidence": "high"
+    },
+    "hymn_0655": {
+      "en": "hymn_0135",
+      "confidence": "high"
+    },
+    "hymn_0657": {
+      "en": "hymn_0150",
+      "confidence": "high"
+    }
+  }
+}

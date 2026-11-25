@@ -8,18 +8,22 @@ import 'package:openbaptisthymnal/features/bible/providers/pending_verse_highlig
 
 /// Resolves a `[[bible:...]]` link and opens the reader at that passage,
 /// flashing the linked verse(s). Shared by the editor's inline tap handler and
-/// the links sheet so the two never drift. [targetKey] is e.g. `JHN.3.16` or
+/// the links sheet so the two never drift. With [planId] and [dayIndex] the
+/// reader offers Mark read for that plan day and the result is true once it
+/// was marked. [targetKey] is e.g. `JHN.3.16` or
 /// `JHN.3.16-18`; [editionPin] is the optional `:en-bsb` suffix.
-Future<void> openBibleLink(
+Future<bool?> openBibleLink(
   BuildContext context,
   WidgetRef ref, {
   required String targetKey,
   String? editionPin,
+  String? planId,
+  int? dayIndex,
 }) async {
   final target = await ref
       .read(bibleLinkResolverProvider)
       .resolve(targetKey, editionPin: editionPin);
-  if (target == null || !context.mounted) return;
+  if (target == null || !context.mounted) return null;
 
   final positionNotifier = ref.read(bibleReadingPositionProvider.notifier);
   final currentEdition = ref.read(bibleReadingPositionProvider).editionId;
@@ -44,5 +48,7 @@ Future<void> openBibleLink(
       SnackBar(content: Text(target.toastMessage!)),
     );
   }
-  context.router.push(const BibleReaderRoute());
+  return context.router.push<bool>(
+    BibleReaderRoute(planId: planId, dayIndex: dayIndex),
+  );
 }

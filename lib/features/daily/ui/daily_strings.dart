@@ -4,7 +4,6 @@ abstract final class DailyStrings {
   static const dayLabel = 'DAY';
   static const todaysReading = "Today's reading";
   static const startReading = 'Start reading';
-  static const markRead = 'Mark as read';
   static const writeNote = 'Write a note';
   static const readAhead = 'Read ahead';
   static const allDays = 'All days';
@@ -45,7 +44,8 @@ abstract final class DailyStrings {
   static String streakDays(int n) => n == 1 ? 'day' : 'days';
   static String streakChipSemantics(int n) =>
       n == 1 ? '1 day streak' : '$n day streak';
-  static String longest(int n) => n == 1 ? 'Longest: 1 day' : 'Longest: $n days';
+  static String longest(int n) =>
+      n == 1 ? 'Longest: 1 day' : 'Longest: $n days';
   static String totalDays(int n) =>
       n == 1 ? '1 day in total' : '$n days in total';
   static String inARow(int n) => n == 1 ? '1 day in a row' : '$n days in a row';
@@ -60,11 +60,26 @@ abstract final class DailyStrings {
   static const weekdayInitials = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
   static const _weekdays = [
-    'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday',
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
     'Sunday',
   ];
   static const _months = [
-    'January', 'February', 'March', 'April', 'May', 'June', 'July',
-    'August', 'September', 'October', 'November', 'December',
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
   ];
 }
