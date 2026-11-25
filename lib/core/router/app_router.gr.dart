@@ -340,6 +340,113 @@ class PlusRoute extends PageRouteInfo<void> {
 }
 
 /// generated route for
+/// [RoadShareCardPage]
+class RoadShareCardRoute extends PageRouteInfo<RoadShareCardRouteArgs> {
+  RoadShareCardRoute({
+    Key? key,
+    required int day,
+    required int totalDays,
+    required String planTitle,
+    int streak = 0,
+    String? passage,
+    String? landmarkTitle,
+    String? landmarkArt,
+    List<PageRouteInfo>? children,
+  }) : super(
+          RoadShareCardRoute.name,
+          args: RoadShareCardRouteArgs(
+            key: key,
+            day: day,
+            totalDays: totalDays,
+            planTitle: planTitle,
+            streak: streak,
+            passage: passage,
+            landmarkTitle: landmarkTitle,
+            landmarkArt: landmarkArt,
+          ),
+          initialChildren: children,
+        );
+
+  static const String name = 'RoadShareCardRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      final args = data.argsAs<RoadShareCardRouteArgs>();
+      return RoadShareCardPage(
+        key: args.key,
+        day: args.day,
+        totalDays: args.totalDays,
+        planTitle: args.planTitle,
+        streak: args.streak,
+        passage: args.passage,
+        landmarkTitle: args.landmarkTitle,
+        landmarkArt: args.landmarkArt,
+      );
+    },
+  );
+}
+
+class RoadShareCardRouteArgs {
+  const RoadShareCardRouteArgs({
+    this.key,
+    required this.day,
+    required this.totalDays,
+    required this.planTitle,
+    this.streak = 0,
+    this.passage,
+    this.landmarkTitle,
+    this.landmarkArt,
+  });
+
+  final Key? key;
+
+  final int day;
+
+  final int totalDays;
+
+  final String planTitle;
+
+  final int streak;
+
+  final String? passage;
+
+  final String? landmarkTitle;
+
+  final String? landmarkArt;
+
+  @override
+  String toString() {
+    return 'RoadShareCardRouteArgs{key: $key, day: $day, totalDays: $totalDays, planTitle: $planTitle, streak: $streak, passage: $passage, landmarkTitle: $landmarkTitle, landmarkArt: $landmarkArt}';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! RoadShareCardRouteArgs) return false;
+    return key == other.key &&
+        day == other.day &&
+        totalDays == other.totalDays &&
+        planTitle == other.planTitle &&
+        streak == other.streak &&
+        passage == other.passage &&
+        landmarkTitle == other.landmarkTitle &&
+        landmarkArt == other.landmarkArt;
+  }
+
+  @override
+  int get hashCode =>
+      key.hashCode ^
+      day.hashCode ^
+      totalDays.hashCode ^
+      planTitle.hashCode ^
+      streak.hashCode ^
+      passage.hashCode ^
+      landmarkTitle.hashCode ^
+      landmarkArt.hashCode;
+}
+
+/// generated route for
 /// [ScriptureShareCardPage]
 class ScriptureShareCardRoute
     extends PageRouteInfo<ScriptureShareCardRouteArgs> {
