@@ -85,12 +85,13 @@ class LandmarkShowcase extends StatefulWidget {
 class _LandmarkShowcaseState extends State<LandmarkShowcase>
     with TickerProviderStateMixin {
   static const _stageHeight = 290.0;
-  static const _podiumY = _stageHeight - 52; // centre of the podium top
-  static const _podiumRy = 24.0;
+  /// The podium's front rim stays put; its top is sized to the model's
+  /// footprint (same slant as the camera) so the ground disc rests on it.
+  static const _rimY = _stageHeight - 28;
 
   /// Where the model's lowest opaque row sits: just in front of the podium's
   /// centre, on its top surface.
-  static const _groundY = _podiumY + _podiumRy * .8;
+  static const _groundY = _rimY - 2;
 
   /// The picture is drawn at most 1:1 in device pixels (frames are 512 px);
   /// 210 pt where the screen is not dense enough to need less.
@@ -323,6 +324,7 @@ class _LandmarkShowcaseState extends State<LandmarkShowcase>
     final dpr = MediaQuery.devicePixelRatioOf(context);
     _heroSize = math.min(210.0, RoadArt.spinFrame / dpr);
     final bottom = _box[3], contentW = (_box[2] - _box[0]) * _heroSize;
+    final podiumRx = (contentW * .5).clamp(72.0, 125.0);
     final colors = _palette.isEmpty ? [c.sceneGlow] : _palette;
     final live = _landed && !_reduce;
     return Column(
@@ -345,6 +347,7 @@ class _LandmarkShowcaseState extends State<LandmarkShowcase>
                       ink: c.textPrimary,
                       reduce: _reduce,
                       shadowWidth: contentW,
+                      rx: podiumRx,
                     ),
                   ),
                 ),
@@ -611,9 +614,10 @@ class _StagePainter extends CustomPainter {
     required this.ink,
     required this.reduce,
     required this.shadowWidth,
+    required this.rx,
   });
 
-  final double shadowWidth;
+  final double shadowWidth, rx;
   final Animation<double> reveal, burst;
   final List<Color> colors;
   final Color surface, edge, ink;
@@ -623,9 +627,8 @@ class _StagePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final cx = size.width / 2;
     final lit = Curves.easeOut.transform(reveal.value);
-    final top = Offset(cx, _LandmarkShowcaseState._podiumY),
-        rx = 108.0,
-        ry = _LandmarkShowcaseState._podiumRy;
+    final ry = rx * .5;
+    final top = Offset(cx, _LandmarkShowcaseState._rimY - ry);
     final tint = colors.first;
 
     // Floor shadow.
@@ -731,7 +734,8 @@ class _StagePainter extends CustomPainter {
       o.colors != colors ||
       o.surface != surface ||
       o.reduce != reduce ||
-      o.shadowWidth != shadowWidth;
+      o.shadowWidth != shadowWidth ||
+      o.rx != rx;
 }
 
 /// Sparkles rising off the podium in the landmark's colours.
