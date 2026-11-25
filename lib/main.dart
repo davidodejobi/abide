@@ -3,6 +3,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/app.dart';
+import 'core/notifications/notification_service.dart';
 import 'core/theme/lum_theme.dart';
 import 'core/storage/storage_provider.dart';
 import 'core/utils/services/file_storage_service.dart';
@@ -15,6 +16,9 @@ void main() async {
   await FileStorageService.init();
   final prefs = await SharedPreferences.getInstance();
 
+  final notifications = LocalNotificationService();
+  await notifications.init();
+
   // The intro's art, built while the native splash still shows.
   await SplashIntro.preload();
 
@@ -22,6 +26,7 @@ void main() async {
     ProviderScope(
       overrides: [
         sharedPreferencesProvider.overrideWithValue(prefs),
+        notificationServiceProvider.overrideWithValue(notifications),
       ],
       child: const AbideApp(),
     ),

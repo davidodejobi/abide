@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:openbaptisthymnal/core/notifications/notification_service.dart';
 import 'package:openbaptisthymnal/core/storage/database/app_database.dart';
 import 'package:openbaptisthymnal/core/storage/database/database_provider.dart';
 import 'package:openbaptisthymnal/core/storage/storage_provider.dart';
@@ -124,9 +125,9 @@ final planTodayProvider = Provider.autoDispose<DateTime>((ref) {
   return DateTime(now.year, now.month, now.day);
 });
 
-/// Plans the user asked to be reminded about, by plan id. Stored locally only:
-/// the app has no notification package yet, so this flag is what a scheduled
-/// notification would read, and what the Today countdown card keys off.
+/// Plans the user asked to be reminded about, by plan id. Drives the Today
+/// countdown card, and for a fixed-start plan also schedules a one-off
+/// notification for 08:00 local on its opening day.
 final planRemindersProvider =
     NotifierProvider<PlanRemindersNotifier, Set<String>>(
         PlanRemindersNotifier.new);
@@ -138,6 +139,31 @@ class PlanRemindersNotifier extends Notifier<Set<String>> {
   void toggle(String planId, bool on) {
     state = on ? {...state, planId} : ({...state}..remove(planId));
     ref.read(storageServiceProvider).savePlanReminders(state);
+    _syncNotification(planId, on);
+  }
+
+  Future<void> _syncNotification(String planId, bool on) async {
+    try {
+      final service = ref.read(notificationServiceProvider);
+      final id = NotificationIds.forPlan(planId);
+      if (!on) return await service.cancel(id);
+      final plans = await ref.read(availablePlansProvider.future);
+      final plan = plans.where((p) => p.id == planId).firstOrNull;
+      final opens = plan == null ? null : PlanSchedule(plan).opensOn;
+      if (plan == null || opens == null) return;
+      final at = DateTime(opens.year, opens.month, opens.day, 8);
+      if (!at.isAfter(ref.read(dayPartClockProvider)())) return;
+      // Permission is asked here, the moment the user turns a reminder on.
+      if (!await service.requestPermission()) return;
+      await service.scheduleOnce(
+        id: id,
+        at: at,
+        title: '${plan.title} starts today',
+        body: 'Day 1 is ready when you are.',
+      );
+    } catch (_) {
+      // The in-app reminder still works without the notification.
+    }
   }
 }
 

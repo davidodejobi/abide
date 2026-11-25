@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:openbaptisthymnal/core/notifications/notification_service.dart';
+import 'package:openbaptisthymnal/core/providers/bottom_nav_provider.dart';
 import 'package:openbaptisthymnal/features/app_update/ui/app_update_overlay.dart';
 import 'package:openbaptisthymnal/features/onboarding/domain/seed_welcome_note.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/seed_release_notes.dart';
@@ -47,6 +49,15 @@ class AbideApp extends HookConsumerWidget {
         createNote: repo.createNote,
       );
       return null;
+    }, const []);
+
+    // Tapping a reminder lands on Today. Cold starts already open on it.
+    useEffect(() {
+      final sub = ref.read(notificationServiceProvider).taps.listen((_) {
+        ref.read(bottomNavProvider.notifier).state = BottomNavTab.today.tabIndex;
+        appRouter.popUntilRoot();
+      });
+      return sub.cancel;
     }, const []);
 
     return ToastificationWrapper(
