@@ -9,6 +9,7 @@ import 'package:openbaptisthymnal/core/widgets/lum_button.dart';
 import '../../domain/passage_label.dart';
 import '../../domain/plan_progress.dart';
 import '../../domain/reading_plan.dart';
+import '../../domain/road_atlas.dart';
 import '../../domain/road_days.dart';
 import '../../domain/road_landmarks.dart';
 import '../daily_strings.dart';
@@ -46,10 +47,12 @@ Future<RoadOpen?> showStopSheet(
   required DateTime? date,
   required Map<String, String> bookNames,
   String? progressId,
+  DayContent? content,
 }) {
   return _show(
     context,
     (_) => StopSheet(
+      content: content,
       progressId: progressId,
       plan: plan,
       day: day,
@@ -139,7 +142,11 @@ class StopSheet extends StatelessWidget {
     required this.date,
     required this.bookNames,
     this.progressId,
+    this.content,
   });
+
+  /// What the atlas knows about this day (region, chapters); null hides it.
+  final DayContent? content;
 
   /// Where this plan's progress is stored (the plan id unless anchored).
   final String? progressId;
@@ -235,6 +242,7 @@ class StopSheet extends StatelessWidget {
             ],
           ),
         ),
+        if (content != null) _DayChapters(content: content!, names: bookNames),
         const SizedBox(height: LumSpace.xl),
         LumButton(
           label: switch (status) {
@@ -502,6 +510,60 @@ class _ShowcaseLayout extends StatelessWidget {
           ],
         );
       }),
+    );
+  }
+}
+
+/// The day's region and the chapters on it, one line each with what happens
+/// there. Long days show the first [_maxChapters] and a count of the rest.
+class _DayChapters extends StatelessWidget {
+  const _DayChapters({required this.content, required this.names});
+
+  final DayContent content;
+  final Map<String, String> names;
+
+  static const _maxChapters = 8;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.lum;
+    final shown = content.chapters.take(_maxChapters).toList();
+    final more = content.chapters.length - shown.length;
+    final region = content.region;
+    return Padding(
+      padding: const EdgeInsets.only(top: LumSpace.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (region != null) ...[
+            Row(children: [
+              Icon(Icons.signpost_outlined,
+                  size: LumSize.iconSm, color: c.textSecondary),
+              const SizedBox(width: LumSpace.sm),
+              Expanded(
+                child: Text(region,
+                    style: LumText.subheadline
+                        .copyWith(color: c.textSecondary)),
+              ),
+            ]),
+            const SizedBox(height: LumSpace.sm),
+          ],
+          for (final ch in shown)
+            Padding(
+              padding: const EdgeInsets.only(bottom: LumSpace.xs),
+              child: Text(
+                [
+                  '${names[ch.book] ?? ch.book} ${ch.chapter}',
+                  if (ch.event != null) ch.event!,
+                ].join(' · '),
+                style: LumText.footnote.copyWith(color: c.textSecondary),
+              ),
+            ),
+          if (more > 0)
+            Text(DailyStrings.moreChapters(more),
+                style: LumText.footnote.copyWith(color: c.textSecondary)),
+        ],
+      ),
     );
   }
 }

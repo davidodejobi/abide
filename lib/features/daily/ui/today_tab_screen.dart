@@ -516,8 +516,11 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
               today: evening ? nextDay(now) : now,
             );
     }
+    final content = await roadDayContent(d.plan, dayIndex);
+    if (!mounted) return;
     final open = await showStopSheet(
       context,
+      content: content,
       plan: d.plan,
       day: day,
       status: status,

@@ -4,6 +4,8 @@ import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
+import '../../domain/reading_plan.dart';
+import '../../domain/road_atlas.dart';
 import '../../domain/road_landmarks.dart';
 
 /// The road's Blender-rendered sprites and the landmark list, decoded once and
@@ -157,5 +159,30 @@ class RoadArt {
           failed.add(a);
         }),
     ]);
+  }
+}
+
+Future<RoadAtlas>? _atlasMemo;
+
+/// The bundled chapter atlas, parsed once and shared. A failed load is not
+/// kept, so a later mount can retry.
+Future<RoadAtlas> loadRoadAtlas() => _atlasMemo ??= rootBundle
+        .loadString('assets/images/road/road_atlas.json')
+        .then(RoadAtlas.parse)
+        .catchError((Object e) {
+      _atlasMemo = null;
+      throw e;
+    });
+
+/// What the road shows at [dayIndex] of [plan] (region, chapters), or null if
+/// the art or atlas cannot load. Same resolution the painter uses.
+Future<DayContent?> roadDayContent(ReadingPlan plan, int dayIndex) async {
+  try {
+    final art = await RoadArt.load();
+    final atlas = await loadRoadAtlas();
+    final lms = landmarksByDay(plan, art.landmarks, placeArtless: true);
+    return resolveDays(plan, atlas, lms)[dayIndex];
+  } catch (_) {
+    return null;
   }
 }

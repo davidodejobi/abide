@@ -9,6 +9,7 @@ import 'package:openbaptisthymnal/core/theme/lum_theme.dart';
 
 import '../../domain/plan_schedule.dart';
 import '../../domain/reading_plan.dart';
+import '../../domain/road_atlas.dart';
 import '../../domain/road_days.dart';
 import '../../domain/road_geometry.dart';
 import '../../domain/road_landmarks.dart';
@@ -134,6 +135,8 @@ class RoadSceneState extends State<RoadScene> with TickerProviderStateMixin {
 
   RoadArt? _art;
   Map<int, List<Landmark>> _landmarks = const {};
+  RoadAtlas? _atlas; // null until loaded or if it failed: the road still works
+  Map<int, DayContent> _days = const {};
   int? _windowAt; // stop the loaded landmark sprites are centred on
   String? _landmarkPlan;
 
@@ -155,10 +158,17 @@ class RoadSceneState extends State<RoadScene> with TickerProviderStateMixin {
     _from = _to = _target;
     _dusk0 = _dusk1 = _duskTarget;
     widget.visibleBottom?.addListener(_panelMoved);
-    RoadArt.load().then((a) {
+    RoadArt.load().then((a) async {
+      RoadAtlas? atlas;
+      try {
+        atlas = await loadRoadAtlas();
+      } catch (_) {
+        // No atlas: no regions or scatter, the road is otherwise unchanged.
+      }
       if (!mounted) return;
       setState(() {
         _art = a;
+        _atlas = atlas;
         _syncLandmarks();
       });
     }, onError: (_) {});
@@ -168,9 +178,12 @@ class RoadSceneState extends State<RoadScene> with TickerProviderStateMixin {
     final plan = widget.plan;
     if (_art == null || plan == null) {
       _landmarks = const {};
+      _days = const {};
       _landmarkPlan = null;
     } else if (_landmarkPlan != plan.id) {
       _landmarks = landmarksByDay(plan, _art!.landmarks, placeArtless: true);
+      final atlas = _atlas;
+      _days = atlas == null ? const {} : resolveDays(plan, atlas, _landmarks);
       _landmarkPlan = plan.id;
       _windowAt = null;
       _syncWindow(_lookNow());
@@ -547,6 +560,7 @@ class RoadSceneState extends State<RoadScene> with TickerProviderStateMixin {
       total: widget.totalDays,
       finished: widget.currentDay == null,
       landmarks: _landmarks,
+      days: _days,
       liftedId: widget.liftedId,
       showTomorrowTag: widget.showTomorrowTag && widget.currentDay != null,
       statuses: widget.statuses,
@@ -821,6 +835,50 @@ const _propScale = {
   'prop_flowers': .65,
   'prop_rock': .6,
 };
+const _water = {'spring', 'well', 'water-jar', 'boat', 'cup'};
+const _stone = {
+  'rock', 'cairn', 'river-stones', 'tablet', 'ruins', 'tomb-stone', 'wall',
+  'cave-mouth', 'altar', 'city-gate', 'tower', 'broken-spear', 'chain-broken',
+};
+const _leafy = {
+  'cedar', 'fig-tree', 'olive-tree', 'palm', 'fruit-tree', 'vine', 'tree',
+};
+const _bloom = {'lily', 'wheat-sheaf', 'seed', 'bread', 'sheep', 'lamb', 'dove'};
+
+/// The generic sprite that stands in for an atlas prop until it has art of its
+/// own; anything unlisted is a bush.
+String _genericFor(String id) => _water.contains(id)
+    ? 'prop_pond'
+    : _stone.contains(id)
+        ? 'prop_rock'
+        : _leafy.contains(id)
+            ? (id == 'cedar' ? 'prop_cypress' : 'prop_tree')
+            : _bloom.contains(id)
+                ? 'prop_flowers'
+                : 'prop_bush';
+
+/// Ground wash per atlas biome.
+const _biomeWash = <String, Color>{
+  'garden': Color(0xFF4FA35A),
+  'meadow': Color(0xFF6DB868),
+  'field': Color(0xFF9DB85A),
+  'vineyard': Color(0xFF8B5FA8),
+  'desert': Color(0xFFE0B96A),
+  'wilderness': Color(0xFFC9A36B),
+  'camp': Color(0xFFD08B5B),
+  'ruins': Color(0xFF9A8F86),
+  'mountain': Color(0xFF7D8FA8),
+  'valley': Color(0xFF6FA08A),
+  'river': Color(0xFF5BA3D0),
+  'sea': Color(0xFF4A8FCB),
+  'shore': Color(0xFF6BB5C9),
+  'harbor': Color(0xFF5B8FB5),
+  'night': Color(0xFF5B5F9E),
+  'exile': Color(0xFF7A7396),
+  'city': Color(0xFFD9A55B),
+  'temple': Color(0xFFE5C068),
+  'palace': Color(0xFFC9788F),
+};
 const _propKinds = [
   'prop_tree',
   'prop_bush',
@@ -849,6 +907,7 @@ class _RoadPainter extends CustomPainter {
     required this.total,
     required this.finished,
     required this.landmarks,
+    this.days = const {},
     this.liftedId,
     required this.showTomorrowTag,
     required this.statuses,
@@ -867,6 +926,7 @@ class _RoadPainter extends CustomPainter {
   final bool finished, showTomorrowTag;
   final PlanDayStatuses? statuses;
   final Map<int, List<Landmark>> landmarks;
+  final Map<int, DayContent> days;
   final String? liftedId;
   final geo = const RoadGeometry();
   final List<CustomPainterSemantics> Function(Size, _RoadPainter) semantics;
@@ -1148,8 +1208,11 @@ class _RoadPainter extends CustomPainter {
       final y = _stopAt(n, cam).dy;
       // Above the haze nothing shows: skip it, and its hit target with it.
       if (y < 24) continue;
-      if (lms == null || lms.length < 2) _props(canvas, sp, n, cam);
+      final day = days[n];
+      if (day != null) _wash(canvas, n, day, cam, dusk);
+      if (lms == null || lms.length < 2) _props(canvas, sp, n, cam, day);
       if (n < 1 || n > total) continue;
+      if (day != null && day.gateway) _gateway(canvas, n, day, cam, dusk);
       if (lms != null) {
         for (var i = 0; i < lms.length; i++) {
           _landmark(canvas, sp, n, lms[i], i, pos, cam, pulse, tint);
@@ -1159,28 +1222,88 @@ class _RoadPainter extends CustomPainter {
     }
   }
 
-  void _props(Canvas canvas, Paint sp, int n, Offset cam) {
+  /// A soft patch of the day's biome colour on the meadow beside the stop: one
+  /// oval each side, so a region reads as a change of ground.
+  void _wash(Canvas canvas, int n, DayContent day, Offset cam, double dusk) {
+    final col = _biomeWash[day.biome];
+    if (col == null) return;
+    final s = _stopAt(n, cam);
+    final f = cache.fill
+      ..color = col.withValues(alpha: (dark ? .16 : .22) * (1 - dusk * .4));
+    for (final side in const [-1.0, 1.0]) {
+      canvas.drawOval(
+          Rect.fromCenter(
+              center: Offset(195 + side * 112, s.dy + 8), width: 150, height: 60),
+          f);
+    }
+  }
+
+  /// A small arch over the road half a stop before the first day of a new
+  /// region, with the region's name above it.
+  void _gateway(Canvas canvas, int n, DayContent day, Offset cam, double dusk) {
+    final q = geo.at(n - .5);
+    final base = Offset(q.x + cam.dx, q.y + cam.dy);
+    if (base.dy < 40 || base.dy > ch + 40) return;
+    final wood = _l(c.sceneRoadEdge, c.sceneDuskLand, dusk * .4);
+    final post = cache.stroke
+      ..strokeWidth = 4
+      ..color = wood;
+    const half = 24.0, rise = 30.0;
+    canvas.drawLine(base.translate(-half, 0), base.translate(-half, -rise), post);
+    canvas.drawLine(base.translate(half, 0), base.translate(half, -rise), post);
+    canvas.drawPath(
+        Path()
+          ..moveTo(base.dx - half - 5, base.dy - rise + 3)
+          ..quadraticBezierTo(
+              base.dx, base.dy - rise - 16, base.dx + half + 5, base.dy - rise + 3),
+        post..strokeWidth = 5);
+    final name = day.region;
+    if (name == null) return;
+    final tp = _text(
+        'g$n',
+        name,
+        LumText.roadLabelCaps11.copyWith(
+            color: dark ? const Color(0xFFF4F6FA) : c.sceneStopOnUpcoming,
+            shadows: const [Shadow(color: Color(0x88000000), blurRadius: 3)]),
+        maxWidth: 150);
+    tp.paint(canvas,
+        Offset(base.dx - tp.width / 2, base.dy - rise - 18 - tp.height));
+  }
+
+  void _props(Canvas canvas, Paint sp, int n, Offset cam, DayContent? day) {
     final h = _hash(n + 77);
     final side = geo.stop(n).x > 0 ? -1.0 : 1.0;
-    final kind = _propKinds[h % _propKinds.length];
-    final img = art?[kind];
-    if (img == null) return;
     final lmSide = landmarks[n]?.isNotEmpty == true
         ? (geo.stop(n).x > 0 ? 1.0 : -1.0)
         : 0.0;
     final s = _stopAt(n, cam);
-    var dx = side * (118 + (h >> 4) % 46).toDouble();
-    if (lmSide != 0 && dx.sign == lmSide) dx = -dx;
-    final sc = (_propScale[kind] ?? .6) * _s;
-    final w = img.width * sc, hh = img.height * sc;
-    final cx = dx + cam.dx;
-    final bottom = s.dy + 26 + (h >> 9) % 20;
-    sp.color = const Color(0xFFFFFFFF);
-    canvas.drawImageRect(
-        img,
-        Rect.fromLTWH(0, 0, img.width.toDouble(), img.height.toDouble()),
-        Rect.fromLTWH(cx - w / 2, bottom - hh + 6, w, hh),
-        sp);
+    // A minor day shows its atlas prop (nearest generic sprite) each side; any
+    // other day keeps the old hashed scatter.
+    final atlas = day?.props ?? const <String>[];
+    final kinds = atlas.isEmpty
+        ? [_propKinds[h % _propKinds.length]]
+        : [
+            for (final p in atlas) _genericFor(p),
+            if (atlas.length == 1) _genericFor(atlas.first),
+          ];
+    for (var i = 0; i < kinds.length; i++) {
+      final kind = kinds[i];
+      final img = art?[kind];
+      if (img == null) continue;
+      final hh2 = _hash(n * 3 + i + 77);
+      var dx = (i.isEven ? side : -side) * (118 + (hh2 >> 4) % 46).toDouble();
+      if (lmSide != 0 && dx.sign == lmSide) dx = -dx;
+      final sc = (_propScale[kind] ?? .6) * _s;
+      final w = img.width * sc, hh = img.height * sc;
+      final cx = dx + cam.dx;
+      final bottom = s.dy + 26 + (hh2 >> 9) % 20;
+      sp.color = const Color(0xFFFFFFFF);
+      canvas.drawImageRect(
+          img,
+          Rect.fromLTWH(0, 0, img.width.toDouble(), img.height.toDouble()),
+          Rect.fromLTWH(cx - w / 2, bottom - hh + 6, w, hh),
+          sp);
+    }
   }
 
   void _stop(Canvas canvas, Paint sp, int n, double pos, Offset cam,
