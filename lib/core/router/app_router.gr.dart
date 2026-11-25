@@ -413,6 +413,7 @@ class ShareCardRoute extends PageRouteInfo<ShareCardRouteArgs> {
     required String hymnNumber,
     required String title,
     required String body,
+    List<({String label, String text})> parts = const [],
     List<PageRouteInfo>? children,
   }) : super(
           ShareCardRoute.name,
@@ -421,6 +422,7 @@ class ShareCardRoute extends PageRouteInfo<ShareCardRouteArgs> {
             hymnNumber: hymnNumber,
             title: title,
             body: body,
+            parts: parts,
           ),
           initialChildren: children,
         );
@@ -436,6 +438,7 @@ class ShareCardRoute extends PageRouteInfo<ShareCardRouteArgs> {
         hymnNumber: args.hymnNumber,
         title: args.title,
         body: args.body,
+        parts: args.parts,
       );
     },
   );
@@ -447,6 +450,7 @@ class ShareCardRouteArgs {
     required this.hymnNumber,
     required this.title,
     required this.body,
+    this.parts = const [],
   });
 
   final Key? key;
@@ -457,9 +461,11 @@ class ShareCardRouteArgs {
 
   final String body;
 
+  final List<({String label, String text})> parts;
+
   @override
   String toString() {
-    return 'ShareCardRouteArgs{key: $key, hymnNumber: $hymnNumber, title: $title, body: $body}';
+    return 'ShareCardRouteArgs{key: $key, hymnNumber: $hymnNumber, title: $title, body: $body, parts: $parts}';
   }
 
   @override
@@ -469,12 +475,17 @@ class ShareCardRouteArgs {
     return key == other.key &&
         hymnNumber == other.hymnNumber &&
         title == other.title &&
-        body == other.body;
+        body == other.body &&
+        const ListEquality().equals(parts, other.parts);
   }
 
   @override
   int get hashCode =>
-      key.hashCode ^ hymnNumber.hashCode ^ title.hashCode ^ body.hashCode;
+      key.hashCode ^
+      hymnNumber.hashCode ^
+      title.hashCode ^
+      body.hashCode ^
+      const ListEquality().hash(parts);
 }
 
 /// generated route for

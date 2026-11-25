@@ -18,6 +18,7 @@ import 'package:openbaptisthymnal/features/hymn/ui/viewmodels/hymns_viewmodel.da
 import 'package:openbaptisthymnal/features/hymn/ui/widgets/hymn_picker_inline.dart';
 import 'package:openbaptisthymnal/features/hymn/ui/widgets/hymn_view.dart';
 import 'package:openbaptisthymnal/features/settings/ui/widgets/text_size_sheet.dart';
+import 'package:openbaptisthymnal/features/tablet/ui/notes_strings.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 /// Two-pack default: the only languages currently shipped. If the project
@@ -154,6 +155,20 @@ class HymnDetailPage extends HookConsumerWidget {
                     hymnNumber: hymnNumber,
                     title: primary.title,
                     body: trimmed,
+                    parts: [
+                      for (final (i, st) in primary.lyrics.stanzas.indexed) ...[
+                        (
+                          label: NotesStrings.stanzaLabel(i + 1),
+                          text: st.text,
+                        ),
+                        // The chorus is sung after the first stanza.
+                        if (i == 0 && primary.lyrics.chorus != null)
+                          (
+                            label: NotesStrings.chorusLabel,
+                            text: primary.lyrics.chorus!,
+                          ),
+                      ],
+                    ],
                   ),
                 );
               }

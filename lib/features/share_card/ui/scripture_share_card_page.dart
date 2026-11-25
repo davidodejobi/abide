@@ -27,12 +27,19 @@ class ScriptureShareCardPage extends StatelessWidget {
     return ShareCardComposer(
       title: NotesStrings.shareVerse,
       filename: 'abide_${_slug(reference)}',
-      cardBuilder: (style, format) => ScriptureCard(
+      cardBuilder: (style, format, showReference) => ScriptureCard(
         reference: reference,
         verses: verses,
         style: style,
         format: format,
+        showReference: showReference,
       ),
+      textBuilder: (showReference) => [
+        verses.length > 1
+            ? verses.map((v) => '${v.number} ${v.text}').join(' ')
+            : verses.first.text,
+        if (showReference) reference,
+      ].join('\n\n'),
     );
   }
 
