@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:openbaptisthymnal/core/theme/lum_theme.dart';
 import 'package:openbaptisthymnal/core/widgets/split_pane.dart';

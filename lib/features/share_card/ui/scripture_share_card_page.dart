@@ -1,5 +1,5 @@
 import 'package:auto_route/auto_route.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:openbaptisthymnal/features/share_card/ui/share_card_composer.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/notes_strings.dart';
 import 'package:openbaptisthymnal/features/share_card/ui/widgets/scripture_card.dart';
