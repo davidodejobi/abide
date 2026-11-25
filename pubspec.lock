@@ -10,7 +10,7 @@ packages:
     source: hosted
     version: "103.0.0"
   alchemist:
-    dependency: "direct main"
+    dependency: "direct dev"
     description:
       name: alchemist
       sha256: a83a511d731671c7f50623ce0dc70b4d6d3588bd8375243fc7978546c1556776
@@ -1269,14 +1269,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.9.2"
-  sqlite3_flutter_libs:
-    dependency: "direct main"
-    description:
-      name: sqlite3_flutter_libs
-      sha256: eeb9e3a45207649076b808f8a5a74d68770d0b7f26ccef6d5f43106eee5375ad
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.5.42"
   sqlparser:
     dependency: transitive
     description:

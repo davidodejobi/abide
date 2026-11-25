@@ -1,6 +1,7 @@
 import 'dart:ui' as ui;
 
 import 'package:material_ui/material_ui.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:openbaptisthymnal/core/theme/app_theme.dart';
 import 'package:openbaptisthymnal/features/daily/domain/road_days.dart';
@@ -24,19 +25,24 @@ void main() {
   var done = false;
 
   Future<void> open(WidgetTester t,
-      {bool reduce = false, Rect? from, bool withSprite = true}) async {
+      {bool reduce = false,
+      Rect? from,
+      bool withSprite = true,
+      Size size = const Size(390, 844),
+      double text = 1}) async {
     art = (await t.runAsync(RoadArt.load))!;
     await t.runAsync(() => art.ensureLandmarks(['garden']));
     lm = art.landmarks.firstWhere((l) => l.art == 'garden');
     sprite = art['lm_garden']!;
-    t.view.physicalSize = const Size(390 * 3, 844 * 3);
+    t.view.physicalSize = size * 3;
     t.view.devicePixelRatio = 3;
     addTearDown(t.view.reset);
     done = false;
     await t.pumpWidget(MaterialApp(
       theme: AppTheme.lightTheme,
       builder: (c, w) => MediaQuery(
-        data: MediaQuery.of(c).copyWith(disableAnimations: reduce),
+        data: MediaQuery.of(c).copyWith(
+            disableAnimations: reduce, textScaler: TextScaler.linear(text)),
         child: w!,
       ),
       home: Scaffold(
@@ -164,5 +170,68 @@ void main() {
     await t.pumpAndSettle();
     expect(find.byType(RawImage), findsNothing);
     expect(find.text(lm.title), findsOneWidget);
+  });
+
+  testWidgets('the sheet is capped so the road shows, with a Close button',
+      (t) async {
+    await open(t, from: const Rect.fromLTWH(20, 500, 120, 100));
+    await _pumpFor(t, 1400);
+    final h = t.getSize(find.byType(BottomSheet)).height;
+    expect(h, lessThanOrEqualTo(844 * .78 + 1));
+    final close = find.bySemanticsLabel('Close');
+    expect(close, findsOneWidget);
+    expect(
+        t.getSize(find.descendant(of: close, matching: find.byType(SizedBox)).first),
+        const Size(48, 48));
+    await t.tap(close);
+    await _pumpFor(t, 150);
+    expect(done, isFalse, reason: 'flying home');
+    await _pumpFor(t, 800);
+    expect(done, isTrue);
+  });
+
+  for (final (name, size, text) in [
+    ('375x667', const Size(375, 667), 1.0),
+    ('375x667 text 1.3', const Size(375, 667), 1.3),
+    ('360x640 text 1.3', const Size(360, 640), 1.3),
+    ('390x844 text 2.0', const Size(390, 844), 2.0),
+    ('landscape 844x390', const Size(844, 390), 1.0),
+  ]) {
+    testWidgets('fits and scrolls to Read on $name', (t) async {
+      await open(t,
+          size: size, text: text, from: const Rect.fromLTWH(20, 300, 120, 100));
+      await _pumpFor(t, 1400);
+      expect(t.takeException(), isNull, reason: 'no overflow');
+      final read = find.text('Read ${lm.ref}');
+      await t.ensureVisible(read);
+      await t.pump();
+      final r = t.getRect(read);
+      expect(r.bottom, lessThanOrEqualTo(size.height + .5));
+      expect(r.top, greaterThanOrEqualTo(0));
+      expect(t.getRect(find.bySemanticsLabel('Close')).top,
+          greaterThanOrEqualTo(0));
+      expect(t.takeException(), isNull);
+    });
+  }
+
+  testWidgets('closing at the watchdog moment shows one image and one haptic',
+      (t) async {
+    var haptics = 0;
+    t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform, (c) async {
+      if (c.method == 'HapticFeedback.vibrate') haptics++;
+      return null;
+    });
+    addTearDown(() => t.binding.defaultBinaryMessenger
+        .setMockMethodCallHandler(SystemChannels.platform, null));
+    await open(t, from: const Rect.fromLTWH(20, 500, 120, 100));
+    await _pumpFor(t, 2850);
+    expect(haptics, 1);
+    Navigator.of(t.element(find.byType(BottomSheet))).pop();
+    await _pumpFor(t, 300);
+    expect(haptics, 1, reason: 'no second landing');
+    expect(find.byType(RawImage), findsOneWidget, reason: 'only the flier');
+    await _pumpFor(t, 600);
+    expect(done, isTrue);
   });
 }

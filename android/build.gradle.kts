@@ -22,8 +22,10 @@ subprojects {
 // AGP 9.3.1 lint crashes (JavaDocParser NoSuchMethodError) in plugin modules;
 // lintVital only gates release builds, so skip it until AGP ships a fix.
 subprojects {
-    tasks.configureEach {
-        if (name.startsWith("lintVital")) enabled = false
+    if (project.name != "app") {
+        tasks.configureEach {
+            if (name.startsWith("lintVital")) enabled = false
+        }
     }
 }
 

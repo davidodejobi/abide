@@ -56,8 +56,13 @@ class AbideApp extends HookConsumerWidget {
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
         themeMode: themeMode,
-        builder: (context, child) => SplashIntro(
-          child: AppUpdateOverlay(child: child ?? const SizedBox.shrink()),
+        // Old-flutter/material packages (appflowy_editor, toastification,
+        // audio_waveforms) read the app theme through this bridge.
+        // ignore: deprecated_member_use
+        builder: (context, child) => MaterialUiCompatibilityBridge(
+          child: SplashIntro(
+            child: AppUpdateOverlay(child: child ?? const SizedBox.shrink()),
+          ),
         ),
         routerConfig: appRouter.config(
           deepLinkBuilder: appRouter.onboardingDeepLink,

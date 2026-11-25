@@ -34,6 +34,7 @@ abstract final class DailyStrings {
   static const stopToday = 'today';
   static const stopAhead = 'coming up';
   static String stopSemantics(int n, String state) => 'Day $n, $state';
+  static const close = 'Close';
   static const sheetDone = 'Read';
   static const sheetToday = 'Today';
   static const sheetAhead = 'Coming up';
