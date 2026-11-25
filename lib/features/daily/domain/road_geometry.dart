@@ -17,6 +17,30 @@ class RoadGeometry {
     return math.Point(side * sway * wobble, -n * spacing);
   }
 
+  /// Where the camera looks: the stop position [look] sits at this screen y.
+  static const double focusY = 300;
+
+  /// Screen offset to add to a world point so that stop position [look] sits at
+  /// the focus point. Follows fully in y and a third of the way in x, so the
+  /// swinging road stays on screen.
+  math.Point<double> camera(double look) {
+    final p = at(look + .25);
+    return math.Point(195 - p.x * .3, focusY - p.y);
+  }
+
+  /// The stops whose screen y can fall within [top]..[bottom] when the camera
+  /// looks at [look]; one stop of margin each side. Stop 0 is the road's start,
+  /// so [first] may be below 1 (props stand there too); the caller clamps to
+  /// the plan. Stop `n` is at screen y `focusY + (look + .25 - n) * spacing`.
+  ({int first, int last}) visibleStops(double look,
+      {double top = 120, double bottom = 580}) {
+    final base = focusY + (look + .25) * spacing;
+    return (
+      first: ((base - bottom) / spacing).floor() - 1,
+      last: ((base - top) / spacing).ceil() + 1,
+    );
+  }
+
   /// A smooth point along the road at fractional stop position [pos], via a
   /// Catmull-Rom spline through the stops, so a walker eased through [pos]
   /// follows the bends instead of cutting corners.

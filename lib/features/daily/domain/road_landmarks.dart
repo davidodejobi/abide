@@ -29,9 +29,18 @@ class Landmark {
   /// A reference line only ("Genesis 1:1"), never quoted text.
   final String ref;
 
-  /// Sprite key, or null while that landmark has no art yet (it is then never
-  /// placed on the road).
+  /// Sprite key, or null while that landmark has no art yet (it is then drawn
+  /// as a small marker sign, so it can still be tapped).
   final String? art;
+
+  /// The verse the reader opens at, as a link key (`GEN.1.1`), read off the
+  /// last `chapter:verse` of [ref]; the first chapter, verse 1 if [ref] has none.
+  String get openingKey {
+    final m = RegExp(r'(\d+):(\d+)\s*$').firstMatch(ref);
+    return m == null
+        ? '$book.$fromChapter.1'
+        : '$book.${m.group(1)}.${m.group(2)}';
+  }
 
   factory Landmark.fromJson(Map<String, dynamic> j) => Landmark(
         id: j['id'] as String,
@@ -58,9 +67,10 @@ List<Landmark> parseLandmarks(String json) => [
 /// the next day if that day is free (the tomb follows the cross), and is
 /// dropped otherwise. A landmark whose art was used within the last
 /// [artGapDays] days is skipped so the road does not repeat itself. Landmarks
-/// without art are never placed.
+/// without art are never placed, unless [placeArtless] is set (the road draws
+/// them as marker signs, each its own "picture" for the repeat rule).
 Map<int, Landmark> landmarksByDay(ReadingPlan plan, List<Landmark> all,
-    {int artGapDays = 4}) {
+    {int artGapDays = 4, bool placeArtless = false}) {
   final placed = <String>{};
   final lastArtDay = <String, int>{};
   final out = <int, Landmark>{};
@@ -73,12 +83,15 @@ Map<int, Landmark> landmarksByDay(ReadingPlan plan, List<Landmark> all,
     final candidates = [
       ...displaced,
       for (final lm in all)
-        if (lm.art != null && !displaced.contains(lm) && touches(lm)) lm,
+        if ((placeArtless || lm.art != null) &&
+            !displaced.contains(lm) &&
+            touches(lm))
+          lm,
     ];
     displaced = [];
     for (final lm in candidates) {
       if (placed.contains(lm.id)) continue;
-      final last = lastArtDay[lm.art];
+      final last = lastArtDay[lm.art ?? lm.id];
       if (last != null && day.dayIndex - last < artGapDays) {
         placed.add(lm.id); // same picture as a recent stop: drop, don't retry
         continue;
@@ -89,7 +102,7 @@ Map<int, Landmark> landmarksByDay(ReadingPlan plan, List<Landmark> all,
       }
       out[day.dayIndex] = lm;
       placed.add(lm.id);
-      lastArtDay[lm.art!] = day.dayIndex;
+      lastArtDay[lm.art ?? lm.id] = day.dayIndex;
     }
   }
   return out;
