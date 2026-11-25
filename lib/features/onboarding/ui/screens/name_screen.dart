@@ -1,85 +1,106 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:openbaptisthymnal/core/theme/app_text_styles.dart';
-import 'package:openbaptisthymnal/features/onboarding/audio/onboarding_sfx.dart';
-import 'package:openbaptisthymnal/features/onboarding/providers/onboarding_provider.dart';
-import 'package:openbaptisthymnal/features/onboarding/ui/widgets/hand_drawn_button.dart';
-import 'package:openbaptisthymnal/features/onboarding/ui/widgets/hand_drawn_field.dart';
-import 'package:openbaptisthymnal/features/onboarding/ui/widgets/typewriter_text.dart';
+import 'package:openbaptisthymnal/core/theme/lum_theme.dart';
 
-/// Final onboarding screen — asks for the user's name, saves it, finishes.
+import '../../providers/onboarding_provider.dart';
+import '../onboarding_strings.dart';
+import '../widgets/onboarding_frame.dart';
+
+/// Step 3: first name (optional), then save everything and finish.
 class NameScreen extends HookConsumerWidget {
-  const NameScreen({super.key, required this.onDone, required this.sfx});
+  const NameScreen({
+    super.key,
+    required this.step,
+    required this.total,
+    required this.onDone,
+    required this.onBack,
+  });
 
+  final int step;
+  final int total;
   final VoidCallback onDone;
-  final OnboardingSfx sfx;
+  final VoidCallback onBack;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final ink = Theme.of(context).colorScheme.onSurface;
-    final controller = useTextEditingController();
-    final showInput = useState(false);
-    final submitting = useState(false);
+    final c = context.lum;
+    final controller =
+        useTextEditingController(text: ref.read(onboardingProvider).name);
+    final saving = ref.watch(onboardingProvider.select((s) => s.saving));
+    final failed = useState(false);
 
     Future<void> finish() async {
-      if (submitting.value) return;
-      sfx.paperTap();
-      submitting.value = true;
-      ref.read(onboardingProvider.notifier).setName(controller.text);
-      await ref.read(onboardingProvider.notifier).complete();
-      onDone();
+      if (saving) return;
+      failed.value = false;
+      final notifier = ref.read(onboardingProvider.notifier);
+      notifier.setName(controller.text);
+      try {
+        await notifier.complete();
+        onDone();
+      } catch (_) {
+        if (context.mounted) failed.value = true;
+      }
     }
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(28, 0, 28, 48),
+    return OnboardingFrame(
+      step: step,
+      totalSteps: total,
+      onBack: saving ? null : onBack,
+      primaryLabel: OnboardingStrings.startRoad,
+      onPrimary: saving ? null : finish,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Spacer(flex: 3),
-          TypewriterText(
-            text: 'One last thing.\nWhat is your name?',
-            style: AppTextStyles.doodleHeadline(color: ink),
-            startDelay: const Duration(milliseconds: 300),
-            onTypingStart: sfx.penTickStart,
-            onComplete: () {
-              sfx.penTickStop();
-              sfx.revealWhoosh();
-              showInput.value = true;
-            },
+          Semantics(
+            header: true,
+            child: Text(OnboardingStrings.nameTitle,
+                style: LumText.title1.copyWith(color: c.textPrimary)),
           ),
-          const SizedBox(height: 12),
-          Text(
-            'So Lumway can feel like yours.',
-            style: AppTextStyles.doodleBody(color: ink.withValues(alpha: 0.7)),
-          ),
-          const SizedBox(height: 32),
-          if (showInput.value)
-            AnimatedOpacity(
-              opacity: showInput.value ? 1 : 0,
-              duration: const Duration(milliseconds: 300),
-              child: HandDrawnField(
-                controller: controller,
-                hintText: 'Your name',
-                onSubmitted: (_) => finish(),
-              ),
-            ),
-          const Spacer(flex: 4),
-          Center(
-            child: AnimatedOpacity(
-              opacity: showInput.value ? 1 : 0,
-              duration: const Duration(milliseconds: 400),
-              child: showInput.value
-                  ? HandDrawnButton(
-                      label: "Let's go",
-                      onTap: finish,
-                      startDelay: const Duration(milliseconds: 400),
-                    )
-                  : const SizedBox(height: 74),
+          const SizedBox(height: LumSpace.xl),
+          Text(OnboardingStrings.nameLabelCaps,
+              style: LumText.roadLabelCaps11.copyWith(color: c.textSecondary)),
+          const SizedBox(height: LumSpace.sm),
+          TextField(
+            controller: controller,
+            textCapitalization: TextCapitalization.words,
+            textInputAction: TextInputAction.done,
+            autofillHints: const [AutofillHints.givenName],
+            onChanged: ref.read(onboardingProvider.notifier).setName,
+            onSubmitted: (_) => finish(),
+            style: LumText.body.copyWith(color: c.textPrimary),
+            cursorColor: c.buttonGoldBottom,
+            decoration: InputDecoration(
+              hintText: OnboardingStrings.nameHint,
+              hintStyle: LumText.body.copyWith(color: c.textSecondary),
+              filled: true,
+              fillColor: c.bgSurface,
+              contentPadding: const EdgeInsets.symmetric(
+                  horizontal: LumSpace.lg, vertical: LumSpace.lg),
+              border: _border(c.borderSubtle),
+              enabledBorder: _border(c.borderSubtle),
+              focusedBorder: _border(c.borderFocus, width: 2),
             ),
           ),
+          const SizedBox(height: LumSpace.sm),
+          Text(OnboardingStrings.nameHelp,
+              style: LumText.footnote.copyWith(color: c.textSecondary)),
+          if (failed.value) ...[
+            const SizedBox(height: LumSpace.md),
+            Semantics(
+              liveRegion: true,
+              child: Text(OnboardingStrings.finishError,
+                  style: LumText.footnote.copyWith(color: c.textDanger)),
+            ),
+          ],
         ],
       ),
     );
   }
+
+  OutlineInputBorder _border(Color color, {double width = 1}) =>
+      OutlineInputBorder(
+        borderRadius: BorderRadius.circular(LumRadius.lg),
+        borderSide: BorderSide(color: color, width: width),
+      );
 }
