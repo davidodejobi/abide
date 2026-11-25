@@ -104,4 +104,43 @@ void main() {
     expect(t.takeException(), isNull);
     expect(find.byType(RawImage), findsOneWidget);
   });
+
+  testWidgets('A lifted landmark is drawn again as soon as it lands, no scroll',
+      (t) async {
+    final plan = ReadingPlan(id: 'p', title: '', description: '', days: [
+      for (var i = 1; i <= 30; i++)
+        PlanDay(dayIndex: i, passages: [VerseRange.tryParse('GEN.$i.1-31')!]),
+    ]);
+    final art = (await t.runAsync(RoadArt.load))!;
+    await t.runAsync(() => art.ensureLandmarks([
+          for (final l in landmarksByDay(plan, art.landmarks).entries)
+            if (l.key <= 21) ...l.value.map((x) => x.art),
+        ]));
+    Widget scene(String? lifted) => MaterialApp(
+          theme: AppTheme.lightTheme,
+          home: Scaffold(
+            body: RoadScene(
+              key: const ValueKey('r'),
+              width: 390,
+              mood: RoadMood.day,
+              currentDay: 6,
+              totalDays: 30,
+              plan: plan,
+              liftedId: lifted,
+            ),
+          ),
+        );
+    await t.pumpWidget(scene(null));
+    await t
+        .runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
+    await t.pump(const Duration(seconds: 2));
+    final st = t.state<RoadSceneState>(find.byKey(const ValueKey('r')));
+    expect(st.debugDrew('gen-ark'), isTrue);
+    await t.pumpWidget(scene('gen-ark'));
+    await t.pump();
+    expect(st.debugDrew('gen-ark'), isFalse, reason: 'it is up in the sheet');
+    await t.pumpWidget(scene(null));
+    await t.pump(); // one frame, no scroll, no walk
+    expect(st.debugDrew('gen-ark'), isTrue);
+  });
 }

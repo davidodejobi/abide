@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 import '../../domain/road_landmarks.dart';
@@ -54,15 +56,68 @@ class RoadArt {
         _images[n] = (await codec.getNextFrame()).image;
       }();
 
-  /// A landmark's 4x4 turntable sheet, decoded at full size for one showcase.
-  /// The caller owns the image and disposes it when the sheet closes.
-  static Future<ui.Image> loadSpin(String art) async {
+  /// Side of one turntable frame, px; a sheet is [spinFrame] x 4 square.
+  static const spinFrame = 512;
+
+  /// Larger than this and some GPUs cannot hold the texture: use the static
+  /// sprite instead.
+  static const maxSpinTexture = 4096;
+
+  static Future<Map<String, List<double>>>? _meta;
+
+  /// Resolves the meta now; tests call it under runAsync so the memo is not
+  /// born in a fake-async zone that never runs its I/O.
+  @visibleForTesting
+  static Future<Map<String, List<double>>> spinMeta() => _loadMeta();
+
+  // A failed read is not remembered: the next call tries again.
+  static Future<Map<String, List<double>>> _loadMeta() => _meta ??= () async {
+        try {
+          final j = jsonDecode(
+                  await rootBundle.loadString('$_dir/spin_meta.json'))
+              as Map<String, dynamic>;
+          return {
+            for (final e in j.entries)
+              e.key: [for (final v in e.value as List) (v as num).toDouble()],
+          };
+        } catch (_) {
+          _meta = null;
+          rethrow;
+        }
+      }();
+
+  /// A landmark's turntable content box (left, top, right, bottom as fractions
+  /// of a frame; bottom is the ground contact), or null if it has none.
+  static Future<List<double>?> spinBox(String art) async =>
+      (await _loadMeta())[art];
+
+  /// A landmark's 4x4 turntable sheet, decoded at full size for one showcase,
+  /// with its content box. The caller owns the image and disposes it when the
+  /// sheet closes. Throws if the sheet is missing or larger than a GPU
+  /// texture can be (checked before decoding).
+  static Future<({ui.Image image, List<double> box})> loadSpin(
+      String art) async {
+    final box = await spinBox(art) ?? const [.1, .15, .9, .9];
     final data = await rootBundle.load('$_dir/lm_${art}_spin.webp');
-    final codec = await ui.instantiateImageCodec(data.buffer.asUint8List());
+    final buffer =
+        await ui.ImmutableBuffer.fromUint8List(data.buffer.asUint8List());
     try {
-      return (await codec.getNextFrame()).image;
+      final desc = await ui.ImageDescriptor.encoded(buffer);
+      try {
+        if (desc.width > maxSpinTexture || desc.height > maxSpinTexture) {
+          throw StateError('turntable ${desc.width}x${desc.height} is too large');
+        }
+        final codec = await desc.instantiateCodec();
+        try {
+          return (image: (await codec.getNextFrame()).image, box: box);
+        } finally {
+          codec.dispose();
+        }
+      } finally {
+        desc.dispose();
+      }
     } finally {
-      codec.dispose();
+      buffer.dispose();
     }
   }
 
