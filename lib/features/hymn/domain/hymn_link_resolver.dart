@@ -4,9 +4,10 @@ import 'package:openbaptisthymnal/features/hymn/domain/hymn_pair_resolver.dart';
 import 'package:openbaptisthymnal/features/hymn/providers/hymnal_provider.dart';
 
 /// Where a tablet `[[hymn:...]]` link should open. A link holds the canonical
-/// hymn id (the `yo` pack's numbering). Pack ids are NOT shared across
-/// languages, so the resolver picks the language to open in and maps the id
-/// into that pack by content, falling back to the canonical pack when the
+/// hymn id in the pack named by its edition pin; an unpinned link is English
+/// (legacy links were written before pins existed). Pack ids are NOT shared
+/// across languages, so the resolver picks the language to open in and maps
+/// the id into that pack by content, falling back to the source pack when the
 /// chosen language has no confirmed version of the hymn.
 ///
 /// The model is deliberately broader than that: [editionId] holds whatever
@@ -66,16 +67,21 @@ class HymnLinkResolver {
       chosen = _pickFallback(installed);
     }
 
+    // The id belongs to the pack the pin names; unpinned links are English.
+    final source = (editionPin == null
+            ? _matchEdition(installed, _hymnLinkDefault)
+            : _matchEdition(installed, editionPin)) ??
+        _hymnLinkDefault;
     final packId = await HymnPairResolver(_ref.read(hymnalRepositoryProvider))
-        .idIn(chosen, hymnId, fromLanguage: canonicalHymnLanguage);
+        .idIn(chosen, hymnId, fromLanguage: source);
     if (packId == null) {
-      // No confirmed version in that language: open the canonical pack
+      // No confirmed version in that language: open the source pack
       // rather than a different song that happens to share the id.
       return HymnNavigationTarget(
         hymnId: hymnId,
-        editionId: canonicalHymnLanguage,
+        editionId: source,
         toastMessage: 'No ${_languageName(chosen)} version of this hymn yet. '
-            'Showing the ${_languageName(canonicalHymnLanguage)} one.',
+            'Showing the ${_languageName(source)} one.',
       );
     }
 

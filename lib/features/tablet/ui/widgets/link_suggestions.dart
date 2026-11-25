@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:openbaptisthymnal/features/bible/providers/bible_providers.dart';
+import 'package:openbaptisthymnal/features/hymn/providers/hymnal_provider.dart';
 import 'package:openbaptisthymnal/features/hymn/ui/viewmodels/hymns_viewmodel.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/bible_autocomplete.dart';
 import 'package:openbaptisthymnal/features/tablet/providers/tablets_providers.dart';
@@ -32,6 +33,7 @@ class LinkSuggestions extends ConsumerWidget {
         .take(4)
         .toList();
 
+    final language = ref.watch(languageProvider);
     final hymns = (ref.watch(hymnsViewModelProvider).valueOrNull ?? [])
         .where((h) => h.id != null)
         .where((h) =>
@@ -72,7 +74,7 @@ class LinkSuggestions extends ConsumerWidget {
               _Row(
                 icon: PhosphorIcons.musicNotes(),
                 label: '#${h.number}  ${h.title}',
-                onTap: () => onSelected('hymn:${h.id}'),
+                onTap: () => onSelected('hymn:${h.id}:$language'),
               ),
             for (final b in bible)
               _Row(

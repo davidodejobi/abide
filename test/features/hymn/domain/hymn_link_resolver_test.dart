@@ -29,6 +29,12 @@ class _NoPrefs extends LinkingPreferencesNotifier {
   LinkingPreferences build() => const LinkingPreferences();
 }
 
+class _YoPrefs extends LinkingPreferencesNotifier {
+  @override
+  LinkingPreferences build() =>
+      const LinkingPreferences(defaultHymnEditionId: 'yo');
+}
+
 void main() {
   late ProviderContainer container;
 
@@ -42,33 +48,47 @@ void main() {
 
   HymnLinkResolver resolver() => container.read(hymnLinkResolverProvider);
 
-  test('paired hymn opens the English id, not the same-numbered song',
-      () async {
-    final t = await resolver().resolve('hymn_0003');
+  test('unpinned link is English: opens the same en id, no switch', () async {
+    final t = await resolver().resolve('hymn_0004');
     expect(t?.editionId, 'en');
     expect(t?.hymnId, 'hymn_0004');
     expect(t?.toastMessage, isNull);
   });
 
-  test('unpaired hymn falls back to the canonical yo pack with a hint',
-      () async {
-    final t = await resolver().resolve('hymn_0001');
+  test('a yo pin keeps the yo id in the yo pack', () async {
+    final t = await resolver().resolve('hymn_0003', editionPin: 'yo');
     expect(t?.editionId, 'yo');
-    expect(t?.hymnId, 'hymn_0001');
-    expect(t?.toastMessage, contains('No English version'));
-  });
-
-  test('a yo pin keeps the canonical id', () async {
-    final t = await resolver().resolve('hymn_0001', editionPin: 'yo');
-    expect(t?.editionId, 'yo');
-    expect(t?.hymnId, 'hymn_0001');
+    expect(t?.hymnId, 'hymn_0003');
     expect(t?.toastMessage, isNull);
   });
 
-  test('an en pin on a paired hymn maps the id', () async {
-    final t = await resolver().resolve('hymn_0003', editionPin: 'en');
+  test('an en pin keeps the en id', () async {
+    final t = await resolver().resolve('hymn_0004', editionPin: 'en');
     expect(t?.editionId, 'en');
     expect(t?.hymnId, 'hymn_0004');
+  });
+
+  test('unpinned en link maps to yo when the reader prefers yo', () async {
+    final c = ProviderContainer(overrides: [
+      hymnalRepositoryProvider.overrideWithValue(_FakeRepo()),
+      linkingPreferencesProvider.overrideWith(_YoPrefs.new),
+    ]);
+    addTearDown(c.dispose);
+    final t = await c.read(hymnLinkResolverProvider).resolve('hymn_0004');
+    expect(t?.editionId, 'yo');
+    expect(t?.hymnId, 'hymn_0003');
+  });
+
+  test('unpaired en hymn falls back to the source pack with a hint', () async {
+    final c = ProviderContainer(overrides: [
+      hymnalRepositoryProvider.overrideWithValue(_FakeRepo()),
+      linkingPreferencesProvider.overrideWith(_YoPrefs.new),
+    ]);
+    addTearDown(c.dispose);
+    final t = await c.read(hymnLinkResolverProvider).resolve('hymn_0001');
+    expect(t?.editionId, 'en');
+    expect(t?.hymnId, 'hymn_0001');
+    expect(t?.toastMessage, contains('No Yoruba version'));
   });
 
   test('empty id resolves to nothing', () async {

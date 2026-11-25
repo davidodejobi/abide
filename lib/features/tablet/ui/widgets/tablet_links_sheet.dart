@@ -4,6 +4,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:openbaptisthymnal/core/router/app_router.dart';
 import 'package:openbaptisthymnal/features/bible/ui/open_bible_link.dart';
+import 'package:openbaptisthymnal/features/hymn/ui/open_hymn_link.dart';
 import 'package:openbaptisthymnal/features/hymn/ui/viewmodels/hymns_viewmodel.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/parse_links.dart';
 import 'package:openbaptisthymnal/features/tablet/providers/tablets_providers.dart';
@@ -68,17 +69,24 @@ class _OutgoingTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     switch (link.type) {
       case NoteLinkType.hymn:
-        final hymns = ref.watch(hymnsViewModelProvider).valueOrNull;
-        final hymn =
-            hymns?.where((h) => h.id == link.targetKey).firstOrNull;
+        // The link id belongs to its pinned pack (unpinned = English).
+        final source = link.editionPin == 'yo' ? 'yo' : 'en';
+        final hymn = ref
+            .watch(hymnInLanguageProvider(
+                HymnInLanguageKey(link.targetKey, source)))
+            .valueOrNull;
         final label = hymn == null
             ? link.targetKey
-            : '#${hymn.number}  ${hymn.title}';
+            : '#${hymn.number} ${hymn.title}';
         return _LinkTile(
           icon: PhosphorIcons.musicNotes(),
           label: label,
-          onTap: () =>
-              context.router.push(HymnDetailRoute(hymnId: link.targetKey)),
+          onTap: () => openHymnLink(
+            context,
+            ref,
+            targetKey: link.targetKey,
+            editionPin: link.editionPin,
+          ),
         );
       case NoteLinkType.bible:
         return _LinkTile(

@@ -99,9 +99,9 @@ void main() {
         userName: 'Tester',
       );
 
-      expect(body, contains('[[hymn:hymn_0001]]'));
+      expect(body, contains('[[hymn:hymn_0001:en]]'));
       expect(body, contains('[[bible:JHN.3.16]]'));
-      expect(body, contains('[[hymn:hymn_0004]]'));
+      expect(body, contains('[[hymn:hymn_0004:en]]'));
       expect(body, contains('[[bible:PSA.23.1]]'));
     });
 
