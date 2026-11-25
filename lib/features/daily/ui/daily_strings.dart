@@ -1,3 +1,5 @@
+import 'package:openbaptisthymnal/core/utils/time_greeting.dart';
+
 /// Every user-facing string on the Today tab and the streak page, in one place
 /// until the ARB move (DAO-131). Plain English, denomination-neutral.
 abstract final class DailyStrings {
@@ -23,6 +25,7 @@ abstract final class DailyStrings {
   static const dayStreak = 'day streak';
   static const ofThePlan = 'of the plan';
   static const restWell = 'Rest well';
+  static const wellDone = 'Well done';
 
   // Road explore
   static const backToToday = 'Back to today';
@@ -82,8 +85,8 @@ abstract final class DailyStrings {
   static String dateCaps(DateTime d) =>
       '${_weekdays[d.weekday - 1]} ${d.day} ${_months[d.month - 1]}'
           .toUpperCase();
-  static String eveningCaps(DateTime d) =>
-      '${_weekdays[d.weekday - 1]} evening'.toUpperCase();
+  static String partCaps(DateTime d, DayPart part) =>
+      '${_weekdays[d.weekday - 1]} ${part.label}'.toUpperCase();
   static String monthYear(DateTime d) => '${_months[d.month - 1]} ${d.year}';
 
   static const weekdayInitials = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];

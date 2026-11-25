@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:openbaptisthymnal/core/storage/database/database_provider.dart';
 import 'package:openbaptisthymnal/core/theme/app_theme.dart';
+import 'package:openbaptisthymnal/core/utils/day_part_provider.dart';
 import 'package:openbaptisthymnal/features/daily/domain/date_key.dart';
 import 'package:openbaptisthymnal/features/bible/domain/verse_ref.dart';
 import 'package:openbaptisthymnal/features/daily/domain/reading_plan.dart';
@@ -140,6 +141,43 @@ void main() {
     expect(find.text(DailyStrings.dayN(41)), findsOneWidget);
     expect(find.text(DailyStrings.writeNote), findsOneWidget);
     expect(find.text(DailyStrings.startReading), findsNothing);
+  });
+
+  testWidgets(
+      'Given today is done in the afternoon, Then it says afternoon and well done',
+      (t) async {
+    final plan = _plan();
+    await pump(
+      t,
+      _app([
+        dayPartClockProvider.overrideWithValue(() => DateTime(2026, 1, 7, 14)),
+        streakProvider.overrideWithValue(_streak(today: true)),
+        isTodayCompleteProvider.overrideWithValue(true),
+        todaysReadingProvider.overrideWith((_) async =>
+            TodaysReading(plan: plan, day: plan.dayAt(42), completedDays: 41)),
+        planDaysDoneTodayProvider.overrideWith((_, __) => Stream.value({41})),
+      ]),
+    );
+    expect(find.text('WEDNESDAY AFTERNOON'), findsOneWidget);
+    expect(find.text('Well done, Maya'), findsOneWidget);
+    expect(find.textContaining('EVENING'), findsNothing);
+  });
+
+  testWidgets('Given it is night and unread, Then it says Good night',
+      (t) async {
+    final plan = _plan();
+    await pump(
+      t,
+      _app([
+        dayPartClockProvider.overrideWithValue(() => DateTime(2026, 1, 7, 23)),
+        streakProvider.overrideWithValue(_streak()),
+        isTodayCompleteProvider.overrideWithValue(false),
+        todaysReadingProvider.overrideWith((_) async =>
+            TodaysReading(plan: plan, day: plan.dayAt(41), completedDays: 40)),
+        planDaysDoneTodayProvider.overrideWith((_, __) => Stream.value({})),
+      ]),
+    );
+    expect(find.text('Good night, Maya'), findsOneWidget);
   });
 
   testWidgets(

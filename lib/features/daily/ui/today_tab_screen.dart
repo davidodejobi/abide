@@ -9,6 +9,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openbaptisthymnal/core/router/app_router.dart';
 import 'package:openbaptisthymnal/core/theme/lum_theme.dart';
+import 'package:openbaptisthymnal/core/utils/day_part_provider.dart';
 import 'package:openbaptisthymnal/core/utils/time_greeting.dart';
 import 'package:openbaptisthymnal/core/widgets/lum_button.dart';
 import 'package:openbaptisthymnal/features/bible/ui/open_bible_link.dart';
@@ -82,14 +83,20 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
         data.completedDays > 0 &&
         !_readAhead &&
         doneIndex != null;
-    final mood = done ? RoadMood.evening : RoadMood.day;
-    final greeting = TimeGreeting.now().greeting;
+    // The sky and greeting follow the clock; `done` only changes the words.
+    final part = ref.watch(dayPartProvider);
+    final dark = part == DayPart.evening || part == DayPart.night;
+    final mood = dark ? RoadMood.evening : RoadMood.day;
     final now = DateTime.now();
 
-    final title = done ? DailyStrings.restWell : greeting;
+    final title = !done
+        ? TimeGreeting.forPart(part).greeting
+        : dark
+            ? DailyStrings.restWell
+            : DailyStrings.wellDone;
     final headText = name == null ? title : '$title, $name';
-    final overSky = done ? c.textOnEveningSky : c.textPrimary;
-    final overSkySecondary = done ? c.textOnEveningSky : c.textSecondary;
+    final overSky = dark ? c.textOnEveningSky : c.textPrimary;
+    final overSkySecondary = dark ? c.textOnEveningSky : c.textSecondary;
 
     // The tab sits inside a SafeArea; the scene bleeds up under the status bar.
     final view = View.of(context);
@@ -238,7 +245,7 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
                               const SizedBox(height: 4),
                               Text(
                                 done
-                                    ? DailyStrings.eveningCaps(now)
+                                    ? DailyStrings.partCaps(now, part)
                                     : DailyStrings.dateCaps(now),
                                 style: LumText.roadLabelCaps11
                                     .copyWith(color: overSkySecondary),
