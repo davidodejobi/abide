@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Extension methods for Widget to reduce boilerplate
 extension WidgetExtensions on Widget {

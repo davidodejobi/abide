@@ -12,17 +12,17 @@ dependencies:
   flutter_riverpod: ^2.4.9
   hooks_riverpod: ^2.4.9
   flutter_hooks: ^0.20.5
-  riverpod_annotation: ^2.3.3
-  freezed_annotation: ^2.4.1
+  freezed_annotation: ^3.1.0
   json_annotation: ^4.9.0
   path_provider: ^2.1.2
   logging: ^1.2.0
   toastification: ^3.0.3
   vector_graphics: ^1.1.19
-  phosphor_flutter: ^2.1.0
+  phosphor_flutter:
+    path: third_party/phosphor_flutter
   auto_size_text: ^3.0.0
   lottie: ^3.3.2
-  auto_route: ^10.1.2
+  auto_route: ^11.2.0
   shared_preferences: ^2.5.4
   share_plus: ^12.0.1
   url_launcher: ^6.3.2
@@ -31,30 +31,30 @@ dependencies:
   cupertino_icons: ^1.0.8
   package_info_plus: ^9.0.0
   audio_waveforms: ^1.3.0
-  drift: ">=2.24.0 <2.28.0"
-  sqlite3: ^2.4.6
-  sqlite3_flutter_libs: ^0.5.24
+  drift: ^2.35.4
+  sqlite3: ^3.0.0
   path: ^1.9.1
   collection: ^1.18.0
   uuid: ^4.5.3
-  appflowy_editor: ^6.0.0
+  appflowy_editor:
+    path: third_party/appflowy_editor
   gal: ^2.3.3
   supabase_flutter: ^2.18.3
+  material_ui: ^1.11.1
+  flutter_scene: ^0.24.6
+  vector_math: ^2.1.4
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^3.0.0
-  build_runner: ^2.4.8
-  drift_dev: ">=2.24.0 <2.28.0"
-  riverpod_generator: ^2.3.9
-  freezed: ^2.4.7
+  alchemist: ^0.15.0
+  build_runner: ^2.16.1
+  drift_dev: ^2.35.3
+  freezed: ^4.0.1
   json_serializable: ^6.7.1
   vector_graphics_compiler: ^1.1.19
-  auto_route_generator: ^10.1.2
-  analyzer: ^7.6.0
-  alchemist: ^0.14.0
-
+  auto_route_generator: ^10.6.0
 flutter:
   uses-material-design: true
   assets:
@@ -81,6 +81,7 @@ flutter:
     - assets/images/lottie/
     - assets/images/road/
     - assets/images/road/living/
+    - assets/images/road/models/
     - assets/fonts/licenses/
     - path: assets/images/icons/
       transformers:

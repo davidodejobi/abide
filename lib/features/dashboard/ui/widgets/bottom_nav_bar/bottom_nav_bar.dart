@@ -2,7 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/physics.dart';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:openbaptisthymnal/core/theme/lum_theme.dart';
 import 'package:openbaptisthymnal/core/utils/extensions/string_extensions.dart';
 import 'package:vector_graphics/vector_graphics_compat.dart';

@@ -103,10 +103,8 @@ void main() {
             expect(note.id, 'note-1');
             expect(note.title, 'Psalm 23');
             expect(note.contentMarkdown, 'The Lord is my shepherd');
-            // Same instant, not the same object: drift persists a DateTime as
-            // epoch seconds and reads it back in local time, so a UTC fixture
-            // comes out as its local-zone equivalent.
-            expect(note.createdAt.isAtSameMomentAs(createdAt), isTrue);
+            // The v5 snapshot helpers expose DateTime columns as raw epoch seconds.
+            expect(note.createdAt, createdAt.millisecondsSinceEpoch ~/ 1000);
 
             final annotation = await db.select(db.bibleAnnotations).getSingle();
             expect(annotation.verseRef, 'JHN.3.16');
@@ -191,7 +189,7 @@ void main() {
                   v5.ReadingDaysCompanion.insert(
                     dateKey: '2026-01-15',
                     source: 'plan',
-                    completedAt: createdAt,
+                    completedAt: createdAt.millisecondsSinceEpoch ~/ 1000,
                   ),
                 );
             await db.into(db.planSubscriptions).insert(
@@ -205,7 +203,7 @@ void main() {
                     id: 'bible-in-a-year:1',
                     planId: 'bible-in-a-year',
                     dayIndex: 1,
-                    completedAt: createdAt,
+                    completedAt: createdAt.millisecondsSinceEpoch ~/ 1000,
                   ),
                 );
 
@@ -264,9 +262,9 @@ void main() {
           expect(await db.select(db.readingDays).get(), hasLength(1));
           final sub = await db.select(db.planSubscriptions).getSingle();
           expect(sub.planId, 'bible-in-a-year');
-          expect(sub.isActive, isTrue);
+          expect(sub.isActive, 1);
           // Pre-v5 rows read as the epoch so any real edit beats them.
-          expect(sub.updatedAt.millisecondsSinceEpoch, 0);
+          expect(sub.updatedAt, 0);
           expect(await db.select(db.planDayProgress).get(), hasLength(1));
 
           final queued = await db.select(db.syncOutbox).get();

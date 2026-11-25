@@ -6,11 +6,10 @@ part of 'hymn.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$HymnImpl _$$HymnImplFromJson(Map<String, dynamic> json) => _$HymnImpl(
+_Hymn _$HymnFromJson(Map<String, dynamic> json) => _Hymn(
       category: json['category'] as String,
     );
 
-Map<String, dynamic> _$$HymnImplToJson(_$HymnImpl instance) =>
-    <String, dynamic>{
+Map<String, dynamic> _$HymnToJson(_Hymn instance) => <String, dynamic>{
       'category': instance.category,
     };
