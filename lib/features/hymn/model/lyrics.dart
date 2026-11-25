@@ -6,7 +6,7 @@ part 'lyrics.freezed.dart';
 part 'lyrics.g.dart';
 
 @freezed
-class Lyrics with _$Lyrics {
+abstract class Lyrics with _$Lyrics {
   const factory Lyrics({
     required List<Stanza> stanzas,
     String? chorus,

@@ -3,16 +3,12 @@ import 'package:openbaptisthymnal/features/hymn/domain/get_hymn_for_split_view.d
 import 'package:openbaptisthymnal/features/hymn/domain/get_hymns_by_language.dart';
 import 'package:openbaptisthymnal/features/hymn/domain/hymn_pair_resolver.dart';
 import 'package:openbaptisthymnal/features/hymn/model/language_pack.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../providers/hymnal_provider.dart';
 
-part 'hymns_viewmodel.g.dart';
-
-@riverpod
-class HymnsViewModel extends _$HymnsViewModel {
+class HymnsViewModel extends AutoDisposeAsyncNotifier<List<HymnTranslation>> {
   @override
-  FutureOr<List<HymnTranslation>> build() async {
+  Future<List<HymnTranslation>> build() async {
     final languageCode = ref.watch(languageProvider);
     final getHymns = GetHymnsByLanguage(ref.read(hymnalRepositoryProvider));
     return getHymns(languageCode);
@@ -23,24 +19,9 @@ class HymnsViewModel extends _$HymnsViewModel {
   }
 }
 
-@riverpod
-Future<Map<String, dynamic>> hymnDetail(Ref ref, String hymnId) async {
-  final languages = [ref.watch(languageProvider)];
-  final getHymn = GetHymnForSplitView(ref.read(hymnalRepositoryProvider));
-  final translations =
-      await getHymn(hymnId, languages, fromLanguage: languages.first);
-  return {'translations': translations};
-}
-
-@riverpod
-Future<Map<String, dynamic>> bilingualHymnDetail(
-    Ref ref, String hymnId, List<String> languages) async {
-  final getHymn = GetHymnForSplitView(ref.read(hymnalRepositoryProvider));
-  // hymnId is the id the reader is looking at, in their reading language.
-  final translations = await getHymn(hymnId, languages,
-      fromLanguage: ref.watch(languageProvider));
-  return {'translations': translations};
-}
+final hymnsViewModelProvider =
+    AsyncNotifierProvider.autoDispose<HymnsViewModel, List<HymnTranslation>>(
+        HymnsViewModel.new);
 
 /// Identifier for [hymnInLanguageProvider] lookups.
 class HymnInLanguageKey {
@@ -82,4 +63,13 @@ final hymnInLanguageProvider = FutureProvider.family
   if (id == null) return null;
   final pack = await repo.getLanguagePack(key.language);
   return pack.hymns[id];
+});
+
+final hymnDetailProvider = FutureProvider.family
+    .autoDispose<Map<String, dynamic>, String>((ref, hymnId) async {
+  final languages = [ref.watch(languageProvider)];
+  final getHymn = GetHymnForSplitView(ref.read(hymnalRepositoryProvider));
+  final translations =
+      await getHymn(hymnId, languages, fromLanguage: languages.first);
+  return {'translations': translations};
 });

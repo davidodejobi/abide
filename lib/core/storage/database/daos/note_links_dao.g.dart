@@ -7,4 +7,16 @@ mixin _$NoteLinksDaoMixin on DatabaseAccessor<AppDatabase> {
   $FoldersTable get folders => attachedDatabase.folders;
   $NotesTable get notes => attachedDatabase.notes;
   $NoteLinksTable get noteLinks => attachedDatabase.noteLinks;
+  NoteLinksDaoManager get managers => NoteLinksDaoManager(this);
+}
+
+class NoteLinksDaoManager {
+  final _$NoteLinksDaoMixin _db;
+  NoteLinksDaoManager(this._db);
+  $$FoldersTableTableManager get folders =>
+      $$FoldersTableTableManager(_db.attachedDatabase, _db.folders);
+  $$NotesTableTableManager get notes =>
+      $$NotesTableTableManager(_db.attachedDatabase, _db.notes);
+  $$NoteLinksTableTableManager get noteLinks =>
+      $$NoteLinksTableTableManager(_db.attachedDatabase, _db.noteLinks);
 }

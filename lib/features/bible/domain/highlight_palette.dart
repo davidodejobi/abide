@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// The fixed set of highlight colors a reader can apply to a verse. Soft pastels
 /// chosen to stay legible behind EBGaramond/Geist text on both light and dark

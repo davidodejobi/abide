@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:openbaptisthymnal/core/notifications/notification_service.dart';
@@ -67,8 +67,13 @@ class AbideApp extends HookConsumerWidget {
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
         themeMode: themeMode,
-        builder: (context, child) => SplashIntro(
-          child: AppUpdateOverlay(child: child ?? const SizedBox.shrink()),
+        // Old-flutter/material packages (appflowy_editor, toastification,
+        // audio_waveforms) read the app theme through this bridge.
+        // ignore: deprecated_member_use
+        builder: (context, child) => MaterialUiCompatibilityBridge(
+          child: SplashIntro(
+            child: AppUpdateOverlay(child: child ?? const SizedBox.shrink()),
+          ),
         ),
         routerConfig: appRouter.config(
           deepLinkBuilder: appRouter.onboardingDeepLink,
