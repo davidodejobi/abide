@@ -36,9 +36,9 @@ class DashboardScreen extends HookConsumerWidget {
               children: [
                 for (final (i, tab) in const [
                   TodayTabScreen(),
-                  TabletsTabScreen(),
-                  HomeTabScreen(),
                   BibleTabScreen(),
+                  HomeTabScreen(),
+                  TabletsTabScreen(),
                   SettingsTabScreen(),
                 ].indexed)
                   TickerMode(enabled: i == currentIndex, child: tab),
@@ -88,7 +88,7 @@ class _BottomNavigation extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: LumSize.screenGutter),
         child: GlassTabBar(
-          labels: const ['Today', 'Notes', 'Songs', 'Bible', 'You'],
+          labels: [for (final t in BottomNavTab.values) t.label],
           selectedIndex: currentIndex,
           onTabSelected: onTabSelected,
         ),
