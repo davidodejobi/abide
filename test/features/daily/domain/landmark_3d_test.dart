@@ -46,7 +46,11 @@ void main() {
           for (final y in [0.0, -podiumDepth * r])
             (r * math.cos(i * math.pi / 18), y, r * math.sin(i * math.pi / 18)),
         (0, top.toDouble(), 0),
+        (r, 0, 0),
       ];
+      final rim = fr.project((r, 0, 0)).$1;
+      expect(rim, greaterThan(.5), reason: '${e.key} podium too small: $rim');
+      expect(fr.project((0, top.toDouble(), 0)).$2, lessThanOrEqualTo(LandmarkFraming.topFill + 1e-6));
       for (final p in pts) {
         final (px, py) = fr.project(p);
         expect(px.abs(), lessThanOrEqualTo(LandmarkFraming.viewFill + 1e-6), reason: '${e.key} x');

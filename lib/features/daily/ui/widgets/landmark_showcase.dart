@@ -594,13 +594,13 @@ class _StagePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final cx = size.width / 2;
     final lit = Curves.easeOut.transform(reveal.value);
-    final top = Offset(cx, size.height - 52), rx = 108.0, ry = 24.0;
+    final top = Offset(cx, size.height - (contact ? 80 : 52)), rx = 108.0, ry = 24.0;
     final tint = colors.first;
 
     // Floor shadow.
     canvas.drawOval(
       Rect.fromCenter(
-          center: Offset(cx, size.height - 20), width: 290, height: 34),
+          center: Offset(cx, size.height - (contact ? 46 : 20)), width: 290, height: 34),
       Paint()
         ..color = ink.withValues(alpha: .16)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10),

@@ -20,7 +20,7 @@ const podiumFootprintScale = 1.2;
 
 /// Where the podium centre sits in the view, in NDC y (-1 is the bottom), so
 /// the stage's spotlight lands on it.
-const podiumAnchorY = -.62;
+const podiumAnchorY = -.40;
 
 /// How the camera frames one landmark on its podium, one view for both.
 ///
@@ -74,7 +74,9 @@ class LandmarkFraming {
       final ty = (lo + hi) / 2;
       final fits = pts.every((p) {
         final (x, y) = ndc(p, d, ty);
-        return x.abs() <= viewFill && y <= viewFill && y >= -viewFill;
+        return x.abs() <= viewFill &&
+            y <= (p.$2 > 0 ? topFill : viewFill) &&
+            y >= -viewFill;
       });
       if (fits) {
         return LandmarkFraming(
@@ -112,14 +114,17 @@ class LandmarkFraming {
 
   /// Vertical field of view and look-down angle: a three-quarter view of the
   /// podium.
-  static const fovYDeg = 45.0;
+  static const fovYDeg = 20.0;
   static const elevationDeg = 24.0;
 
   /// Width over height of the 3D view box.
   static const aspect = 320 / 260;
 
   /// How much of the view (NDC) the fitted content may use.
-  static const viewFill = .94;
+  static const viewFill = .97;
+
+  /// How high the model top may reach (NDC), leaving room for the close button.
+  static const topFill = .8;
 
   double get yawStartTurns => yawStartDeg / 360;
 
