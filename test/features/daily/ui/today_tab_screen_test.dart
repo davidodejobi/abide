@@ -8,6 +8,7 @@ import 'package:openbaptisthymnal/core/theme/app_theme.dart';
 import 'package:openbaptisthymnal/features/daily/domain/date_key.dart';
 import 'package:openbaptisthymnal/features/bible/domain/verse_ref.dart';
 import 'package:openbaptisthymnal/features/daily/domain/reading_plan.dart';
+import 'package:openbaptisthymnal/features/daily/domain/road_geometry.dart';
 import 'package:openbaptisthymnal/features/daily/domain/streak.dart';
 import 'package:openbaptisthymnal/features/daily/providers/daily_providers.dart';
 import 'package:openbaptisthymnal/features/daily/ui/daily_strings.dart';
@@ -109,6 +110,48 @@ void main() {
     expect(find.text(DailyStrings.dayN(41)), findsOneWidget);
     expect(find.text(DailyStrings.writeNote), findsOneWidget);
     expect(find.text(DailyStrings.startReading), findsNothing);
+  });
+
+  testWidgets(
+      'Given a tap on the glowing stop and one ahead, Then the sheets say read and preview',
+      (t) async {
+    final plan = _plan();
+    await pump(
+      t,
+      _app([
+        streakProvider.overrideWithValue(_streak()),
+        isTodayCompleteProvider.overrideWithValue(false),
+        todaysReadingProvider.overrideWith((_) async =>
+            TodaysReading(plan: plan, day: plan.dayAt(41), completedDays: 40)),
+        planDaysDoneTodayProvider.overrideWith((_, __) => Stream.value({})),
+        planProgressProvider.overrideWith((_, __) => Stream.value({})),
+      ]),
+    );
+    const geo = RoadGeometry();
+    Offset stop(int n) {
+      final s = geo.stop(n), c = geo.camera(41);
+      return Offset(s.x + c.x, s.y + c.y);
+    }
+
+    await t.tapAt(stop(41));
+    await t.pump(
+        const Duration(milliseconds: 600)); // the ambient loop never settles
+    expect(find.text('DAY 41 OF 90'), findsOneWidget);
+    expect(find.text('John 15–17'), findsWidgets);
+    expect(
+        find.textContaining('${DailyStrings.sheetToday} · '), findsOneWidget);
+    expect(find.text(DailyStrings.readDay), findsOneWidget);
+    await t.tapAt(const Offset(195, 20)); // dismiss on the barrier
+    await t.pump(
+        const Duration(milliseconds: 600)); // the ambient loop never settles
+
+    await t.tapAt(stop(42));
+    await t.pump(
+        const Duration(milliseconds: 600)); // the ambient loop never settles
+    expect(find.text('DAY 42 OF 90'), findsOneWidget);
+    expect(find.text(DailyStrings.previewDay), findsOneWidget);
+    expect(find.text(DailyStrings.readDay), findsNothing);
+    expect(find.text(DailyStrings.sheetDateNote), findsOneWidget);
   });
 
   testWidgets('Given day 11 done today but day 1 unmarked, Then no "Day 0"',

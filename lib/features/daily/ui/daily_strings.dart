@@ -24,6 +24,26 @@ abstract final class DailyStrings {
   static const ofThePlan = 'of the plan';
   static const restWell = 'Rest well';
 
+  // Road explore
+  static const backToToday = 'Back to today';
+  static const stopDone = 'read';
+  static const stopToday = 'today';
+  static const stopAhead = 'coming up';
+  static String stopSemantics(int n, String state) => 'Day $n, $state';
+  static const sheetDone = 'Read';
+  static const sheetToday = 'Today';
+  static const sheetAhead = 'Coming up';
+  static const sheetDateNote = 'If you read one day at a time from today.';
+  static const readDay = 'Read';
+  static const readAgain = 'Read again';
+  static const previewDay = 'Preview the reading';
+  static const whatHappened = 'WHAT HAPPENED';
+  static const whyItMatters = 'WHY IT MATTERS';
+  static const share = 'Share';
+  static String readRef(String ref) => 'Read $ref';
+  static String dateLong(DateTime d) =>
+      '${_weekdays[d.weekday - 1]} ${d.day} ${_months[d.month - 1]}';
+
   // Streak page
   static const streakTitle = 'Your streak';
   static const daysWithTheWord = 'DAYS WITH THE WORD';
@@ -42,8 +62,7 @@ abstract final class DailyStrings {
       'Your place in each plan is kept when you switch.';
   static const plansLoadError = "Plans couldn't be loaded.";
   static String daysRead(int n, int total) => '$n of $total days read';
-  static String resumesAt(int n, int total) =>
-      'Resumes at $n of $total days';
+  static String resumesAt(int n, int total) => 'Resumes at $n of $total days';
 
   static String chapters(int n) => n == 1 ? '1 chapter' : '$n chapters';
   static String doneCaps(String passage) => 'DONE · ${passage.toUpperCase()}';

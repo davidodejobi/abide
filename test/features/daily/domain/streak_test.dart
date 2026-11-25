@@ -68,7 +68,8 @@ void main() {
 
         final result = computeStreak(completed, todayKey: today);
 
-        expect(result.current, 6, reason: '1 + 5 completed; the gap is not one');
+        expect(result.current, 6,
+            reason: '1 + 5 completed; the gap is not one');
         expect(result.graceDaysUsed, 1);
       });
     });
