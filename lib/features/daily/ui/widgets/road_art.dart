@@ -54,6 +54,18 @@ class RoadArt {
         _images[n] = (await codec.getNextFrame()).image;
       }();
 
+  /// A landmark's 4x4 turntable sheet, decoded at full size for one showcase.
+  /// The caller owns the image and disposes it when the sheet closes.
+  static Future<ui.Image> loadSpin(String art) async {
+    final data = await rootBundle.load('$_dir/lm_${art}_spin.webp');
+    final codec = await ui.instantiateImageCodec(data.buffer.asUint8List());
+    try {
+      return (await codec.getNextFrame()).image;
+    } finally {
+      codec.dispose();
+    }
+  }
+
   /// Art keys whose sprite is missing or failed to decode; the road draws a
   /// signpost for those landmarks instead.
   final failed = <String>{};
