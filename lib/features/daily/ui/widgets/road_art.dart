@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:ui' as ui;
 
 import 'package:flutter/services.dart';
@@ -54,13 +55,40 @@ class RoadArt {
         _images[n] = (await codec.getNextFrame()).image;
       }();
 
-  /// A landmark's 4x4 turntable sheet, decoded at full size for one showcase.
-  /// The caller owns the image and disposes it when the sheet closes.
-  static Future<ui.Image> loadSpin(String art) async {
+  /// Side of one turntable frame, px; a sheet is [spinFrame] x 4 square.
+  static const spinFrame = 512;
+
+  /// Larger than this and some GPUs cannot hold the texture: use the static
+  /// sprite instead.
+  static const maxSpinTexture = 4096;
+
+  static Future<Map<String, List<double>>>? _meta;
+
+  static Future<Map<String, List<double>>> _loadMeta() => _meta ??= () async {
+        final j = jsonDecode(await rootBundle.loadString('$_dir/spin_meta.json'))
+            as Map<String, dynamic>;
+        return {
+          for (final e in j.entries)
+            e.key: [for (final v in e.value as List) (v as num).toDouble()],
+        };
+      }();
+
+  /// A landmark's 4x4 turntable sheet, decoded at full size for one showcase,
+  /// with the content box of a frame (left, top, right, bottom as fractions;
+  /// bottom is the ground contact). The caller owns the image and disposes it
+  /// when the sheet closes. Throws if the sheet is missing or too large.
+  static Future<({ui.Image image, List<double> box})> loadSpin(
+      String art) async {
+    final box = (await _loadMeta())[art] ?? const [.1, .15, .9, .9];
     final data = await rootBundle.load('$_dir/lm_${art}_spin.webp');
     final codec = await ui.instantiateImageCodec(data.buffer.asUint8List());
     try {
-      return (await codec.getNextFrame()).image;
+      final img = (await codec.getNextFrame()).image;
+      if (img.width > maxSpinTexture || img.height > maxSpinTexture) {
+        img.dispose();
+        throw StateError('turntable ${img.width}x${img.height} is too large');
+      }
+      return (image: img, box: box);
     } finally {
       codec.dispose();
     }

@@ -78,16 +78,23 @@ Future<RoadOpen?> showLandmarkSheet(
       sprite: sprite,
       flight: flight,
     ),
+    // The road stays visible above it.
+    maxHeightFraction: sprite != null && landmark.art != null ? .78 : null,
   );
   if (!flight.backStarted) flight.finish();
   await flight.settled;
   return open;
 }
 
-Future<RoadOpen?> _show(BuildContext context, WidgetBuilder builder) {
+Future<RoadOpen?> _show(BuildContext context, WidgetBuilder builder,
+    {double? maxHeightFraction}) {
   return showModalBottomSheet<RoadOpen>(
     context: context,
     isScrollControlled: true,
+    constraints: maxHeightFraction == null
+        ? null
+        : BoxConstraints(
+            maxHeight: MediaQuery.sizeOf(context).height * maxHeightFraction),
     showDragHandle: true,
     useSafeArea: true,
     backgroundColor: context.lum.bgPage,
@@ -98,15 +105,17 @@ Future<RoadOpen?> _show(BuildContext context, WidgetBuilder builder) {
 /// The shared sheet body: scrolls, so large text never pushes the buttons off
 /// screen.
 class _SheetBody extends StatelessWidget {
-  const _SheetBody({required this.children});
+  const _SheetBody({required this.children, this.header});
 
   final List<Widget> children;
 
+  /// Pinned above the scrolling [children]: it keeps its size and, not being
+  /// scrolled, a drag on it always dismisses the sheet.
+  final Widget? header;
+
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      top: false,
-      child: SingleChildScrollView(
+    final body = SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(
             LumSize.screenGutter, 0, LumSize.screenGutter, LumSpace.lg),
         child: Column(
@@ -114,6 +123,21 @@ class _SheetBody extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: children,
         ),
+      );
+    if (header == null) return SafeArea(top: false, child: body);
+    return SafeArea(
+      top: false,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(
+                horizontal: LumSize.screenGutter),
+            child: header,
+          ),
+          Flexible(child: body),
+        ],
       ),
     );
   }
@@ -272,16 +296,30 @@ class LandmarkSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.lum;
     final s = story;
+    final showcase = sprite != null && landmark.art != null;
     return _SheetBody(
+      header: !showcase
+          ? null
+          : Stack(
+              children: [
+                LandmarkShowcase(
+                  art: landmark.art!,
+                  sprite: sprite!,
+                  eyebrow: '${DailyStrings.dayN(day)} · ${landmark.ref}',
+                  title: landmark.title,
+                  flight: flight,
+                ),
+                Positioned(
+                  top: 0,
+                  right: 0,
+                  child: _CloseButton(
+                      onPressed: () => Navigator.of(context).pop()),
+                ),
+              ],
+            ),
       children: [
-        if (sprite != null && landmark.art != null)
-          LandmarkShowcase(
-            art: landmark.art!,
-            sprite: sprite!,
-            eyebrow: '${DailyStrings.dayN(day)} · ${landmark.ref}',
-            title: landmark.title,
-            flight: flight,
-          )
+        if (showcase)
+          const SizedBox(height: 0)
         else ...[
           Text('${DailyStrings.dayN(day)} · ${landmark.ref}'.toUpperCase(),
               style: LumText.roadLabelCaps11.copyWith(color: c.textSecondary)),
@@ -292,7 +330,7 @@ class LandmarkSheet extends StatelessWidget {
                 style: LumText.title1.copyWith(color: c.textPrimary)),
           ),
         ],
-        const SizedBox(height: LumSpace.lg),
+        SizedBox(height: showcase ? LumSpace.sm : LumSpace.lg),
         if (s == null)
           Text(landmark.short,
               style: LumText.body.copyWith(color: c.textPrimary))
@@ -349,6 +387,46 @@ class LandmarkSheet extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// A round close button with a 48 pt target; it closes the sheet the same way
+/// a swipe does, so the sprite flies home.
+class _CloseButton extends StatelessWidget {
+  const _CloseButton({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.lum;
+    return Semantics(
+      button: true,
+      label: DailyStrings.close,
+      excludeSemantics: true,
+      onTap: onPressed,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onPressed,
+        child: SizedBox(
+          width: 48,
+          height: 48,
+          child: Center(
+            child: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: c.bgSurface,
+                border: Border.all(color: c.borderSubtle),
+              ),
+              child: Icon(Icons.close_rounded,
+                  size: 20, color: c.textPrimary),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

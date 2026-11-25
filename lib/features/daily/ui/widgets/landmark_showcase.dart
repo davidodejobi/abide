@@ -85,7 +85,21 @@ class LandmarkShowcase extends StatefulWidget {
 class _LandmarkShowcaseState extends State<LandmarkShowcase>
     with TickerProviderStateMixin {
   static const _stageHeight = 290.0;
-  static const _heroSize = 210.0;
+  static const _podiumY = _stageHeight - 52; // centre of the podium top
+  static const _podiumRy = 24.0;
+
+  /// Where the model's lowest opaque row sits: just in front of the podium's
+  /// centre, on its top surface.
+  static const _groundY = _podiumY + _podiumRy * .45;
+
+  /// The picture is drawn at most 1:1 in device pixels (frames are 512 px);
+  /// 210 pt where the screen is not dense enough to need less.
+  double _heroSize = 210;
+
+  /// Content box of the turntable within a frame (left, top, right, bottom as
+  /// fractions); the bottom is the ground contact. Until the meta arrives, a
+  /// guess that fits the static sprite.
+  List<double> _box = const [.1, .15, .9, .9];
 
   final _slot = GlobalKey();
   late final ui.Image _mine = widget.sprite.clone();
@@ -105,6 +119,7 @@ class _LandmarkShowcaseState extends State<LandmarkShowcase>
   bool _dragging = false;
   Rect _lastSlot = Rect.zero;
   OverlayEntry? _entry;
+  Timer? _watchdog;
   Animation<double>? _route;
 
   @override
@@ -126,16 +141,23 @@ class _LandmarkShowcaseState extends State<LandmarkShowcase>
 
   Future<void> _loadSheet() async {
     try {
-      final img = await RoadArt.loadSpin(widget.art);
+      final spin = await RoadArt.loadSpin(widget.art);
       if (!mounted) {
-        img.dispose();
+        spin.image.dispose();
         return;
       }
       final old = _sheet;
-      setState(() => _sheet = img);
+      setState(() {
+        _sheet = spin.image;
+        _box = spin.box;
+      });
       old?.dispose();
       _maybeSpin();
-    } catch (_) {}
+    } catch (e) {
+      // Too big for the device, missing or undecodable: the static picture
+      // stays, never a blank header.
+      debugPrint('Landmark turntable unavailable (${widget.art}): $e');
+    }
   }
 
   Future<void> _loadPalette() async {
@@ -169,6 +191,7 @@ class _LandmarkShowcaseState extends State<LandmarkShowcase>
 
   @override
   void dispose() {
+    _watchdog?.cancel();
     _route?.removeStatusListener(_routeStatus);
     _entry?.remove();
     _entry = null;
@@ -217,6 +240,13 @@ class _LandmarkShowcaseState extends State<LandmarkShowcase>
     );
     _entry = entry;
     Overlay.of(context, rootOverlay: true).insert(entry);
+    // A flight that never reports in must not leave the header empty.
+    _watchdog = Timer(const Duration(seconds: 3), () {
+      if (!mounted || !_flying) return;
+      _entry?.remove();
+      _entry = null;
+      _land();
+    });
   }
 
   void _routeStatus(AnimationStatus s) {
@@ -290,6 +320,9 @@ class _LandmarkShowcaseState extends State<LandmarkShowcase>
   Widget build(BuildContext context) {
     final c = context.lum;
     final sheet = _sheet;
+    final dpr = MediaQuery.devicePixelRatioOf(context);
+    _heroSize = math.min(210.0, RoadArt.spinFrame / dpr);
+    final bottom = _box[3], contentW = (_box[2] - _box[0]) * _heroSize;
     final colors = _palette.isEmpty ? [c.sceneGlow] : _palette;
     final live = _landed && !_reduce;
     return Column(
@@ -311,12 +344,13 @@ class _LandmarkShowcaseState extends State<LandmarkShowcase>
                       edge: c.borderSubtle,
                       ink: c.textPrimary,
                       reduce: _reduce,
+                      shadowWidth: contentW,
                     ),
                   ),
                 ),
               ),
               Positioned(
-                top: 36,
+                top: _groundY - _heroSize * bottom,
                 left: 0,
                 right: 0,
                 child: Center(
@@ -349,7 +383,7 @@ class _LandmarkShowcaseState extends State<LandmarkShowcase>
                                         clock: _clock,
                                         bob: live,
                                       ),
-                                      size: const Size.square(_heroSize),
+                                      size: Size.square(_heroSize),
                                     ),
                                   ),
                           ),
@@ -576,8 +610,10 @@ class _StagePainter extends CustomPainter {
     required this.edge,
     required this.ink,
     required this.reduce,
+    required this.shadowWidth,
   });
 
+  final double shadowWidth;
   final Animation<double> reveal, burst;
   final List<Color> colors;
   final Color surface, edge, ink;
@@ -587,7 +623,9 @@ class _StagePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final cx = size.width / 2;
     final lit = Curves.easeOut.transform(reveal.value);
-    final top = Offset(cx, size.height - 52), rx = 108.0, ry = 24.0;
+    final top = Offset(cx, _LandmarkShowcaseState._podiumY),
+        rx = 108.0,
+        ry = _LandmarkShowcaseState._podiumRy;
     final tint = colors.first;
 
     // Floor shadow.
@@ -645,6 +683,16 @@ class _StagePainter extends CustomPainter {
           tint.withValues(alpha: 0),
         ]),
     );
+    // Contact shadow where the model touches the podium.
+    canvas.drawOval(
+      Rect.fromCenter(
+          center: Offset(cx, _LandmarkShowcaseState._groundY + 1),
+          width: shadowWidth * .96,
+          height: 14),
+      Paint()
+        ..color = ink.withValues(alpha: .34)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
+    );
     // Lit rim.
     canvas.drawOval(
       topOval,
@@ -680,7 +728,10 @@ class _StagePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_StagePainter o) =>
-      o.colors != colors || o.surface != surface || o.reduce != reduce;
+      o.colors != colors ||
+      o.surface != surface ||
+      o.reduce != reduce ||
+      o.shadowWidth != shadowWidth;
 }
 
 /// Sparkles rising off the podium in the landmark's colours.

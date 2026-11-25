@@ -17,6 +17,14 @@ Future<void> _pumpFor(WidgetTester t, int ms) async {
   }
 }
 
+/// The 2048 px sheet decodes off the fake clock: give real time until it is in.
+Future<void> _waitSpin(WidgetTester t) async {
+  for (var i = 0; i < 150 && find.byKey(_spinKey).evaluate().isEmpty; i++) {
+    await t.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 100)));
+    await t.pump(const Duration(milliseconds: 50));
+  }
+}
+
 void main() {
   late RoadArt art;
   late Landmark lm;
@@ -75,8 +83,7 @@ void main() {
     expect(find.text(lm.title), findsOneWidget);
 
     // Lazy: the sheet decodes only now, off the fake clock.
-    await t.runAsync(
-        () => Future<void>.delayed(const Duration(milliseconds: 400)));
+    await _waitSpin(t);
     await _pumpFor(t, 400);
     expect(find.byKey(_spinKey), findsOneWidget);
     expect(find.byKey(_staticKey), findsNothing);
@@ -145,8 +152,7 @@ void main() {
     expect(find.text(lm.title), findsOneWidget);
 
     // Still draggable once the turntable is in; it does not idle on its own.
-    await t.runAsync(
-        () => Future<void>.delayed(const Duration(milliseconds: 400)));
+    await _waitSpin(t);
     await _pumpFor(t, 300);
     expect(find.byKey(_spinKey), findsOneWidget);
     await t.drag(find.byKey(_spinKey), const Offset(-90, 0));
@@ -164,5 +170,50 @@ void main() {
     await t.pumpAndSettle();
     expect(find.byType(RawImage), findsNothing);
     expect(find.text(lm.title), findsOneWidget);
+  });
+
+  testWidgets('the sheet is capped so the road shows, with a Close button',
+      (t) async {
+    await open(t, from: const Rect.fromLTWH(20, 500, 120, 100));
+    await _pumpFor(t, 1400);
+    final h = t.getSize(find.byType(BottomSheet)).height;
+    expect(h, lessThanOrEqualTo(844 * .78 + 1));
+    // Round close button, 48 pt target, labelled for screen readers.
+    final close = find.bySemanticsLabel('Close');
+    expect(close, findsOneWidget);
+    expect(t.getSize(find.descendant(of: close, matching: find.byType(SizedBox)).first),
+        const Size(48, 48));
+    await t.tap(close);
+    await _pumpFor(t, 150);
+    expect(done, isFalse, reason: 'flying home');
+    await _pumpFor(t, 800);
+    expect(done, isTrue);
+  });
+
+  testWidgets('a turntable that cannot load leaves the static picture',
+      (t) async {
+    await open(t, from: const Rect.fromLTWH(20, 500, 120, 100));
+    await _pumpFor(t, 200);
+    Navigator.of(t.element(find.byKey(_staticKey))).pop();
+    await _pumpFor(t, 1200);
+    // Same sprite, art with no sheet shipped.
+    const ghost = Landmark(
+        id: 'g',
+        book: 'GEN',
+        fromChapter: 1,
+        toChapter: 1,
+        title: 'Ghost',
+        short: 's',
+        ref: 'Genesis 1',
+        art: 'no-such-art');
+    final ctx = t.element(find.byType(TextButton));
+    showLandmarkSheet(ctx, landmark: ghost, story: null, day: 1, sprite: sprite);
+    await _pumpFor(t, 600);
+    await t.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 200)));
+    await _pumpFor(t, 300);
+    expect(find.byKey(_staticKey), findsOneWidget);
+    expect(find.byKey(_spinKey), findsNothing);
+    expect(t.takeException(), isNull);
   });
 }
