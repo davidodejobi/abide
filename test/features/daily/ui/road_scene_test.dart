@@ -111,4 +111,30 @@ void main() {
     await t.pump(const Duration(milliseconds: 100));
     expect(t.takeException(), isNull);
   });
+
+  testWidgets('Given the sky changes mid-walk, Then it waits for the walk',
+      (t) async {
+    await loadArt(t);
+    const k = ValueKey('road');
+    Widget road(int day, RoadMood mood) => RoadScene(
+        key: k,
+        width: 390,
+        mood: mood,
+        currentDay: day,
+        totalDays: 30,
+        plan: _plan);
+    await t.pumpWidget(_app(road(1, RoadMood.day)));
+    await t.pump(const Duration(milliseconds: 50));
+    await t.pumpWidget(_app(road(2, RoadMood.day)));
+    await t.pump(const Duration(milliseconds: 1000));
+    await t.pumpWidget(_app(road(2, RoadMood.evening)));
+    await t.pump(const Duration(milliseconds: 1));
+    // The walk was not restarted: the traveller is still on the way, sky unchanged.
+    expect(_state(t, k).debugPos, greaterThan(1.1));
+    expect(_state(t, k).debugDusk, 0);
+    await t.pump(const Duration(seconds: 2));
+    await t.pump(const Duration(seconds: 2));
+    expect(_state(t, k).debugPos, 2);
+    expect(_state(t, k).debugDusk, 1);
+  });
 }

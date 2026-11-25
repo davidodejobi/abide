@@ -95,7 +95,12 @@ const _duskTime = Duration(milliseconds: 900);
 @visibleForTesting
 class RoadSceneState extends State<RoadScene> with TickerProviderStateMixin {
   late final AnimationController _walk =
-      AnimationController(vsync: this, duration: _walkTime);
+      AnimationController(vsync: this, duration: _walkTime)
+        ..addStatusListener((st) {
+          // A sky change that arrived mid-walk waits for the walk to finish.
+          if (st == AnimationStatus.completed && _skyQueued) _retarget();
+        });
+  bool _skyQueued = false;
   // 96 s so the 2.4 s pulse and the cloud drift both wrap without a jump.
   late final AnimationController _ambient =
       AnimationController(vsync: this, duration: const Duration(seconds: 96));
@@ -181,6 +186,8 @@ class RoadSceneState extends State<RoadScene> with TickerProviderStateMixin {
   /// The traveller's current fractional stop position, for tests.
   @visibleForTesting
   double get debugPos => _posNow;
+  @visibleForTesting
+  double get debugDusk => _duskNow;
 
   /// Whether the ambient loop is running, for tests.
   @visibleForTesting
@@ -343,6 +350,15 @@ class RoadSceneState extends State<RoadScene> with TickerProviderStateMixin {
         _exploreAt = clampLook(_exploreAt!, widget.totalDays);
       }
     }
+    if (_walk.isAnimating && _target == _to && _duskTarget != _dusk1) {
+      _skyQueued = true;
+      return;
+    }
+    _retarget();
+  }
+
+  void _retarget() {
+    _skyQueued = false;
     final target = _target, dusk = _duskTarget;
     if (target == _to && dusk == _dusk1) return;
     // A day was read (or the plan changed) while exploring: bring the camera
