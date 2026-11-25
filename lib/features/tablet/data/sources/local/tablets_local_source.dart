@@ -125,6 +125,8 @@ class TabletsLocalSource {
 
   Future<void> deleteNote(String id) => _dao.softDelete(id);
 
+  Future<void> restoreNote(String id) => _dao.restore(id);
+
   /// Re-derives the outgoing link set from [contentMarkdown] and persists it.
   Future<void> _syncLinks(String noteId, String contentMarkdown) {
     final links = parseLinks(contentMarkdown).map((link) {

@@ -36,7 +36,8 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
   /// Live list of non-deleted tablets in a single folder, newest edit first.
   Stream<List<Note>> watchActiveNotesInFolder(String folderId) {
     return (select(notes)
-          ..where((t) => t.isDeleted.equals(false) & t.folderId.equals(folderId))
+          ..where(
+              (t) => t.isDeleted.equals(false) & t.folderId.equals(folderId))
           ..orderBy([(t) => OrderingTerm.desc(t.updatedAt)]))
         .watch();
   }
@@ -75,6 +76,11 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
             ))
         .toList();
   }
+
+  /// Undoes [softDelete]. Leaves updatedAt alone so the note keeps its place.
+  Future<void> restore(String id) =>
+      (update(notes)..where((t) => t.id.equals(id)))
+          .write(const NotesCompanion(isDeleted: Value(false)));
 
   Future<void> softDelete(String id) =>
       (update(notes)..where((t) => t.id.equals(id))).write(

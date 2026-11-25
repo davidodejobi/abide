@@ -76,4 +76,6 @@ class TabletsRepository {
       );
 
   Future<void> deleteNote(String id) => _local.deleteNote(id);
+
+  Future<void> restoreNote(String id) => _local.restoreNote(id);
 }

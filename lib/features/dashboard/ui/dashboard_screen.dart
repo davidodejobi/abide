@@ -83,7 +83,7 @@ class _BottomNavigation extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: LumSize.screenGutter),
         child: GlassTabBar(
-          labels: const ['Today', 'Tablets', 'Songs', 'Bible', 'You'],
+          labels: const ['Today', 'Notes', 'Songs', 'Bible', 'You'],
           selectedIndex: currentIndex,
           onTabSelected: onTabSelected,
         ),

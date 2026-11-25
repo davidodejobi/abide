@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:openbaptisthymnal/features/share_card/ui/share_card_composer.dart';
+import 'package:openbaptisthymnal/features/tablet/ui/notes_strings.dart';
 import 'package:openbaptisthymnal/features/share_card/ui/widgets/scripture_card.dart';
 
 /// One selected verse: its number and text, used to render verse markers.
@@ -24,11 +25,13 @@ class ScriptureShareCardPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ShareCardComposer(
+      title: NotesStrings.shareVerse,
       filename: 'abide_${_slug(reference)}',
-      cardBuilder: (style) => ScriptureCard(
+      cardBuilder: (style, format) => ScriptureCard(
         reference: reference,
         verses: verses,
         style: style,
+        format: format,
       ),
     );
   }
