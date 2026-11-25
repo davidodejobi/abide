@@ -15,17 +15,16 @@ final bottomNavVisibleProvider = StateProvider<bool>((ref) => true);
 /// a streak nobody sees cannot bring anyone back, so it greets you rather than
 /// waiting to be found.
 ///
-/// **This enum is documentation, not the source of truth.** Nothing reads it.
-/// The tabs actually render from two hand-synced lists in `dashboard_screen.dart`
-/// -- `IndexedStack.children` and `tabs:` -- so a new tab means editing all three
-/// at the same ordinal, and the nav bar resolves each icon from the *lowercased
+/// The nav bar labels come from this enum; `IndexedStack.children` in
+/// `dashboard_screen.dart` is still a hand-synced list at the same ordinals.
+/// The nav bar resolves each icon from the *lowercased
 /// label* (`'Today'` -> `assets/images/icons/today.svg` + `today_fill.svg`).
 /// A missing SVG throws at runtime, not at build.
 enum BottomNavTab {
   today(0, 'Today'),
-  notes(1, 'Notes'),
+  bible(1, 'Bible'),
   songs(2, 'Songs'),
-  bible(3, 'Bible'),
+  notes(3, 'Notes'),
   settings(4, 'You');
 
   const BottomNavTab(this.tabIndex, this.label);

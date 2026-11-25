@@ -29,16 +29,15 @@ class DashboardScreen extends HookConsumerWidget {
             bottom: false,
             child: IndexedStack(
               index: currentIndex,
-              // Order must match `tabs:` in _BottomNavigation below, and
-              // BottomNavTab's ordinals. Three lists, hand-synced.
+              // Order must match BottomNavTab's ordinals (the bar's labels).
               // TickerMode: IndexedStack keeps hidden tabs mounted with tickers
               // running, so mute every tab but the visible one.
               children: [
                 for (final (i, tab) in const [
                   TodayTabScreen(),
-                  TabletsTabScreen(),
-                  HomeTabScreen(),
                   BibleTabScreen(),
+                  HomeTabScreen(),
+                  TabletsTabScreen(),
                   SettingsTabScreen(),
                 ].indexed)
                   TickerMode(enabled: i == currentIndex, child: tab),
@@ -88,7 +87,7 @@ class _BottomNavigation extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: LumSize.screenGutter),
         child: GlassTabBar(
-          labels: const ['Today', 'Notes', 'Songs', 'Bible', 'You'],
+          labels: [for (final t in BottomNavTab.values) t.label],
           selectedIndex: currentIndex,
           onTabSelected: onTabSelected,
         ),
