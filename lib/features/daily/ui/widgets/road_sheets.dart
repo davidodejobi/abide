@@ -48,11 +48,13 @@ Future<RoadOpen?> showStopSheet(
   required Map<String, String> bookNames,
   String? progressId,
   DayContent? content,
+  Future<DayContent?>? contentLoad,
 }) {
   return _show(
     context,
     (_) => StopSheet(
       content: content,
+      contentLoad: contentLoad,
       progressId: progressId,
       plan: plan,
       day: day,
@@ -143,7 +145,12 @@ class StopSheet extends StatelessWidget {
     required this.bookNames,
     this.progressId,
     this.content,
+    this.contentLoad,
   });
+
+  /// Same as [content] but still loading: the sheet opens at once and the
+  /// chapter list fills in when it lands (or never, if the atlas fails).
+  final Future<DayContent?>? contentLoad;
 
   /// What the atlas knows about this day (region, chapters); null hides it.
   final DayContent? content;
@@ -243,6 +250,13 @@ class StopSheet extends StatelessWidget {
           ),
         ),
         if (content != null) _DayChapters(content: content!, names: bookNames),
+        if (content == null && contentLoad != null)
+          FutureBuilder<DayContent?>(
+            future: contentLoad,
+            builder: (_, s) => s.data == null
+                ? const SizedBox.shrink()
+                : _DayChapters(content: s.data!, names: bookNames),
+          ),
         const SizedBox(height: LumSpace.xl),
         LumButton(
           label: switch (status) {

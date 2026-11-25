@@ -158,17 +158,20 @@ class RoadSceneState extends State<RoadScene> with TickerProviderStateMixin {
     _from = _to = _target;
     _dusk0 = _dusk1 = _duskTarget;
     widget.visibleBottom?.addListener(_panelMoved);
-    RoadArt.load().then((a) async {
-      RoadAtlas? atlas;
-      try {
-        atlas = await loadRoadAtlas();
-      } catch (_) {
-        // No atlas: no regions or scatter, the road is otherwise unchanged.
-      }
+    RoadArt.load().then((a) {
       if (!mounted) return;
       setState(() {
         _art = a;
-        _atlas = atlas;
+        _syncLandmarks();
+      });
+    }, onError: (_) {});
+    // Separate, so the road never waits on it; without it there are simply no
+    // regions or scatter.
+    loadRoadAtlas().then((at) {
+      if (!mounted) return;
+      setState(() {
+        _atlas = at;
+        _landmarkPlan = null; // re-resolve the days against the atlas
         _syncLandmarks();
       });
     }, onError: (_) {});
