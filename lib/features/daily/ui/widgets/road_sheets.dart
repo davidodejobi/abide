@@ -69,6 +69,7 @@ Future<RoadOpen?> showLandmarkSheet(
   required int day,
   ui.Image? sprite,
   Rect? from,
+  VoidCallback? onShareCard,
 }) async {
   // [from] is where the sprite stands on the road (global): it flies from
   // there into the sheet and back. Resolves once it has landed home again.
@@ -81,6 +82,7 @@ Future<RoadOpen?> showLandmarkSheet(
       day: day,
       sprite: sprite,
       flight: flight,
+      onShareCard: onShareCard,
     ),
     // The road stays visible above it.
     maxHeightFraction: sprite != null && landmark.art != null ? .78 : null,
@@ -267,9 +269,13 @@ class LandmarkSheet extends StatelessWidget {
     required this.day,
     this.sprite,
     this.flight,
+    this.onShareCard,
   });
 
   final ShowcaseFlight? flight;
+
+  /// Opens the share-card composer for this landmark; null hides the button.
+  final VoidCallback? onShareCard;
 
   /// The landmark's picture from the road, shown at the top; null when it has
   /// none yet.
@@ -383,6 +389,15 @@ class LandmarkSheet extends StatelessWidget {
           },
         ),
       ),
+      if (onShareCard != null) ...[
+        const SizedBox(height: LumSpace.sm),
+        LumButton(
+          label: DailyStrings.shareLandmarkCard,
+          icon: const Icon(Icons.image_outlined),
+          kind: LumButtonKind.secondary,
+          onPressed: onShareCard,
+        ),
+      ],
     ];
   }
 }

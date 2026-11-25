@@ -317,12 +317,24 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
                                           streakDays: streak.current,
                                           onReadAhead: () =>
                                               setState(() => _readAhead = true),
+                                          onShare: () => _shareRoad(
+                                            d,
+                                            doneIndex,
+                                            streak.current,
+                                            bookNames,
+                                          ),
                                         )
                                       : _Reading(
                                           reading: d,
                                           bookNames: bookNames,
                                           onChange: _choosePlan,
                                           onStart: () => _startReading(d),
+                                          onShare: () => _shareRoad(
+                                            d,
+                                            d.day!.dayIndex,
+                                            streak.current,
+                                            bookNames,
+                                          ),
                                         ),
                         ),
                         _PlanNoteCard(
@@ -554,13 +566,55 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
           story: story,
           day: day,
           sprite: sprite,
-          from: sprite == null ? null : from);
+          from: sprite == null ? null : from,
+          onShareCard: () => _shareLandmark(landmark, day));
     } finally {
       // Whatever happened (error, timeout, swipe), the sprite is back on the
       // road and the road repaints now.
       if (mounted && _lifted == landmark.id) setState(() => _lifted = null);
     }
     await _open(open);
+  }
+
+  /// The share card for the reader's own day, with the landmark nearest it.
+  Future<void> _shareRoad(TodaysReading d, int day, int streak,
+      Map<String, String> bookNames) async {
+    Landmark? near;
+    try {
+      final art = await RoadArt.load();
+      final byDay = landmarksByDay(d.plan, art.landmarks, placeArtless: true);
+      for (var i = 0; i <= d.plan.dayCount && near == null; i++) {
+        near = (byDay[day - i] ?? byDay[day + i])?.firstOrNull;
+      }
+    } catch (_) {
+      // The card is fine without a landmark.
+    }
+    final planDay = d.plan.dayAt(day);
+    if (!mounted) return;
+    await context.router.push(RoadShareCardRoute(
+      day: day,
+      totalDays: d.plan.dayCount,
+      planTitle: d.plan.title,
+      streak: streak,
+      passage:
+          planDay == null ? null : formatPassages(planDay.passages, bookNames),
+      landmarkTitle: near?.title,
+      landmarkArt: near?.art,
+    ));
+  }
+
+  /// The card for a landmark the reader has reached; it opens over the sheet.
+  Future<void> _shareLandmark(Landmark landmark, int day) {
+    final d = ref.read(todaysReadingProvider).valueOrNull;
+    return context.router.push(RoadShareCardRoute(
+      day: day,
+      totalDays: d?.plan.dayCount ?? day,
+      planTitle: d?.plan.title ?? '',
+      streak: ref.read(streakProvider).current,
+      passage: landmark.ref,
+      landmarkTitle: landmark.title,
+      landmarkArt: landmark.art,
+    ));
   }
 
   Future<void> _open(RoadOpen? open) async {
@@ -784,12 +838,14 @@ class _Reading extends ConsumerWidget {
     required this.bookNames,
     required this.onChange,
     required this.onStart,
+    required this.onShare,
   });
 
   final TodaysReading reading;
   final Map<String, String> bookNames;
   final VoidCallback onChange;
   final VoidCallback onStart;
+  final VoidCallback onShare;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -921,6 +977,7 @@ class _Reading extends ConsumerWidget {
                   context.router.push(PlanDaysRoute(planId: reading.plan.id)),
             ),
             _TextAction(label: DailyStrings.changePlan, onTap: onChange),
+            _TextAction(label: DailyStrings.shareRoad, onTap: onShare),
           ],
         ),
       ],
@@ -970,6 +1027,7 @@ class _DayDone extends ConsumerWidget {
     required this.bookNames,
     required this.streakDays,
     required this.onReadAhead,
+    required this.onShare,
   });
 
   final TodaysReading reading;
@@ -977,6 +1035,7 @@ class _DayDone extends ConsumerWidget {
   final Map<String, String> bookNames;
   final int streakDays;
   final VoidCallback onReadAhead;
+  final VoidCallback onShare;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -1039,7 +1098,13 @@ class _DayDone extends ConsumerWidget {
         const SizedBox(height: 8),
         Align(
           alignment: Alignment.centerLeft,
-          child: _TextAction(label: DailyStrings.readAhead, onTap: onReadAhead),
+          child: Wrap(
+            spacing: LumSpace.md,
+            children: [
+              _TextAction(label: DailyStrings.readAhead, onTap: onReadAhead),
+              _TextAction(label: DailyStrings.shareRoad, onTap: onShare),
+            ],
+          ),
         ),
       ],
     );
