@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// App color palette extracted from Figma design
 /// https://www.figma.com/design/Kig869DTVVbNvQZG65OdeO/MC?node-id=388-7432

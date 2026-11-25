@@ -2,13 +2,14 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/physics.dart';
 import 'package:flutter/services.dart';
 import 'package:openbaptisthymnal/core/theme/lum_theme.dart';
 
-import '../../domain/landmark_spin.dart';
-import 'road_art.dart';
+import '../../domain/landmark_3d.dart';
+import 'landmark_model_3d.dart';
 
 /// Where a landmark sheet's picture came from on the road, and when it has
 /// finished flying home again. The caller waits on [settled] so the road can
@@ -94,26 +95,7 @@ class LandmarkShowcase extends StatefulWidget {
 class _LandmarkShowcaseState extends State<LandmarkShowcase>
     with TickerProviderStateMixin {
   static const _stageHeight = LandmarkShowcase.stageHeight;
-
-  /// The podium's front rim stays put; its top is sized to the model's
-  /// footprint (same slant as the camera) so the ground disc rests on it.
-  static const _rimY = _stageHeight - 28;
-
-  /// Where the model's lowest opaque row sits: just in front of the podium's
-  /// centre, on its top surface.
-  static const _groundY = _rimY - 2;
-
-  /// The picture is drawn at most 1:1 in device pixels (frames are 512 px);
-  /// 210 pt where the screen is not dense enough to need less.
-  double _heroSize = 210;
-
-  /// Content box of the turntable within a frame (left, top, right, bottom as
-  /// fractions); the bottom is the ground contact. Until the meta arrives, a
-  /// guess that fits the static sprite.
-  List<double> _box = const [.1, .15, .9, .9];
-
-  /// Where the static sprite's content sits in it (left, right, bottom).
-  List<double>? _staticBox;
+  static const _heroSize = 210.0;
 
   final _slot = GlobalKey();
   late final ui.Image _mine = widget.sprite.clone();
@@ -125,8 +107,9 @@ class _LandmarkShowcaseState extends State<LandmarkShowcase>
   late final _burst = AnimationController(
       vsync: this, duration: const Duration(milliseconds: 700));
 
-  /// The decoded turntable; null until ready (the static sprite stands in).
-  ui.Image? _sheet;
+  /// True once the first 3D frame is up; the static sprite stands in until
+  /// then, and for good if 3D is unavailable.
+  bool _shown3d = false, _failed3d = false;
   List<Color> _palette = const [];
   bool _landed = false;
   bool _init = false, _reduce = false, _flying = false, _started = false;
@@ -146,104 +129,19 @@ class _LandmarkShowcaseState extends State<LandmarkShowcase>
       }
     });
     scheduleMicrotask(() {
-      if (mounted) {
-        _loadStatic();
-        _loadBox();
-        _loadSheet();
-      }
+      if (mounted) _loadPalette();
     });
   }
 
-  Future<void> _loadSheet() async {
-    try {
-      final spin = await RoadArt.loadSpin(widget.art);
-      if (!mounted) {
-        spin.image.dispose();
-        return;
-      }
-      final old = _sheet;
-      setState(() {
-        _sheet = spin.image;
-        _box = spin.box;
-      });
-      old?.dispose();
-      _maybeSpin();
-    } catch (e) {
-      // Too big for the device, missing or undecodable: the static picture
-      // stays, never a blank header.
-      debugPrint('Landmark turntable unavailable (${widget.art}): $e');
-    }
-  }
-
-  /// The content box is a few bytes of JSON: known long before the sheet
-  /// decodes, so the picture never moves when the turntable arrives.
-  Future<void> _loadBox() async {
-    try {
-      final box = await RoadArt.spinBox(widget.art);
-      if (mounted && box != null) setState(() => _box = box);
-    } catch (_) {}
-  }
-
-  /// Reads the static sprite once: the palette, and where its content sits
-  /// (left, right, bottom as fractions) so it can be seated like the turntable.
-  Future<void> _loadStatic() async {
+  Future<void> _loadPalette() async {
     try {
       final bytes = await _mine.toByteData(format: ui.ImageByteFormat.rawRgba);
       if (bytes == null || !mounted) return;
-      final px = bytes.buffer.asUint8List();
-      final w = _mine.width, h = _mine.height;
-      var l = w, r = -1, b = -1;
-      for (var y = 0; y < h; y++) {
-        for (var x = 0; x < w; x++) {
-          if (px[(y * w + x) * 4 + 3] > 128) {
-            if (x < l) l = x;
-            if (x > r) r = x;
-            b = y;
-          }
-        }
+      final p = spinPalette(bytes.buffer.asUint8List());
+      if (p.isNotEmpty && mounted) {
+        setState(() => _palette = [for (final v in p) Color(v)]);
       }
-      final p = spinPalette(px);
-      if (!mounted) return;
-      setState(() {
-        if (p.isNotEmpty) _palette = [for (final v in p) Color(v)];
-        if (r > l) _staticBox = [l / w, (r + 1) / w, (b + 1) / h];
-      });
     } catch (_) {}
-  }
-
-  /// The static sprite scaled and placed so its content matches the
-  /// turntable's content box: the crossfade to the spin is seamless.
-  Widget _staticSeated() {
-    final sb = _staticBox;
-    final img = RawImage(
-        key: const ValueKey('showcase-static'), image: _mine, fit: BoxFit.fill);
-    if (sb == null) {
-      return RawImage(
-          key: const ValueKey('showcase-static'),
-          image: _mine,
-          fit: BoxFit.contain);
-    }
-    final hero = _heroSize;
-    final w = _mine.width.toDouble(), h = _mine.height.toDouble();
-    final k = (_box[2] - _box[0]) * hero / ((sb[1] - sb[0]) * w);
-    final cx = (_box[0] + _box[2]) / 2 * hero;
-    return SizedBox(
-      key: const ValueKey('showcase-static-box'),
-      width: hero,
-      height: hero,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Positioned(
-            left: cx - (sb[0] + sb[1]) / 2 * w * k,
-            top: hero * _box[3] - sb[2] * h * k,
-            width: w * k,
-            height: h * k,
-            child: img,
-          ),
-        ],
-      ),
-    );
   }
 
   @override
@@ -277,8 +175,6 @@ class _LandmarkShowcaseState extends State<LandmarkShowcase>
     _reveal.dispose();
     _burst.dispose();
     _mine.dispose();
-    _sheet?.dispose();
-    _sheet = null;
     super.dispose();
   }
 
@@ -370,9 +266,9 @@ class _LandmarkShowcaseState extends State<LandmarkShowcase>
     _maybeSpin();
   }
 
-  /// The whoosh plays once the picture has landed and the turntable is ready.
+  /// The whoosh plays once the picture has landed and the 3D model is up.
   void _maybeSpin() {
-    if (_started || !_landed || _sheet == null) return;
+    if (_started || !_landed || !_shown3d) return;
     _started = true;
     if (!_reduce) _spin.animateWith(_Whoosh(_spin.value, 2, 1.2));
   }
@@ -397,11 +293,6 @@ class _LandmarkShowcaseState extends State<LandmarkShowcase>
   @override
   Widget build(BuildContext context) {
     final c = context.lum;
-    final sheet = _sheet;
-    final dpr = MediaQuery.devicePixelRatioOf(context);
-    _heroSize = math.min(210.0, RoadArt.spinFrame / dpr);
-    final bottom = _box[3], contentW = (_box[2] - _box[0]) * _heroSize;
-    final podiumRx = (contentW * .5).clamp(72.0, 125.0);
     final colors = _palette.isEmpty ? [c.sceneGlow] : _palette;
     final live = _landed && !_reduce;
     final stage = SizedBox(
@@ -420,23 +311,22 @@ class _LandmarkShowcaseState extends State<LandmarkShowcase>
                   edge: c.borderSubtle,
                   ink: c.textPrimary,
                   reduce: _reduce,
-                  shadowWidth: contentW,
-                  rx: podiumRx,
+                  contact: _shown3d,
                 ),
               ),
             ),
           ),
           Positioned(
-            top: _groundY - _heroSize * bottom,
+            top: 36,
             left: 0,
             right: 0,
             child: Center(
               child: GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 excludeFromSemantics: true,
-                onHorizontalDragStart: sheet == null ? null : _dragStart,
-                onHorizontalDragUpdate: sheet == null ? null : _dragUpdate,
-                onHorizontalDragEnd: sheet == null ? null : _dragEnd,
+                onHorizontalDragStart: _shown3d ? _dragStart : null,
+                onHorizontalDragUpdate: _shown3d ? _dragUpdate : null,
+                onHorizontalDragEnd: _shown3d ? _dragEnd : null,
                 child: SizedBox(
                   key: _slot,
                   width: _heroSize,
@@ -444,22 +334,41 @@ class _LandmarkShowcaseState extends State<LandmarkShowcase>
                   child: ExcludeSemantics(
                     child: Opacity(
                       opacity: _flying ? 0 : 1,
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 180),
-                        child: sheet == null
-                            ? _staticSeated()
-                            : RepaintBoundary(
-                                key: const ValueKey('showcase-spin'),
-                                child: CustomPaint(
-                                  painter: _SpinPainter(
-                                    sheet: sheet,
-                                    turns: _spin,
-                                    clock: _clock,
-                                    bob: live,
-                                  ),
-                                  size: Size.square(_heroSize),
-                                ),
-                              ),
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          // Seated on the podium; fades out once the 3D
+                          // model is up, and stays if it never is.
+                          AnimatedOpacity(
+                            duration: const Duration(milliseconds: 220),
+                            opacity: _shown3d ? 0 : 1,
+                            child: RawImage(
+                                key: const ValueKey('showcase-static'),
+                                image: _mine,
+                                fit: BoxFit.contain),
+                          ),
+                          // Flutter GPU is not on web: keep the sprite there.
+                          if (!_failed3d && !kIsWeb)
+                            LandmarkModel3d(
+                              key: const ValueKey('showcase-3d'),
+                              art: widget.art,
+                              turns: _spin,
+                              active: _landed,
+                              // Called from the scene's tick, so state
+                              // changes wait for the frame to finish.
+                              onShown: () => WidgetsBinding.instance
+                                  .addPostFrameCallback((_) {
+                                if (!mounted) return;
+                                setState(() => _shown3d = true);
+                                _maybeSpin();
+                              }),
+                              onFailed: () {
+                                if (mounted) {
+                                  setState(() => _failed3d = true);
+                                }
+                              },
+                            ),
+                        ],
                       ),
                     ),
                   ),
@@ -652,33 +561,6 @@ class _FlierState extends State<_Flier> with SingleTickerProviderStateMixin {
 }
 
 // ------------------------------------------------------------------ painters
-class _SpinPainter extends CustomPainter {
-  _SpinPainter({
-    required this.sheet,
-    required this.turns,
-    required this.clock,
-    required this.bob,
-  }) : super(repaint: Listenable.merge([turns, clock]));
-
-  final ui.Image sheet;
-  final Animation<double> turns, clock;
-  final bool bob;
-  final _paint = Paint()..filterQuality = FilterQuality.medium;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final f = spinFrameFor(turns.value);
-    final cell = sheet.width / spinColumns;
-    final src = Rect.fromLTWH(
-        (f % spinColumns) * cell, (f ~/ spinColumns) * cell, cell, cell);
-    final dy = bob ? math.sin(clock.value * 2 * math.pi) * 3 : 0.0;
-    canvas.drawImageRect(sheet, src, (Offset(0, dy) & size), _paint);
-  }
-
-  @override
-  bool shouldRepaint(_SpinPainter o) => o.sheet != sheet || o.bob != bob;
-}
-
 /// Podium, floor shadow and the soft spotlight, lit by [reveal].
 class _StagePainter extends CustomPainter {
   _StagePainter({
@@ -690,22 +572,19 @@ class _StagePainter extends CustomPainter {
     required this.edge,
     required this.ink,
     required this.reduce,
-    required this.shadowWidth,
-    required this.rx,
+    required this.contact,
   });
 
-  final double shadowWidth, rx;
   final Animation<double> reveal, burst;
   final List<Color> colors;
   final Color surface, edge, ink;
-  final bool reduce;
+  final bool reduce, contact;
 
   @override
   void paint(Canvas canvas, Size size) {
     final cx = size.width / 2;
     final lit = Curves.easeOut.transform(reveal.value);
-    final ry = rx * .5;
-    final top = Offset(cx, _LandmarkShowcaseState._rimY - ry);
+    final top = Offset(cx, size.height - 52), rx = 108.0, ry = 24.0;
     final tint = colors.first;
 
     // Floor shadow.
@@ -763,6 +642,15 @@ class _StagePainter extends CustomPainter {
     final topOval = Rect.fromCenter(center: top, width: rx * 2, height: ry * 2);
     canvas.drawOval(
         topOval, Paint()..color = Color.lerp(surface, tint, .18 * lit)!);
+    // Contact shadow under a 3D model (the sprite carries its own).
+    if (contact) {
+      canvas.drawOval(
+        Rect.fromCenter(center: top.translate(0, 4), width: 150, height: 34),
+        Paint()
+          ..color = Colors.black.withValues(alpha: .34)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 9),
+      );
+    }
     // Pool of light.
     canvas.drawOval(
       topOval.deflate(10),
@@ -771,16 +659,6 @@ class _StagePainter extends CustomPainter {
           tint.withValues(alpha: .55 * lit),
           tint.withValues(alpha: 0),
         ]),
-    );
-    // Contact shadow where the model touches the podium.
-    canvas.drawOval(
-      Rect.fromCenter(
-          center: Offset(cx, _LandmarkShowcaseState._groundY + 1),
-          width: shadowWidth * .96,
-          height: 14),
-      Paint()
-        ..color = ink.withValues(alpha: .34)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
     );
     // Lit rim.
     canvas.drawOval(
@@ -823,8 +701,7 @@ class _StagePainter extends CustomPainter {
       o.colors != colors ||
       o.surface != surface ||
       o.reduce != reduce ||
-      o.shadowWidth != shadowWidth ||
-      o.rx != rx;
+      o.contact != contact;
 }
 
 /// Sparkles rising off the podium in the landmark's colours.
