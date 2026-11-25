@@ -14,13 +14,15 @@ class ShareCardFrame extends StatelessWidget {
     super.key,
     required this.style,
     required this.format,
-    required this.eyebrow,
+    this.eyebrow,
     required this.span,
   });
 
   final ShareCardStyle style;
   final ShareCardFormat format;
-  final String eyebrow;
+
+  /// Reference line above the words; null hides it.
+  final String? eyebrow;
 
   /// The words, styled with the card's tone. The frame scales them to fit.
   final TextSpan Function(LumColors tone) span;
@@ -49,7 +51,9 @@ class ShareCardFrame extends StatelessWidget {
           // Padding top and bottom, the two gaps, the eyebrow and the footer.
           final chrome = 2 * LumSpace.xl +
               2 * LumSpace.md +
-              lineHeight(eyebrow, eyebrowStyle) +
+              (eyebrow == null
+                  ? -LumSpace.md
+                  : lineHeight(eyebrow!, eyebrowStyle)) +
               lineHeight(_mark, footerStyle) +
               1;
           final words = span(t);
@@ -85,13 +89,15 @@ class ShareCardFrame extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          eyebrow,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: eyebrowStyle,
-                        ),
-                        const SizedBox(height: LumSpace.md),
+                        if (eyebrow != null) ...[
+                          Text(
+                            eyebrow!,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: eyebrowStyle,
+                          ),
+                          const SizedBox(height: LumSpace.md),
+                        ],
                         Expanded(
                           child: Text.rich(
                             words,

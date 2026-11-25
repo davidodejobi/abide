@@ -14,6 +14,7 @@ class LyricCard extends StatelessWidget {
     required this.body,
     required this.style,
     this.format = ShareCardFormat.status,
+    this.showReference = true,
   });
 
   final String hymnNumber;
@@ -22,12 +23,15 @@ class LyricCard extends StatelessWidget {
   final ShareCardStyle style;
   final ShareCardFormat format;
 
+  /// Whether the hymn number line shows above the title.
+  final bool showReference;
+
   @override
   Widget build(BuildContext context) {
     return ShareCardFrame(
       style: style,
       format: format,
-      eyebrow: NotesStrings.hymnEyebrow(hymnNumber),
+      eyebrow: showReference ? NotesStrings.hymnEyebrow(hymnNumber) : null,
       span: (t) => TextSpan(
         children: [
           TextSpan(

@@ -15,6 +15,7 @@ class ScriptureCard extends StatelessWidget {
     required this.verses,
     required this.style,
     this.format = ShareCardFormat.status,
+    this.showReference = true,
   });
 
   /// Full citation, e.g. `John 3:16–18`.
@@ -26,12 +27,15 @@ class ScriptureCard extends StatelessWidget {
   final ShareCardStyle style;
   final ShareCardFormat format;
 
+  /// Whether the citation shows above the verses.
+  final bool showReference;
+
   @override
   Widget build(BuildContext context) {
     return ShareCardFrame(
       style: style,
       format: format,
-      eyebrow: reference.toUpperCase(),
+      eyebrow: showReference ? reference.toUpperCase() : null,
       span: (t) {
         final base = LumText.readingScripture.copyWith(color: t.textPrimary);
         final number = LumText.readingVerseNumber.copyWith(color: t.textAccent);

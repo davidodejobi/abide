@@ -18,6 +18,7 @@ import 'package:openbaptisthymnal/features/hymn/ui/viewmodels/hymns_viewmodel.da
 import 'package:openbaptisthymnal/features/hymn/ui/widgets/hymn_picker_inline.dart';
 import 'package:openbaptisthymnal/features/hymn/ui/widgets/hymn_view.dart';
 import 'package:openbaptisthymnal/features/settings/ui/widgets/text_size_sheet.dart';
+import 'package:openbaptisthymnal/features/share_card/ui/share_card_page.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 /// Two-pack default: the only languages currently shipped. If the project
@@ -144,18 +145,10 @@ class HymnDetailPage extends HookConsumerWidget {
                 ]);
               }
               final primary = translations.values.first as HymnTranslation;
-              final hymnNumber = primary.number.toString().padLeft(3, '0');
 
               void shareText(String body) {
-                final trimmed = body.trim();
-                if (trimmed.isEmpty) return;
-                context.router.push(
-                  ShareCardRoute(
-                    hymnNumber: hymnNumber,
-                    title: primary.title,
-                    body: trimmed,
-                  ),
-                );
+                if (body.trim().isEmpty) return;
+                shareHymn(context, primary, body: body);
               }
 
               final primaryView = HymnView(
@@ -213,7 +206,10 @@ class HymnDetailPage extends HookConsumerWidget {
                           language: split.value.secondaryLanguage ??
                               _otherLanguage(language),
                           textScale: textScale,
-                          onShare: shareText,
+                          onShare: (tr, body) {
+                            if (body.trim().isEmpty) return;
+                            shareHymn(context, tr, body: body);
+                          },
                           onPickHymn: (id, lang) => split.value = split.value
                               .copyWith(
                                   secondaryHymnId: id,
@@ -253,11 +249,7 @@ class HymnDetailPage extends HookConsumerWidget {
                             plain: true,
                             icon: PhosphorIcons.export(),
                             label: HymnStrings.share,
-                            onPressed: () => shareText([
-                              for (final s in primary.lyrics.stanzas) s.text,
-                              if (primary.lyrics.chorus?.isNotEmpty ?? false)
-                                primary.lyrics.chorus!,
-                            ].join('\n\n')),
+                            onPressed: () => shareHymn(context, primary),
                           ),
                           LumCircleButton(
                             plain: true,
@@ -337,6 +329,20 @@ class _TopRow extends StatelessWidget {
 
 /// Secondary pane: shows either the picker (when no hymn is selected) or a
 /// [HymnView] rendering the chosen hymn.
+/// Opens the share composer for [translation]. With no [body] the whole hymn
+/// is preselected; otherwise the part (or highlighted text) it came from.
+void shareHymn(BuildContext context, HymnTranslation translation,
+    {String body = ''}) {
+  context.router.push(
+    ShareCardRoute(
+      hymnNumber: translation.number.toString().padLeft(3, '0'),
+      title: translation.title,
+      body: body.trim(),
+      parts: shareParts(translation.lyrics),
+    ),
+  );
+}
+
 class _SecondaryHymnPane extends ConsumerWidget {
   const _SecondaryHymnPane({
     required this.hymnId,
@@ -353,7 +359,7 @@ class _SecondaryHymnPane extends ConsumerWidget {
   final String? idLanguage;
   final String language;
   final double textScale;
-  final void Function(String body) onShare;
+  final void Function(HymnTranslation translation, String body) onShare;
   final void Function(String hymnId, String language) onPickHymn;
   final ValueChanged<String> onLanguageChanged;
   final VoidCallback onChange;
@@ -389,7 +395,7 @@ class _SecondaryHymnPane extends ConsumerWidget {
         return HymnView(
           translation: translation,
           textScale: textScale,
-          onShare: onShare,
+          onShare: (body) => onShare(translation, body),
           languageLabel: HymnStrings.languageName(language),
           bottomExtraSpace: LumSpace.lg,
           compact: true,
