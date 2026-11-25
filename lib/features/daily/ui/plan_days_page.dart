@@ -6,10 +6,13 @@ import 'package:openbaptisthymnal/core/theme/app_colors.dart';
 import 'package:openbaptisthymnal/core/theme/app_text_styles.dart';
 import 'package:openbaptisthymnal/features/bible/ui/open_bible_link.dart';
 
+import '../domain/date_key.dart';
 import '../domain/passage_label.dart';
+import '../domain/plan_schedule.dart';
 import '../domain/plan_progress.dart';
 import '../domain/reading_plan.dart';
 import '../providers/daily_providers.dart';
+import 'daily_strings.dart';
 
 /// The whole plan, every day of it.
 ///
@@ -61,8 +64,20 @@ class _PlanDaysPageState extends ConsumerState<PlanDaysPage> {
   @override
   Widget build(BuildContext context) {
     final planAsync = ref.watch(planByIdProvider(widget.planId));
-    final done = ref.watch(planProgressProvider(widget.planId)).valueOrNull ??
+    final plan0 = planAsync.valueOrNull;
+    final sub = ref.watch(planSubscriptionProvider(widget.planId)).valueOrNull;
+    final fallbackToday = ref.watch(planTodayProvider);
+    final today = dateFromKey(ref.watch(todayKeyProvider)) ?? fallbackToday;
+    // One source for which bucket the progress lives in and what today is.
+    final run = plan0 == null
+        ? null
+        : PlanSchedule(plan0).runFor(sub?.startDateKey, today);
+    final progressId = run?.progressId ?? widget.planId;
+    final done = ref.watch(planProgressProvider(progressId)).valueOrNull ??
         const <int>{};
+    final statuses = run != null && run.anchored
+        ? PlanDayStatuses(done: done, today: run.calendarDay)
+        : null;
     final bookNames = ref.watch(planBookNamesProvider).valueOrNull ?? const {};
 
     return Scaffold(
@@ -76,7 +91,10 @@ class _PlanDaysPageState extends ConsumerState<PlanDaysPage> {
         loading: () => const Center(child: CircularProgressIndicator.adaptive()),
         error: (e, _) => const Center(child: Text("This plan couldn't load.")),
         data: (plan) {
-          final current = nextPlanDayIndex(done, plan.dayCount);
+          // Anchored plans highlight the calendar day; the rest, the next unread.
+          final current = statuses != null
+              ? statuses.today
+              : nextPlanDayIndex(done, plan.dayCount);
 
           WidgetsBinding.instance.addPostFrameCallback((_) {
             _jumpToCurrentDay(current ?? plan.dayCount, plan.dayCount);
@@ -93,8 +111,10 @@ class _PlanDaysPageState extends ConsumerState<PlanDaysPage> {
                 plan: plan,
                 day: day,
                 bookNames: bookNames,
+                progressId: progressId,
                 isDone: done.contains(day.dayIndex),
                 isCurrent: day.dayIndex == current,
+                isCatchUp: statuses?.of(day.dayIndex) == DayStatus.catchUp,
               );
             },
           );
@@ -109,15 +129,19 @@ class _DayRow extends ConsumerWidget {
     required this.plan,
     required this.day,
     required this.bookNames,
+    required this.progressId,
     required this.isDone,
     required this.isCurrent,
+    required this.isCatchUp,
   });
 
   final ReadingPlan plan;
   final PlanDay day;
   final Map<String, String> bookNames;
+  final String progressId;
   final bool isDone;
   final bool isCurrent;
+  final bool isCatchUp;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -150,7 +174,9 @@ class _DayRow extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Day ${day.dayIndex}',
+                        isCatchUp
+                            ? 'Day ${day.dayIndex} · ${DailyStrings.sheetCatchUp}'
+                            : 'Day ${day.dayIndex}',
                         style: AppTextStyles.labelSmall.copyWith(
                           color: isCurrent
                               ? AppColors.secondary
@@ -193,7 +219,7 @@ class _DayRow extends ConsumerWidget {
                     onPressed: () => ref
                         .read(readingPlansDaoProvider)
                         .unmarkPlanDay(
-                          planId: plan.id,
+                          planId: progressId,
                           dayIndex: day.dayIndex,
                         ),
                   )

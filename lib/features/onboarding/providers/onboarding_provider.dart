@@ -1,10 +1,10 @@
 import 'dart:ui' show PlatformDispatcher;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:openbaptisthymnal/core/storage/database/database_provider.dart';
 import 'package:openbaptisthymnal/core/storage/storage_provider.dart';
 import 'package:openbaptisthymnal/features/bible/providers/bible_providers.dart';
-import 'package:openbaptisthymnal/features/daily/domain/date_key.dart';
+import 'package:openbaptisthymnal/features/daily/domain/plan_schedule.dart';
+import 'package:openbaptisthymnal/features/daily/providers/daily_providers.dart';
 import 'package:openbaptisthymnal/features/hymn/providers/hymnal_provider.dart';
 
 import '../domain/onboarding_defaults.dart';
@@ -72,8 +72,8 @@ class OnboardingNotifier extends Notifier<OnboardingState> {
   /// Picking a language moves the edition to that language's first Bible.
   void setLanguage(String code) {
     if (code == state.languageCode) return;
-    state = state.copyWith(
-        languageCode: code, editionId: defaultEditionFor(code));
+    state =
+        state.copyWith(languageCode: code, editionId: defaultEditionFor(code));
   }
 
   void setEdition(String id) => state = state.copyWith(editionId: id);
@@ -104,10 +104,12 @@ class OnboardingNotifier extends Notifier<OnboardingState> {
     if (state.languageCode == 'en' || state.languageCode == 'yo') {
       ref.read(languageProvider.notifier).state = state.languageCode;
     }
-    await ref.read(readingPlansDaoProvider).startPlan(
-          planId: state.planId,
-          startDateKey: todayKey(),
-        );
+    // A locked plan can never be started; fall back to the default.
+    var plan = await ref.read(planByIdProvider(state.planId).future);
+    if (PlanSchedule(plan).isLocked(ref.read(planTodayProvider))) {
+      plan = await ref.read(planByIdProvider(kOnboardingDefaultPlanId).future);
+    }
+    await ref.read(startPlanProvider)(plan);
     await storage.saveOnboardingComplete(true);
   }
 }

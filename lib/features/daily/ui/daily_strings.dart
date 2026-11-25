@@ -65,6 +65,24 @@ abstract final class DailyStrings {
   static const planSheetBody =
       'Your place in each plan is kept when you switch.';
   static const plansLoadError = "Plans couldn't be loaded.";
+  static String startsOnLocked(String label, int days) =>
+      'Starts $label · ${days == 1 ? '1 day' : '$days days'} to go';
+  static const remindMe = 'Show on Today';
+  static const joinCaps = 'Join';
+  static const dismiss = 'Dismiss';
+  static const stopCatchUp = 'catch up';
+  static const sheetCatchUp = 'Catch up';
+  static const readCatchUp = 'Read this day';
+  static const warmUp =
+      'While you wait, warm up with the New Testament in 90 days or Psalms in 30.';
+  static String yearStartsIn(String title, int days) =>
+      days == 1 ? '$title starts tomorrow' : '$title starts in $days days';
+  static String catchUp(int today, int n) => n == 1
+      ? 'Today is day $today. 1 earlier day is waiting whenever you want it.'
+      : 'Today is day $today. $n earlier days are waiting whenever you want them.';
+  static String yearOpenToday(String title) => '$title starts today';
+  static String yearOpenNow(String title, int day) =>
+      '$title is open. Join at day $day.';
   static String daysRead(int n, int total) => '$n of $total days read';
   static String resumesAt(int n, int total) => 'Resumes at $n of $total days';
 

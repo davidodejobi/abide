@@ -5,11 +5,14 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openbaptisthymnal/core/storage/database/app_database.dart';
 import 'package:openbaptisthymnal/core/storage/database/database_provider.dart';
+import 'package:openbaptisthymnal/core/storage/storage_provider.dart';
+import 'package:openbaptisthymnal/core/utils/day_part_provider.dart';
 import 'package:openbaptisthymnal/features/bible/providers/bible_providers.dart';
 
 import '../data/plan_local_source.dart';
 import '../domain/date_key.dart';
 import '../domain/plan_progress.dart';
+import '../domain/plan_schedule.dart';
 import '../domain/reading_plan.dart';
 import '../domain/road_days.dart';
 import '../domain/streak.dart';
@@ -54,6 +57,14 @@ final activePlanSubscriptionProvider = StreamProvider<PlanSubscription?>(
   (ref) => ref.watch(readingPlansDaoProvider).watchActivePlan(),
 );
 
+/// The subscription row for one plan, active or not (null if never joined).
+final planSubscriptionProvider =
+    StreamProvider.family<PlanSubscription?, String>((ref, planId) {
+  final db = ref.watch(appDatabaseProvider);
+  return (db.select(db.planSubscriptions)..where((t) => t.planId.equals(planId)))
+      .watchSingleOrNull();
+});
+
 /// Which days of the active plan are done.
 final planProgressProvider = StreamProvider.family<Set<int>, String>(
   (ref, planId) =>
@@ -76,12 +87,15 @@ class TodayKeyNotifier extends Notifier<String> with WidgetsBindingObserver {
       WidgetsBinding.instance.removeObserver(this);
     });
     _schedule();
-    return todayKey();
+    return _today();
   }
+
+  // One clock for every date in the app, so tests can set the day.
+  String _today() => todayKey(ref.read(dayPartClockProvider)());
 
   void _schedule() {
     _timer?.cancel();
-    final now = DateTime.now();
+    final now = ref.read(dayPartClockProvider)();
     // A second past midnight, so the timer never fires on the old day.
     _timer =
         Timer(nextDay(now).difference(now) + const Duration(seconds: 1), () {
@@ -90,13 +104,40 @@ class TodayKeyNotifier extends Notifier<String> with WidgetsBindingObserver {
   }
 
   void refresh() {
-    state = todayKey();
+    state = _today();
     _schedule();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) refresh();
+  }
+}
+
+/// Today as a local-midnight date, from the injected clock. Deliberately does
+/// not watch [todayKeyProvider]: that one owns a midnight timer, which screens
+/// that only need the date (onboarding) should not start. Auto-disposed so a
+/// sheet opened tomorrow reads tomorrow; providers that stay mounted across
+/// midnight watch [todayKeyProvider] themselves.
+final planTodayProvider = Provider.autoDispose<DateTime>((ref) {
+  final now = ref.watch(dayPartClockProvider)();
+  return DateTime(now.year, now.month, now.day);
+});
+
+/// Plans the user asked to be reminded about, by plan id. Stored locally only:
+/// the app has no notification package yet, so this flag is what a scheduled
+/// notification would read, and what the Today countdown card keys off.
+final planRemindersProvider =
+    NotifierProvider<PlanRemindersNotifier, Set<String>>(
+        PlanRemindersNotifier.new);
+
+class PlanRemindersNotifier extends Notifier<Set<String>> {
+  @override
+  Set<String> build() => ref.watch(storageServiceProvider).getPlanReminders();
+
+  void toggle(String planId, bool on) {
+    state = on ? {...state, planId} : ({...state}..remove(planId));
+    ref.read(storageServiceProvider).savePlanReminders(state);
   }
 }
 
@@ -140,18 +181,44 @@ final todaysReadingProvider = FutureProvider<TodaysReading?>((ref) async {
   if (subscription == null) return null;
 
   final plan = await ref.watch(planByIdProvider(subscription.planId).future);
-  final done =
-      await ref.watch(planProgressProvider(subscription.planId).future);
+  final schedule = PlanSchedule(plan);
+  // Only a calendar-anchored plan changes with the day, so only it follows the
+  // midnight roll; a progress-driven one must not reload at midnight.
+  final fallbackToday = ref.watch(planTodayProvider);
+  final DateTime today = schedule.isFixed
+      ? (dateFromKey(ref.watch(todayKeyProvider)) ?? fallbackToday)
+      : fallbackToday;
+  final run = schedule.runFor(subscription.startDateKey, today);
+  // A fixed-start run from a past year is history, not today's plan: show the
+  // picker so they can join this year's. Its progress stays where it is.
+  if (!run.joined) return null;
 
-  final next = nextPlanDayIndex(done, plan.dayCount);
-  if (next == null) {
-    return TodaysReading(plan: plan, day: null, completedDays: done.length);
+  final done = await ref.watch(planProgressProvider(run.progressId).future);
+
+  if (!run.anchored) {
+    final next = nextPlanDayIndex(done, plan.dayCount);
+    return TodaysReading(
+      plan: plan,
+      day: next == null ? null : plan.dayAt(next),
+      completedDays: done.length,
+      progressId: run.progressId,
+    );
   }
 
+  // Anchored: today's reading is the calendar day for everyone. Unread days
+  // before it are an optional catch-up list, never "done".
+  final c = run.calendarDay;
+  final todayRead = done.contains(c);
+  final finished = done.length >= plan.dayCount;
   return TodaysReading(
     plan: plan,
-    day: plan.dayAt(next),
+    day: finished
+        ? null
+        : plan.dayAt(!todayRead ? c : (c < plan.dayCount ? c + 1 : c)),
     completedDays: done.length,
+    catchUpDays: schedule.catchUpCount(done, today),
+    progressId: run.progressId,
+    statuses: PlanDayStatuses(done: done, today: c),
   );
 });
 
@@ -161,14 +228,34 @@ class TodaysReading {
     required this.plan,
     required this.day,
     required this.completedDays,
+    this.catchUpDays = 0,
+    this.progressId,
+    this.statuses,
   });
 
   final ReadingPlan plan;
 
-  /// The day to read next, or null when the plan is finished.
+  /// The day to read next, or null when the plan is finished. On an anchored
+  /// plan: today's calendar day, or tomorrow's once today is read.
   final PlanDay? day;
 
   final int completedDays;
+
+  /// Unread days before today's calendar day on a fixed-start plan. Offered as
+  /// catch-up, never as missed.
+  final int catchUpDays;
+
+  /// Where this run's progress is stored; the plan id for ordinary plans.
+  final String? progressId;
+  String get progressKey => progressId ?? plan.id;
+
+  /// Set for anchored plans only; the one status source for road and sheets.
+  final PlanDayStatuses? statuses;
+  bool get isAnchored => statuses != null;
+
+  /// Anchored: today's calendar day has been read.
+  bool get todayRead =>
+      statuses != null && statuses!.done.contains(statuses!.today);
 
   bool get isFinished => day == null;
 
@@ -183,13 +270,46 @@ class TodaysReading {
 final markPlanDayReadProvider =
     Provider<Future<void> Function(String planId, int dayIndex)>((ref) {
   return (planId, dayIndex) {
-    final now = DateTime.now();
+    final now = ref.read(dayPartClockProvider)();
     return ref.read(readingPlansDaoProvider).markReadingComplete(
           dateKey: dayKey(now),
           source: 'plan',
           planId: planId,
           dayIndex: dayIndex,
           completedAt: now,
+        );
+  };
+});
+
+/// Starts [plan] for the person, the one path the picker and onboarding share.
+///
+/// A locked plan is refused. A fixed-start plan keeps its original join date
+/// while the run is current (re-picking must not move a 1 Jan joiner's floor to
+/// today), and starts clean when the year has rolled over.
+final startPlanProvider =
+    Provider<Future<void> Function(ReadingPlan plan)>((ref) {
+  return (plan) async {
+    final today = ref.read(planTodayProvider);
+    final schedule = PlanSchedule(plan);
+    final db = ref.read(appDatabaseProvider);
+    final existing = await (db.select(db.planSubscriptions)
+          ..where((t) => t.planId.equals(plan.id)))
+        .getSingleOrNull();
+
+    // Someone who was already on the plan keeps it (their join date and their
+    // progress), locked or not.
+    final legacy = existing != null && schedule.isLegacy(existing.startDateKey);
+    if (schedule.isLocked(today) && !legacy) return;
+
+    // Re-picking inside the same run keeps the original join day. A new year
+    // gets a new join day and a new progress bucket; nothing is deleted.
+    final keep = existing != null &&
+        (!schedule.isFixed ||
+            legacy ||
+            schedule.isCurrentRun(existing.startDateKey, today));
+    await ref.read(readingPlansDaoProvider).startPlan(
+          planId: plan.id,
+          startDateKey: keep ? existing.startDateKey : dayKey(today),
         );
   };
 });
