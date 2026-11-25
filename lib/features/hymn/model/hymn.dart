@@ -4,7 +4,7 @@ part 'hymn.freezed.dart';
 part 'hymn.g.dart';
 
 @freezed
-class Hymn with _$Hymn {
+abstract class Hymn with _$Hymn {
   const factory Hymn({
     required String category,
   }) = _Hymn;

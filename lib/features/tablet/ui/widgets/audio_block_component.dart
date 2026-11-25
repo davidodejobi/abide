@@ -1,6 +1,6 @@
 import 'package:appflowy_editor/appflowy_editor.dart';
 import 'package:audio_waveforms/audio_waveforms.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:openbaptisthymnal/core/utils/services/file_storage_service.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/tablet_media.dart';

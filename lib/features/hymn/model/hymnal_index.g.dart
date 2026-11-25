@@ -6,15 +6,14 @@ part of 'hymnal_index.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$HymnalIndexImpl _$$HymnalIndexImplFromJson(Map<String, dynamic> json) =>
-    _$HymnalIndexImpl(
+_HymnalIndex _$HymnalIndexFromJson(Map<String, dynamic> json) => _HymnalIndex(
       orders: (json['orders'] as Map<String, dynamic>).map(
         (k, e) =>
             MapEntry(k, (e as List<dynamic>).map((e) => e as String).toList()),
       ),
     );
 
-Map<String, dynamic> _$$HymnalIndexImplToJson(_$HymnalIndexImpl instance) =>
+Map<String, dynamic> _$HymnalIndexToJson(_HymnalIndex instance) =>
     <String, dynamic>{
       'orders': instance.orders,
     };

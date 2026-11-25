@@ -6,8 +6,8 @@ part of 'language_pack.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$LanguagePackImpl _$$LanguagePackImplFromJson(Map<String, dynamic> json) =>
-    _$LanguagePackImpl(
+_LanguagePack _$LanguagePackFromJson(Map<String, dynamic> json) =>
+    _LanguagePack(
       language: json['language'] as String,
       hymnalName: json['hymnal_name'] as String,
       hymns: (json['hymns'] as Map<String, dynamic>).map(
@@ -16,23 +16,21 @@ _$LanguagePackImpl _$$LanguagePackImplFromJson(Map<String, dynamic> json) =>
       ),
     );
 
-Map<String, dynamic> _$$LanguagePackImplToJson(_$LanguagePackImpl instance) =>
+Map<String, dynamic> _$LanguagePackToJson(_LanguagePack instance) =>
     <String, dynamic>{
       'language': instance.language,
       'hymnal_name': instance.hymnalName,
       'hymns': instance.hymns,
     };
 
-_$HymnTranslationImpl _$$HymnTranslationImplFromJson(
-        Map<String, dynamic> json) =>
-    _$HymnTranslationImpl(
+_HymnTranslation _$HymnTranslationFromJson(Map<String, dynamic> json) =>
+    _HymnTranslation(
       number: (json['number'] as num).toInt(),
       title: json['title'] as String,
       lyrics: Lyrics.fromJson(json['lyrics'] as Map<String, dynamic>),
     );
 
-Map<String, dynamic> _$$HymnTranslationImplToJson(
-        _$HymnTranslationImpl instance) =>
+Map<String, dynamic> _$HymnTranslationToJson(_HymnTranslation instance) =>
     <String, dynamic>{
       'number': instance.number,
       'title': instance.title,

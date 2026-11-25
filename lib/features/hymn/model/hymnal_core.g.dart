@@ -6,8 +6,7 @@ part of 'hymnal_core.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$HymnalCoreImpl _$$HymnalCoreImplFromJson(Map<String, dynamic> json) =>
-    _$HymnalCoreImpl(
+_HymnalCore _$HymnalCoreFromJson(Map<String, dynamic> json) => _HymnalCore(
       schemaVersion: json['schema_version'] as String,
       hymnalId: json['hymnal_id'] as String,
       hymns: (json['hymns'] as Map<String, dynamic>).map(
@@ -15,7 +14,7 @@ _$HymnalCoreImpl _$$HymnalCoreImplFromJson(Map<String, dynamic> json) =>
       ),
     );
 
-Map<String, dynamic> _$$HymnalCoreImplToJson(_$HymnalCoreImpl instance) =>
+Map<String, dynamic> _$HymnalCoreToJson(_HymnalCore instance) =>
     <String, dynamic>{
       'schema_version': instance.schemaVersion,
       'hymnal_id': instance.hymnalId,

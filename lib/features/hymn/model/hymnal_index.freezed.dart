@@ -1,6 +1,6 @@
-// coverage:ignore-file
 // GENERATED CODE - DO NOT MODIFY BY HAND
-// ignore_for_file: type=lint
+// coverage:ignore-file
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'hymnal_index.dart';
@@ -9,82 +9,63 @@ part of 'hymnal_index.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// dart format off
 T _$identity<T>(T value) => value;
-
-final _privateConstructorUsedError = UnsupportedError(
-    'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
-
-HymnalIndex _$HymnalIndexFromJson(Map<String, dynamic> json) {
-  return _HymnalIndex.fromJson(json);
-}
 
 /// @nodoc
 mixin _$HymnalIndex {
-  Map<String, List<String>> get orders => throw _privateConstructorUsedError;
-
-  /// Serializes this HymnalIndex to a JSON map.
-  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+  Map<String, List<String>> get orders;
 
   /// Create a copy of HymnalIndex
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
-  $HymnalIndexCopyWith<HymnalIndex> get copyWith =>
-      throw _privateConstructorUsedError;
-}
-
-/// @nodoc
-abstract class $HymnalIndexCopyWith<$Res> {
-  factory $HymnalIndexCopyWith(
-          HymnalIndex value, $Res Function(HymnalIndex) then) =
-      _$HymnalIndexCopyWithImpl<$Res, HymnalIndex>;
-  @useResult
-  $Res call({Map<String, List<String>> orders});
-}
-
-/// @nodoc
-class _$HymnalIndexCopyWithImpl<$Res, $Val extends HymnalIndex>
-    implements $HymnalIndexCopyWith<$Res> {
-  _$HymnalIndexCopyWithImpl(this._value, this._then);
-
-  // ignore: unused_field
-  final $Val _value;
-  // ignore: unused_field
-  final $Res Function($Val) _then;
-
-  /// Create a copy of HymnalIndex
-  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
+  $HymnalIndexCopyWith<HymnalIndex> get copyWith =>
+      _$HymnalIndexCopyWithImpl<HymnalIndex>(this as HymnalIndex, _$identity);
+
+  /// Serializes this HymnalIndex to a JSON map.
+  Map<String, dynamic> toJson();
+
   @override
-  $Res call({
-    Object? orders = null,
-  }) {
-    return _then(_value.copyWith(
-      orders: null == orders
-          ? _value.orders
-          : orders // ignore: cast_nullable_to_non_nullable
-              as Map<String, List<String>>,
-    ) as $Val);
+  bool operator ==(Object other) {
+    final _this = this as HymnalIndex;
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is HymnalIndex &&
+            const DeepCollectionEquality().equals(other.orders, _this.orders));
+  }
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  int get hashCode {
+    final _this = this as HymnalIndex;
+    return Object.hash(
+        runtimeType, const DeepCollectionEquality().hash(_this.orders));
+  }
+
+  @override
+  String toString() {
+    final _this = this as HymnalIndex;
+    return 'HymnalIndex(orders: ${_this.orders})';
   }
 }
 
 /// @nodoc
-abstract class _$$HymnalIndexImplCopyWith<$Res>
-    implements $HymnalIndexCopyWith<$Res> {
-  factory _$$HymnalIndexImplCopyWith(
-          _$HymnalIndexImpl value, $Res Function(_$HymnalIndexImpl) then) =
-      __$$HymnalIndexImplCopyWithImpl<$Res>;
-  @override
+abstract mixin class $HymnalIndexCopyWith<$Res> {
+  factory $HymnalIndexCopyWith(
+          HymnalIndex value, $Res Function(HymnalIndex) _then) =
+      _$HymnalIndexCopyWithImpl;
   @useResult
   $Res call({Map<String, List<String>> orders});
 }
 
 /// @nodoc
-class __$$HymnalIndexImplCopyWithImpl<$Res>
-    extends _$HymnalIndexCopyWithImpl<$Res, _$HymnalIndexImpl>
-    implements _$$HymnalIndexImplCopyWith<$Res> {
-  __$$HymnalIndexImplCopyWithImpl(
-      _$HymnalIndexImpl _value, $Res Function(_$HymnalIndexImpl) _then)
-      : super(_value, _then);
+class _$HymnalIndexCopyWithImpl<$Res> implements $HymnalIndexCopyWith<$Res> {
+  _$HymnalIndexCopyWithImpl(this._self, this._then);
+
+  final HymnalIndex _self;
+  final $Res Function(HymnalIndex) _then;
 
   /// Create a copy of HymnalIndex
   /// with the given fields replaced by the non-null parameter values.
@@ -93,23 +74,179 @@ class __$$HymnalIndexImplCopyWithImpl<$Res>
   $Res call({
     Object? orders = null,
   }) {
-    return _then(_$HymnalIndexImpl(
+    return _then(HymnalIndex(
       orders: null == orders
-          ? _value._orders
+          ? _self.orders
           : orders // ignore: cast_nullable_to_non_nullable
               as Map<String, List<String>>,
     ));
   }
 }
 
+/// Adds pattern-matching-related methods to [HymnalIndex].
+extension HymnalIndexPatterns on HymnalIndex {
+  /// A variant of `map` that fallback to returning `orElse`.
+  ///
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case final Subclass value:
+  ///     return ...;
+  ///   case _:
+  ///     return orElse();
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>(
+    TResult Function(_HymnalIndex value)? $default, {
+    required TResult orElse(),
+  }) {
+    final _that = this;
+    switch (_that) {
+      case _HymnalIndex() when $default != null:
+        return $default(_that);
+      case _:
+        return orElse();
+    }
+  }
+
+  /// A `switch`-like method, using callbacks.
+  ///
+  /// Callbacks receives the raw object, upcasted.
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case final Subclass value:
+  ///     return ...;
+  ///   case final Subclass2 value:
+  ///     return ...;
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>(
+    TResult Function(_HymnalIndex value) $default,
+  ) {
+    final _that = this;
+    switch (_that) {
+      case _HymnalIndex():
+        return $default(_that);
+      case _:
+        throw StateError('Unexpected subclass');
+    }
+  }
+
+  /// A variant of `map` that fallback to returning `null`.
+  ///
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case final Subclass value:
+  ///     return ...;
+  ///   case _:
+  ///     return null;
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>(
+    TResult? Function(_HymnalIndex value)? $default,
+  ) {
+    final _that = this;
+    switch (_that) {
+      case _HymnalIndex() when $default != null:
+        return $default(_that);
+      case _:
+        return null;
+    }
+  }
+
+  /// A variant of `when` that fallback to an `orElse` callback.
+  ///
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case Subclass(:final field):
+  ///     return ...;
+  ///   case _:
+  ///     return orElse();
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>(
+    TResult Function(Map<String, List<String>> orders)? $default, {
+    required TResult orElse(),
+  }) {
+    final _that = this;
+    switch (_that) {
+      case _HymnalIndex() when $default != null:
+        return $default(_that.orders);
+      case _:
+        return orElse();
+    }
+  }
+
+  /// A `switch`-like method, using callbacks.
+  ///
+  /// As opposed to `map`, this offers destructuring.
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case Subclass(:final field):
+  ///     return ...;
+  ///   case Subclass2(:final field2):
+  ///     return ...;
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>(
+    TResult Function(Map<String, List<String>> orders) $default,
+  ) {
+    final _that = this;
+    switch (_that) {
+      case _HymnalIndex():
+        return $default(_that.orders);
+      case _:
+        throw StateError('Unexpected subclass');
+    }
+  }
+
+  /// A variant of `when` that fallback to returning `null`
+  ///
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case Subclass(:final field):
+  ///     return ...;
+  ///   case _:
+  ///     return null;
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>(
+    TResult? Function(Map<String, List<String>> orders)? $default,
+  ) {
+    final _that = this;
+    switch (_that) {
+      case _HymnalIndex() when $default != null:
+        return $default(_that.orders);
+      case _:
+        return null;
+    }
+  }
+}
+
 /// @nodoc
 @JsonSerializable()
-class _$HymnalIndexImpl implements _HymnalIndex {
-  const _$HymnalIndexImpl({required final Map<String, List<String>> orders})
+class _HymnalIndex implements HymnalIndex {
+  const _HymnalIndex({required Map<String, List<String>> orders})
       : _orders = orders;
-
-  factory _$HymnalIndexImpl.fromJson(Map<String, dynamic> json) =>
-      _$$HymnalIndexImplFromJson(json);
+  factory _HymnalIndex.fromJson(Map<String, dynamic> json) =>
+      _$HymnalIndexFromJson(json);
 
   final Map<String, List<String>> _orders;
   @override
@@ -119,54 +256,74 @@ class _$HymnalIndexImpl implements _HymnalIndex {
     return EqualUnmodifiableMapView(_orders);
   }
 
+  /// Create a copy of HymnalIndex
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  String toString() {
-    return 'HymnalIndex(orders: $orders)';
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @pragma('vm:prefer-inline')
+  _$HymnalIndexCopyWith<_HymnalIndex> get copyWith =>
+      __$HymnalIndexCopyWithImpl<_HymnalIndex>(this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$HymnalIndexToJson(
+      this,
+    );
   }
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$HymnalIndexImpl &&
-            const DeepCollectionEquality().equals(other._orders, _orders));
+            other is _HymnalIndex &&
+            const DeepCollectionEquality().equals(other.orders, _orders));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode =>
-      Object.hash(runtimeType, const DeepCollectionEquality().hash(_orders));
+  int get hashCode {
+    return Object.hash(
+        runtimeType, const DeepCollectionEquality().hash(_orders));
+  }
+
+  @override
+  String toString() {
+    return 'HymnalIndex(orders: $orders)';
+  }
+}
+
+/// @nodoc
+abstract mixin class _$HymnalIndexCopyWith<$Res>
+    implements $HymnalIndexCopyWith<$Res> {
+  factory _$HymnalIndexCopyWith(
+          _HymnalIndex value, $Res Function(_HymnalIndex) _then) =
+      __$HymnalIndexCopyWithImpl;
+  @override
+  @useResult
+  $Res call({Map<String, List<String>> orders});
+}
+
+/// @nodoc
+class __$HymnalIndexCopyWithImpl<$Res> implements _$HymnalIndexCopyWith<$Res> {
+  __$HymnalIndexCopyWithImpl(this._self, this._then);
+
+  final _HymnalIndex _self;
+  final $Res Function(_HymnalIndex) _then;
 
   /// Create a copy of HymnalIndex
   /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
-  _$$HymnalIndexImplCopyWith<_$HymnalIndexImpl> get copyWith =>
-      __$$HymnalIndexImplCopyWithImpl<_$HymnalIndexImpl>(this, _$identity);
-
-  @override
-  Map<String, dynamic> toJson() {
-    return _$$HymnalIndexImplToJson(
-      this,
-    );
+  $Res call({
+    Object? orders = null,
+  }) {
+    return _then(_HymnalIndex(
+      orders: null == orders
+          ? _self._orders
+          : orders // ignore: cast_nullable_to_non_nullable
+              as Map<String, List<String>>,
+    ));
   }
 }
 
-abstract class _HymnalIndex implements HymnalIndex {
-  const factory _HymnalIndex(
-      {required final Map<String, List<String>> orders}) = _$HymnalIndexImpl;
-
-  factory _HymnalIndex.fromJson(Map<String, dynamic> json) =
-      _$HymnalIndexImpl.fromJson;
-
-  @override
-  Map<String, List<String>> get orders;
-
-  /// Create a copy of HymnalIndex
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$HymnalIndexImplCopyWith<_$HymnalIndexImpl> get copyWith =>
-      throw _privateConstructorUsedError;
-}
+// dart format on

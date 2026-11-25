@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:openbaptisthymnal/core/theme/lum_theme.dart';
 
 /// The streak lamp. The one place the lamp appears; it is lit by the day count,

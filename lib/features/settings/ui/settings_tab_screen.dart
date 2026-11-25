@@ -1,6 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:openbaptisthymnal/core/audio/audio_quality.dart';
@@ -87,11 +87,14 @@ class _SettingsTabScreenState extends ConsumerState<SettingsTabScreen>
                 onTap: () => requirePlus(context, ref, PlusFeature.sync),
               ),
               if (kDebugMode)
-                SwitchListTile(
-                  title: const Text(PlusStrings.debugToggle),
-                  value: ref.watch(plusProvider.select((e) => e.isPlus)),
-                  onChanged: (v) =>
-                      ref.read(plusProvider.notifier).debugSet(v),
+                Material(
+                  type: MaterialType.transparency,
+                  child: SwitchListTile(
+                    title: const Text(PlusStrings.debugToggle),
+                    value: ref.watch(plusProvider.select((e) => e.isPlus)),
+                    onChanged: (v) =>
+                        ref.read(plusProvider.notifier).debugSet(v),
+                  ),
                 ),
             ]),
             const YouSectionLabel(YouStrings.appearance),

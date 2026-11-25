@@ -397,12 +397,17 @@ class ScriptureShareCardRouteArgs {
     if (other is! ScriptureShareCardRouteArgs) return false;
     return key == other.key &&
         reference == other.reference &&
-        const ListEquality().equals(verses, other.verses);
+        const ListEquality<({int number, String text})>().equals(
+          verses,
+          other.verses,
+        );
   }
 
   @override
   int get hashCode =>
-      key.hashCode ^ reference.hashCode ^ const ListEquality().hash(verses);
+      key.hashCode ^
+      reference.hashCode ^
+      const ListEquality<({int number, String text})>().hash(verses);
 }
 
 /// generated route for
@@ -492,7 +497,10 @@ class ShareCardRouteArgs {
         hymnNumber == other.hymnNumber &&
         title == other.title &&
         body == other.body &&
-        const ListEquality().equals(parts, other.parts);
+        const ListEquality<({String label, String text})>().equals(
+          parts,
+          other.parts,
+        );
   }
 
   @override
@@ -501,7 +509,7 @@ class ShareCardRouteArgs {
       hymnNumber.hashCode ^
       title.hashCode ^
       body.hashCode ^
-      const ListEquality().hash(parts);
+      const ListEquality<({String label, String text})>().hash(parts);
 }
 
 /// generated route for
