@@ -2,26 +2,20 @@ PODS:
   - audio_waveforms (0.0.1):
     - Flutter
   - Flutter (1.0.0)
-  - keyboard_height_plugin (0.0.1):
-    - Flutter
 
 DEPENDENCIES:
   - audio_waveforms (from `.symlinks/plugins/audio_waveforms/ios`)
   - Flutter (from `Flutter`)
-  - keyboard_height_plugin (from `.symlinks/plugins/keyboard_height_plugin/ios`)
 
 EXTERNAL SOURCES:
   audio_waveforms:
     :path: ".symlinks/plugins/audio_waveforms/ios"
   Flutter:
     :path: Flutter
-  keyboard_height_plugin:
-    :path: ".symlinks/plugins/keyboard_height_plugin/ios"
 
 SPEC CHECKSUMS:
   audio_waveforms: cd736909ebc6b6a164eb74701d8c705ce3241e1c
-  Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
-  keyboard_height_plugin: 43fa8bba20fd5c4fdeed5076466b8b9d43cc6b86
+  Flutter: 71a624a5bc0c04062bf19101d501e466baf2fb47
 
 PODFILE CHECKSUM: be4663332fca77601dd6736e3676fe47177084e1
 

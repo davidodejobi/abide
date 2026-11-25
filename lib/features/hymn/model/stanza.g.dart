@@ -6,13 +6,12 @@ part of 'stanza.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$StanzaImpl _$$StanzaImplFromJson(Map<String, dynamic> json) => _$StanzaImpl(
+_Stanza _$StanzaFromJson(Map<String, dynamic> json) => _Stanza(
       index: (json['index'] as num).toInt(),
       text: json['text'] as String,
     );
 
-Map<String, dynamic> _$$StanzaImplToJson(_$StanzaImpl instance) =>
-    <String, dynamic>{
+Map<String, dynamic> _$StanzaToJson(_Stanza instance) => <String, dynamic>{
       'index': instance.index,
       'text': instance.text,
     };

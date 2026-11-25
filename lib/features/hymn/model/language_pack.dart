@@ -6,7 +6,7 @@ part 'language_pack.freezed.dart';
 part 'language_pack.g.dart';
 
 @freezed
-class LanguagePack with _$LanguagePack {
+abstract class LanguagePack with _$LanguagePack {
   const factory LanguagePack({
     required String language,
     @JsonKey(name: 'hymnal_name') required String hymnalName,
@@ -18,7 +18,7 @@ class LanguagePack with _$LanguagePack {
 }
 
 @freezed
-class HymnTranslation with _$HymnTranslation {
+abstract class HymnTranslation with _$HymnTranslation {
   const factory HymnTranslation({
     required int number,
     required String title,

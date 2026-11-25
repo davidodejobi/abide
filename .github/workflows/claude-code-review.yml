@@ -8,7 +8,7 @@ env:
   # Keep in step with .fvmrc and flutter.yml. The reviewer must analyze against
   # the same SDK the test job uses, or it will report analyzer errors nobody
   # else can reproduce.
-  FLUTTER_VERSION: "3.38.4"
+  FLUTTER_VERSION: "3.50.1"
 
 jobs:
   claude-review:

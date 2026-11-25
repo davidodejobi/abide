@@ -1,6 +1,6 @@
-// coverage:ignore-file
 // GENERATED CODE - DO NOT MODIFY BY HAND
-// ignore_for_file: type=lint
+// coverage:ignore-file
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'hymnal_core.dart';
@@ -9,88 +9,61 @@ part of 'hymnal_core.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// dart format off
 T _$identity<T>(T value) => value;
-
-final _privateConstructorUsedError = UnsupportedError(
-    'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
-
-HymnalCore _$HymnalCoreFromJson(Map<String, dynamic> json) {
-  return _HymnalCore.fromJson(json);
-}
 
 /// @nodoc
 mixin _$HymnalCore {
   @JsonKey(name: 'schema_version')
-  String get schemaVersion => throw _privateConstructorUsedError;
+  String get schemaVersion;
   @JsonKey(name: 'hymnal_id')
-  String get hymnalId => throw _privateConstructorUsedError;
-  Map<String, Hymn> get hymns => throw _privateConstructorUsedError;
-
-  /// Serializes this HymnalCore to a JSON map.
-  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+  String get hymnalId;
+  Map<String, Hymn> get hymns;
 
   /// Create a copy of HymnalCore
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
-  $HymnalCoreCopyWith<HymnalCore> get copyWith =>
-      throw _privateConstructorUsedError;
-}
-
-/// @nodoc
-abstract class $HymnalCoreCopyWith<$Res> {
-  factory $HymnalCoreCopyWith(
-          HymnalCore value, $Res Function(HymnalCore) then) =
-      _$HymnalCoreCopyWithImpl<$Res, HymnalCore>;
-  @useResult
-  $Res call(
-      {@JsonKey(name: 'schema_version') String schemaVersion,
-      @JsonKey(name: 'hymnal_id') String hymnalId,
-      Map<String, Hymn> hymns});
-}
-
-/// @nodoc
-class _$HymnalCoreCopyWithImpl<$Res, $Val extends HymnalCore>
-    implements $HymnalCoreCopyWith<$Res> {
-  _$HymnalCoreCopyWithImpl(this._value, this._then);
-
-  // ignore: unused_field
-  final $Val _value;
-  // ignore: unused_field
-  final $Res Function($Val) _then;
-
-  /// Create a copy of HymnalCore
-  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
+  $HymnalCoreCopyWith<HymnalCore> get copyWith =>
+      _$HymnalCoreCopyWithImpl<HymnalCore>(this as HymnalCore, _$identity);
+
+  /// Serializes this HymnalCore to a JSON map.
+  Map<String, dynamic> toJson();
+
   @override
-  $Res call({
-    Object? schemaVersion = null,
-    Object? hymnalId = null,
-    Object? hymns = null,
-  }) {
-    return _then(_value.copyWith(
-      schemaVersion: null == schemaVersion
-          ? _value.schemaVersion
-          : schemaVersion // ignore: cast_nullable_to_non_nullable
-              as String,
-      hymnalId: null == hymnalId
-          ? _value.hymnalId
-          : hymnalId // ignore: cast_nullable_to_non_nullable
-              as String,
-      hymns: null == hymns
-          ? _value.hymns
-          : hymns // ignore: cast_nullable_to_non_nullable
-              as Map<String, Hymn>,
-    ) as $Val);
+  bool operator ==(Object other) {
+    final _this = this as HymnalCore;
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is HymnalCore &&
+            (identical(other.schemaVersion, _this.schemaVersion) ||
+                other.schemaVersion == _this.schemaVersion) &&
+            (identical(other.hymnalId, _this.hymnalId) ||
+                other.hymnalId == _this.hymnalId) &&
+            const DeepCollectionEquality().equals(other.hymns, _this.hymns));
+  }
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  int get hashCode {
+    final _this = this as HymnalCore;
+    return Object.hash(runtimeType, _this.schemaVersion, _this.hymnalId,
+        const DeepCollectionEquality().hash(_this.hymns));
+  }
+
+  @override
+  String toString() {
+    final _this = this as HymnalCore;
+    return 'HymnalCore(schemaVersion: ${_this.schemaVersion}, hymnalId: ${_this.hymnalId}, hymns: ${_this.hymns})';
   }
 }
 
 /// @nodoc
-abstract class _$$HymnalCoreImplCopyWith<$Res>
-    implements $HymnalCoreCopyWith<$Res> {
-  factory _$$HymnalCoreImplCopyWith(
-          _$HymnalCoreImpl value, $Res Function(_$HymnalCoreImpl) then) =
-      __$$HymnalCoreImplCopyWithImpl<$Res>;
-  @override
+abstract mixin class $HymnalCoreCopyWith<$Res> {
+  factory $HymnalCoreCopyWith(
+          HymnalCore value, $Res Function(HymnalCore) _then) =
+      _$HymnalCoreCopyWithImpl;
   @useResult
   $Res call(
       {@JsonKey(name: 'schema_version') String schemaVersion,
@@ -99,12 +72,11 @@ abstract class _$$HymnalCoreImplCopyWith<$Res>
 }
 
 /// @nodoc
-class __$$HymnalCoreImplCopyWithImpl<$Res>
-    extends _$HymnalCoreCopyWithImpl<$Res, _$HymnalCoreImpl>
-    implements _$$HymnalCoreImplCopyWith<$Res> {
-  __$$HymnalCoreImplCopyWithImpl(
-      _$HymnalCoreImpl _value, $Res Function(_$HymnalCoreImpl) _then)
-      : super(_value, _then);
+class _$HymnalCoreCopyWithImpl<$Res> implements $HymnalCoreCopyWith<$Res> {
+  _$HymnalCoreCopyWithImpl(this._self, this._then);
+
+  final HymnalCore _self;
+  final $Res Function(HymnalCore) _then;
 
   /// Create a copy of HymnalCore
   /// with the given fields replaced by the non-null parameter values.
@@ -115,34 +87,202 @@ class __$$HymnalCoreImplCopyWithImpl<$Res>
     Object? hymnalId = null,
     Object? hymns = null,
   }) {
-    return _then(_$HymnalCoreImpl(
+    return _then(HymnalCore(
       schemaVersion: null == schemaVersion
-          ? _value.schemaVersion
+          ? _self.schemaVersion
           : schemaVersion // ignore: cast_nullable_to_non_nullable
               as String,
       hymnalId: null == hymnalId
-          ? _value.hymnalId
+          ? _self.hymnalId
           : hymnalId // ignore: cast_nullable_to_non_nullable
               as String,
       hymns: null == hymns
-          ? _value._hymns
+          ? _self.hymns
           : hymns // ignore: cast_nullable_to_non_nullable
               as Map<String, Hymn>,
     ));
   }
 }
 
+/// Adds pattern-matching-related methods to [HymnalCore].
+extension HymnalCorePatterns on HymnalCore {
+  /// A variant of `map` that fallback to returning `orElse`.
+  ///
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case final Subclass value:
+  ///     return ...;
+  ///   case _:
+  ///     return orElse();
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>(
+    TResult Function(_HymnalCore value)? $default, {
+    required TResult orElse(),
+  }) {
+    final _that = this;
+    switch (_that) {
+      case _HymnalCore() when $default != null:
+        return $default(_that);
+      case _:
+        return orElse();
+    }
+  }
+
+  /// A `switch`-like method, using callbacks.
+  ///
+  /// Callbacks receives the raw object, upcasted.
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case final Subclass value:
+  ///     return ...;
+  ///   case final Subclass2 value:
+  ///     return ...;
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>(
+    TResult Function(_HymnalCore value) $default,
+  ) {
+    final _that = this;
+    switch (_that) {
+      case _HymnalCore():
+        return $default(_that);
+      case _:
+        throw StateError('Unexpected subclass');
+    }
+  }
+
+  /// A variant of `map` that fallback to returning `null`.
+  ///
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case final Subclass value:
+  ///     return ...;
+  ///   case _:
+  ///     return null;
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>(
+    TResult? Function(_HymnalCore value)? $default,
+  ) {
+    final _that = this;
+    switch (_that) {
+      case _HymnalCore() when $default != null:
+        return $default(_that);
+      case _:
+        return null;
+    }
+  }
+
+  /// A variant of `when` that fallback to an `orElse` callback.
+  ///
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case Subclass(:final field):
+  ///     return ...;
+  ///   case _:
+  ///     return orElse();
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>(
+    TResult Function(
+            @JsonKey(name: 'schema_version') String schemaVersion,
+            @JsonKey(name: 'hymnal_id') String hymnalId,
+            Map<String, Hymn> hymns)?
+        $default, {
+    required TResult orElse(),
+  }) {
+    final _that = this;
+    switch (_that) {
+      case _HymnalCore() when $default != null:
+        return $default(_that.schemaVersion, _that.hymnalId, _that.hymns);
+      case _:
+        return orElse();
+    }
+  }
+
+  /// A `switch`-like method, using callbacks.
+  ///
+  /// As opposed to `map`, this offers destructuring.
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case Subclass(:final field):
+  ///     return ...;
+  ///   case Subclass2(:final field2):
+  ///     return ...;
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>(
+    TResult Function(
+            @JsonKey(name: 'schema_version') String schemaVersion,
+            @JsonKey(name: 'hymnal_id') String hymnalId,
+            Map<String, Hymn> hymns)
+        $default,
+  ) {
+    final _that = this;
+    switch (_that) {
+      case _HymnalCore():
+        return $default(_that.schemaVersion, _that.hymnalId, _that.hymns);
+      case _:
+        throw StateError('Unexpected subclass');
+    }
+  }
+
+  /// A variant of `when` that fallback to returning `null`
+  ///
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case Subclass(:final field):
+  ///     return ...;
+  ///   case _:
+  ///     return null;
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>(
+    TResult? Function(
+            @JsonKey(name: 'schema_version') String schemaVersion,
+            @JsonKey(name: 'hymnal_id') String hymnalId,
+            Map<String, Hymn> hymns)?
+        $default,
+  ) {
+    final _that = this;
+    switch (_that) {
+      case _HymnalCore() when $default != null:
+        return $default(_that.schemaVersion, _that.hymnalId, _that.hymns);
+      case _:
+        return null;
+    }
+  }
+}
+
 /// @nodoc
 @JsonSerializable()
-class _$HymnalCoreImpl implements _HymnalCore {
-  const _$HymnalCoreImpl(
+class _HymnalCore implements HymnalCore {
+  const _HymnalCore(
       {@JsonKey(name: 'schema_version') required this.schemaVersion,
       @JsonKey(name: 'hymnal_id') required this.hymnalId,
-      required final Map<String, Hymn> hymns})
+      required Map<String, Hymn> hymns})
       : _hymns = hymns;
-
-  factory _$HymnalCoreImpl.fromJson(Map<String, dynamic> json) =>
-      _$$HymnalCoreImplFromJson(json);
+  factory _HymnalCore.fromJson(Map<String, dynamic> json) =>
+      _$HymnalCoreFromJson(json);
 
   @override
   @JsonKey(name: 'schema_version')
@@ -158,66 +298,91 @@ class _$HymnalCoreImpl implements _HymnalCore {
     return EqualUnmodifiableMapView(_hymns);
   }
 
+  /// Create a copy of HymnalCore
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  String toString() {
-    return 'HymnalCore(schemaVersion: $schemaVersion, hymnalId: $hymnalId, hymns: $hymns)';
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @pragma('vm:prefer-inline')
+  _$HymnalCoreCopyWith<_HymnalCore> get copyWith =>
+      __$HymnalCoreCopyWithImpl<_HymnalCore>(this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$HymnalCoreToJson(
+      this,
+    );
   }
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$HymnalCoreImpl &&
+            other is _HymnalCore &&
             (identical(other.schemaVersion, schemaVersion) ||
                 other.schemaVersion == schemaVersion) &&
             (identical(other.hymnalId, hymnalId) ||
                 other.hymnalId == hymnalId) &&
-            const DeepCollectionEquality().equals(other._hymns, _hymns));
+            const DeepCollectionEquality().equals(other.hymns, _hymns));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, schemaVersion, hymnalId,
-      const DeepCollectionEquality().hash(_hymns));
+  int get hashCode {
+    return Object.hash(runtimeType, schemaVersion, hymnalId,
+        const DeepCollectionEquality().hash(_hymns));
+  }
+
+  @override
+  String toString() {
+    return 'HymnalCore(schemaVersion: $schemaVersion, hymnalId: $hymnalId, hymns: $hymns)';
+  }
+}
+
+/// @nodoc
+abstract mixin class _$HymnalCoreCopyWith<$Res>
+    implements $HymnalCoreCopyWith<$Res> {
+  factory _$HymnalCoreCopyWith(
+          _HymnalCore value, $Res Function(_HymnalCore) _then) =
+      __$HymnalCoreCopyWithImpl;
+  @override
+  @useResult
+  $Res call(
+      {@JsonKey(name: 'schema_version') String schemaVersion,
+      @JsonKey(name: 'hymnal_id') String hymnalId,
+      Map<String, Hymn> hymns});
+}
+
+/// @nodoc
+class __$HymnalCoreCopyWithImpl<$Res> implements _$HymnalCoreCopyWith<$Res> {
+  __$HymnalCoreCopyWithImpl(this._self, this._then);
+
+  final _HymnalCore _self;
+  final $Res Function(_HymnalCore) _then;
 
   /// Create a copy of HymnalCore
   /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
-  _$$HymnalCoreImplCopyWith<_$HymnalCoreImpl> get copyWith =>
-      __$$HymnalCoreImplCopyWithImpl<_$HymnalCoreImpl>(this, _$identity);
-
-  @override
-  Map<String, dynamic> toJson() {
-    return _$$HymnalCoreImplToJson(
-      this,
-    );
+  $Res call({
+    Object? schemaVersion = null,
+    Object? hymnalId = null,
+    Object? hymns = null,
+  }) {
+    return _then(_HymnalCore(
+      schemaVersion: null == schemaVersion
+          ? _self.schemaVersion
+          : schemaVersion // ignore: cast_nullable_to_non_nullable
+              as String,
+      hymnalId: null == hymnalId
+          ? _self.hymnalId
+          : hymnalId // ignore: cast_nullable_to_non_nullable
+              as String,
+      hymns: null == hymns
+          ? _self._hymns
+          : hymns // ignore: cast_nullable_to_non_nullable
+              as Map<String, Hymn>,
+    ));
   }
 }
 
-abstract class _HymnalCore implements HymnalCore {
-  const factory _HymnalCore(
-      {@JsonKey(name: 'schema_version') required final String schemaVersion,
-      @JsonKey(name: 'hymnal_id') required final String hymnalId,
-      required final Map<String, Hymn> hymns}) = _$HymnalCoreImpl;
-
-  factory _HymnalCore.fromJson(Map<String, dynamic> json) =
-      _$HymnalCoreImpl.fromJson;
-
-  @override
-  @JsonKey(name: 'schema_version')
-  String get schemaVersion;
-  @override
-  @JsonKey(name: 'hymnal_id')
-  String get hymnalId;
-  @override
-  Map<String, Hymn> get hymns;
-
-  /// Create a copy of HymnalCore
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$HymnalCoreImplCopyWith<_$HymnalCoreImpl> get copyWith =>
-      throw _privateConstructorUsedError;
-}
+// dart format on

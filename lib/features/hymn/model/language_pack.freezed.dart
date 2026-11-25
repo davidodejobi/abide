@@ -1,6 +1,6 @@
-// coverage:ignore-file
 // GENERATED CODE - DO NOT MODIFY BY HAND
-// ignore_for_file: type=lint
+// coverage:ignore-file
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'language_pack.dart';
@@ -9,87 +9,61 @@ part of 'language_pack.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// dart format off
 T _$identity<T>(T value) => value;
-
-final _privateConstructorUsedError = UnsupportedError(
-    'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
-
-LanguagePack _$LanguagePackFromJson(Map<String, dynamic> json) {
-  return _LanguagePack.fromJson(json);
-}
 
 /// @nodoc
 mixin _$LanguagePack {
-  String get language => throw _privateConstructorUsedError;
+  String get language;
   @JsonKey(name: 'hymnal_name')
-  String get hymnalName => throw _privateConstructorUsedError;
-  Map<String, HymnTranslation> get hymns => throw _privateConstructorUsedError;
-
-  /// Serializes this LanguagePack to a JSON map.
-  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+  String get hymnalName;
+  Map<String, HymnTranslation> get hymns;
 
   /// Create a copy of LanguagePack
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
-  $LanguagePackCopyWith<LanguagePack> get copyWith =>
-      throw _privateConstructorUsedError;
-}
-
-/// @nodoc
-abstract class $LanguagePackCopyWith<$Res> {
-  factory $LanguagePackCopyWith(
-          LanguagePack value, $Res Function(LanguagePack) then) =
-      _$LanguagePackCopyWithImpl<$Res, LanguagePack>;
-  @useResult
-  $Res call(
-      {String language,
-      @JsonKey(name: 'hymnal_name') String hymnalName,
-      Map<String, HymnTranslation> hymns});
-}
-
-/// @nodoc
-class _$LanguagePackCopyWithImpl<$Res, $Val extends LanguagePack>
-    implements $LanguagePackCopyWith<$Res> {
-  _$LanguagePackCopyWithImpl(this._value, this._then);
-
-  // ignore: unused_field
-  final $Val _value;
-  // ignore: unused_field
-  final $Res Function($Val) _then;
-
-  /// Create a copy of LanguagePack
-  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
+  $LanguagePackCopyWith<LanguagePack> get copyWith =>
+      _$LanguagePackCopyWithImpl<LanguagePack>(
+          this as LanguagePack, _$identity);
+
+  /// Serializes this LanguagePack to a JSON map.
+  Map<String, dynamic> toJson();
+
   @override
-  $Res call({
-    Object? language = null,
-    Object? hymnalName = null,
-    Object? hymns = null,
-  }) {
-    return _then(_value.copyWith(
-      language: null == language
-          ? _value.language
-          : language // ignore: cast_nullable_to_non_nullable
-              as String,
-      hymnalName: null == hymnalName
-          ? _value.hymnalName
-          : hymnalName // ignore: cast_nullable_to_non_nullable
-              as String,
-      hymns: null == hymns
-          ? _value.hymns
-          : hymns // ignore: cast_nullable_to_non_nullable
-              as Map<String, HymnTranslation>,
-    ) as $Val);
+  bool operator ==(Object other) {
+    final _this = this as LanguagePack;
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is LanguagePack &&
+            (identical(other.language, _this.language) ||
+                other.language == _this.language) &&
+            (identical(other.hymnalName, _this.hymnalName) ||
+                other.hymnalName == _this.hymnalName) &&
+            const DeepCollectionEquality().equals(other.hymns, _this.hymns));
+  }
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  int get hashCode {
+    final _this = this as LanguagePack;
+    return Object.hash(runtimeType, _this.language, _this.hymnalName,
+        const DeepCollectionEquality().hash(_this.hymns));
+  }
+
+  @override
+  String toString() {
+    final _this = this as LanguagePack;
+    return 'LanguagePack(language: ${_this.language}, hymnalName: ${_this.hymnalName}, hymns: ${_this.hymns})';
   }
 }
 
 /// @nodoc
-abstract class _$$LanguagePackImplCopyWith<$Res>
-    implements $LanguagePackCopyWith<$Res> {
-  factory _$$LanguagePackImplCopyWith(
-          _$LanguagePackImpl value, $Res Function(_$LanguagePackImpl) then) =
-      __$$LanguagePackImplCopyWithImpl<$Res>;
-  @override
+abstract mixin class $LanguagePackCopyWith<$Res> {
+  factory $LanguagePackCopyWith(
+          LanguagePack value, $Res Function(LanguagePack) _then) =
+      _$LanguagePackCopyWithImpl;
   @useResult
   $Res call(
       {String language,
@@ -98,12 +72,11 @@ abstract class _$$LanguagePackImplCopyWith<$Res>
 }
 
 /// @nodoc
-class __$$LanguagePackImplCopyWithImpl<$Res>
-    extends _$LanguagePackCopyWithImpl<$Res, _$LanguagePackImpl>
-    implements _$$LanguagePackImplCopyWith<$Res> {
-  __$$LanguagePackImplCopyWithImpl(
-      _$LanguagePackImpl _value, $Res Function(_$LanguagePackImpl) _then)
-      : super(_value, _then);
+class _$LanguagePackCopyWithImpl<$Res> implements $LanguagePackCopyWith<$Res> {
+  _$LanguagePackCopyWithImpl(this._self, this._then);
+
+  final LanguagePack _self;
+  final $Res Function(LanguagePack) _then;
 
   /// Create a copy of LanguagePack
   /// with the given fields replaced by the non-null parameter values.
@@ -114,34 +87,202 @@ class __$$LanguagePackImplCopyWithImpl<$Res>
     Object? hymnalName = null,
     Object? hymns = null,
   }) {
-    return _then(_$LanguagePackImpl(
+    return _then(LanguagePack(
       language: null == language
-          ? _value.language
+          ? _self.language
           : language // ignore: cast_nullable_to_non_nullable
               as String,
       hymnalName: null == hymnalName
-          ? _value.hymnalName
+          ? _self.hymnalName
           : hymnalName // ignore: cast_nullable_to_non_nullable
               as String,
       hymns: null == hymns
-          ? _value._hymns
+          ? _self.hymns
           : hymns // ignore: cast_nullable_to_non_nullable
               as Map<String, HymnTranslation>,
     ));
   }
 }
 
+/// Adds pattern-matching-related methods to [LanguagePack].
+extension LanguagePackPatterns on LanguagePack {
+  /// A variant of `map` that fallback to returning `orElse`.
+  ///
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case final Subclass value:
+  ///     return ...;
+  ///   case _:
+  ///     return orElse();
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>(
+    TResult Function(_LanguagePack value)? $default, {
+    required TResult orElse(),
+  }) {
+    final _that = this;
+    switch (_that) {
+      case _LanguagePack() when $default != null:
+        return $default(_that);
+      case _:
+        return orElse();
+    }
+  }
+
+  /// A `switch`-like method, using callbacks.
+  ///
+  /// Callbacks receives the raw object, upcasted.
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case final Subclass value:
+  ///     return ...;
+  ///   case final Subclass2 value:
+  ///     return ...;
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>(
+    TResult Function(_LanguagePack value) $default,
+  ) {
+    final _that = this;
+    switch (_that) {
+      case _LanguagePack():
+        return $default(_that);
+      case _:
+        throw StateError('Unexpected subclass');
+    }
+  }
+
+  /// A variant of `map` that fallback to returning `null`.
+  ///
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case final Subclass value:
+  ///     return ...;
+  ///   case _:
+  ///     return null;
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>(
+    TResult? Function(_LanguagePack value)? $default,
+  ) {
+    final _that = this;
+    switch (_that) {
+      case _LanguagePack() when $default != null:
+        return $default(_that);
+      case _:
+        return null;
+    }
+  }
+
+  /// A variant of `when` that fallback to an `orElse` callback.
+  ///
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case Subclass(:final field):
+  ///     return ...;
+  ///   case _:
+  ///     return orElse();
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>(
+    TResult Function(
+            String language,
+            @JsonKey(name: 'hymnal_name') String hymnalName,
+            Map<String, HymnTranslation> hymns)?
+        $default, {
+    required TResult orElse(),
+  }) {
+    final _that = this;
+    switch (_that) {
+      case _LanguagePack() when $default != null:
+        return $default(_that.language, _that.hymnalName, _that.hymns);
+      case _:
+        return orElse();
+    }
+  }
+
+  /// A `switch`-like method, using callbacks.
+  ///
+  /// As opposed to `map`, this offers destructuring.
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case Subclass(:final field):
+  ///     return ...;
+  ///   case Subclass2(:final field2):
+  ///     return ...;
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>(
+    TResult Function(
+            String language,
+            @JsonKey(name: 'hymnal_name') String hymnalName,
+            Map<String, HymnTranslation> hymns)
+        $default,
+  ) {
+    final _that = this;
+    switch (_that) {
+      case _LanguagePack():
+        return $default(_that.language, _that.hymnalName, _that.hymns);
+      case _:
+        throw StateError('Unexpected subclass');
+    }
+  }
+
+  /// A variant of `when` that fallback to returning `null`
+  ///
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case Subclass(:final field):
+  ///     return ...;
+  ///   case _:
+  ///     return null;
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>(
+    TResult? Function(
+            String language,
+            @JsonKey(name: 'hymnal_name') String hymnalName,
+            Map<String, HymnTranslation> hymns)?
+        $default,
+  ) {
+    final _that = this;
+    switch (_that) {
+      case _LanguagePack() when $default != null:
+        return $default(_that.language, _that.hymnalName, _that.hymns);
+      case _:
+        return null;
+    }
+  }
+}
+
 /// @nodoc
 @JsonSerializable()
-class _$LanguagePackImpl implements _LanguagePack {
-  const _$LanguagePackImpl(
+class _LanguagePack implements LanguagePack {
+  const _LanguagePack(
       {required this.language,
       @JsonKey(name: 'hymnal_name') required this.hymnalName,
-      required final Map<String, HymnTranslation> hymns})
+      required Map<String, HymnTranslation> hymns})
       : _hymns = hymns;
-
-  factory _$LanguagePackImpl.fromJson(Map<String, dynamic> json) =>
-      _$$LanguagePackImplFromJson(json);
+  factory _LanguagePack.fromJson(Map<String, dynamic> json) =>
+      _$LanguagePackFromJson(json);
 
   @override
   final String language;
@@ -156,96 +297,148 @@ class _$LanguagePackImpl implements _LanguagePack {
     return EqualUnmodifiableMapView(_hymns);
   }
 
+  /// Create a copy of LanguagePack
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  String toString() {
-    return 'LanguagePack(language: $language, hymnalName: $hymnalName, hymns: $hymns)';
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @pragma('vm:prefer-inline')
+  _$LanguagePackCopyWith<_LanguagePack> get copyWith =>
+      __$LanguagePackCopyWithImpl<_LanguagePack>(this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$LanguagePackToJson(
+      this,
+    );
   }
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$LanguagePackImpl &&
+            other is _LanguagePack &&
             (identical(other.language, language) ||
                 other.language == language) &&
             (identical(other.hymnalName, hymnalName) ||
                 other.hymnalName == hymnalName) &&
-            const DeepCollectionEquality().equals(other._hymns, _hymns));
+            const DeepCollectionEquality().equals(other.hymns, _hymns));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, language, hymnalName,
-      const DeepCollectionEquality().hash(_hymns));
+  int get hashCode {
+    return Object.hash(runtimeType, language, hymnalName,
+        const DeepCollectionEquality().hash(_hymns));
+  }
+
+  @override
+  String toString() {
+    return 'LanguagePack(language: $language, hymnalName: $hymnalName, hymns: $hymns)';
+  }
+}
+
+/// @nodoc
+abstract mixin class _$LanguagePackCopyWith<$Res>
+    implements $LanguagePackCopyWith<$Res> {
+  factory _$LanguagePackCopyWith(
+          _LanguagePack value, $Res Function(_LanguagePack) _then) =
+      __$LanguagePackCopyWithImpl;
+  @override
+  @useResult
+  $Res call(
+      {String language,
+      @JsonKey(name: 'hymnal_name') String hymnalName,
+      Map<String, HymnTranslation> hymns});
+}
+
+/// @nodoc
+class __$LanguagePackCopyWithImpl<$Res>
+    implements _$LanguagePackCopyWith<$Res> {
+  __$LanguagePackCopyWithImpl(this._self, this._then);
+
+  final _LanguagePack _self;
+  final $Res Function(_LanguagePack) _then;
 
   /// Create a copy of LanguagePack
   /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
-  _$$LanguagePackImplCopyWith<_$LanguagePackImpl> get copyWith =>
-      __$$LanguagePackImplCopyWithImpl<_$LanguagePackImpl>(this, _$identity);
-
-  @override
-  Map<String, dynamic> toJson() {
-    return _$$LanguagePackImplToJson(
-      this,
-    );
+  $Res call({
+    Object? language = null,
+    Object? hymnalName = null,
+    Object? hymns = null,
+  }) {
+    return _then(_LanguagePack(
+      language: null == language
+          ? _self.language
+          : language // ignore: cast_nullable_to_non_nullable
+              as String,
+      hymnalName: null == hymnalName
+          ? _self.hymnalName
+          : hymnalName // ignore: cast_nullable_to_non_nullable
+              as String,
+      hymns: null == hymns
+          ? _self._hymns
+          : hymns // ignore: cast_nullable_to_non_nullable
+              as Map<String, HymnTranslation>,
+    ));
   }
-}
-
-abstract class _LanguagePack implements LanguagePack {
-  const factory _LanguagePack(
-      {required final String language,
-      @JsonKey(name: 'hymnal_name') required final String hymnalName,
-      required final Map<String, HymnTranslation> hymns}) = _$LanguagePackImpl;
-
-  factory _LanguagePack.fromJson(Map<String, dynamic> json) =
-      _$LanguagePackImpl.fromJson;
-
-  @override
-  String get language;
-  @override
-  @JsonKey(name: 'hymnal_name')
-  String get hymnalName;
-  @override
-  Map<String, HymnTranslation> get hymns;
-
-  /// Create a copy of LanguagePack
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$LanguagePackImplCopyWith<_$LanguagePackImpl> get copyWith =>
-      throw _privateConstructorUsedError;
-}
-
-HymnTranslation _$HymnTranslationFromJson(Map<String, dynamic> json) {
-  return _HymnTranslation.fromJson(json);
 }
 
 /// @nodoc
 mixin _$HymnTranslation {
-  int get number => throw _privateConstructorUsedError;
-  String get title => throw _privateConstructorUsedError;
-  Lyrics get lyrics => throw _privateConstructorUsedError;
+  int get number;
+  String get title;
+  Lyrics get lyrics;
   @JsonKey(includeFromJson: false)
-  String? get id => throw _privateConstructorUsedError;
-
-  /// Serializes this HymnTranslation to a JSON map.
-  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+  String? get id;
 
   /// Create a copy of HymnTranslation
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
+  @pragma('vm:prefer-inline')
   $HymnTranslationCopyWith<HymnTranslation> get copyWith =>
-      throw _privateConstructorUsedError;
+      _$HymnTranslationCopyWithImpl<HymnTranslation>(
+          this as HymnTranslation, _$identity);
+
+  /// Serializes this HymnTranslation to a JSON map.
+  Map<String, dynamic> toJson();
+
+  @override
+  bool operator ==(Object other) {
+    final _this = this as HymnTranslation;
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is HymnTranslation &&
+            (identical(other.number, _this.number) ||
+                other.number == _this.number) &&
+            (identical(other.title, _this.title) ||
+                other.title == _this.title) &&
+            (identical(other.lyrics, _this.lyrics) ||
+                other.lyrics == _this.lyrics) &&
+            (identical(other.id, _this.id) || other.id == _this.id));
+  }
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  int get hashCode {
+    final _this = this as HymnTranslation;
+    return Object.hash(
+        runtimeType, _this.number, _this.title, _this.lyrics, _this.id);
+  }
+
+  @override
+  String toString() {
+    final _this = this as HymnTranslation;
+    return 'HymnTranslation(number: ${_this.number}, title: ${_this.title}, lyrics: ${_this.lyrics}, id: ${_this.id})';
+  }
 }
 
 /// @nodoc
-abstract class $HymnTranslationCopyWith<$Res> {
+abstract mixin class $HymnTranslationCopyWith<$Res> {
   factory $HymnTranslationCopyWith(
-          HymnTranslation value, $Res Function(HymnTranslation) then) =
-      _$HymnTranslationCopyWithImpl<$Res, HymnTranslation>;
+          HymnTranslation value, $Res Function(HymnTranslation) _then) =
+      _$HymnTranslationCopyWithImpl;
   @useResult
   $Res call(
       {int number,
@@ -257,14 +450,12 @@ abstract class $HymnTranslationCopyWith<$Res> {
 }
 
 /// @nodoc
-class _$HymnTranslationCopyWithImpl<$Res, $Val extends HymnTranslation>
+class _$HymnTranslationCopyWithImpl<$Res>
     implements $HymnTranslationCopyWith<$Res> {
-  _$HymnTranslationCopyWithImpl(this._value, this._then);
+  _$HymnTranslationCopyWithImpl(this._self, this._then);
 
-  // ignore: unused_field
-  final $Val _value;
-  // ignore: unused_field
-  final $Res Function($Val) _then;
+  final HymnTranslation _self;
+  final $Res Function(HymnTranslation) _then;
 
   /// Create a copy of HymnTranslation
   /// with the given fields replaced by the non-null parameter values.
@@ -276,24 +467,24 @@ class _$HymnTranslationCopyWithImpl<$Res, $Val extends HymnTranslation>
     Object? lyrics = null,
     Object? id = freezed,
   }) {
-    return _then(_value.copyWith(
+    return _then(HymnTranslation(
       number: null == number
-          ? _value.number
+          ? _self.number
           : number // ignore: cast_nullable_to_non_nullable
               as int,
       title: null == title
-          ? _value.title
+          ? _self.title
           : title // ignore: cast_nullable_to_non_nullable
               as String,
       lyrics: null == lyrics
-          ? _value.lyrics
+          ? _self.lyrics
           : lyrics // ignore: cast_nullable_to_non_nullable
               as Lyrics,
       id: freezed == id
-          ? _value.id
+          ? _self.id
           : id // ignore: cast_nullable_to_non_nullable
               as String?,
-    ) as $Val);
+    ));
   }
 
   /// Create a copy of HymnTranslation
@@ -301,80 +492,185 @@ class _$HymnTranslationCopyWithImpl<$Res, $Val extends HymnTranslation>
   @override
   @pragma('vm:prefer-inline')
   $LyricsCopyWith<$Res> get lyrics {
-    return $LyricsCopyWith<$Res>(_value.lyrics, (value) {
-      return _then(_value.copyWith(lyrics: value) as $Val);
+    return $LyricsCopyWith<$Res>(_self.lyrics, (value) {
+      return _then(_self.copyWith(lyrics: value));
     });
   }
 }
 
-/// @nodoc
-abstract class _$$HymnTranslationImplCopyWith<$Res>
-    implements $HymnTranslationCopyWith<$Res> {
-  factory _$$HymnTranslationImplCopyWith(_$HymnTranslationImpl value,
-          $Res Function(_$HymnTranslationImpl) then) =
-      __$$HymnTranslationImplCopyWithImpl<$Res>;
-  @override
-  @useResult
-  $Res call(
-      {int number,
-      String title,
-      Lyrics lyrics,
-      @JsonKey(includeFromJson: false) String? id});
+/// Adds pattern-matching-related methods to [HymnTranslation].
+extension HymnTranslationPatterns on HymnTranslation {
+  /// A variant of `map` that fallback to returning `orElse`.
+  ///
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case final Subclass value:
+  ///     return ...;
+  ///   case _:
+  ///     return orElse();
+  /// }
+  /// ```
 
-  @override
-  $LyricsCopyWith<$Res> get lyrics;
-}
-
-/// @nodoc
-class __$$HymnTranslationImplCopyWithImpl<$Res>
-    extends _$HymnTranslationCopyWithImpl<$Res, _$HymnTranslationImpl>
-    implements _$$HymnTranslationImplCopyWith<$Res> {
-  __$$HymnTranslationImplCopyWithImpl(
-      _$HymnTranslationImpl _value, $Res Function(_$HymnTranslationImpl) _then)
-      : super(_value, _then);
-
-  /// Create a copy of HymnTranslation
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? number = null,
-    Object? title = null,
-    Object? lyrics = null,
-    Object? id = freezed,
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>(
+    TResult Function(_HymnTranslation value)? $default, {
+    required TResult orElse(),
   }) {
-    return _then(_$HymnTranslationImpl(
-      number: null == number
-          ? _value.number
-          : number // ignore: cast_nullable_to_non_nullable
-              as int,
-      title: null == title
-          ? _value.title
-          : title // ignore: cast_nullable_to_non_nullable
-              as String,
-      lyrics: null == lyrics
-          ? _value.lyrics
-          : lyrics // ignore: cast_nullable_to_non_nullable
-              as Lyrics,
-      id: freezed == id
-          ? _value.id
-          : id // ignore: cast_nullable_to_non_nullable
-              as String?,
-    ));
+    final _that = this;
+    switch (_that) {
+      case _HymnTranslation() when $default != null:
+        return $default(_that);
+      case _:
+        return orElse();
+    }
+  }
+
+  /// A `switch`-like method, using callbacks.
+  ///
+  /// Callbacks receives the raw object, upcasted.
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case final Subclass value:
+  ///     return ...;
+  ///   case final Subclass2 value:
+  ///     return ...;
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>(
+    TResult Function(_HymnTranslation value) $default,
+  ) {
+    final _that = this;
+    switch (_that) {
+      case _HymnTranslation():
+        return $default(_that);
+      case _:
+        throw StateError('Unexpected subclass');
+    }
+  }
+
+  /// A variant of `map` that fallback to returning `null`.
+  ///
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case final Subclass value:
+  ///     return ...;
+  ///   case _:
+  ///     return null;
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>(
+    TResult? Function(_HymnTranslation value)? $default,
+  ) {
+    final _that = this;
+    switch (_that) {
+      case _HymnTranslation() when $default != null:
+        return $default(_that);
+      case _:
+        return null;
+    }
+  }
+
+  /// A variant of `when` that fallback to an `orElse` callback.
+  ///
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case Subclass(:final field):
+  ///     return ...;
+  ///   case _:
+  ///     return orElse();
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>(
+    TResult Function(int number, String title, Lyrics lyrics,
+            @JsonKey(includeFromJson: false) String? id)?
+        $default, {
+    required TResult orElse(),
+  }) {
+    final _that = this;
+    switch (_that) {
+      case _HymnTranslation() when $default != null:
+        return $default(_that.number, _that.title, _that.lyrics, _that.id);
+      case _:
+        return orElse();
+    }
+  }
+
+  /// A `switch`-like method, using callbacks.
+  ///
+  /// As opposed to `map`, this offers destructuring.
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case Subclass(:final field):
+  ///     return ...;
+  ///   case Subclass2(:final field2):
+  ///     return ...;
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>(
+    TResult Function(int number, String title, Lyrics lyrics,
+            @JsonKey(includeFromJson: false) String? id)
+        $default,
+  ) {
+    final _that = this;
+    switch (_that) {
+      case _HymnTranslation():
+        return $default(_that.number, _that.title, _that.lyrics, _that.id);
+      case _:
+        throw StateError('Unexpected subclass');
+    }
+  }
+
+  /// A variant of `when` that fallback to returning `null`
+  ///
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case Subclass(:final field):
+  ///     return ...;
+  ///   case _:
+  ///     return null;
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>(
+    TResult? Function(int number, String title, Lyrics lyrics,
+            @JsonKey(includeFromJson: false) String? id)?
+        $default,
+  ) {
+    final _that = this;
+    switch (_that) {
+      case _HymnTranslation() when $default != null:
+        return $default(_that.number, _that.title, _that.lyrics, _that.id);
+      case _:
+        return null;
+    }
   }
 }
 
 /// @nodoc
 @JsonSerializable()
-class _$HymnTranslationImpl implements _HymnTranslation {
-  const _$HymnTranslationImpl(
+class _HymnTranslation implements HymnTranslation {
+  const _HymnTranslation(
       {required this.number,
       required this.title,
       required this.lyrics,
       @JsonKey(includeFromJson: false) this.id});
-
-  factory _$HymnTranslationImpl.fromJson(Map<String, dynamic> json) =>
-      _$$HymnTranslationImplFromJson(json);
+  factory _HymnTranslation.fromJson(Map<String, dynamic> json) =>
+      _$HymnTranslationFromJson(json);
 
   @override
   final int number;
@@ -386,16 +682,26 @@ class _$HymnTranslationImpl implements _HymnTranslation {
   @JsonKey(includeFromJson: false)
   final String? id;
 
+  /// Create a copy of HymnTranslation
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  String toString() {
-    return 'HymnTranslation(number: $number, title: $title, lyrics: $lyrics, id: $id)';
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @pragma('vm:prefer-inline')
+  _$HymnTranslationCopyWith<_HymnTranslation> get copyWith =>
+      __$HymnTranslationCopyWithImpl<_HymnTranslation>(this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$HymnTranslationToJson(
+      this,
+    );
   }
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$HymnTranslationImpl &&
+            other is _HymnTranslation &&
             (identical(other.number, number) || other.number == number) &&
             (identical(other.title, title) || other.title == title) &&
             (identical(other.lyrics, lyrics) || other.lyrics == lyrics) &&
@@ -404,50 +710,81 @@ class _$HymnTranslationImpl implements _HymnTranslation {
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, number, title, lyrics, id);
-
-  /// Create a copy of HymnTranslation
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$HymnTranslationImplCopyWith<_$HymnTranslationImpl> get copyWith =>
-      __$$HymnTranslationImplCopyWithImpl<_$HymnTranslationImpl>(
-          this, _$identity);
+  int get hashCode {
+    return Object.hash(runtimeType, number, title, lyrics, id);
+  }
 
   @override
-  Map<String, dynamic> toJson() {
-    return _$$HymnTranslationImplToJson(
-      this,
-    );
+  String toString() {
+    return 'HymnTranslation(number: $number, title: $title, lyrics: $lyrics, id: $id)';
   }
 }
 
-abstract class _HymnTranslation implements HymnTranslation {
-  const factory _HymnTranslation(
-          {required final int number,
-          required final String title,
-          required final Lyrics lyrics,
-          @JsonKey(includeFromJson: false) final String? id}) =
-      _$HymnTranslationImpl;
+/// @nodoc
+abstract mixin class _$HymnTranslationCopyWith<$Res>
+    implements $HymnTranslationCopyWith<$Res> {
+  factory _$HymnTranslationCopyWith(
+          _HymnTranslation value, $Res Function(_HymnTranslation) _then) =
+      __$HymnTranslationCopyWithImpl;
+  @override
+  @useResult
+  $Res call(
+      {int number,
+      String title,
+      Lyrics lyrics,
+      @JsonKey(includeFromJson: false) String? id});
 
-  factory _HymnTranslation.fromJson(Map<String, dynamic> json) =
-      _$HymnTranslationImpl.fromJson;
+  @override
+  $LyricsCopyWith<$Res> get lyrics;
+}
 
-  @override
-  int get number;
-  @override
-  String get title;
-  @override
-  Lyrics get lyrics;
-  @override
-  @JsonKey(includeFromJson: false)
-  String? get id;
+/// @nodoc
+class __$HymnTranslationCopyWithImpl<$Res>
+    implements _$HymnTranslationCopyWith<$Res> {
+  __$HymnTranslationCopyWithImpl(this._self, this._then);
+
+  final _HymnTranslation _self;
+  final $Res Function(_HymnTranslation) _then;
 
   /// Create a copy of HymnTranslation
   /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$HymnTranslationImplCopyWith<_$HymnTranslationImpl> get copyWith =>
-      throw _privateConstructorUsedError;
+  @pragma('vm:prefer-inline')
+  $Res call({
+    Object? number = null,
+    Object? title = null,
+    Object? lyrics = null,
+    Object? id = freezed,
+  }) {
+    return _then(_HymnTranslation(
+      number: null == number
+          ? _self.number
+          : number // ignore: cast_nullable_to_non_nullable
+              as int,
+      title: null == title
+          ? _self.title
+          : title // ignore: cast_nullable_to_non_nullable
+              as String,
+      lyrics: null == lyrics
+          ? _self.lyrics
+          : lyrics // ignore: cast_nullable_to_non_nullable
+              as Lyrics,
+      id: freezed == id
+          ? _self.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as String?,
+    ));
+  }
+
+  /// Create a copy of HymnTranslation
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @pragma('vm:prefer-inline')
+  $LyricsCopyWith<$Res> get lyrics {
+    return $LyricsCopyWith<$Res>(_self.lyrics, (value) {
+      return _then(_self.copyWith(lyrics: value));
+    });
+  }
 }
+
+// dart format on
