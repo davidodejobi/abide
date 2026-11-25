@@ -1,23 +1,21 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
-import 'package:openbaptisthymnal/core/theme/app_text_styles.dart';
+import 'package:openbaptisthymnal/core/theme/lum_theme.dart';
 import 'package:openbaptisthymnal/features/share_card/ui/scripture_share_card_page.dart'
     show ShareVerse;
 import 'package:openbaptisthymnal/features/share_card/ui/share_card_style.dart';
+import 'package:openbaptisthymnal/features/share_card/ui/widgets/share_card_frame.dart';
 
-/// The shareable scripture card: verse text as the hero, with its reference and
-/// the Lumway mark beneath. Fixed 4:5 portrait so exports stay consistent across
-/// style presets. Mirrors [LyricCard] without the hymn-number watermark.
-///
-/// Each verse is prefixed with its number so the boundaries between verses stay
-/// visible, and the text fills the card from the top-left, scaling down only
-/// when a long passage would otherwise overflow.
+/// The scripture card: the reference as the eyebrow, the verses in the reading
+/// face. A multi-verse passage keeps its verse numbers so the boundaries stay
+/// visible, and the text scales down only when it would overflow.
 class ScriptureCard extends StatelessWidget {
   const ScriptureCard({
     super.key,
     required this.reference,
     required this.verses,
     required this.style,
+    this.format = ShareCardFormat.status,
   });
 
   /// Full citation, e.g. `John 3:16–18`.
@@ -27,82 +25,37 @@ class ScriptureCard extends StatelessWidget {
   final List<ShareVerse> verses;
 
   final ShareCardStyle style;
+  final ShareCardFormat format;
 
   @override
   Widget build(BuildContext context) {
-    final bodyStyle = style.bodyStyle.copyWith(
-      color: style.ink,
-      fontSize: 24,
-      height: 1.55,
-    );
-    final numberStyle = bodyStyle.copyWith(
-      fontSize: 15,
-      color: style.accent,
-      fontWeight: FontWeight.w700,
-    );
-
-    return AspectRatio(
-      aspectRatio: 4 / 5,
-      child: Container(
-        decoration: BoxDecoration(gradient: style.gradient),
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: SizedBox(
-                  width: double.infinity,
-                  child: AutoSizeText.rich(
-                    TextSpan(
-                      children: [
-                        for (var i = 0; i < verses.length; i++) ...[
-                          if (i > 0) const TextSpan(text: '  '),
-                          TextSpan(
-                            text: '${verses[i].number} ',
-                            style: numberStyle,
-                          ),
-                          TextSpan(text: verses[i].text),
-                        ],
-                      ],
-                    ),
-                    style: bodyStyle,
-                    // Shrinks the FONT size to fit (not the layout), so the
-                    // text always fills the full card width — no more text
-                    // hugging the left edge with empty space on the right.
-                    minFontSize: 12,
-                    maxFontSize: 24,
-                    stepGranularity: 0.5,
-                    textAlign: TextAlign.left,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Text(
-                reference,
-                style: AppTextStyles.titleMedium.copyWith(
-                  color: style.ink,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Container(width: 28, height: 2, color: style.accent),
-                  const SizedBox(width: 10),
-                  Text(
-                    'Lumway',
-                    style: AppTextStyles.labelMedium.copyWith(
-                      color: style.accent,
-                      letterSpacing: 1.5,
-                    ),
-                  ),
+    return ShareCardFrame(
+      style: style,
+      format: format,
+      eyebrow: reference.toUpperCase(),
+      body: (context, t) {
+        final base = LumText.readingScripture.copyWith(color: t.textPrimary);
+        final number = LumText.readingVerseNumber.copyWith(color: t.textAccent);
+        return SizedBox(
+          width: double.infinity,
+          child: AutoSizeText.rich(
+            TextSpan(
+              children: [
+                for (var i = 0; i < verses.length; i++) ...[
+                  if (i > 0) const TextSpan(text: '  '),
+                  if (verses.length > 1)
+                    TextSpan(text: '${verses[i].number} ', style: number),
+                  TextSpan(text: verses[i].text),
                 ],
-              ),
-            ],
+              ],
+            ),
+            style: base,
+            minFontSize: 11,
+            maxFontSize: 24,
+            stepGranularity: 0.5,
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

@@ -1,80 +1,54 @@
-import 'package:flutter/material.dart';
-import 'package:openbaptisthymnal/core/theme/app_colors.dart';
-import 'package:openbaptisthymnal/core/theme/app_text_styles.dart';
+import 'package:openbaptisthymnal/core/theme/lum_theme.dart';
+import 'package:openbaptisthymnal/features/tablet/ui/notes_strings.dart';
 
-/// A visual preset for a shareable lyric card: background, ink color, and the
-/// text style family used for the lyric body.
+/// A look for a shareable card (Figma M4-04): the road crop on top (or none),
+/// and the panel colours beneath. A card is an image that leaves the app, so
+/// its colours are fixed to the preset and do not follow the app theme.
 class ShareCardStyle {
   const ShareCardStyle({
     required this.id,
     required this.label,
-    required this.gradient,
-    required this.ink,
-    required this.accent,
-    required this.bodyStyle,
+    required this.tone,
+    this.roadAsset,
   });
 
   final String id;
   final String label;
-  final Gradient gradient;
 
-  /// Primary text color (title + lyrics).
-  final Color ink;
+  /// Colour set for the panel and text.
+  final LumColors tone;
 
-  /// Secondary color used for the hymn number watermark and footer.
-  final Color accent;
+  /// Baked road scene shown across the top, or null for a plain card.
+  final String? roadAsset;
 
-  /// Base style for the lyric body; color is applied from [ink] at render time.
-  final TextStyle bodyStyle;
-
-  static final List<ShareCardStyle> presets = [
+  static const List<ShareCardStyle> presets = [
     ShareCardStyle(
-      id: 'navy',
-      label: 'Midnight',
-      gradient: const LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [AppColors.primary, AppColors.primaryDark],
-      ),
-      ink: AppColors.neutral100,
-      accent: AppColors.secondaryLight,
-      bodyStyle: AppTextStyles.hymnVerse(),
+      id: 'day',
+      label: NotesStrings.dayRoad,
+      tone: LumColors.light,
+      roadAsset: 'assets/images/road/bg_light.png',
     ),
     ShareCardStyle(
-      id: 'cream',
-      label: 'Parchment',
-      gradient: const LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [AppColors.secondary50, AppColors.secondary100],
-      ),
-      ink: AppColors.primaryDark,
-      accent: AppColors.secondary,
-      bodyStyle: AppTextStyles.hymnVerse(),
+      id: 'night',
+      label: NotesStrings.nightRoad,
+      tone: LumColors.dark,
+      roadAsset: 'assets/images/road/bg_evening_dark.png',
     ),
     ShareCardStyle(
-      id: 'gold',
-      label: 'Gold',
-      gradient: const LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [AppColors.secondary, AppColors.secondaryDark],
-      ),
-      ink: AppColors.neutral100,
-      accent: AppColors.secondary200,
-      bodyStyle: AppTextStyles.hymnVerse(),
-    ),
-    ShareCardStyle(
-      id: 'ink',
-      label: 'Ink',
-      gradient: const LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [AppColors.neutral850, AppColors.neutral900],
-      ),
-      ink: AppColors.neutral100,
-      accent: AppColors.primary400,
-      bodyStyle: AppTextStyles.hymnVerse(),
+      id: 'plain',
+      label: NotesStrings.plain,
+      tone: LumColors.light,
     ),
   ];
+}
+
+/// The shapes a card exports as (Figma M4-05): a tall status card or a square.
+enum ShareCardFormat {
+  status(9 / 16, NotesStrings.formatStatus),
+  square(1, NotesStrings.formatSquare);
+
+  const ShareCardFormat(this.aspect, this.label);
+
+  final double aspect;
+  final String label;
 }

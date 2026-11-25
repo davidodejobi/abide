@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:openbaptisthymnal/features/share_card/ui/share_card_composer.dart';
+import 'package:openbaptisthymnal/features/tablet/ui/notes_strings.dart';
 import 'package:openbaptisthymnal/features/share_card/ui/widgets/lyric_card.dart';
 
 /// Composer screen for sharing a hymn lyric card as an image.
@@ -20,12 +21,14 @@ class ShareCardPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ShareCardComposer(
+      title: NotesStrings.shareHymn,
       filename: 'abide_hymn_$hymnNumber',
-      cardBuilder: (style) => LyricCard(
+      cardBuilder: (style, format) => LyricCard(
         hymnNumber: hymnNumber,
         title: title,
         body: body,
         style: style,
+        format: format,
       ),
     );
   }
