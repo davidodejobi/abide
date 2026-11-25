@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Splash, light: LumColors.light.bgPage (lib/core/theme/lum_tokens.dart). -->
+<resources>
+    <color name="splash_bg">#EDEFF2</color>
+</resources>

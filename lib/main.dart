@@ -6,6 +6,7 @@ import 'core/app.dart';
 import 'core/theme/lum_theme.dart';
 import 'core/storage/storage_provider.dart';
 import 'core/utils/services/file_storage_service.dart';
+import 'core/widgets/splash_intro.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,6 +14,9 @@ void main() async {
 
   await FileStorageService.init();
   final prefs = await SharedPreferences.getInstance();
+
+  // The intro's art, built while the native splash still shows.
+  await SplashIntro.preload();
 
   runApp(
     ProviderScope(

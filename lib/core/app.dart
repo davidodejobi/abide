@@ -11,6 +11,7 @@ import 'router/app_router.dart';
 import 'storage/storage_provider.dart';
 import 'theme/theme.dart';
 import 'theme/theme_provider.dart';
+import 'widgets/splash_intro.dart';
 
 /// Provider for the app router instance. In debug builds the onboarding flow
 /// shows on every launch so it can be reviewed; release builds show it once.
@@ -55,8 +56,9 @@ class AbideApp extends HookConsumerWidget {
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
         themeMode: themeMode,
-        builder: (context, child) =>
-            AppUpdateOverlay(child: child ?? const SizedBox.shrink()),
+        builder: (context, child) => SplashIntro(
+          child: AppUpdateOverlay(child: child ?? const SizedBox.shrink()),
+        ),
         routerConfig: appRouter.config(
           deepLinkBuilder: appRouter.onboardingDeepLink,
         ),
