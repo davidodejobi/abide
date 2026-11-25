@@ -3021,7 +3021,7 @@ final class $$FoldersTableReferences
   static MultiTypedResultKey<$NotesTable, List<Note>> _notesRefsTable(
           _$AppDatabase db) =>
       MultiTypedResultKey.fromTable(db.notes,
-          aliasName: $_aliasNameGenerator(db.folders.id, db.notes.folderId));
+          aliasName: 'folders__id__notes__folder_id');
 
   $$NotesTableProcessedTableManager get notesRefs {
     final manager = $$NotesTableTableManager($_db, $_db.notes)
@@ -3179,8 +3179,10 @@ class $$FoldersTableTableManager extends RootTableManager<
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
-              .map((e) =>
-                  (e.readTable(table), $$FoldersTableReferences(db, table, e)))
+              .map((e) => (
+                    e.readTable<$FoldersTable, Folder>(table),
+                    $$FoldersTableReferences(db, table, e)
+                  ))
               .toList(),
           prefetchHooksCallback: ({notesRefs = false}) {
             return PrefetchHooks(
@@ -3190,15 +3192,15 @@ class $$FoldersTableTableManager extends RootTableManager<
               getPrefetchedDataCallback: (items) async {
                 return [
                   if (notesRefs)
-                    await $_getPrefetchedData<Folder, $FoldersTable, Note>(
+                    await $_getPrefetchedDataByColumns<Folder, $FoldersTable,
+                            Note, $NotesTable>(
                         currentTable: table,
                         referencedTable:
                             $$FoldersTableReferences._notesRefsTable(db),
                         managerFromTypedResult: (p0) =>
                             $$FoldersTableReferences(db, table, p0).notesRefs,
-                        referencedItemsForCurrentItem: (item,
-                                referencedItems) =>
-                            referencedItems.where((e) => e.folderId == item.id),
+                        currentColumn: 'id',
+                        referencedColumn: 'folder_id',
                         typedResults: items)
                 ];
               },
@@ -3244,8 +3246,8 @@ final class $$NotesTableReferences
     extends BaseReferences<_$AppDatabase, $NotesTable, Note> {
   $$NotesTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static $FoldersTable _folderIdTable(_$AppDatabase db) => db.folders
-      .createAlias($_aliasNameGenerator(db.notes.folderId, db.folders.id));
+  static $FoldersTable _folderIdTable(_$AppDatabase db) =>
+      db.folders.createAlias('notes__folder_id__folders__id');
 
   $$FoldersTableProcessedTableManager? get folderId {
     final $_column = $_itemColumn<String>('folder_id');
@@ -3261,7 +3263,7 @@ final class $$NotesTableReferences
   static MultiTypedResultKey<$NoteTagsTable, List<NoteTag>> _noteTagsRefsTable(
           _$AppDatabase db) =>
       MultiTypedResultKey.fromTable(db.noteTags,
-          aliasName: $_aliasNameGenerator(db.notes.id, db.noteTags.noteId));
+          aliasName: 'notes__id__note_tags__note_id');
 
   $$NoteTagsTableProcessedTableManager get noteTagsRefs {
     final manager = $$NoteTagsTableTableManager($_db, $_db.noteTags)
@@ -3275,8 +3277,7 @@ final class $$NotesTableReferences
   static MultiTypedResultKey<$NoteLinksTable, List<NoteLink>>
       _noteLinksRefsTable(_$AppDatabase db) =>
           MultiTypedResultKey.fromTable(db.noteLinks,
-              aliasName:
-                  $_aliasNameGenerator(db.notes.id, db.noteLinks.sourceNoteId));
+              aliasName: 'notes__id__note_links__source_note_id');
 
   $$NoteLinksTableProcessedTableManager get noteLinksRefs {
     final manager = $$NoteLinksTableTableManager($_db, $_db.noteLinks).filter(
@@ -3288,9 +3289,9 @@ final class $$NotesTableReferences
   }
 
   static MultiTypedResultKey<$AttachmentsTable, List<Attachment>>
-      _attachmentsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
-          db.attachments,
-          aliasName: $_aliasNameGenerator(db.notes.id, db.attachments.noteId));
+      _attachmentsRefsTable(_$AppDatabase db) =>
+          MultiTypedResultKey.fromTable(db.attachments,
+              aliasName: 'notes__id__attachments__note_id');
 
   $$AttachmentsTableProcessedTableManager get attachmentsRefs {
     final manager = $$AttachmentsTableTableManager($_db, $_db.attachments)
@@ -3304,8 +3305,7 @@ final class $$NotesTableReferences
   static MultiTypedResultKey<$BibleAnnotationsTable, List<BibleAnnotation>>
       _bibleAnnotationsRefsTable(_$AppDatabase db) =>
           MultiTypedResultKey.fromTable(db.bibleAnnotations,
-              aliasName: $_aliasNameGenerator(
-                  db.notes.id, db.bibleAnnotations.noteId));
+              aliasName: 'notes__id__bible_annotations__note_id');
 
   $$BibleAnnotationsTableProcessedTableManager get bibleAnnotationsRefs {
     final manager =
@@ -3700,8 +3700,10 @@ class $$NotesTableTableManager extends RootTableManager<
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
-              .map((e) =>
-                  (e.readTable(table), $$NotesTableReferences(db, table, e)))
+              .map((e) => (
+                    e.readTable<$NotesTable, Note>(table),
+                    $$NotesTableReferences(db, table, e)
+                  ))
               .toList(),
           prefetchHooksCallback: (
               {folderId = false,
@@ -3745,51 +3747,50 @@ class $$NotesTableTableManager extends RootTableManager<
               getPrefetchedDataCallback: (items) async {
                 return [
                   if (noteTagsRefs)
-                    await $_getPrefetchedData<Note, $NotesTable, NoteTag>(
+                    await $_getPrefetchedDataByColumns<Note, $NotesTable,
+                            NoteTag, $NoteTagsTable>(
                         currentTable: table,
                         referencedTable:
                             $$NotesTableReferences._noteTagsRefsTable(db),
                         managerFromTypedResult: (p0) =>
                             $$NotesTableReferences(db, table, p0).noteTagsRefs,
-                        referencedItemsForCurrentItem: (item,
-                                referencedItems) =>
-                            referencedItems.where((e) => e.noteId == item.id),
+                        currentColumn: 'id',
+                        referencedColumn: 'note_id',
                         typedResults: items),
                   if (noteLinksRefs)
-                    await $_getPrefetchedData<Note, $NotesTable, NoteLink>(
+                    await $_getPrefetchedDataByColumns<Note, $NotesTable,
+                            NoteLink, $NoteLinksTable>(
                         currentTable: table,
                         referencedTable:
                             $$NotesTableReferences._noteLinksRefsTable(db),
                         managerFromTypedResult: (p0) =>
                             $$NotesTableReferences(db, table, p0).noteLinksRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems
-                                .where((e) => e.sourceNoteId == item.id),
+                        currentColumn: 'id',
+                        referencedColumn: 'source_note_id',
                         typedResults: items),
                   if (attachmentsRefs)
-                    await $_getPrefetchedData<Note, $NotesTable, Attachment>(
+                    await $_getPrefetchedDataByColumns<Note, $NotesTable,
+                            Attachment, $AttachmentsTable>(
                         currentTable: table,
                         referencedTable:
                             $$NotesTableReferences._attachmentsRefsTable(db),
                         managerFromTypedResult: (p0) =>
                             $$NotesTableReferences(db, table, p0)
                                 .attachmentsRefs,
-                        referencedItemsForCurrentItem: (item,
-                                referencedItems) =>
-                            referencedItems.where((e) => e.noteId == item.id),
+                        currentColumn: 'id',
+                        referencedColumn: 'note_id',
                         typedResults: items),
                   if (bibleAnnotationsRefs)
-                    await $_getPrefetchedData<Note, $NotesTable,
-                            BibleAnnotation>(
+                    await $_getPrefetchedDataByColumns<Note, $NotesTable,
+                            BibleAnnotation, $BibleAnnotationsTable>(
                         currentTable: table,
                         referencedTable: $$NotesTableReferences
                             ._bibleAnnotationsRefsTable(db),
                         managerFromTypedResult: (p0) =>
                             $$NotesTableReferences(db, table, p0)
                                 .bibleAnnotationsRefs,
-                        referencedItemsForCurrentItem: (item,
-                                referencedItems) =>
-                            referencedItems.where((e) => e.noteId == item.id),
+                        currentColumn: 'id',
+                        referencedColumn: 'note_id',
                         typedResults: items)
                 ];
               },
@@ -3833,7 +3834,7 @@ final class $$TagsTableReferences
   static MultiTypedResultKey<$NoteTagsTable, List<NoteTag>> _noteTagsRefsTable(
           _$AppDatabase db) =>
       MultiTypedResultKey.fromTable(db.noteTags,
-          aliasName: $_aliasNameGenerator(db.tags.id, db.noteTags.tagId));
+          aliasName: 'tags__id__note_tags__tag_id');
 
   $$NoteTagsTableProcessedTableManager get noteTagsRefs {
     final manager = $$NoteTagsTableTableManager($_db, $_db.noteTags)
@@ -3976,8 +3977,10 @@ class $$TagsTableTableManager extends RootTableManager<
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
-              .map((e) =>
-                  (e.readTable(table), $$TagsTableReferences(db, table, e)))
+              .map((e) => (
+                    e.readTable<$TagsTable, Tag>(table),
+                    $$TagsTableReferences(db, table, e)
+                  ))
               .toList(),
           prefetchHooksCallback: ({noteTagsRefs = false}) {
             return PrefetchHooks(
@@ -3987,15 +3990,15 @@ class $$TagsTableTableManager extends RootTableManager<
               getPrefetchedDataCallback: (items) async {
                 return [
                   if (noteTagsRefs)
-                    await $_getPrefetchedData<Tag, $TagsTable, NoteTag>(
+                    await $_getPrefetchedDataByColumns<Tag, $TagsTable, NoteTag,
+                            $NoteTagsTable>(
                         currentTable: table,
                         referencedTable:
                             $$TagsTableReferences._noteTagsRefsTable(db),
                         managerFromTypedResult: (p0) =>
                             $$TagsTableReferences(db, table, p0).noteTagsRefs,
-                        referencedItemsForCurrentItem: (item,
-                                referencedItems) =>
-                            referencedItems.where((e) => e.tagId == item.id),
+                        currentColumn: 'id',
+                        referencedColumn: 'tag_id',
                         typedResults: items)
                 ];
               },
@@ -4031,8 +4034,8 @@ final class $$NoteTagsTableReferences
     extends BaseReferences<_$AppDatabase, $NoteTagsTable, NoteTag> {
   $$NoteTagsTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static $NotesTable _noteIdTable(_$AppDatabase db) => db.notes
-      .createAlias($_aliasNameGenerator(db.noteTags.noteId, db.notes.id));
+  static $NotesTable _noteIdTable(_$AppDatabase db) =>
+      db.notes.createAlias('note_tags__note_id__notes__id');
 
   $$NotesTableProcessedTableManager get noteId {
     final $_column = $_itemColumn<String>('note_id')!;
@@ -4046,7 +4049,7 @@ final class $$NoteTagsTableReferences
   }
 
   static $TagsTable _tagIdTable(_$AppDatabase db) =>
-      db.tags.createAlias($_aliasNameGenerator(db.noteTags.tagId, db.tags.id));
+      db.tags.createAlias('note_tags__tag_id__tags__id');
 
   $$TagsTableProcessedTableManager get tagId {
     final $_column = $_itemColumn<String>('tag_id')!;
@@ -4253,8 +4256,10 @@ class $$NoteTagsTableTableManager extends RootTableManager<
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
-              .map((e) =>
-                  (e.readTable(table), $$NoteTagsTableReferences(db, table, e)))
+              .map((e) => (
+                    e.readTable<$NoteTagsTable, NoteTag>(table),
+                    $$NoteTagsTableReferences(db, table, e)
+                  ))
               .toList(),
           prefetchHooksCallback: ({noteId = false, tagId = false}) {
             return PrefetchHooks(
@@ -4336,8 +4341,7 @@ final class $$NoteLinksTableReferences
   $$NoteLinksTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static $NotesTable _sourceNoteIdTable(_$AppDatabase db) =>
-      db.notes.createAlias(
-          $_aliasNameGenerator(db.noteLinks.sourceNoteId, db.notes.id));
+      db.notes.createAlias('note_links__source_note_id__notes__id');
 
   $$NotesTableProcessedTableManager get sourceNoteId {
     final $_column = $_itemColumn<String>('source_note_id')!;
@@ -4533,7 +4537,7 @@ class $$NoteLinksTableTableManager extends RootTableManager<
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (
-                    e.readTable(table),
+                    e.readTable<$NoteLinksTable, NoteLink>(table),
                     $$NoteLinksTableReferences(db, table, e)
                   ))
               .toList(),
@@ -4616,8 +4620,8 @@ final class $$AttachmentsTableReferences
     extends BaseReferences<_$AppDatabase, $AttachmentsTable, Attachment> {
   $$AttachmentsTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static $NotesTable _noteIdTable(_$AppDatabase db) => db.notes
-      .createAlias($_aliasNameGenerator(db.attachments.noteId, db.notes.id));
+  static $NotesTable _noteIdTable(_$AppDatabase db) =>
+      db.notes.createAlias('attachments__note_id__notes__id');
 
   $$NotesTableProcessedTableManager get noteId {
     final $_column = $_itemColumn<String>('note_id')!;
@@ -4854,7 +4858,7 @@ class $$AttachmentsTableTableManager extends RootTableManager<
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (
-                    e.readTable(table),
+                    e.readTable<$AttachmentsTable, Attachment>(table),
                     $$AttachmentsTableReferences(db, table, e)
                   ))
               .toList(),
@@ -4938,8 +4942,8 @@ final class $$BibleAnnotationsTableReferences extends BaseReferences<
   $$BibleAnnotationsTableReferences(
       super.$_db, super.$_table, super.$_typedResult);
 
-  static $NotesTable _noteIdTable(_$AppDatabase db) => db.notes.createAlias(
-      $_aliasNameGenerator(db.bibleAnnotations.noteId, db.notes.id));
+  static $NotesTable _noteIdTable(_$AppDatabase db) =>
+      db.notes.createAlias('bible_annotations__note_id__notes__id');
 
   $$NotesTableProcessedTableManager? get noteId {
     final $_column = $_itemColumn<String>('note_id');
@@ -5175,7 +5179,7 @@ class $$BibleAnnotationsTableTableManager extends RootTableManager<
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (
-                    e.readTable(table),
+                    e.readTable<$BibleAnnotationsTable, BibleAnnotation>(table),
                     $$BibleAnnotationsTableReferences(db, table, e)
                   ))
               .toList(),
@@ -5348,7 +5352,11 @@ class $$ReadingDaysTableTableManager extends RootTableManager<
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map((e) => (
+                    e.readTable<$ReadingDaysTable, ReadingDay>(table),
+                    BaseReferences<_$AppDatabase, $ReadingDaysTable,
+                        ReadingDay>(db, table, e)
+                  ))
               .toList(),
           prefetchHooksCallback: null,
         ));
@@ -5491,7 +5499,12 @@ class $$PlanSubscriptionsTableTableManager extends RootTableManager<
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map((e) => (
+                    e.readTable<$PlanSubscriptionsTable, PlanSubscription>(
+                        table),
+                    BaseReferences<_$AppDatabase, $PlanSubscriptionsTable,
+                        PlanSubscription>(db, table, e)
+                  ))
               .toList(),
           prefetchHooksCallback: null,
         ));
@@ -5650,7 +5663,12 @@ class $$PlanDayProgressTableTableManager extends RootTableManager<
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map((e) => (
+                    e.readTable<$PlanDayProgressTable, PlanDayProgressData>(
+                        table),
+                    BaseReferences<_$AppDatabase, $PlanDayProgressTable,
+                        PlanDayProgressData>(db, table, e)
+                  ))
               .toList(),
           prefetchHooksCallback: null,
         ));

@@ -4,7 +4,7 @@ part 'stanza.freezed.dart';
 part 'stanza.g.dart';
 
 @freezed
-class Stanza with _$Stanza {
+abstract class Stanza with _$Stanza {
   const factory Stanza({
     required int index,
     required String text,
