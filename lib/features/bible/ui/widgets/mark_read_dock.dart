@@ -1,15 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:openbaptisthymnal/core/theme/lum_theme.dart';
 import 'package:openbaptisthymnal/core/widgets/lum_button.dart';
+import 'package:openbaptisthymnal/core/widgets/lum_circle_button.dart';
 import 'package:openbaptisthymnal/features/bible/ui/bible_strings.dart';
 import 'package:openbaptisthymnal/features/daily/ui/widgets/lamp_icon.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 /// The docked panel under the text when the reader was opened from a plan day
 /// (Figma 02): the streak line and the gold "Mark read". A sibling of the
 /// scrolling text, with no art behind Scripture.
 class MarkReadDock extends StatelessWidget {
-  const MarkReadDock(
-      {super.key, required this.streakLine, required this.onMarkRead});
+  const MarkReadDock({
+    super.key,
+    required this.streakLine,
+    required this.onMarkRead,
+    this.onPrev,
+    this.onNext,
+  });
+
+  /// Previous / next chapter; null disables the button.
+  final VoidCallback? onPrev;
+  final VoidCallback? onNext;
 
   /// "Lights day 12 of your streak"; null hides the line.
   final String? streakLine;
@@ -53,11 +64,31 @@ class MarkReadDock extends StatelessWidget {
             ),
             const SizedBox(height: LumSpace.md),
           ],
-          LumButton(
-            label: BibleStrings.markRead,
-            kind: LumButtonKind.gold,
-            icon: const Icon(Icons.check_rounded),
-            onPressed: onMarkRead,
+          Row(
+            children: [
+              LumCircleButton(
+                icon: PhosphorIcons.caretLeft(),
+                label: BibleStrings.previous,
+                onPressed: onPrev,
+                color: onPrev == null ? c.textDisabled : null,
+              ),
+              const SizedBox(width: LumSpace.sm),
+              Expanded(
+                child: LumButton(
+                  label: BibleStrings.markRead,
+                  kind: LumButtonKind.gold,
+                  icon: const Icon(Icons.check_rounded),
+                  onPressed: onMarkRead,
+                ),
+              ),
+              const SizedBox(width: LumSpace.sm),
+              LumCircleButton(
+                icon: PhosphorIcons.caretRight(),
+                label: BibleStrings.next,
+                onPressed: onNext,
+                color: onNext == null ? c.textDisabled : null,
+              ),
+            ],
           ),
         ],
       ),

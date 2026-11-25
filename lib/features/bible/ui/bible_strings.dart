@@ -15,6 +15,7 @@ abstract final class BibleStrings {
   static const onThisPhone = 'ON THIS PHONE';
   static const inUse = 'In use';
   static const close = 'Close';
+  static const markReadFailed = 'Could not save your reading. Try again.';
   static const previous = 'Previous chapter';
   static const next = 'Next chapter';
   static const chooseChapter = 'Choose book and chapter';

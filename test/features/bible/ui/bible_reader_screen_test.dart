@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -5,9 +7,12 @@ import 'package:openbaptisthymnal/core/storage/database/database_provider.dart';
 import 'package:openbaptisthymnal/core/theme/app_theme.dart';
 import 'package:openbaptisthymnal/features/bible/providers/bible_providers.dart';
 import 'package:openbaptisthymnal/features/bible/ui/bible_reader_page.dart';
+import 'package:openbaptisthymnal/features/daily/providers/daily_providers.dart';
 import 'package:openbaptisthymnal/features/bible/ui/bible_strings.dart';
 import 'package:openbaptisthymnal/features/bible/ui/bible_tab_screen.dart';
+import 'package:openbaptisthymnal/features/bible/ui/widgets/bible_chapter_view.dart';
 import 'package:openbaptisthymnal/features/bible/ui/widgets/edition_sheet.dart';
+import 'package:openbaptisthymnal/features/bible/ui/widgets/mark_read_dock.dart';
 import 'package:openbaptisthymnal/features/bible/model/bible_edition.dart';
 
 import '../../../support/pump_app.dart';
@@ -110,6 +115,86 @@ void main() {
     expect(find.bySemanticsLabel(BibleStrings.share), findsOneWidget);
     expect(find.bySemanticsLabel(BibleStrings.clearSelection), findsOneWidget);
     expect(t.takeException(), isNull);
+  });
+
+  for (final (name, size, scale) in [
+    ('390x844', const Size(390, 844), 1.0),
+    ('320 wide at 2x text', const Size(320, 700), 2.0),
+  ]) {
+    testWidgets(
+        'Given a plan day at $name, Then the last verse clears the Mark read dock',
+        (t) async {
+      await pumpReader(t, const BibleReaderPage(planId: 'nt-90', dayIndex: 41),
+          size: size, scale: scale);
+      final scroll = t.state<ScrollableState>(find
+          .descendant(
+              of: find.byType(BibleChapterView).first,
+              matching: find.byType(Scrollable))
+          .first);
+      // Extents are estimated until built: jump until the end is real.
+      for (var i = 0; i < 6; i++) {
+        scroll.position.jumpTo(scroll.position.maxScrollExtent);
+        await t.pump();
+      }
+      await settle(t);
+      final verses = find.textContaining('true vine', findRichText: true);
+      var lastBottom = 0.0;
+      for (var i = 0; i < verses.evaluate().length; i++) {
+        final r = t.getRect(verses.at(i));
+        if (r.left >= 0 && r.left < size.width && r.bottom > lastBottom) {
+          lastBottom = r.bottom;
+        }
+      }
+      expect(lastBottom,
+          lessThanOrEqualTo(t.getRect(find.byType(MarkReadDock)).top));
+    });
+  }
+
+  testWidgets('Given Mark read is double tapped, Then it saves once',
+      (t) async {
+    var saves = 0;
+    final gate = Completer<void>();
+    await pumpReader(t, const BibleReaderPage(planId: 'nt-90', dayIndex: 41),
+        extra: [
+          markPlanDayReadProvider.overrideWithValue((_, __) {
+            saves++;
+            return gate.future;
+          }),
+        ]);
+    await t.tap(find.text(BibleStrings.markRead));
+    await t.pump();
+    await t.tap(find.text(BibleStrings.markRead));
+    await t.pump();
+    expect(saves, 1);
+    gate.complete();
+    await settle(t);
+  });
+
+  testWidgets(
+      'Given the save fails, Then a snackbar shows and the reader stays',
+      (t) async {
+    await pumpReader(
+        t, const Scaffold(body: BibleTabScreen(planId: 'nt-90', dayIndex: 41)),
+        extra: [
+          markPlanDayReadProvider
+              .overrideWithValue((_, __) => Future.error('disk full')),
+        ]);
+    await t.tap(find.text(BibleStrings.markRead));
+    await settle(t);
+    expect(find.text(BibleStrings.markReadFailed), findsOneWidget);
+  });
+
+  testWidgets(
+      'Given a plan day, Then the dock offers previous and next chapter',
+      (t) async {
+    final c = await pumpReader(
+        t, const BibleReaderPage(planId: 'nt-90', dayIndex: 41));
+    // First chapter of the day: no previous, next goes to chapter 16.
+    expect(find.bySemanticsLabel(BibleStrings.previous), findsOneWidget);
+    await t.tap(find.bySemanticsLabel(BibleStrings.next));
+    await settle(t);
+    expect(c.read(bibleReadingPositionProvider).chapter, 16);
+    expect(find.text('CHAPTER 2 OF 3'), findsOneWidget);
   });
 
   group('layout robustness', () {

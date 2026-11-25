@@ -7,7 +7,6 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:openbaptisthymnal/core/providers/bottom_nav_provider.dart';
 import 'package:openbaptisthymnal/core/storage/database/app_database.dart';
 import 'package:openbaptisthymnal/core/storage/database/daos/note_links_dao.dart';
-import 'package:openbaptisthymnal/core/storage/database/database_provider.dart';
 import 'package:openbaptisthymnal/core/theme/font_scale_provider.dart';
 import 'package:openbaptisthymnal/core/theme/lum_theme.dart';
 import 'package:openbaptisthymnal/core/widgets/lum_button.dart';
@@ -27,7 +26,6 @@ import 'package:openbaptisthymnal/features/bible/ui/widgets/edition_sheet.dart';
 import 'package:openbaptisthymnal/features/bible/ui/widgets/mark_read_dock.dart';
 import 'package:openbaptisthymnal/features/bible/ui/widgets/reader_top_bar.dart';
 import 'package:openbaptisthymnal/features/bible/ui/widgets/verse_action_bar.dart';
-import 'package:openbaptisthymnal/features/daily/domain/date_key.dart';
 import 'package:openbaptisthymnal/features/daily/domain/passage_label.dart';
 import 'package:openbaptisthymnal/features/daily/providers/daily_providers.dart';
 import 'package:openbaptisthymnal/features/settings/ui/widgets/text_size_sheet.dart';
@@ -164,18 +162,39 @@ class BibleTabScreen extends HookConsumerWidget {
     final streak = ref.watch(streakProvider);
     final todayDone = ref.watch(isTodayCompleteProvider);
 
+    final saving = useRef(false);
+    final dockKey = useMemoized(GlobalKey.new);
+    // The real height of the Mark read dock, so the text can scroll clear of it.
+    final dockHeight = useState(220.0);
+
+    void measureDock() {
+      final h = (dockKey.currentContext?.size)?.height;
+      if (h != null && h != dockHeight.value) dockHeight.value = h;
+    }
+
+    useEffect(() {
+      if (_fromPlan) {
+        WidgetsBinding.instance.addPostFrameCallback((_) => measureDock());
+      }
+      return null;
+    });
+
     Future<void> markRead() async {
-      final now = DateTime.now();
-      // The same transaction Today used: the calendar day feeds the streak, the
-      // plan day advances the plan.
-      await ref.read(readingPlansDaoProvider).markReadingComplete(
-            dateKey: dayKey(now),
-            source: 'plan',
-            planId: planId!,
-            dayIndex: dayIndex!,
-            completedAt: now,
-          );
-      if (context.mounted) Navigator.of(context).pop(true);
+      if (saving.value) return; // a second tap while saving is ignored
+      saving.value = true;
+      try {
+        await ref.read(markPlanDayReadProvider)(planId!, dayIndex!);
+        if (context.mounted && ModalRoute.of(context)?.isCurrent == true) {
+          Navigator.of(context).pop(true);
+        }
+      } catch (_) {
+        if (context.mounted) {
+          ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+              const SnackBar(content: Text(BibleStrings.markReadFailed)));
+        }
+      } finally {
+        saving.value = false;
+      }
     }
 
     return manifestAsync.when(
@@ -265,6 +284,9 @@ class BibleTabScreen extends HookConsumerWidget {
 
         // "Chapter 1 of 3" for the plan day, when this chapter is part of it.
         String? chapterEyebrow;
+        // The dock's prev/next stay inside the plan day while the reader is in it.
+        VoidCallback? dockPrev = hasPrev ? goPrev : null;
+        VoidCallback? dockNext = hasNext ? goNext : null;
         if (planDay != null) {
           final chapters = [
             for (final p in planDay.passages)
@@ -274,6 +296,14 @@ class BibleTabScreen extends HookConsumerWidget {
           final i = chapters.indexOf((book.code, position.chapter));
           if (i >= 0) {
             chapterEyebrow = BibleStrings.chapterOf(i + 1, chapters.length);
+            dockPrev = i > 0
+                ? () =>
+                    notifier.openChapter(chapters[i - 1].$1, chapters[i - 1].$2)
+                : null;
+            dockNext = i < chapters.length - 1
+                ? () =>
+                    notifier.openChapter(chapters[i + 1].$1, chapters[i + 1].$2)
+                : null;
           }
         }
 
@@ -284,7 +314,11 @@ class BibleTabScreen extends HookConsumerWidget {
                 ? (safeBottom < 8 ? 8 : safeBottom) + LumSize.tabBar
                 : safeBottom) +
             LumSpace.md;
-        final textBottomPad = _fromPlan ? 220.0 : barBottom + 56 + LumSpace.xl;
+        final textBottomPad = _fromPlan
+            ? dockHeight.value + LumSpace.md
+            : barBottom + 56 + LumSpace.xl;
+        final splitBottomPad =
+            _fromPlan ? dockHeight.value + LumSpace.md : 120.0;
         final textPadding = EdgeInsets.fromLTRB(LumSize.screenGutter - 4,
             LumSpace.sm, LumSize.screenGutter - 4, textBottomPad);
         final isSelecting = selected.value.isNotEmpty;
@@ -303,8 +337,8 @@ class BibleTabScreen extends HookConsumerWidget {
           onTapBacklink: openBacklinks,
           highlights: highlights,
           padding: split.value.isOpen
-              ? const EdgeInsets.fromLTRB(
-                  LumSpace.sm, LumSpace.sm, LumSpace.sm, 120)
+              ? EdgeInsets.fromLTRB(
+                  LumSpace.sm, LumSpace.sm, LumSpace.sm, splitBottomPad)
               : textPadding,
           header: split.value.isOpen
               ? null
@@ -387,6 +421,7 @@ class BibleTabScreen extends HookConsumerWidget {
                 ],
               ),
               secondary: SecondaryBiblePane(
+                bottomPadding: splitBottomPad,
                 state: split.value,
                 textScale: textScale,
                 onPicked: (e, b, ch) => split.value = split.value.copyWith(
@@ -468,8 +503,22 @@ class BibleTabScreen extends HookConsumerWidget {
                 left: 0,
                 right: 0,
                 bottom: 0,
-                child:
-                    MarkReadDock(streakLine: streakLine, onMarkRead: markRead),
+                child: NotificationListener<SizeChangedLayoutNotification>(
+                  onNotification: (_) {
+                    WidgetsBinding.instance
+                        .addPostFrameCallback((_) => measureDock());
+                    return false;
+                  },
+                  child: SizeChangedLayoutNotifier(
+                    child: MarkReadDock(
+                      key: dockKey,
+                      streakLine: streakLine,
+                      onMarkRead: markRead,
+                      onPrev: dockPrev,
+                      onNext: dockNext,
+                    ),
+                  ),
+                ),
               )
             else
               Positioned(

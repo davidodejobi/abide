@@ -181,8 +181,11 @@ class SecondaryBiblePane extends ConsumerWidget {
     required this.onPicked,
     required this.onEditionChanged,
     required this.onChange,
+    this.bottomPadding = 120,
   });
 
+  /// Room under the text for a docked panel (Mark read).
+  final double bottomPadding;
   final BibleSplitState state;
   final double textScale;
   final void Function(String editionId, String bookCode, int chapter) onPicked;
@@ -237,8 +240,8 @@ class SecondaryBiblePane extends ConsumerWidget {
                         )))
                         .valueOrNull ??
                     const <int, BibleAnnotation>{},
-                padding: const EdgeInsets.fromLTRB(
-                    LumSpace.sm, LumSpace.sm, LumSpace.sm, 120),
+                padding: EdgeInsets.fromLTRB(
+                    LumSpace.sm, LumSpace.sm, LumSpace.sm, bottomPadding),
               ),
             ),
           ],
