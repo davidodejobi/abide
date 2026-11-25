@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:openbaptisthymnal/core/theme/lum_theme.dart';
 
 import '../../domain/landmark_spin.dart';
+import 'landmark_model_3d.dart';
 import 'road_art.dart';
 
 /// Where a landmark sheet's picture came from on the road, and when it has
@@ -286,6 +287,15 @@ class _LandmarkShowcaseState extends State<LandmarkShowcase>
             tolerance: const Tolerance(distance: .001, velocity: .02)));
   }
 
+  Widget _spriteSpin(ui.Image sheet, bool live) => RepaintBoundary(
+        key: const ValueKey('showcase-spin'),
+        child: CustomPaint(
+          painter: _SpinPainter(
+              sheet: sheet, turns: _spin, clock: _clock, bob: live),
+          size: const Size.square(_heroSize),
+        ),
+      );
+
   @override
   Widget build(BuildContext context) {
     final c = context.lum;
@@ -340,18 +350,14 @@ class _LandmarkShowcaseState extends State<LandmarkShowcase>
                                     key: const ValueKey('showcase-static'),
                                     image: _mine,
                                     fit: BoxFit.contain)
-                                : RepaintBoundary(
-                                    key: const ValueKey('showcase-spin'),
-                                    child: CustomPaint(
-                                      painter: _SpinPainter(
-                                        sheet: sheet,
+                                : kLandmark3d
+                                    ? LandmarkModel3d(
+                                        key: const ValueKey('showcase-3d'),
+                                        art: widget.art,
                                         turns: _spin,
-                                        clock: _clock,
-                                        bob: live,
-                                      ),
-                                      size: const Size.square(_heroSize),
-                                    ),
-                                  ),
+                                        fallback: _spriteSpin(sheet, live),
+                                      )
+                                    : _spriteSpin(sheet, live),
                           ),
                         ),
                       ),
