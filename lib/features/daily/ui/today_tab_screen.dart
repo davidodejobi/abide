@@ -12,6 +12,9 @@ import 'package:openbaptisthymnal/core/theme/lum_theme.dart';
 import 'package:openbaptisthymnal/core/utils/day_part_provider.dart';
 import 'package:openbaptisthymnal/core/utils/time_greeting.dart';
 import 'package:openbaptisthymnal/core/widgets/lum_button.dart';
+import 'package:openbaptisthymnal/features/account/domain/save_road_rule.dart';
+import 'package:openbaptisthymnal/features/account/providers/account_providers.dart';
+import 'package:openbaptisthymnal/features/account/ui/save_road_sheet.dart';
 import 'package:openbaptisthymnal/features/bible/ui/open_bible_link.dart';
 import 'package:openbaptisthymnal/features/onboarding/providers/onboarding_provider.dart';
 
@@ -22,6 +25,7 @@ import '../domain/plan_progress.dart';
 import '../domain/reading_plan.dart';
 import '../domain/road_days.dart';
 import '../domain/road_landmarks.dart';
+import '../domain/world_company.dart';
 import '../providers/daily_providers.dart';
 import 'daily_strings.dart';
 import 'widgets/lamp_icon.dart';
@@ -30,6 +34,7 @@ import 'widgets/road_art.dart';
 import 'widgets/road_scene.dart';
 import 'widgets/road_sheets.dart';
 import 'widgets/streak_chip.dart';
+import 'widgets/world_company_line.dart';
 
 /// The Today tab: the road scene, today's reading and the one button that
 /// starts it. After "Mark as read" the same screen says well done (or rest
@@ -60,6 +65,28 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    // "Save your road" is offered once, as the third day is completed.
+    ref.watch(accountProvider); // keep it loaded for the listener below
+    ref.listen(completedDayKeysProvider, (prev, next) {
+      if (ref.read(authRepositoryProvider) == null) return;
+      final days = next.valueOrNull?.length;
+      final account = ref.read(accountProvider).valueOrNull;
+      if (days == null) return;
+      final prompt = shouldPromptSaveRoad(
+        previousDays: prev?.valueOrNull?.length,
+        days: days,
+        accountLoaded: account != null,
+        saved: account?.isSaved ?? false,
+        alreadyPrompted: ref.read(saveRoadPromptedProvider),
+      );
+      if (!prompt) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        // Skip (and stay unmarked) if another sheet or page is above Today.
+        if (!mounted || ModalRoute.of(context)?.isCurrent != true) return;
+        ref.read(saveRoadPromptedProvider.notifier).markShown();
+        showSaveRoadSheet(context);
+      });
+    });
     final c = context.lum;
     final name = ref.watch(userNameProvider);
     final streak = ref.watch(streakProvider);
@@ -125,6 +152,18 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
       currentDay = data.day!.dayIndex;
       total = data.plan.dayCount;
     }
+
+    final worldDay = done ? doneIndex : currentDay;
+    final companions = hasPlan && worldDay != null
+        ? companionSpots(
+            ref
+                    .watch(worldCompanyProvider(
+                        (planKey: data.progressKey, day: worldDay)))
+                    .valueOrNull
+                    ?.readersOnDay ??
+                0,
+            worldDay)
+        : const <CompanionSpot>[];
 
     // The collapsed panel's chip: today's day and passage, or tomorrow's once
     // today is read.
@@ -206,6 +245,7 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
                   mood: mood,
                   currentDay: currentDay,
                   totalDays: total,
+                  companions: companions,
                   plan: data?.plan,
                   showTomorrowTag: done,
                   statuses: data?.statuses,
@@ -324,17 +364,26 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
                                             bookNames,
                                           ),
                                         )
-                                      : _Reading(
-                                          reading: d,
-                                          bookNames: bookNames,
-                                          onChange: _choosePlan,
-                                          onStart: () => _startReading(d),
-                                          onShare: () => _shareRoad(
-                                            d,
-                                            d.day!.dayIndex,
-                                            streak.current,
-                                            bookNames,
-                                          ),
+                                      : Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            _Reading(
+                                              reading: d,
+                                              bookNames: bookNames,
+                                              onChange: _choosePlan,
+                                              onStart: () => _startReading(d),
+                                              onShare: () => _shareRoad(
+                                                d,
+                                                d.day!.dayIndex,
+                                                streak.current,
+                                                bookNames,
+                                              ),
+                                            ),
+                                            WorldCompanyLine(
+                                                planKey: d.progressKey,
+                                                day: d.day!.dayIndex),
+                                          ],
                                         ),
                         ),
                         _PlanNoteCard(
@@ -1086,6 +1135,8 @@ class _DayDone extends ConsumerWidget {
         if (next > doneIndex)
           Text(DailyStrings.tomorrowDay(next),
               style: LumText.callout.copyWith(color: c.textSecondary)),
+        WorldCompanyLine(
+            planKey: reading.progressKey, day: doneIndex, finished: true),
         const SizedBox(height: 16),
         Row(
           children: [
