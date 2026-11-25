@@ -10,14 +10,18 @@ import 'package:openbaptisthymnal/core/widgets/lum_button.dart';
 import 'package:openbaptisthymnal/features/bible/ui/open_bible_link.dart';
 import 'package:openbaptisthymnal/features/onboarding/providers/onboarding_provider.dart';
 
+import '../domain/date_key.dart';
 import '../domain/passage_label.dart';
 import '../domain/plan_progress.dart';
 import '../domain/reading_plan.dart';
+import '../domain/road_days.dart';
+import '../domain/road_landmarks.dart';
 import '../providers/daily_providers.dart';
 import 'daily_strings.dart';
 import 'widgets/lamp_icon.dart';
 import 'widgets/plan_picker_sheet.dart';
 import 'widgets/road_scene.dart';
+import 'widgets/road_sheets.dart';
 import 'widgets/streak_chip.dart';
 
 /// The Today tab: the road scene, today's reading and the one button that
@@ -136,6 +140,10 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
                       totalDays: total,
                       plan: data?.plan,
                       showTomorrowTag: done,
+                      onStopTap: data == null
+                          ? null
+                          : (day) => _openStop(data, day, evening: done),
+                      onLandmarkTap: data == null ? null : _openLandmark,
                     ),
                   ),
                   Column(
@@ -243,6 +251,66 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
   }
 
   Future<void> _choosePlan() => showPlanPickerSheet(context);
+
+  /// A stop on the road: its sheet, then the reader if asked. Marking is only
+  /// offered for the day the traveller stands on; days ahead are previews.
+  Future<void> _openStop(TodaysReading d, int dayIndex,
+      {required bool evening}) async {
+    final day = d.plan.dayAt(dayIndex);
+    if (day == null) return;
+    final current = d.day?.dayIndex;
+    final isDone = d.isFinished ||
+        (current != null && dayIndex < current) ||
+        (ref.read(planProgressProvider(d.plan.id)).valueOrNull ?? const <int>{})
+            .contains(dayIndex);
+    final status = isDone
+        ? StopStatus.done
+        : dayIndex == current
+            ? (evening ? StopStatus.tomorrow : StopStatus.today)
+            : StopStatus.ahead;
+    final today = DateTime.now();
+    final date = current == null || isDone
+        ? null
+        : dateForDay(
+            day: dayIndex,
+            currentDay: current,
+            today: evening ? nextDay(today) : today,
+          );
+    final open = await showStopSheet(
+      context,
+      plan: d.plan,
+      day: day,
+      status: status,
+      date: date,
+      bookNames: ref.read(planBookNamesProvider).valueOrNull ?? const {},
+    );
+    await _open(open);
+  }
+
+  Future<void> _openLandmark(Landmark landmark, int day) async {
+    LandmarkStory? story;
+    try {
+      story = (await ref.read(landmarkStoriesProvider.future))[landmark.id];
+    } catch (_) {
+      // The retelling is a bonus; the sheet still opens with the title.
+    }
+    if (!mounted) return;
+    final open = await showLandmarkSheet(context,
+        landmark: landmark, story: story, day: day);
+    await _open(open);
+  }
+
+  Future<void> _open(RoadOpen? open) async {
+    if (open == null || !mounted) return;
+    final marked = await openBibleLink(
+      context,
+      ref,
+      targetKey: open.targetKey,
+      planId: open.planId,
+      dayIndex: open.dayIndex,
+    );
+    if (marked == true && mounted) setState(() => _readAhead = false);
+  }
 
   /// Opens the reader on today's plan day. Mark read lives there; when it was
   /// marked, "read ahead" is over and Today turns to evening.

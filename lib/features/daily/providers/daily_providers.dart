@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openbaptisthymnal/core/storage/database/app_database.dart';
@@ -10,6 +11,7 @@ import '../data/plan_local_source.dart';
 import '../domain/date_key.dart';
 import '../domain/plan_progress.dart';
 import '../domain/reading_plan.dart';
+import '../domain/road_days.dart';
 import '../domain/streak.dart';
 
 /// USFM code -> book name, in the edition the reader is currently using, so a
@@ -21,6 +23,13 @@ final planBookNamesProvider = FutureProvider<Map<String, String>>((ref) async {
   final manifest = await ref.watch(bibleManifestProvider(edition).future);
   return {for (final book in manifest.books) book.code: book.name};
 });
+
+/// What happened at each landmark on the road, keyed by landmark id (bundled
+/// `landmark_stories.json`, our own retellings).
+final landmarkStoriesProvider = FutureProvider<Map<String, LandmarkStory>>(
+  (ref) async => parseLandmarkStories(
+      await rootBundle.loadString('assets/images/road/landmark_stories.json')),
+);
 
 final planLocalSourceProvider = Provider<PlanLocalSource>(
   (ref) => const PlanLocalSource(),
