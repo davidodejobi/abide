@@ -16,6 +16,7 @@ import 'package:openbaptisthymnal/features/bible/ui/open_bible_link.dart';
 import 'package:openbaptisthymnal/features/onboarding/providers/onboarding_provider.dart';
 
 import '../domain/date_key.dart';
+import '../domain/plan_schedule.dart';
 import '../domain/passage_label.dart';
 import '../domain/plan_progress.dart';
 import '../domain/reading_plan.dart';
@@ -284,35 +285,43 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
                     collapse: _collapse,
                     peekLabel: peekLabel,
                     onPeekTap: () => _showPanel(defaultF, reduce),
-                    child: reading.when(
-                      loading: () => const SizedBox(height: 160),
-                      error: (e, _) => Text(
-                        DailyStrings.loadError,
-                        style: LumText.body.copyWith(color: c.textSecondary),
-                      ),
-                      data: (d) => d == null
-                          ? _NoPlan(onChoose: _choosePlan)
-                          : d.isFinished
-                              ? _Finished(
-                                  reading: d,
-                                  bookNames: bookNames,
-                                  onChoose: _choosePlan,
-                                )
-                              : done
-                                  ? _DayDone(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        reading.when(
+                          loading: () => const SizedBox(height: 160),
+                          error: (e, _) => Text(
+                            DailyStrings.loadError,
+                            style:
+                                LumText.body.copyWith(color: c.textSecondary),
+                          ),
+                          data: (d) => d == null
+                              ? _NoPlan(onChoose: _choosePlan)
+                              : d.isFinished
+                                  ? _Finished(
                                       reading: d,
-                                      doneIndex: doneIndex,
                                       bookNames: bookNames,
-                                      streakDays: streak.current,
-                                      onReadAhead: () =>
-                                          setState(() => _readAhead = true),
+                                      onChoose: _choosePlan,
                                     )
-                                  : _Reading(
-                                      reading: d,
-                                      bookNames: bookNames,
-                                      onChange: _choosePlan,
-                                      onStart: () => _startReading(d),
-                                    ),
+                                  : done
+                                      ? _DayDone(
+                                          reading: d,
+                                          doneIndex: doneIndex,
+                                          bookNames: bookNames,
+                                          streakDays: streak.current,
+                                          onReadAhead: () =>
+                                              setState(() => _readAhead = true),
+                                        )
+                                      : _Reading(
+                                          reading: d,
+                                          bookNames: bookNames,
+                                          onChange: _choosePlan,
+                                          onStart: () => _startReading(d),
+                                        ),
+                        ),
+                        _PlanNoteCard(catchUpDays: data?.catchUpDays ?? 0),
+                      ],
                     ),
                   ),
                 ),
@@ -433,9 +442,8 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
 
   /// Height of the greeting block at the current text size, so the panel never
   /// starts over it.
-  double _headerHeight(
-      BuildContext context, String headText, double width, bool streak,
-      bool stackChip) {
+  double _headerHeight(BuildContext context, String headText, double width,
+      bool streak, bool stackChip) {
     final scaler = MediaQuery.textScalerOf(context);
     final p = TextPainter(
       text: TextSpan(text: headText, style: LumText.title1),
@@ -443,8 +451,8 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
       textScaler: scaler,
     )..layout(
         maxWidth: width -
-        2 * (LumSize.screenGutter + 4) -
-        (streak && !stackChip ? 120 : 0));
+            2 * (LumSize.screenGutter + 4) -
+            (streak && !stackChip ? 120 : 0));
     final caps = TextPainter(
       text: const TextSpan(text: 'X', style: LumText.roadLabelCaps11),
       textDirection: TextDirection.ltr,
@@ -596,20 +604,20 @@ class _Sheet extends StatelessWidget {
             Positioned.fill(
               child: IgnorePointer(
                 child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: c.scenePanel.withValues(alpha: open),
-                  borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(32)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: c.sceneShadow
-                          .withValues(alpha: c.sceneShadow.a * open),
-                      blurRadius: 28,
-                      offset: const Offset(0, -8),
-                    ),
-                  ],
+                  decoration: BoxDecoration(
+                    color: c.scenePanel.withValues(alpha: open),
+                    borderRadius:
+                        const BorderRadius.vertical(top: Radius.circular(32)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: c.sceneShadow
+                            .withValues(alpha: c.sceneShadow.a * open),
+                        blurRadius: 28,
+                        offset: const Offset(0, -8),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
               ),
             ),
             // At the peek only a narrow strip around the chip takes touches;
@@ -621,8 +629,7 @@ class _Sheet extends StatelessWidget {
                   child: SizedBox(
                     height: p > .9 ? _peekChipHeight : box.maxHeight,
                     child: Opacity(
-                        opacity: (1 - p * 2.5).clamp(0.0, 1.0),
-                        child: content),
+                        opacity: (1 - p * 2.5).clamp(0.0, 1.0), child: content),
                   ),
                 ),
               ),
@@ -648,21 +655,21 @@ class _Sheet extends StatelessWidget {
               ),
             ),
             if (chip > 0)
-            Positioned(
-              top: 6,
-              left: LumSpace.lg,
-              right: LumSpace.lg,
-              child: IgnorePointer(
-                ignoring: chip < .5,
-                child: Opacity(
-                  opacity: chip,
-                  child: Align(
-                    alignment: Alignment.topCenter,
-                    child: _PeekChip(label: peekLabel, onTap: onPeekTap),
+              Positioned(
+                top: 6,
+                left: LumSpace.lg,
+                right: LumSpace.lg,
+                child: IgnorePointer(
+                  ignoring: chip < .5,
+                  child: Opacity(
+                    opacity: chip,
+                    child: Align(
+                      alignment: Alignment.topCenter,
+                      child: _PeekChip(label: peekLabel, onTap: onPeekTap),
+                    ),
                   ),
                 ),
               ),
-            ),
           ],
         );
       },
@@ -1134,6 +1141,47 @@ class _Roomy extends StatelessWidget {
   final Widget child;
 
   @override
-  Widget build(BuildContext context) =>
-      expand ? Expanded(child: child) : child;
+  Widget build(BuildContext context) => expand ? Expanded(child: child) : child;
+}
+
+/// Small cards under the panel content: the countdown for a locked plan the
+/// person asked to be reminded about, and the kind catch-up line for a late
+/// joiner. Renders nothing when neither applies.
+class _PlanNoteCard extends ConsumerWidget {
+  const _PlanNoteCard({required this.catchUpDays});
+
+  final int catchUpDays;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final c = context.lum;
+    final today = ref.watch(planTodayProvider);
+    final reminders = ref.watch(planRemindersProvider);
+    final plans = ref.watch(availablePlansProvider).valueOrNull ?? const [];
+    final lines = <String>[
+      for (final p in plans)
+        if (reminders.contains(p.id) && PlanSchedule(p).isLocked(today))
+          DailyStrings.yearStartsIn(p.title, PlanSchedule(p).daysToGo(today)),
+      if (catchUpDays > 0) DailyStrings.catchUp(catchUpDays),
+    ];
+    if (lines.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: LumSpace.lg),
+      child: Container(
+        padding: const EdgeInsets.all(LumSpace.md),
+        decoration: BoxDecoration(
+          color: c.bgSurfaceSunken,
+          borderRadius: BorderRadius.circular(LumRadius.lg),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (final line in lines)
+              Text(line,
+                  style: LumText.subheadline.copyWith(color: c.textSecondary)),
+          ],
+        ),
+      ),
+    );
+  }
 }
