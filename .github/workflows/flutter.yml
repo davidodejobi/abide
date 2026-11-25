@@ -11,7 +11,7 @@ on:
     branches: [dev, main]
 
 env:
-  FLUTTER_VERSION: "3.38.4" # keep in step with .fvmrc
+  FLUTTER_VERSION: "3.50.1" # keep in step with .fvmrc
   # A floor, not a target. Set ~5 points under actual so it fails on regression
   # rather than nagging. Scoped to the logic layers (see the gate step): UI line
   # coverage is deliberately out, so adding a widget test never moves this
