@@ -42,9 +42,14 @@ class StepRoad extends StatelessWidget {
               ),
             ],
             const SizedBox(width: LumSpace.md),
-            Text(
-              OnboardingStrings.stepLabel(current, total).toUpperCase(),
-              style: LumText.roadLabelCaps11.copyWith(color: c.textSecondary),
+            Flexible(
+              child: Text(
+                OnboardingStrings.stepLabel(current, total).toUpperCase(),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style:
+                    LumText.roadLabelCaps11.copyWith(color: c.textSecondary),
+              ),
             ),
           ],
         ),

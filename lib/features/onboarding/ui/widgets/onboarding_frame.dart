@@ -39,7 +39,10 @@ class OnboardingFrame extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.lum;
     final welcome = step == null;
-    final keyboard = MediaQuery.viewInsetsOf(context).bottom > 0;
+    // Scaffold consumes viewInsets for its body, so read the real keyboard
+    // height from the view instead.
+    final view = View.of(context);
+    final keyboard = view.viewInsets.bottom > 0;
     return LayoutBuilder(builder: (context, box) {
       final width = box.maxWidth < _maxWidth ? box.maxWidth : _maxWidth;
       final k = width / RoadScene.designWidth;
@@ -95,7 +98,6 @@ class OnboardingFrame extends StatelessWidget {
               child: Align(
                 alignment: Alignment.topLeft,
                 child: Row(
-                  mainAxisSize: MainAxisSize.min,
                   children: [
                     LumCircleButton(
                       icon: Icons.arrow_back_rounded,
@@ -103,7 +105,7 @@ class OnboardingFrame extends StatelessWidget {
                       onPressed: onBack,
                     ),
                     const SizedBox(width: LumSpace.md),
-                    StepRoad(current: step!, total: totalSteps),
+                    Flexible(child: StepRoad(current: step!, total: totalSteps)),
                   ],
                 ),
               ),

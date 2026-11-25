@@ -17,6 +17,7 @@ class OnboardingState {
     required this.editionId,
     required this.planId,
     this.name = '',
+    this.saving = false,
   });
 
   final String languageCode;
@@ -26,17 +27,22 @@ class OnboardingState {
   /// Untrimmed, as typed.
   final String name;
 
+  /// True while [OnboardingNotifier.complete] is writing; locks back.
+  final bool saving;
+
   OnboardingState copyWith({
     String? languageCode,
     String? editionId,
     String? planId,
     String? name,
+    bool? saving,
   }) =>
       OnboardingState(
         languageCode: languageCode ?? this.languageCode,
         editionId: editionId ?? this.editionId,
         planId: planId ?? this.planId,
         name: name ?? this.name,
+        saving: saving ?? this.saving,
       );
 }
 
@@ -78,6 +84,16 @@ class OnboardingNotifier extends Notifier<OnboardingState> {
   /// onboarding complete. The flag goes last so a failure part-way lets the
   /// person run onboarding again.
   Future<void> complete() async {
+    state = state.copyWith(saving: true);
+    try {
+      await _write();
+    } catch (_) {
+      state = state.copyWith(saving: false);
+      rethrow;
+    }
+  }
+
+  Future<void> _write() async {
     final storage = ref.read(storageServiceProvider);
     final name = state.name.trim();
     if (name.isNotEmpty) {

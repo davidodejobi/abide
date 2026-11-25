@@ -27,12 +27,11 @@ class NameScreen extends HookConsumerWidget {
     final c = context.lum;
     final controller =
         useTextEditingController(text: ref.read(onboardingProvider).name);
-    final saving = useState(false);
+    final saving = ref.watch(onboardingProvider.select((s) => s.saving));
     final failed = useState(false);
 
     Future<void> finish() async {
-      if (saving.value) return;
-      saving.value = true;
+      if (saving) return;
       failed.value = false;
       final notifier = ref.read(onboardingProvider.notifier);
       notifier.setName(controller.text);
@@ -40,17 +39,16 @@ class NameScreen extends HookConsumerWidget {
         await notifier.complete();
         onDone();
       } catch (_) {
-        failed.value = true;
-        saving.value = false;
+        if (context.mounted) failed.value = true;
       }
     }
 
     return OnboardingFrame(
       step: step,
       totalSteps: total,
-      onBack: onBack,
+      onBack: saving ? null : onBack,
       primaryLabel: OnboardingStrings.startRoad,
-      onPrimary: saving.value ? null : finish,
+      onPrimary: saving ? null : finish,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -68,6 +66,7 @@ class NameScreen extends HookConsumerWidget {
             textCapitalization: TextCapitalization.words,
             textInputAction: TextInputAction.done,
             autofillHints: const [AutofillHints.givenName],
+            onChanged: ref.read(onboardingProvider.notifier).setName,
             onSubmitted: (_) => finish(),
             style: LumText.body.copyWith(color: c.textPrimary),
             cursorColor: c.buttonGoldBottom,

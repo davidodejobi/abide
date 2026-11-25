@@ -1,8 +1,10 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openbaptisthymnal/core/router/app_router.dart';
 import 'package:openbaptisthymnal/core/theme/lum_theme.dart';
 
+import '../providers/onboarding_provider.dart';
 import 'screens/bible_screen.dart';
 import 'screens/name_screen.dart';
 import 'screens/plan_screen.dart';
@@ -11,14 +13,14 @@ import 'screens/welcome_screen.dart';
 /// Hosts the first-run flow: welcome, then three steps on the road (Bible,
 /// plan, name). Steps whose data the app cannot store yet are not shown.
 @RoutePage()
-class OnboardingPage extends StatefulWidget {
+class OnboardingPage extends ConsumerStatefulWidget {
   const OnboardingPage({super.key});
 
   @override
-  State<OnboardingPage> createState() => _OnboardingPageState();
+  ConsumerState<OnboardingPage> createState() => _OnboardingPageState();
 }
 
-class _OnboardingPageState extends State<OnboardingPage> {
+class _OnboardingPageState extends ConsumerState<OnboardingPage> {
   static const _steps = 3;
   int _page = 0;
 
@@ -59,10 +61,11 @@ class _OnboardingPageState extends State<OnboardingPage> {
 
   @override
   Widget build(BuildContext context) {
+    final saving = ref.watch(onboardingProvider.select((s) => s.saving));
     return PopScope(
-      canPop: _page == 0,
+      canPop: _page == 0 && !saving,
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) _goTo(_page - 1);
+        if (!didPop && !saving && _page > 0) _goTo(_page - 1);
       },
       child: Scaffold(
         backgroundColor: context.lum.bgPage,

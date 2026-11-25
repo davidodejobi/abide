@@ -9,6 +9,7 @@ import 'package:openbaptisthymnal/features/bible/domain/verse_ref.dart';
 import 'package:openbaptisthymnal/features/bible/providers/bible_providers.dart';
 import 'package:openbaptisthymnal/features/daily/domain/reading_plan.dart';
 import 'package:openbaptisthymnal/features/daily/providers/daily_providers.dart';
+import 'package:openbaptisthymnal/features/hymn/providers/hymnal_provider.dart';
 import 'package:openbaptisthymnal/features/onboarding/providers/onboarding_provider.dart';
 import 'package:openbaptisthymnal/features/onboarding/ui/onboarding_strings.dart';
 import 'package:openbaptisthymnal/features/onboarding/ui/screens/bible_screen.dart';
@@ -130,7 +131,18 @@ void main() {
     expect(active?.planId, 'psalms-30');
   });
 
-  testWidgets('name step writes the typed name into the flow state',
+  test('complete persists the song language for the next launch', () async {
+    final c = container();
+    c.read(onboardingProvider.notifier).setLanguage('yo');
+    await c.read(onboardingProvider.notifier).complete();
+    expect(prefs.getString('song_language'), 'yo');
+    final next = ProviderContainer(
+        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)]);
+    addTearDown(next.dispose);
+    expect(next.read(languageProvider), 'yo');
+  });
+
+  testWidgets('name step writes the typed name into the provider',
       (t) async {
     final c = container();
     await pump(
@@ -139,9 +151,53 @@ void main() {
         NameScreen(step: 3, total: 3, onDone: () {}, onBack: () {}));
     expect(find.text(OnboardingStrings.nameTitle), findsOneWidget);
     await t.enterText(find.byType(TextField), 'Tolu');
-    expect(find.text('Tolu'), findsOneWidget);
+    expect(c.read(onboardingProvider).name, 'Tolu');
     await t.flushTimers();
   });
+
+  testWidgets('scene collapses when the keyboard is up', (t) async {
+    final c = container();
+    await pump(
+        t, c, NameScreen(step: 3, total: 3, onDone: () {}, onBack: () {}));
+    final before = t.getTopLeft(find.text(OnboardingStrings.nameTitle)).dy;
+    t.view.viewInsets = const FakeViewPadding(bottom: 300 * 3);
+    addTearDown(t.view.resetViewInsets);
+    await t.pump(const Duration(milliseconds: 200));
+    final after = t.getTopLeft(find.text(OnboardingStrings.nameTitle)).dy;
+    expect(after, lessThan(before - 50));
+    expect(t.takeException(), isNull);
+    await t.flushTimers();
+  });
+
+  for (final (w, h, scale) in [(320.0, 568.0, 2.0), (375.0, 667.0, 3.1)]) {
+    testWidgets('no overflow at ${w}x$h @$scale on every step', (t) async {
+      final c = container();
+      for (final screen in <Widget>[
+        BibleScreen(step: 1, total: 3, onNext: () {}, onBack: () {}),
+        PlanScreen(step: 2, total: 3, onNext: () {}, onBack: () {}),
+        NameScreen(step: 3, total: 3, onDone: () {}, onBack: () {}),
+      ]) {
+        t.view.physicalSize = Size(w * 3, h * 3);
+        t.view.devicePixelRatio = 3;
+        addTearDown(t.view.reset);
+        await t.pumpWidget(UncontrolledProviderScope(
+          container: c,
+          child: MaterialApp(
+            theme: AppTheme.lightTheme,
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(context)
+                  .copyWith(textScaler: TextScaler.linear(scale)),
+              child: child!,
+            ),
+            home: Scaffold(body: screen),
+          ),
+        ));
+        await t.pump(const Duration(milliseconds: 200));
+        expect(t.takeException(), isNull);
+      }
+      await t.flushTimers();
+    });
+  }
 
   testWidgets('layout survives large text on every step', (t) async {
     final c = container();
