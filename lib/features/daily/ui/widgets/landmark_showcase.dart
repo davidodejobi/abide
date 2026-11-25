@@ -114,6 +114,7 @@ class _LandmarkShowcaseState extends State<LandmarkShowcase>
   bool _init = false, _reduce = false, _flying = false, _started = false;
   bool _dragging = false;
   Rect _lastSlot = Rect.zero;
+  LandmarkFraming? _framing;
   OverlayEntry? _entry;
   Timer? _watchdog;
   Animation<double>? _route;
@@ -121,6 +122,9 @@ class _LandmarkShowcaseState extends State<LandmarkShowcase>
   @override
   void initState() {
     super.initState();
+    LandmarkModel3d.framingFor(widget.art).then((f) {
+      if (mounted) setState(() => _framing = f);
+    }, onError: (_) {});
     _spin.addStatusListener((s) {
       // A whoosh or a fling has run out: settle into the slow idle turn.
       if (s == AnimationStatus.completed && mounted && !_dragging && !_reduce) {
@@ -189,6 +193,23 @@ class _LandmarkShowcaseState extends State<LandmarkShowcase>
     return _palette.isEmpty ? context.lum.sceneGlow : _palette.first;
   }
 
+  /// The 3D view box around the slot (it spills past the 210 px slot).
+  static const _box = Rect.fromLTRB(-55, -8, _heroSize + 55, _heroSize + 42);
+
+  /// Where the model appears inside the slot, from its projected bounds;
+  /// the whole slot until the framing is known.
+  Rect _modelLocal() {
+    final f = _framing;
+    if (f == null || _failed3d) return Offset.zero & const Size.square(_heroSize);
+    final (l, b, r, t) = f.modelNdc;
+    double x(double n) => _box.left + (n + 1) / 2 * _box.width;
+    double y(double n) => _box.top + (1 - n) / 2 * _box.height;
+    return Rect.fromLTRB(x(l), y(t), x(r), y(b));
+  }
+
+  /// Screen rect the sprite flies to and from: where the 3D model lands.
+  Rect _heroRect() => _modelLocal().shift(_slotRect().topLeft);
+
   void _startFlight() {
     final from = widget.flight!.from!;
     _lastSlot = from;
@@ -200,7 +221,7 @@ class _LandmarkShowcaseState extends State<LandmarkShowcase>
       builder: (_) => _Flier(
         image: image,
         from: from,
-        to: _slotRect,
+        to: _heroRect,
         glow: glow,
         onDone: () {
           _entry?.remove();
@@ -228,7 +249,7 @@ class _LandmarkShowcaseState extends State<LandmarkShowcase>
     _watchdog?.cancel();
     _entry?.remove();
     _entry = null;
-    final start = _slotRect();
+    final start = _heroRect();
     final image = _mine.clone();
     final glow = _glow;
     setState(() => _flying = true); // the flier is the only copy on screen
@@ -342,10 +363,18 @@ class _LandmarkShowcaseState extends State<LandmarkShowcase>
                           AnimatedOpacity(
                             duration: const Duration(milliseconds: 220),
                             opacity: _shown3d ? 0 : 1,
-                            child: RawImage(
-                                key: const ValueKey('showcase-static'),
-                                image: _mine,
-                                fit: BoxFit.contain),
+                            child: Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                Positioned.fromRect(
+                                  rect: _modelLocal(),
+                                  child: RawImage(
+                                      key: const ValueKey('showcase-static'),
+                                      image: _mine,
+                                      fit: BoxFit.contain),
+                                ),
+                              ],
+                            ),
                           ),
                           // The 3D view is wider and taller than the slot so
                           // the whole podium fits; its podium centre lands
@@ -362,7 +391,7 @@ class _LandmarkShowcaseState extends State<LandmarkShowcase>
                               turns: _spin,
                               active: _landed,
                               podiumColor: Color.lerp(c.bgSurface,
-                                  colors.first, .18)!,
+                                  colors.first, .55)!,
                               // Called from the scene's tick, so state
                               // changes wait for the frame to finish.
                               onShown: () => WidgetsBinding.instance

@@ -16,7 +16,7 @@ double flingTurnsPerSecond(double vx) => vx / dragPxPerTurn;
 const podiumDepth = .19;
 
 /// Podium radius as a multiple of the model's ground footprint radius.
-const podiumFootprintScale = 1.2;
+const podiumFootprintScale = 1.05;
 
 /// Where the podium centre sits in the view, in NDC y (-1 is the bottom), so
 /// the stage's spotlight lands on it.
@@ -33,6 +33,9 @@ class LandmarkFraming {
     required this.targetY,
     this.yawStartDeg = 0,
     this.podiumRadius = 1,
+    this.modelHalfX = 0,
+    this.modelHalfZ = 0,
+    this.modelHeight = 0,
   });
 
   /// Fits the camera to a model with the given bounds (glTF space, metres).
@@ -84,6 +87,9 @@ class LandmarkFraming {
           targetY: ty,
           yawStartDeg: yawStartDeg,
           podiumRadius: radius,
+          modelHalfX: hx,
+          modelHalfZ: hz,
+          modelHeight: height,
         );
       }
     }
@@ -112,6 +118,26 @@ class LandmarkFraming {
   /// Radius of the static podium under the model, in metres.
   final double podiumRadius;
 
+  /// Model bounds: half extents on the ground and height, in metres.
+  final double modelHalfX, modelHalfZ, modelHeight;
+
+  /// The model's box as seen in the view, in NDC: (left, bottom, right, top).
+  (double, double, double, double) get modelNdc {
+    var l = 9.0, b = 9.0, r = -9.0, t = -9.0;
+    for (final x in [-modelHalfX, modelHalfX]) {
+      for (final y in [0.0, modelHeight]) {
+        for (final z in [-modelHalfZ, modelHalfZ]) {
+          final (px, py) = project((x, y, z));
+          l = math.min(l, px);
+          r = math.max(r, px);
+          b = math.min(b, py);
+          t = math.max(t, py);
+        }
+      }
+    }
+    return (l, b, r, t);
+  }
+
   /// Vertical field of view and look-down angle: a three-quarter view of the
   /// podium.
   static const fovYDeg = 20.0;
@@ -124,7 +150,7 @@ class LandmarkFraming {
   static const viewFill = .97;
 
   /// How high the model top may reach (NDC), leaving room for the close button.
-  static const topFill = .8;
+  static const topFill = .9;
 
   double get yawStartTurns => yawStartDeg / 360;
 

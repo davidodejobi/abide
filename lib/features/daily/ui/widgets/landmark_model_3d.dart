@@ -35,6 +35,14 @@ class LandmarkModel3d extends StatefulWidget {
   final Color podiumColor;
   final VoidCallback onShown, onFailed;
 
+
+  /// The cached framing for [art], loading the manifest once.
+  static Future<LandmarkFraming?> framingFor(String art) async {
+    _LandmarkModel3dState._framings ??=
+        parseFramings(await rootBundle.loadString('${_LandmarkModel3dState._dir}/manifest.json'));
+    return _LandmarkModel3dState._framings![art];
+  }
+
   @override
   State<LandmarkModel3d> createState() => _LandmarkModel3dState();
 }
@@ -42,6 +50,7 @@ class LandmarkModel3d extends StatefulWidget {
 class _LandmarkModel3dState extends State<LandmarkModel3d> {
   static const _dir = 'assets/images/road/models';
   static Map<String, LandmarkFraming>? _framings;
+
   static bool _logged = false;
 
   Scene? _scene;
