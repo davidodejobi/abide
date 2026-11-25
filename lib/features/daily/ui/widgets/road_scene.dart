@@ -220,6 +220,7 @@ class RoadSceneState extends State<RoadScene> with TickerProviderStateMixin {
   Offset? debugLandmarkTap(int day, [int slot = 0]) {
     final list = _landmarks[day];
     if (list == null || slot >= list.length) return null;
+    if (!_layout.containsKey(list[slot].id)) return null;
     final r = _landmarkRect(_layout, list[slot].id, _cameraAt(_lookNow()));
     return r.center.translate(0, 8) * (widget.width / RoadScene.designWidth);
   }
@@ -555,7 +556,8 @@ class RoadSceneState extends State<RoadScene> with TickerProviderStateMixin {
       landmarks: _landmarks,
       layout: _layout,
       glowId:
-          glowingLandmark(_landmarks, widget.currentDay ?? widget.totalDays),
+          glowingLandmark(
+          _landmarks, widget.currentDay ?? widget.totalDays, _layout),
       liftedId: widget.liftedId,
       showTomorrowTag: widget.showTomorrowTag && widget.currentDay != null,
       statuses: widget.statuses,
@@ -663,6 +665,7 @@ class RoadSceneState extends State<RoadScene> with TickerProviderStateMixin {
       final lms = _landmarks[n] ?? const <Landmark>[];
       for (var i = 0; i < lms.length; i++) {
         final lm = lms[i];
+        if (!_layout.containsKey(lm.id)) continue; // not on the road
         final r = _landmarkRect(_layout, lm.id, cam);
         out.add(CustomPainterSemantics(
           rect: Rect.fromLTRB(r.left * k, r.top * k, r.right * k, r.bottom * k),
@@ -1155,8 +1158,6 @@ class _RoadPainter extends CustomPainter {
   /// one, and nothing is allocated per stop.
   void _worldSprites(Canvas canvas, Paint sp, double pos, double look,
       Offset cam, double pulse, double dusk, Color tint) {
-    // Landmarks slide up to ~4 stops from theirs (see layoutLandmarks): look
-    // that much further each way for them.
     final v =
         geo.visibleStops(look, top: -250, bottom: ch + 250, focus: focusOf());
     for (var n = v.last; n >= v.first; n--) {
@@ -1325,6 +1326,7 @@ class _RoadPainter extends CustomPainter {
 
   void _landmark(Canvas canvas, Paint sp, int n, Landmark lm, double pos,
       Offset cam, double pulse, Color tint) {
+    if (!layout.containsKey(lm.id)) return; // no room on the road
     final artKey = lm.art;
     // No sprite (none drawn, failed, or not decoded yet): a signpost stands in.
     final img = artKey == null ? null : art?['lm_$artKey'];

@@ -23,39 +23,25 @@ void main() {
     expect(landmarkSize.shortestSide, greaterThanOrEqualTo(landmarkMinHit));
   });
 
-  test('first 60 days: no landmark touches a stop or another landmark', () {
-    final ids = [
-      for (var n = 1; n <= 60; n++) ...?byDay[n]?.map((l) => l.id),
-    ];
-    expect(ids.length, greaterThan(5));
-    for (final id in ids) {
-      final r = layout[id]!;
-      expect(r.left, greaterThanOrEqualTo(0));
-      expect(r.right, lessThanOrEqualTo(390));
-      for (var n = 1; n <= 70; n++) {
-        final s = geo.stop(n);
-        expect(
-            r.overlaps(stopFootprint(195 + s.x, s.y).inflate(landmarkStopGap)),
-            isFalse,
-            reason: '$id overlaps stop $n');
-      }
-      for (final o in ids) {
-        if (o == id) continue;
-        expect(r.overlaps(layout[o]!.inflate(landmarkGap)), isFalse,
-            reason: '$id overlaps $o');
-      }
-    }
-  });
-
-  test(
-      'the whole year, dense gospel days included, is clear of stops and each other',
-      () {
-    for (final e in byDay.entries) {
+  void checkClear(Iterable<MapEntry<int, List<Landmark>>> days) {
+    for (final e in days) {
       for (final l in e.value) {
-        final r = layout[l.id]!;
-        for (var n = e.key - 5; n <= e.key + 5; n++) {
+        final r = layout[l.id];
+        if (r == null) continue; // skipped on the road
+        expect(r.left, greaterThanOrEqualTo(0));
+        expect(r.right, lessThanOrEqualTo(390));
+        final own = geo.stop(e.key);
+        final dOwn = (r.center - Offset(195 + own.x, own.y)).distance;
+        expect((r.center.dy - own.y).abs(), lessThan(geo.spacing / 2),
+            reason: '${l.id} leaves its own stretch of road');
+        for (var n = e.key - 6; n <= e.key + 6; n++) {
           if (n < 1) continue;
           final s = geo.stop(n);
+          if (n != e.key) {
+            expect(
+                (r.center - Offset(195 + s.x, s.y)).distance, greaterThan(dOwn),
+                reason: '${l.id} is nearer stop $n than its own ${e.key}');
+          }
           expect(
               r.overlaps(
                   stopFootprint(195 + s.x, s.y).inflate(landmarkStopGap)),
@@ -69,6 +55,32 @@ void main() {
         }
       }
     }
+  }
+
+  test('first 60 days: nothing touches, each landmark nearest its own stop',
+      () {
+    final first = byDay.entries.where((e) => e.key <= 60).toList();
+    expect(first.expand((e) => e.value).length, greaterThan(5));
+    for (final e in first) {
+      expect(layout.containsKey(e.value.first.id), isTrue);
+    }
+    checkClear(first);
+  });
+
+  test('the whole year, dense gospel days included, is clear and local', () {
+    checkClear(byDay.entries);
+    final skipped = [
+      for (final e in byDay.entries)
+        for (final l in e.value)
+          if (!layout.containsKey(l.id)) '${e.key}:${l.id}',
+    ];
+    // ignore: avoid_print
+    print('skipped on the road: ${skipped.length} $skipped');
+    // A day's first landmark is never the one dropped.
+    for (final e in byDay.entries) {
+      expect(layout.containsKey(e.value.first.id), isTrue,
+          reason: 'primary landmark of day ${e.key} was skipped');
+    }
   });
 
   test('layout is deterministic', () {
@@ -77,7 +89,7 @@ void main() {
 
   test('exactly one landmark glows, the nearest to the day being read', () {
     for (final day in [1, 2, 17, 60, 365]) {
-      final g = glowingLandmark(byDay, day)!;
+      final g = glowingLandmark(byDay, day, layout)!;
       final at =
           byDay.entries.firstWhere((e) => e.value.any((l) => l.id == g)).key;
       final dist = (at - day).abs();
