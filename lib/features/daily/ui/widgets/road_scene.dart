@@ -940,8 +940,17 @@ class _RoadPainter extends CustomPainter {
       final landLow = _l(c.sceneMeadowBottom, c.sceneDuskLand, dusk);
       final clear = land.withValues(alpha: 0);
       cache.groundPaint = Paint()
-        ..shader = ui.Gradient.linear(const Offset(0, 120), Offset(0, ch),
-            [clear, land, landLow], [0, .2, 1]);
+        ..shader = ui.Gradient.linear(
+            const Offset(0, 120),
+            Offset(0, ch),
+            [
+              clear,
+              land.withValues(alpha: .25),
+              land.withValues(alpha: .7),
+              land,
+              landLow
+            ],
+            const [0, .07, .15, .27, 1]);
       cache.mistPaint = Paint()
         ..shader = ui.Gradient.linear(
             const Offset(0, 30),
@@ -1346,6 +1355,8 @@ class _RoadPainter extends CustomPainter {
   void _labels(Canvas canvas, double pos, Offset cam) {
     final settled = walk.value == 0 || walk.value == 1;
     final taken = <Rect>[];
+    // Nothing is labelled under the reading panel or its peek chip.
+    final limit = focusOf() * 392 / RoadGeometry.focusY - 4;
     for (final h in cache.hits) {
       final here = settled && (pos - h.n).abs() < .01;
       if (!here) continue;
@@ -1355,8 +1366,9 @@ class _RoadPainter extends CustomPainter {
           LumText.caption
               .copyWith(color: c.textPrimary, fontWeight: FontWeight.w600),
           maxWidth: 220);
-      taken.add(_chip(
-          canvas, Offset(h.rect.center.dx, h.rect.top + 8), tp, 1));
+      final at = Offset(h.rect.center.dx, h.rect.top + 8);
+      if (_chipRect(at, tp).bottom > limit) continue;
+      taken.add(_chip(canvas, at, tp, 1));
     }
     if (showTomorrowTag && settled) {
       final s = _stopAt(to.round(), cam);
@@ -1374,7 +1386,7 @@ class _RoadPainter extends CustomPainter {
         final top = hit.map((r) => r.top).reduce(math.min);
         at = Offset(at.dx, top - 4 - mine.height / 2 + 14);
       }
-      _chip(canvas, at, tp, 1);
+      if (_chipRect(at, tp).bottom <= limit) _chip(canvas, at, tp, 1);
     }
   }
 
