@@ -66,7 +66,7 @@ void main() {
     expect(
       DailyStrings.roadShareText(
           day: 42, plan: 'Bible in a Year', streak: 7, passage: 'John 3'),
-      'Day 42 of Bible in a Year\n7 day streak\nJohn 3',
+      'Day 42 of Bible in a Year\n7-day streak\nJohn 3',
     );
   });
 }

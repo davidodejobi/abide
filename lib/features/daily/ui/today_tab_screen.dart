@@ -567,7 +567,7 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
           day: day,
           sprite: sprite,
           from: sprite == null ? null : from,
-          onShareCard: () => _shareLandmark(landmark, day));
+          onShareCard: () => _shareLandmark(landmark));
     } finally {
       // Whatever happened (error, timeout, swipe), the sprite is back on the
       // road and the road repaints now.
@@ -576,20 +576,33 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
     await _open(open);
   }
 
-  /// The share card for the reader's own day, with the landmark nearest it.
+  /// The share card for the reader's own day. [landmark] (one they tapped)
+  /// only supplies the sprite and the "Near" line; otherwise the nearest
+  /// landmark within a week of the day is used, or none.
   Future<void> _shareRoad(TodaysReading d, int day, int streak,
-      Map<String, String> bookNames) async {
-    Landmark? near;
-    try {
-      final art = await RoadArt.load();
-      final byDay = landmarksByDay(d.plan, art.landmarks, placeArtless: true);
-      for (var i = 0; i <= d.plan.dayCount && near == null; i++) {
-        near = (byDay[day - i] ?? byDay[day + i])?.firstOrNull;
+      Map<String, String> bookNames,
+      {Landmark? landmark}) async {
+    var near = landmark;
+    if (near == null) {
+      try {
+        final art = await RoadArt.load();
+        final byDay = landmarksByDay(d.plan, art.landmarks, placeArtless: true);
+        for (var i = 0; i <= 7 && near == null; i++) {
+          near = (byDay[day - i] ?? byDay[day + i])?.firstOrNull;
+        }
+      } catch (_) {
+        // The card is fine without a landmark.
       }
-    } catch (_) {
-      // The card is fine without a landmark.
     }
     final planDay = d.plan.dayAt(day);
+    final sprite = near?.art;
+    if (sprite != null && mounted) {
+      // Decode the sprite first so the card never exports without it.
+      try {
+        await precacheImage(
+            AssetImage('assets/images/road/living/lm_$sprite.webp'), context);
+      } catch (_) {}
+    }
     if (!mounted) return;
     await context.router.push(RoadShareCardRoute(
       day: day,
@@ -599,22 +612,26 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
       passage:
           planDay == null ? null : formatPassages(planDay.passages, bookNames),
       landmarkTitle: near?.title,
-      landmarkArt: near?.art,
+      landmarkArt: sprite,
     ));
   }
 
-  /// The card for a landmark the reader has reached; it opens over the sheet.
-  Future<void> _shareLandmark(Landmark landmark, int day) {
+  /// The card from a landmark sheet: the reader's own day and progress, never
+  /// the landmark's day, so it cannot claim a day they have not read.
+  Future<void> _shareLandmark(Landmark landmark) async {
     final d = ref.read(todaysReadingProvider).valueOrNull;
-    return context.router.push(RoadShareCardRoute(
-      day: day,
-      totalDays: d?.plan.dayCount ?? day,
-      planTitle: d?.plan.title ?? '',
-      streak: ref.read(streakProvider).current,
-      passage: landmark.ref,
-      landmarkTitle: landmark.title,
-      landmarkArt: landmark.art,
-    ));
+    if (d == null) return;
+    final next = d.day?.dayIndex;
+    final day = next == null
+        ? d.plan.dayCount
+        : d.isAnchored
+            ? (d.todayRead ? d.statuses!.today : next)
+            : ref.read(isTodayCompleteProvider) && next > 1
+                ? next - 1
+                : next;
+    await _shareRoad(d, day, ref.read(streakProvider).current,
+        ref.read(planBookNamesProvider).valueOrNull ?? const {},
+        landmark: landmark);
   }
 
   Future<void> _open(RoadOpen? open) async {
