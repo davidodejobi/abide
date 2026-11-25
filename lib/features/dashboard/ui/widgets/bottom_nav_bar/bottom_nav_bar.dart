@@ -42,10 +42,16 @@ class GlassTabBar extends StatefulWidget {
 class _GlassTabBarState extends State<GlassTabBar>
     with SingleTickerProviderStateMixin {
   /// Fractional tab position; unbounded so the spring may overshoot.
-  late final AnimationController _pos = AnimationController.unbounded(
-    vsync: this,
-    value: widget.selectedIndex.toDouble(),
-  );
+  late final AnimationController _pos;
+
+  @override
+  void initState() {
+    super.initState();
+    _pos = AnimationController.unbounded(
+      vsync: this,
+      value: widget.selectedIndex.toDouble(),
+    );
+  }
 
   @override
   void didUpdateWidget(GlassTabBar old) {
@@ -108,6 +114,8 @@ class _GlassTabBarState extends State<GlassTabBar>
                   final itemW = box.maxWidth / n;
                   return Stack(
                     alignment: Alignment.center,
+                    // Spring overshoot may leave the cell; the bar's ClipRRect trims it.
+                    clipBehavior: Clip.none,
                     children: [
                       // Selection indicator, behind the icons.
                       if (reduce)
@@ -182,7 +190,9 @@ class _GlassPill extends StatelessWidget {
     // Slots hand us their full height; centre a 52pt capsule (66 max wide).
     return Center(
       child: LayoutBuilder(builder: (context, box) {
-        final w = (box.maxWidth - 4).clamp(0.0, itemWidth + 40);
+        // 66pt cap (the item column) plus whatever stretch the slot adds.
+        final base = itemWidth - 4 < 66 ? itemWidth - 4 : 66.0;
+        final w = base + (box.maxWidth - itemWidth).clamp(0.0, 40.0);
         return Container(
           width: w,
           height: GlassTabBar._itemHeight,

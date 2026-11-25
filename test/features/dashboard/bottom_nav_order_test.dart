@@ -7,6 +7,45 @@ import 'package:openbaptisthymnal/features/dashboard/ui/widgets/bottom_nav_bar/b
 import '../../support/pump_app.dart';
 
 void main() {
+  testWidgets('pill stays at most 66pt wide on an 820pt bar', (tester) async {
+    tester.view.physicalSize = const Size(820, 600);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpApp(Align(
+      alignment: Alignment.bottomCenter,
+      child: GlassTabBar(
+        labels: const ['Today', 'Bible', 'Songs', 'Notes', 'You'],
+        selectedIndex: 1,
+        onTabSelected: (_) {},
+      ),
+    ));
+    final pill = find.byWidgetPredicate(
+        (w) => w is Container && w.constraints?.maxHeight == 52);
+    expect(pill, findsOneWidget);
+    expect(tester.getSize(pill).width, lessThanOrEqualTo(66));
+    await tester.flushTimers();
+  });
+
+  testWidgets('reduced motion: replacing the bar does not throw',
+      (tester) async {
+    await tester.pumpWidget(MediaQuery(
+      data: const MediaQueryData(disableAnimations: true),
+      child: MaterialApp(
+        theme: AppTheme.darkTheme,
+        home: Scaffold(
+          body: GlassTabBar(
+            labels: const ['Today', 'Bible'],
+            selectedIndex: 0,
+            onTabSelected: (_) {},
+          ),
+        ),
+      ),
+    ));
+    await tester.pump();
+    await tester.pumpWidget(const SizedBox());
+    expect(tester.takeException(), isNull);
+  });
+
   test('tab order is Today, Bible, Songs, Notes, You', () {
     expect(BottomNavTab.values.map((t) => t.label),
         ['Today', 'Bible', 'Songs', 'Notes', 'You']);

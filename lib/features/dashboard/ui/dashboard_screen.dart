@@ -29,8 +29,7 @@ class DashboardScreen extends HookConsumerWidget {
             bottom: false,
             child: IndexedStack(
               index: currentIndex,
-              // Order must match `tabs:` in _BottomNavigation below, and
-              // BottomNavTab's ordinals. Three lists, hand-synced.
+              // Order must match BottomNavTab's ordinals (the bar's labels).
               // TickerMode: IndexedStack keeps hidden tabs mounted with tickers
               // running, so mute every tab but the visible one.
               children: [
