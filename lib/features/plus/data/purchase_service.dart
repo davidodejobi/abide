@@ -33,3 +33,19 @@ class FakePurchaseService implements PurchaseService {
     return PurchaseOutcome.nothingToRestore;
   }
 }
+
+/// Used when Plus is switched off (release): nothing can be bought or granted.
+class DisabledPurchaseService implements PurchaseService {
+  const DisabledPurchaseService();
+
+  @override
+  Future<PurchaseOutcome> startTrial(PlusPlan plan) async =>
+      PurchaseOutcome.failed;
+
+  @override
+  Future<PurchaseOutcome> restore() async => PurchaseOutcome.failed;
+
+  @override
+  Future<PurchaseOutcome> sponsor(SponsorGift gift) async =>
+      PurchaseOutcome.failed;
+}

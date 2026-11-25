@@ -1,3 +1,4 @@
+import '../data/purchase_service.dart';
 import '../plus_config.dart';
 
 /// What the app knows about the reader's Plus access.
@@ -6,15 +7,18 @@ class Entitlement {
     this.isPlus = false,
     this.trialStartedAt,
     this.reminderDismissed = false,
+    this.plan,
   });
 
   final bool isPlus;
+  final PlusPlan? plan;
   final DateTime? trialStartedAt;
   final bool reminderDismissed;
 
   Entitlement copyWith({bool? isPlus, bool? reminderDismissed}) => Entitlement(
         isPlus: isPlus ?? this.isPlus,
         trialStartedAt: trialStartedAt,
+        plan: plan,
         reminderDismissed: reminderDismissed ?? this.reminderDismissed,
       );
 }
@@ -34,8 +38,16 @@ bool trialReminderDue(Entitlement e, DateTime now) {
   return day >= PlusConfig.reminderDay && day <= PlusConfig.trialDays;
 }
 
-/// The soft offer at the end of onboarding: only for readers without Plus.
-bool showOnboardingOffer(Entitlement e) => !e.isPlus;
+/// Release gate selector, see [PlusConfig.enabled].
+bool plusFeaturesEnabled({required bool debug, required bool flag}) =>
+    debug || flag;
 
-/// Only [PlusFeature] extras are gated. Reading is never asked about.
-bool isGated(Entitlement e, PlusFeature feature) => !e.isPlus;
+/// The soft offer at the end of onboarding: only when Plus is switched on and
+/// the reader does not have it.
+bool showOnboardingOffer(Entitlement e, {required bool enabled}) =>
+    enabled && !e.isPlus;
+
+/// Only [PlusFeature] extras are gated, and only when Plus is switched on.
+/// Reading is never asked about.
+bool isGated(Entitlement e, PlusFeature feature, {required bool enabled}) =>
+    enabled && !e.isPlus;

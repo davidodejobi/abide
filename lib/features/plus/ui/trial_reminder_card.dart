@@ -4,6 +4,9 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:openbaptisthymnal/core/providers/service_providers.dart';
 import 'package:openbaptisthymnal/core/theme/lum_theme.dart';
 
+import 'package:openbaptisthymnal/features/daily/ui/daily_strings.dart';
+
+import '../data/purchase_service.dart';
 import '../domain/plus_rules.dart';
 import '../plus_config.dart';
 import '../providers/plus_providers.dart';
@@ -14,11 +17,9 @@ class TrialReminderCard extends ConsumerWidget {
   const TrialReminderCard({super.key, this.now});
   final DateTime? now;
 
-  static String _date(DateTime d) =>
-      '${d.day}/${d.month}/${d.year}';
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    if (!ref.watch(plusEnabledProvider)) return const SizedBox.shrink();
     final e = ref.watch(plusProvider);
     final at = now ?? DateTime.now();
     if (!trialReminderDue(e, at)) return const SizedBox.shrink();
@@ -42,7 +43,11 @@ class TrialReminderCard extends ConsumerWidget {
           Text(PlusStrings.reminderTitle(daysLeft),
               style: LumText.bodyEmphasized.copyWith(color: c.textPrimary)),
           const SizedBox(height: LumSpace.xs),
-          Text(PlusStrings.reminderBody(_date(end), PlusConfig.annualPrice),
+          Text(PlusStrings.reminderBody(
+                  DailyStrings.dateLong(end),
+                  e.plan == PlusPlan.monthly
+                      ? PlusConfig.monthlyPrice
+                      : PlusConfig.annualPrice),
               style: LumText.subheadline.copyWith(color: c.textSecondary)),
           Row(
             children: [
@@ -53,7 +58,7 @@ class TrialReminderCard extends ConsumerWidget {
               ),
               TextButton(
                 onPressed: () => ref.read(plusProvider.notifier).dismissReminder(),
-                child: const Text('Got it'),
+                child: const Text(PlusStrings.gotIt),
               ),
             ],
           ),

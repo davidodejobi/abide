@@ -33,7 +33,8 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
   void _finish() => context.router.replaceAll([const DashboardRoute()]);
 
   /// Onboarding is saved; offer Plus once, softly, to readers without it.
-  void _afterName() => showOnboardingOffer(ref.read(plusProvider))
+  void _afterName() => showOnboardingOffer(ref.read(plusProvider),
+          enabled: ref.read(plusEnabledProvider))
       ? _goTo(4)
       : _finish();
 
@@ -66,7 +67,12 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
           onBack: () => _goTo(2),
         );
       default:
-        return PlusOfferScreen(key: const ValueKey(4), onDone: _finish);
+        return PlusOfferScreen(
+          key: const ValueKey(4),
+          onDone: _finish,
+          onSeePlans: () => context.router
+              .replaceAll([const DashboardRoute(), const PlusRoute()]),
+        );
     }
   }
 

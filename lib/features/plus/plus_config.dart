@@ -1,7 +1,16 @@
+import 'package:flutter/foundation.dart';
+
+import 'domain/plus_rules.dart';
+
 /// Plus config and copy. Prices are placeholders until the billing provider
 /// is chosen; real prices will come from the store, in the reader's currency.
 /// Plain English, denomination-neutral.
 abstract final class PlusConfig {
+  /// Release gate: Plus UI exists only in debug builds, or when built with
+  /// --dart-define=PLUS_ENABLED=true. Off in release until billing is real.
+  static final enabled = plusFeaturesEnabled(
+      debug: kDebugMode, flag: const bool.fromEnvironment('PLUS_ENABLED'));
+
   static const trialDays = 7;
   static const reminderDay = 5;
   static const monthlyPrice = '\$4.99';
@@ -46,6 +55,8 @@ abstract final class PlusStrings {
   static const privacy = 'Privacy';
   static const youHavePlus = 'You have Plus. Thank you.';
   static const manage = 'Manage subscription';
+  static const gotIt = 'Got it';
+  static const seePlans = 'See Plus plans';
   static const failed = 'That did not go through. You have not been charged.';
   static const sponsorRow = 'Sponsor a reader';
   static const plusRow = 'Lumway Plus';

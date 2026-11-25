@@ -64,6 +64,7 @@ class _SettingsTabScreenState extends ConsumerState<SettingsTabScreen>
               child: Text(YouStrings.title,
                   style: LumText.largeTitle.copyWith(color: c.textPrimary)),
             ),
+            if (ref.watch(plusEnabledProvider)) ...[
             const SizedBox(height: LumSpace.lg),
             const TrialReminderCard(),
             YouGroup(children: [
@@ -80,8 +81,9 @@ class _SettingsTabScreenState extends ConsumerState<SettingsTabScreen>
                 title: PlusStrings.sponsorRow,
                 onTap: () => context.router.push(const SponsorRoute()),
               ),
-              // Example Plus gate: the sheet opens only for readers without Plus.
-              YouRow(
+              // Example Plus gate, debug only until a real Plus feature exists.
+              if (kDebugMode)
+                YouRow(
                 icon: PhosphorIcons.cloudArrowUp(),
                 title: PlusFeature.sync.title,
                 onTap: () => requirePlus(context, ref, PlusFeature.sync),
@@ -97,6 +99,7 @@ class _SettingsTabScreenState extends ConsumerState<SettingsTabScreen>
                   ),
                 ),
             ]),
+            ],
             const YouSectionLabel(YouStrings.appearance),
             YouGroup(children: [
               YouControlRow(
