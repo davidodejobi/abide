@@ -335,6 +335,7 @@ class _LandmarkShowcaseState extends State<LandmarkShowcase>
                       opacity: _flying ? 0 : 1,
                       child: Stack(
                         fit: StackFit.expand,
+                        clipBehavior: Clip.none,
                         children: [
                           // Seated on the podium; fades out once the 3D
                           // model is up, and stays if it never is.
@@ -346,12 +347,22 @@ class _LandmarkShowcaseState extends State<LandmarkShowcase>
                                 image: _mine,
                                 fit: BoxFit.contain),
                           ),
+                          // The 3D view is wider and taller than the slot so
+                          // the whole podium fits; its podium centre lands
+                          // on the stage's spotlight (see podiumAnchorY).
                           if (!_failed3d)
-                            LandmarkModel3d(
+                            Positioned(
+                              left: -55,
+                              right: -55,
+                              top: -8,
+                              bottom: -42,
+                              child: LandmarkModel3d(
                               key: const ValueKey('showcase-3d'),
                               art: widget.art,
                               turns: _spin,
                               active: _landed,
+                              podiumColor: Color.lerp(c.bgSurface,
+                                  colors.first, .18)!,
                               // Called from the scene's tick, so state
                               // changes wait for the frame to finish.
                               onShown: () => WidgetsBinding.instance
@@ -365,6 +376,7 @@ class _LandmarkShowcaseState extends State<LandmarkShowcase>
                                   setState(() => _failed3d = true);
                                 }
                               },
+                              ),
                             ),
                         ],
                       ),
@@ -613,7 +625,14 @@ class _StagePainter extends CustomPainter {
       );
     }
 
-    // Podium: side wall, then the lit top.
+    // The 3D scene draws its own podium, wall, contact shadow and rim.
+    if (!contact) _podium(canvas, top, rx, ry, lit, tint);
+    _shockwave(canvas, top, rx, ry, tint);
+  }
+
+  /// The flat podium behind the static sprite.
+  void _podium(Canvas canvas, Offset top, double rx, double ry, double lit,
+      Color tint) {
     final bottom = top.translate(0, 24);
     final side = Path()
       ..moveTo(top.dx - rx, top.dy)
@@ -640,15 +659,6 @@ class _StagePainter extends CustomPainter {
     final topOval = Rect.fromCenter(center: top, width: rx * 2, height: ry * 2);
     canvas.drawOval(
         topOval, Paint()..color = Color.lerp(surface, tint, .18 * lit)!);
-    // Contact shadow under a 3D model (the sprite carries its own).
-    if (contact) {
-      canvas.drawOval(
-        Rect.fromCenter(center: top.translate(0, 4), width: 150, height: 34),
-        Paint()
-          ..color = Colors.black.withValues(alpha: .34)
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 9),
-      );
-    }
     // Pool of light.
     canvas.drawOval(
       topOval.deflate(10),
@@ -677,7 +687,11 @@ class _StagePainter extends CustomPainter {
       );
     }
 
-    // Landing shockwave.
+  }
+
+  /// Landing shockwave.
+  void _shockwave(
+      Canvas canvas, Offset top, double rx, double ry, Color tint) {
     final b = burst.value;
     if (!reduce && b > 0 && b < 1) {
       final e = Curves.easeOut.transform(b);

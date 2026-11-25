@@ -8,7 +8,7 @@ import 'package:vector_math/vector_math.dart' as vm;
 
 import '../../domain/landmark_3d.dart';
 
-/// A landmark glb standing on the podium, turned by [turns] (the showcase's
+/// A landmark glb standing on a 3D podium (static; only the model turns), turned by [turns] (the showcase's
 /// spin controller, so whoosh, idle turn and drag inertia drive it).
 ///
 /// It loads its one model as soon as it is built, but only mounts the 3D view
@@ -22,6 +22,7 @@ class LandmarkModel3d extends StatefulWidget {
     required this.art,
     required this.turns,
     required this.active,
+    required this.podiumColor,
     required this.onShown,
     required this.onFailed,
   });
@@ -29,6 +30,9 @@ class LandmarkModel3d extends StatefulWidget {
   final String art;
   final Animation<double> turns;
   final bool active;
+
+  /// Tint of the podium top and wall (the wall is shaded darker by the glb).
+  final Color podiumColor;
   final VoidCallback onShown, onFailed;
 
   @override
@@ -41,7 +45,7 @@ class _LandmarkModel3dState extends State<LandmarkModel3d> {
   static bool _logged = false;
 
   Scene? _scene;
-  Node? _pivot;
+  Node? _pivot, _podium;
   PerspectiveCamera? _camera;
   LandmarkFraming? _framing;
   bool _shown = false;
@@ -70,6 +74,11 @@ class _LandmarkModel3dState extends State<LandmarkModel3d> {
       if (framing == null) throw StateError('no framing for ${widget.art}');
       final model = await Node.fromGlbAsset('$_dir/${widget.art}.glb');
       if (!mounted) return;
+      final podium = await Node.fromGlbAsset('$_dir/podium.glb');
+      if (!mounted) return;
+      // Unit-radius podium, top face at y=0, sized from the model footprint.
+      final r = framing.podiumRadius;
+      podium.localTransform = vm.Matrix4.diagonal3Values(r, r, r);
       final pivot = Node()..add(model);
       // Soft key over a dim ambient: the glb's colour is already shaded, so
       // the lights only add gentle form, not a second full shading.
@@ -79,11 +88,13 @@ class _LandmarkModel3dState extends State<LandmarkModel3d> {
           direction: vm.Vector3(.35, -1, .55),
           intensity: .9,
         )
+        ..add(podium)
         ..add(pivot);
       final (x, y, z) = framing.eye;
       setState(() {
         _scene = scene;
         _pivot = pivot;
+        _podium = podium;
         _framing = framing;
         _camera = PerspectiveCamera(
           fovRadiansY: LandmarkFraming.fovYDeg * math.pi / 180,
@@ -91,9 +102,33 @@ class _LandmarkModel3dState extends State<LandmarkModel3d> {
           target: vm.Vector3(0, framing.targetY, 0),
         );
       });
+      _tint();
     } catch (e) {
       _fail(e);
     }
+  }
+
+  /// Podium colour through the material's base colour (the glb's vertex
+  /// colours supply the darker wall).
+  void _tint() {
+    void walk(Node n) {
+      for (final p in n.mesh?.primitives ?? const <MeshPrimitive>[]) {
+        final m = p.material;
+        if (m is PhysicallyBasedMaterial) {
+          final c = widget.podiumColor;
+          m.baseColorFactor = vm.Vector4(c.r, c.g, c.b, 1);
+        }
+      }
+      n.children.forEach(walk);
+    }
+
+    if (_podium != null) walk(_podium!);
+  }
+
+  @override
+  void didUpdateWidget(LandmarkModel3d old) {
+    super.didUpdateWidget(old);
+    if (old.podiumColor != widget.podiumColor) _tint();
   }
 
   void _tick(Duration _, double __) {

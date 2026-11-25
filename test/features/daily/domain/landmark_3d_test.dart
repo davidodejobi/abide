@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
 import 'dart:typed_data';
@@ -6,22 +7,56 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:openbaptisthymnal/features/daily/domain/landmark_3d.dart';
 
 void main() {
-  test('framing reads the manifest entry', () {
-    final f = parseFramings(
-        '{"landmarks":{"ark":{"camera_distance":12.73,"camera_target_y":1.757,"yaw_start_deg":90}}}');
+  const ark = '{"landmarks":{"ark":{"camera_distance":12.73,'
+      '"yaw_start_deg":90,"bounds_min":[-3.4,0,-2.62],"bounds_max":[3.4,3.513,2.62]}}}';
+
+  test('framing reads the manifest entry and sizes the podium from bounds', () {
+    final f = parseFramings(ark);
     expect(f.keys, ['ark']);
-    expect(f['ark']!.distance, 12.73);
-    expect(f['ark']!.targetY, 1.757);
     expect(f['ark']!.yawStartTurns, .25);
+    final foot = math.sqrt(3.4 * 3.4 + 2.62 * 2.62);
+    expect(f['ark']!.podiumRadius, closeTo(podiumFootprintScale * foot, 1e-9));
   });
 
-  test('eye sits at the manifest distance, 38 degrees above the target', () {
+  test('eye sits at the distance, a three-quarter elevation above the target', () {
     const f = LandmarkFraming(distance: 10, targetY: 2);
+    expect(LandmarkFraming.elevationDeg, inInclusiveRange(20, 28));
     final (x, y, z) = f.eye;
+    const e = LandmarkFraming.elevationDeg * math.pi / 180;
     expect(x, 0);
-    expect(y, closeTo(2 + 10 * math.sin(38 * math.pi / 180), 1e-9));
+    expect(y, closeTo(2 + 10 * math.sin(e), 1e-9));
     expect(z, lessThan(0), reason: 'front of the model faces -Z in the engine');
     expect(math.sqrt(x * x + (y - 2) * (y - 2) + z * z), closeTo(10, 1e-9));
+  });
+
+  test('the podium centre lands on the anchor, the target at the view centre', () {
+    final f = parseFramings(ark)['ark']!;
+    expect(f.project((0, 0, 0)).$2, closeTo(podiumAnchorY, 1e-3));
+    expect(f.project((0, f.targetY, 0)).$2, closeTo(0, 1e-9));
+  });
+
+  test('every landmark, model top and whole podium, fits the view', () {
+    final raw = File('assets/images/road/models/manifest.json').readAsStringSync();
+    final lm = (jsonDecode(raw) as Map)['landmarks'] as Map;
+    for (final e in parseFramings(raw).entries) {
+      final fr = e.value, r = fr.podiumRadius;
+      final top = ((lm[e.key] as Map)['bounds_max'] as List)[1] as num;
+      final pts = <(double, double, double)>[
+        for (var i = 0; i < 36; i++)
+          for (final y in [0.0, -podiumDepth * r])
+            (r * math.cos(i * math.pi / 18), y, r * math.sin(i * math.pi / 18)),
+        (0, top.toDouble(), 0),
+      ];
+      for (final p in pts) {
+        final (px, py) = fr.project(p);
+        expect(px.abs(), lessThanOrEqualTo(LandmarkFraming.viewFill + 1e-6), reason: '${e.key} x');
+        expect(py, inInclusiveRange(-1, LandmarkFraming.viewFill + 1e-6), reason: '${e.key} y');
+      }
+    }
+  });
+
+  test('the podium glb is bundled and tiny', () {
+    expect(File('assets/images/road/models/podium.glb').lengthSync(), lessThan(20 * 1024));
   });
 
   test('the bundled manifest covers every landmark sprite', () {
@@ -35,7 +70,7 @@ void main() {
     expect(f.keys.toSet(), sprites.toSet());
     for (final k in f.keys) {
       expect(File('assets/images/road/models/$k.glb').existsSync(), isTrue);
-      expect(f[k]!.distance, greaterThan(0));
+      expect(f[k]!.podiumRadius, greaterThan(0));
     }
   });
 
