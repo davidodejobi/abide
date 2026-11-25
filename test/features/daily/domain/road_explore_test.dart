@@ -53,6 +53,13 @@ void main() {
       expect(clampLook(400, 90), 90);
     });
 
+    test('camera x is locked and focus follows the panel', () {
+      for (final look in [0.0, 7.0, 8.0, 100.0]) {
+        expect(geo.camera(look).x, 195);
+      }
+      expect(geo.camera(10, focus: 500).y - geo.camera(10).y, 500 - 300);
+    });
+
     test('camera puts the looked-at stop at the focus height', () {
       for (final look in [0.0, 7.0, 100.0, 364.0]) {
         final cam = geo.camera(look);

@@ -93,6 +93,36 @@ void main() {
   });
 
   testWidgets(
+      'Given the panel is dragged down, Then the road fills the screen and the chip brings it back',
+      (t) async {
+    final plan = _plan();
+    await pump(
+      t,
+      _app([
+        streakProvider.overrideWithValue(_streak()),
+        isTodayCompleteProvider.overrideWithValue(false),
+        todaysReadingProvider.overrideWith((_) async =>
+            TodaysReading(plan: plan, day: plan.dayAt(41), completedDays: 40)),
+        planDaysDoneTodayProvider.overrideWith((_, __) => Stream.value({})),
+      ]),
+    );
+    final chip = find.text('Day 41 · John 15–17');
+    expect(chip, findsNothing);
+    final openTop = t.getTopLeft(find.text(DailyStrings.startReading)).dy;
+    await t.drag(find.text(DailyStrings.startReading), const Offset(0, 600));
+    await t.pump(const Duration(milliseconds: 400));
+    await t.pump(const Duration(milliseconds: 400));
+    expect(chip, findsOneWidget);
+    await t.tap(chip);
+    await t.pump(const Duration(milliseconds: 400));
+    await t.pump(const Duration(milliseconds: 400));
+    expect(chip, findsNothing);
+    expect(t.getTopLeft(find.text(DailyStrings.startReading)).dy,
+        closeTo(openTop, 2));
+    expect(tester(t), isNull);
+  });
+
+  testWidgets(
       'Given today is done, Then it turns to evening and names tomorrow',
       (t) async {
     final plan = _plan();
