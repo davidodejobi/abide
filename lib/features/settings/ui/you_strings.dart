@@ -38,5 +38,4 @@ abstract final class YouStrings {
 
   static String versionLabel(String v) => '$version $v';
   static String qualityHint(String sizeHint) => '$qualityNote $sizeHint.';
-  static String sizeSemantics(String label) => '$fontSize, $label';
 }

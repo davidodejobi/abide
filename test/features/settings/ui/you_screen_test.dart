@@ -15,16 +15,19 @@ import 'package:openbaptisthymnal/features/settings/ui/you_strings.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 Future<ProviderContainer> _pump(WidgetTester tester,
-    {ThemeData? theme, double scale = 1}) async {
+    {ThemeData? theme,
+    double scale = 1,
+    Size size = const Size(390, 1400),
+    List<BibleEdition> editions = const []}) async {
   SharedPreferences.setMockInitialValues({});
   final prefs = await SharedPreferences.getInstance();
   final container = ProviderContainer(overrides: [
     sharedPreferencesProvider.overrideWithValue(prefs),
     appVersionProvider.overrideWith((_) async => '1.2.3'),
-    bibleEditionsProvider.overrideWithValue(const <BibleEdition>[]),
+    bibleEditionsProvider.overrideWithValue(editions),
   ]);
   addTearDown(container.dispose);
-  tester.view.physicalSize = const Size(390 * 3, 1400 * 3);
+  tester.view.physicalSize = Size(size.width * 3, size.height * 3);
   tester.view.devicePixelRatio = 3;
   addTearDown(tester.view.reset);
   await tester.pumpWidget(UncontrolledProviderScope(
@@ -75,12 +78,50 @@ void main() {
     await tester.pumpAndSettle();
     expect(
         container.read(linkingPreferencesProvider).defaultHymnEditionId, 'yo');
-    expect(container.read(storageServiceProvider), isNotNull);
+    // Persisted: a fresh container over the same prefs reads it back.
+    final fresh = ProviderContainer(overrides: [
+      sharedPreferencesProvider
+          .overrideWithValue(container.read(sharedPreferencesProvider)),
+    ]);
+    addTearDown(fresh.dispose);
+    expect(fresh.read(storageServiceProvider).getDefaultHymnLinkEdition(), 'yo');
   });
 
-  testWidgets('dark theme at large text scale does not overflow',
+  for (final w in [390.0, 320.0]) {
+    testWidgets('large text, ${w.toInt()} wide: whole list lays out',
+        (tester) async {
+      await _pump(tester,
+          theme: AppTheme.darkTheme, scale: 3, size: Size(w, 568));
+      await tester.scrollUntilVisible(find.text(YouStrings.terms), 300,
+          scrollable: find.byType(Scrollable).first);
+      await tester.pump();
+      expect(tester.takeException(), isNull);
+    });
+  }
+
+  testWidgets('Bible picker survives 320x568 at 3x text and saves a pick',
       (tester) async {
-    await _pump(tester, theme: AppTheme.darkTheme, scale: 2);
+    const kjv = BibleEdition(
+      id: 'en-kjv',
+      languageCode: 'en',
+      versionCode: 'kjv',
+      displayName: 'King James Version',
+      attribution: 'Public Domain',
+    );
+    final container = await _pump(tester,
+        scale: 3, size: const Size(320, 568), editions: const [kjv]);
+    await tester.scrollUntilVisible(find.text(YouStrings.linkBible), 200,
+        scrollable: find.byType(Scrollable).first);
+    await tester.ensureVisible(find.text(YouStrings.linkBible));
+    await tester.pump();
+    await tester.tap(find.text(YouStrings.linkBible));
+    await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
+    await tester.ensureVisible(find.text(kjv.displayName));
+    await tester.pump();
+    await tester.tap(find.text(kjv.displayName));
+    await tester.pumpAndSettle();
+    expect(container.read(linkingPreferencesProvider).defaultBibleEditionId,
+        'en-kjv');
   });
 }

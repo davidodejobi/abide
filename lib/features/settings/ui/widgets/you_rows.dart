@@ -184,19 +184,20 @@ Future<YouChoice?> showYouPicker(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                    LumSpace.md, LumSpace.xs, LumSpace.md, LumSpace.md),
-                child: Semantics(
-                  header: true,
-                  child: Text(title,
-                      style: LumText.title2.copyWith(color: c.textPrimary)),
-                ),
-              ),
               Flexible(
                 child: SingleChildScrollView(
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                            LumSpace.md, LumSpace.xs, LumSpace.md, LumSpace.md),
+                        child: Semantics(
+                          header: true,
+                          child: Text(title,
+                              style: LumText.title2.copyWith(color: c.textPrimary)),
+                        ),
+                      ),
                       for (final o in options)
                         Semantics(
                           button: true,
