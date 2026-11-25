@@ -473,7 +473,7 @@ class _RoadPainter extends CustomPainter {
       f.color = (h.isEven
               ? Color.lerp(base, const Color(0xFFFFFFFF), .18)!
               : Color.lerp(base, const Color(0xFF1B5E2A), .14)!)
-          .withValues(alpha: .55);
+          .withValues(alpha: .32);
       canvas.drawOval(
           Rect.fromCenter(center: Offset(wx + cam.dx * .98 + 0, wy + cam.dy), width: r * 2.2, height: r * 1.2), f);
     }
@@ -646,9 +646,10 @@ class _RoadPainter extends CustomPainter {
   }
 
   void _chip(Canvas canvas, Offset anchorBottomCenter, TextPainter tp, double alpha) {
+    final w = tp.width + 20;
+    final cx = anchorBottomCenter.dx.clamp(8 + w / 2, 382 - w / 2).toDouble();
     final r = RRect.fromRectAndRadius(
-        Rect.fromCenter(
-            center: anchorBottomCenter.translate(0, -12), width: tp.width + 20, height: tp.height + 10),
+        Rect.fromCenter(center: Offset(cx, anchorBottomCenter.dy - 12), width: w, height: tp.height + 10),
         const Radius.circular(LumRadius.full));
     cache.fill.color = c.scenePanel.withValues(alpha: alpha);
     canvas.drawRRect(r, cache.fill);
