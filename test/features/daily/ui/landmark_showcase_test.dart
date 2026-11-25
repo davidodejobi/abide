@@ -34,6 +34,7 @@ void main() {
   Future<void> open(WidgetTester t,
       {bool reduce = false, Rect? from, bool withSprite = true}) async {
     art = (await t.runAsync(RoadArt.load))!;
+    await t.runAsync(RoadArt.spinMeta);
     await t.runAsync(() => art.ensureLandmarks(['garden']));
     lm = art.landmarks.firstWhere((l) => l.art == 'garden');
     sprite = art['lm_garden']!;

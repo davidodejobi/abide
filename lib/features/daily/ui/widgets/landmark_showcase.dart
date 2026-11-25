@@ -90,7 +90,7 @@ class _LandmarkShowcaseState extends State<LandmarkShowcase>
 
   /// Where the model's lowest opaque row sits: just in front of the podium's
   /// centre, on its top surface.
-  static const _groundY = _podiumY + _podiumRy * .45;
+  static const _groundY = _podiumY + _podiumRy * .8;
 
   /// The picture is drawn at most 1:1 in device pixels (frames are 512 px);
   /// 210 pt where the screen is not dense enough to need less.

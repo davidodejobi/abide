@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 import '../../domain/road_landmarks.dart';
@@ -63,6 +64,11 @@ class RoadArt {
   static const maxSpinTexture = 4096;
 
   static Future<Map<String, List<double>>>? _meta;
+
+  /// Resolves the meta now; tests call it under runAsync so the memo is not
+  /// born in a fake-async zone that never runs its I/O.
+  @visibleForTesting
+  static Future<Map<String, List<double>>> spinMeta() => _loadMeta();
 
   static Future<Map<String, List<double>>> _loadMeta() => _meta ??= () async {
         final j = jsonDecode(await rootBundle.loadString('$_dir/spin_meta.json'))
