@@ -37,6 +37,15 @@ Future<void> _pump(WidgetTester t, int? readers,
 }
 
 void main() {
+  test('release builds default to no data; fake only in debug or by flag', () {
+    expect(pickWorldCompanySource(debug: false, fakeFlag: false),
+        isA<NoWorldCompanySource>());
+    expect(pickWorldCompanySource(debug: true, fakeFlag: false),
+        isA<FakeWorldCompanySource>());
+    expect(pickWorldCompanySource(debug: false, fakeFlag: true),
+        isA<FakeWorldCompanySource>());
+  });
+
   test('formats counts by locale', () {
     expect(formatCount(2481, const Locale('en')), '2,481');
     expect(formatCount(1204000, const Locale('en')), '1,204,000');

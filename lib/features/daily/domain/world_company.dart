@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/widgets.dart' show Locale;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -46,8 +47,19 @@ class NoWorldCompanySource implements WorldCompanySource {
   Future<WorldCompany?> load(String planKey, int dayIndex) async => null;
 }
 
-final worldCompanySourceProvider =
-    Provider<WorldCompanySource>((ref) => const FakeWorldCompanySource());
+/// Real readers must never see invented counts: the fake is for debug builds
+/// or an explicit `--dart-define=FAKE_WORLD_COMPANY=true`. Everyone else gets
+/// no data, so the UI hides until the Supabase source replaces this.
+WorldCompanySource pickWorldCompanySource(
+        {required bool debug, required bool fakeFlag}) =>
+    debug || fakeFlag
+        ? const FakeWorldCompanySource()
+        : const NoWorldCompanySource();
+
+final worldCompanySourceProvider = Provider<WorldCompanySource>((ref) =>
+    pickWorldCompanySource(
+        debug: kDebugMode,
+        fakeFlag: const bool.fromEnvironment('FAKE_WORLD_COMPANY')));
 
 final worldCompanyProvider =
     FutureProvider.family<WorldCompany?, ({String planKey, int day})>(
