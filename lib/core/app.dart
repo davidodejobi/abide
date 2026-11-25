@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -61,7 +62,20 @@ class AbideApp extends HookConsumerWidget {
         // ignore: deprecated_member_use
         builder: (context, child) => MaterialUiCompatibilityBridge(
           child: SplashIntro(
-            child: AppUpdateOverlay(child: child ?? const SizedBox.shrink()),
+            child: AppUpdateOverlay(
+              child: kIsWeb
+                  // Phone-width column on wide desktop browsers.
+                  ? ColoredBox(
+                      color: Theme.of(context).scaffoldBackgroundColor,
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 560),
+                          child: child ?? const SizedBox.shrink(),
+                        ),
+                      ),
+                    )
+                  : child ?? const SizedBox.shrink(),
+            ),
           ),
         ),
         routerConfig: appRouter.config(

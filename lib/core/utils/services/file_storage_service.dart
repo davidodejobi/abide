@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -28,6 +30,7 @@ class FileStorageService {
   /// Resolves and caches the documents directory. Call once in `main()` before
   /// `runApp` so path conversion is available synchronously everywhere.
   static Future<void> init() async {
+    if (kIsWeb) return; // No documents dir; see [persistFile].
     _documentsPath = (await getApplicationDocumentsDirectory()).path;
   }
 
@@ -39,6 +42,7 @@ class FileStorageService {
     String sourcePath, {
     required String bucket,
   }) async {
+    if (kIsWeb) return _toDataUrl(XFile(sourcePath));
     final docs = await getApplicationDocumentsDirectory();
     _documentsPath ??= docs.path;
     final dir = Directory(p.join(docs.path, bucket));
@@ -62,12 +66,22 @@ class FileStorageService {
       imageQuality: imageQuality,
     );
     if (picked == null) return null;
+    if (kIsWeb) return _toDataUrl(picked);
     return persistFile(picked.path, bucket: bucket);
+  }
+
+  /// Web has no file system: store the bytes inline as a data URL, which the
+  /// editor renders via Image.memory and which survives reloads in the note.
+  static Future<String> _toDataUrl(XFile file) async {
+    final bytes = await file.readAsBytes();
+    final mime = file.mimeType ?? 'image/jpeg';
+    return 'data:$mime;base64,${base64Encode(bytes)}';
   }
 
   /// Deletes a previously persisted file (relative or absolute path). No-op if
   /// it is already gone.
   Future<void> deleteFile(String path) async {
+    if (kIsWeb) return;
     final file = File(absolutePath(path));
     if (file.existsSync()) {
       await file.delete();

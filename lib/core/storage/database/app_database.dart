@@ -1,10 +1,4 @@
-import 'dart:io';
-
 import 'package:drift/drift.dart';
-import 'package:drift/native.dart';
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
-import 'package:sqlite3/sqlite3.dart';
 
 import 'daos/bible_annotations_dao.dart';
 import 'daos/folders_dao.dart';
@@ -12,6 +6,8 @@ import 'daos/note_links_dao.dart';
 import 'daos/notes_dao.dart';
 import 'daos/reading_plans_dao.dart';
 import 'daos/tags_dao.dart';
+import 'connection/connection_native.dart'
+    if (dart.library.js_interop) 'connection/connection_web.dart';
 import 'tables.dart';
 
 part 'app_database.g.dart';
@@ -39,7 +35,7 @@ part 'app_database.g.dart';
   ],
 )
 class AppDatabase extends _$AppDatabase {
-  AppDatabase() : super(_openConnection());
+  AppDatabase() : super(openConnection());
 
   /// In-memory connection for tests.
   AppDatabase.forTesting(super.executor);
@@ -129,15 +125,4 @@ class AppDatabase extends _$AppDatabase {
       await m.createTable(bibleAnnotations);
     }
   }
-}
-
-LazyDatabase _openConnection() {
-  return LazyDatabase(() async {
-    final dir = await getApplicationDocumentsDirectory();
-    final file = File(p.join(dir.path, 'abide_notes.sqlite'));
-
-    sqlite3.tempDirectory = (await getTemporaryDirectory()).path;
-
-    return NativeDatabase.createInBackground(file);
-  });
 }

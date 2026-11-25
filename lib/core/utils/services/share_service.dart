@@ -14,8 +14,22 @@ class ShareService {
     Rect? sharePositionOrigin,
   }) async {
     try {
-      // Process image in an isolate to avoid blocking the UI
-      final processedBytes = await compute(_processImageBytes, imageBytes);
+      // Process image in an isolate to avoid blocking the UI (no isolates on
+      // web; the bytes are already a PNG from the capture).
+      final processedBytes =
+          kIsWeb ? imageBytes : await compute(_processImageBytes, imageBytes);
+
+      if (kIsWeb) {
+        await SharePlus.instance.share(ShareParams(
+          files: [
+            XFile.fromData(processedBytes,
+                mimeType: 'image/png', name: '$filename.png')
+          ],
+          fileNameOverrides: ['$filename.png'],
+          sharePositionOrigin: sharePositionOrigin,
+        ));
+        return;
+      }
 
       // Get temporary directory
       final directory = await getTemporaryDirectory();
@@ -46,8 +60,10 @@ class ShareService {
       );
 
   /// Saves the PNG to the photo gallery; the OS asks for permission on first use.
-  Future<void> saveImage(Uint8List imageBytes, String filename) =>
-      Gal.putImageBytes(imageBytes, name: filename);
+  Future<void> saveImage(Uint8List imageBytes, String filename) => kIsWeb
+      ? shareImage(
+          imageBytes: imageBytes, filename: filename) // no gallery on web
+      : Gal.putImageBytes(imageBytes, name: filename);
 
   /// Decodes and re-encodes the image to ensure it is a valid PNG.
   /// Runs in a separate isolate.

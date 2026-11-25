@@ -81,6 +81,10 @@ jobs:
             exit 1
           fi
 
+      # Guards the web target (dart2wasm rejects dart:html, dart:ffi imports).
+      - name: Build web (wasm)
+        run: flutter build web --wasm --release
+
   # Escape hatch: goldens seeded on macOS can still drift from ubuntu's render.
   # Label a PR `update-goldens` and CI reseeds them onto the branch for you.
   #

@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
+
 import 'package:auto_route/auto_route.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/semantics.dart';
@@ -579,8 +581,9 @@ class _Thumb extends StatelessWidget {
           height: 56,
           child: p == null
               ? tile
-              : p.startsWith('http')
-                  ? Image.network(p, fit: BoxFit.cover)
+              : (kIsWeb || p.startsWith('http') || p.startsWith('blob:'))
+                  ? Image.network(p,
+                      fit: BoxFit.cover, errorBuilder: (_, __, ___) => tile)
                   : Image.file(File(p),
                       fit: BoxFit.cover, errorBuilder: (_, __, ___) => tile),
         ),
