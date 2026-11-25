@@ -26,7 +26,8 @@ ReadingPlan _plan(String id, String title, int days) => ReadingPlan(
       description: '',
       days: [
         for (var i = 1; i <= days; i++)
-          PlanDay(dayIndex: i, passages: [VerseRange.tryParse('JHN.1.1-3.36')!]),
+          PlanDay(
+              dayIndex: i, passages: [VerseRange.tryParse('JHN.1.1-3.36')!]),
       ],
     );
 
@@ -75,8 +76,7 @@ void main() {
     await t.pump(const Duration(milliseconds: 200));
   }
 
-  testWidgets('welcome shows the headline and Begin fires onNext',
-      (t) async {
+  testWidgets('welcome shows the headline and Begin fires onNext', (t) async {
     var next = 0;
     await pump(t, container(), WelcomeScreen(onNext: () => next++));
     expect(find.text(OnboardingStrings.welcomeTitle), findsOneWidget);
@@ -89,9 +89,7 @@ void main() {
       (t) async {
     final c = container();
     await pump(
-        t,
-        c,
-        BibleScreen(step: 1, total: 3, onNext: () {}, onBack: () {}));
+        t, c, BibleScreen(step: 1, total: 3, onNext: () {}, onBack: () {}));
     expect(find.text('English'), findsOneWidget);
     expect(find.text('Yorùbá'), findsOneWidget);
     await t.tap(find.text('Berean Standard Bible'));
@@ -142,13 +140,10 @@ void main() {
     expect(next.read(languageProvider), 'yo');
   });
 
-  testWidgets('name step writes the typed name into the provider',
-      (t) async {
+  testWidgets('name step writes the typed name into the provider', (t) async {
     final c = container();
     await pump(
-        t,
-        c,
-        NameScreen(step: 3, total: 3, onDone: () {}, onBack: () {}));
+        t, c, NameScreen(step: 3, total: 3, onDone: () {}, onBack: () {}));
     expect(find.text(OnboardingStrings.nameTitle), findsOneWidget);
     await t.enterText(find.byType(TextField), 'Tolu');
     expect(c.read(onboardingProvider).name, 'Tolu');

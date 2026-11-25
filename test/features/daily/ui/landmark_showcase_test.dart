@@ -21,7 +21,8 @@ Future<void> _pumpFor(WidgetTester t, int ms) async {
 /// The 2048 px sheet decodes off the fake clock: give real time until it is in.
 Future<void> _waitSpin(WidgetTester t) async {
   for (var i = 0; i < 150 && find.byKey(_spinKey).evaluate().isEmpty; i++) {
-    await t.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 100)));
+    await t.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 100)));
     await t.pump(const Duration(milliseconds: 50));
   }
 }
@@ -81,11 +82,21 @@ void main() {
     // Mid-air: the sheet's own picture is hidden, the flier is on the overlay.
     final hero = find.byKey(_staticKey);
     expect(hero, findsOneWidget);
-    expect(t.widget<Opacity>(find.ancestor(of: hero, matching: find.byType(Opacity)).first).opacity, 0);
+    expect(
+        t
+            .widget<Opacity>(
+                find.ancestor(of: hero, matching: find.byType(Opacity)).first)
+            .opacity,
+        0);
     expect(find.byType(RawImage), findsNWidgets(2));
 
     await _pumpFor(t, 1000);
-    expect(t.widget<Opacity>(find.ancestor(of: hero, matching: find.byType(Opacity)).first).opacity, 1);
+    expect(
+        t
+            .widget<Opacity>(
+                find.ancestor(of: hero, matching: find.byType(Opacity)).first)
+            .opacity,
+        1);
     expect(find.byType(RawImage), findsOneWidget, reason: 'the flier is gone');
     expect(find.text(lm.title), findsOneWidget);
 
@@ -101,8 +112,7 @@ void main() {
     expect(t.takeException(), isNull);
   });
 
-  testWidgets('closing flies it back home before the call resolves',
-      (t) async {
+  testWidgets('closing flies it back home before the call resolves', (t) async {
     await open(t, from: const Rect.fromLTWH(20, 500, 120, 100));
     await _pumpFor(t, 1400);
     Navigator.of(t.element(find.byKey(_staticKey))).pop();
@@ -123,7 +133,8 @@ void main() {
     await _pumpFor(t, 250);
     // Any overlay rebuild (a dialog here) must not touch a disposed image.
     final ctx = t.element(find.byType(TextButton));
-    showDialog<void>(context: ctx, builder: (_) => const AlertDialog(title: Text('hi')));
+    showDialog<void>(
+        context: ctx, builder: (_) => const AlertDialog(title: Text('hi')));
     await _pumpFor(t, 600);
     expect(t.takeException(), isNull);
     expect(find.text('hi'), findsOneWidget);
@@ -147,13 +158,17 @@ void main() {
     expect(find.text(lm.title), findsOneWidget);
   });
 
-  testWidgets('reduced motion: no flight, picture is simply there',
-      (t) async {
+  testWidgets('reduced motion: no flight, picture is simply there', (t) async {
     await open(t, reduce: true, from: const Rect.fromLTWH(20, 500, 120, 100));
     await _pumpFor(t, 100);
     final hero = find.byKey(_staticKey);
     expect(hero, findsOneWidget);
-    expect(t.widget<Opacity>(find.ancestor(of: hero, matching: find.byType(Opacity)).first).opacity, 1);
+    expect(
+        t
+            .widget<Opacity>(
+                find.ancestor(of: hero, matching: find.byType(Opacity)).first)
+            .opacity,
+        1);
     expect(find.byType(RawImage), findsOneWidget, reason: 'no flier');
     await _pumpFor(t, 400);
     expect(find.text(lm.title), findsOneWidget);
@@ -171,8 +186,7 @@ void main() {
     expect(done, isTrue, reason: 'nothing to wait for');
   });
 
-  testWidgets('without a sprite the sheet is the plain title block',
-      (t) async {
+  testWidgets('without a sprite the sheet is the plain title block', (t) async {
     await open(t, withSprite: false);
     await t.pumpAndSettle();
     expect(find.byType(RawImage), findsNothing);
@@ -188,7 +202,9 @@ void main() {
     // Round close button, 48 pt target, labelled for screen readers.
     final close = find.bySemanticsLabel('Close');
     expect(close, findsOneWidget);
-    expect(t.getSize(find.descendant(of: close, matching: find.byType(SizedBox)).first),
+    expect(
+        t.getSize(
+            find.descendant(of: close, matching: find.byType(SizedBox)).first),
         const Size(48, 48));
     await t.tap(close);
     await _pumpFor(t, 150);
@@ -214,7 +230,8 @@ void main() {
         ref: 'Genesis 1',
         art: 'no-such-art');
     final ctx = t.element(find.byType(TextButton));
-    showLandmarkSheet(ctx, landmark: ghost, story: null, day: 1, sprite: sprite);
+    showLandmarkSheet(ctx,
+        landmark: ghost, story: null, day: 1, sprite: sprite);
     await _pumpFor(t, 600);
     await t.runAsync(
         () => Future<void>.delayed(const Duration(milliseconds: 200)));
@@ -243,7 +260,8 @@ void main() {
       expect(r.bottom, lessThanOrEqualTo(size.height + .5));
       expect(r.top, greaterThanOrEqualTo(0));
       // The close button stays in view whatever the scroll.
-      expect(t.getRect(find.bySemanticsLabel('Close')).top, greaterThanOrEqualTo(0));
+      expect(t.getRect(find.bySemanticsLabel('Close')).top,
+          greaterThanOrEqualTo(0));
       expect(t.takeException(), isNull);
     });
   }
@@ -251,8 +269,8 @@ void main() {
   testWidgets('closing at the watchdog moment shows one image and one haptic',
       (t) async {
     var haptics = 0;
-    t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-        SystemChannels.platform, (c) async {
+    t.binding.defaultBinaryMessenger
+        .setMockMethodCallHandler(SystemChannels.platform, (c) async {
       if (c.method == 'HapticFeedback.vibrate') haptics++;
       return null;
     });
@@ -276,10 +294,12 @@ void main() {
     final seated = find.byKey(const ValueKey('showcase-static-box'));
     // The static sprite is read (a few ms) well before the sheet decodes.
     for (var i = 0; i < 100 && seated.evaluate().isEmpty; i++) {
-      await t.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 5)));
+      await t.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 5)));
       await t.pump(const Duration(milliseconds: 16));
     }
-    if (seated.evaluate().isEmpty) return; // sheet won the race: nothing to compare
+    if (seated.evaluate().isEmpty)
+      return; // sheet won the race: nothing to compare
     final before = t.getTopLeft(seated);
     await _waitSpin(t);
     await _pumpFor(t, 300);

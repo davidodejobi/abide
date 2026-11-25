@@ -47,7 +47,8 @@ void main() {
 
   test('watchAnnotationsForChapter scopes to the exact chapter', () async {
     await dao.setHighlight('JHN.3.16', 'yellow');
-    await dao.setHighlight('JHN.30.1', 'green'); // no such chapter, but prefix-y
+    await dao.setHighlight(
+        'JHN.30.1', 'green'); // no such chapter, but prefix-y
     await dao.setHighlight('JHN.4.1', 'blue');
 
     final ch3 = await dao.watchAnnotationsForChapter('JHN', 3).first;

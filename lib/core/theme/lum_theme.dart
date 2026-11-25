@@ -86,7 +86,8 @@ abstract final class LumTheme {
         ('Gentium Book Plus', 'GentiumBookPlus'),
         ('Bricolage Grotesque', 'BricolageGrotesque'),
       ]) {
-        final text = await rootBundle.loadString('assets/fonts/licenses/$file-OFL.txt');
+        final text =
+            await rootBundle.loadString('assets/fonts/licenses/$file-OFL.txt');
         yield LicenseEntryWithLineBreaks([family], text);
       }
     });

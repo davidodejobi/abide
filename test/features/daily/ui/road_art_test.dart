@@ -97,7 +97,8 @@ void main() {
       ),
     ));
     await t.tap(find.text('open'));
-    await t.pump(const Duration(milliseconds: 300)); // the showcase never settles
+    await t
+        .pump(const Duration(milliseconds: 300)); // the showcase never settles
     expect(find.byType(RawImage), findsOneWidget);
     await t.runAsync(() => art.ensureLandmarks([]));
     await t.pump();

@@ -107,6 +107,11 @@ class PlanSubscriptions extends Table {
 
   BoolColumn get isActive => boolean().withDefault(const Constant(true))();
 
+  /// Last-write-wins clock for sync. Rows from before v5 read as the epoch, so
+  /// any real edit (on any device) beats them.
+  DateTimeColumn get updatedAt =>
+      dateTime().withDefault(const CustomExpression('0'))();
+
   @override
   Set<Column> get primaryKey => {planId};
 }
@@ -146,4 +151,34 @@ class BibleAnnotations extends Table {
 
   @override
   Set<Column> get primaryKey => {id};
+}
+
+/// Local changes not yet pushed. Filled by SQLite triggers (see
+/// `core/sync/sync_triggers.dart`), so every writer is covered without touching
+/// the DAOs. One row per (entity, row): later writes replace earlier ones.
+class SyncOutbox extends Table {
+  TextColumn get entity => text()();
+  TextColumn get rowId => text()();
+
+  /// `upsert` | `delete`.
+  TextColumn get op => text()();
+
+  /// Bumped on every write to the row; push only clears the exact [seq] it sent.
+  IntColumn get seq => integer()();
+
+  /// Unix seconds. Doubles as the tombstone time of a hard delete.
+  IntColumn get queuedAt => integer()();
+
+  @override
+  Set<Column> get primaryKey => {entity, rowId};
+}
+
+/// Small key/value store for sync: per-entity pull cursors and the `applying`
+/// flag that keeps pulled rows out of the outbox.
+class SyncState extends Table {
+  TextColumn get key => text()();
+  TextColumn get value => text()();
+
+  @override
+  Set<Column> get primaryKey => {key};
 }

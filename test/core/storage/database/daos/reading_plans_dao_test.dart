@@ -323,7 +323,8 @@ void main() {
           );
         }
 
-        expect(await dao.watchCompletedDayIndexes('nt-90').first, hasLength(90));
+        expect(
+            await dao.watchCompletedDayIndexes('nt-90').first, hasLength(90));
         expect(
           await dao.completedDayKeys(),
           isEmpty,

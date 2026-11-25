@@ -9,8 +9,7 @@ void main() {
   testWidgets('exposes a tap action and fires it', (tester) async {
     final handle = tester.ensureSemantics();
     var taps = 0;
-    await tester.pumpApp(
-        LumButton(label: 'Go', onPressed: () => taps++));
+    await tester.pumpApp(LumButton(label: 'Go', onPressed: () => taps++));
     final node = tester.getSemantics(find.byType(LumButton));
     expect(node.getSemanticsData().hasAction(SemanticsAction.tap), isTrue);
     tester.semantics.tap(find.semantics.byLabel('Go'));
@@ -34,7 +33,8 @@ void main() {
     await tester.pumpWidget(MaterialApp(
       theme: ThemeData.dark(),
       builder: (c, child) => MediaQuery(
-          data: MediaQuery.of(c).copyWith(textScaler: const TextScaler.linear(2)),
+          data:
+              MediaQuery.of(c).copyWith(textScaler: const TextScaler.linear(2)),
           child: child!),
       home: Scaffold(
         body: Center(

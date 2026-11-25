@@ -26,7 +26,9 @@ class TagsDao extends DatabaseAccessor<AppDatabase> with _$TagsDaoMixin {
     ])
       ..where(noteTags.noteId.equals(noteId))
       ..orderBy([OrderingTerm(expression: tags.name.lower())]);
-    return query.watch().map((rows) => rows.map((r) => r.readTable(tags)).toList());
+    return query
+        .watch()
+        .map((rows) => rows.map((r) => r.readTable(tags)).toList());
   }
 
   /// Idempotent: attaching a tag already on the note is a no-op (composite PK).

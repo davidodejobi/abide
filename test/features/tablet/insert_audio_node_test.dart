@@ -10,8 +10,7 @@ void main() {
     test('cursor in a non-empty paragraph: clip + trailing inserted after it',
         () async {
       final es = EditorState(
-        document: Document.blank()
-          ..insert([0], [paragraphNode(text: 'intro')]),
+        document: Document.blank()..insert([0], [paragraphNode(text: 'intro')]),
       );
       es.selection = Selection.collapsed(Position(path: [0], offset: 5));
 

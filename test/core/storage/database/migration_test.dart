@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:drift/drift.dart';
+import 'package:drift/drift.dart' hide isNull;
 import 'package:drift/native.dart';
 import 'package:drift_dev/api/migrations_native.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -10,6 +10,7 @@ import '../../../drift_schemas/schema.dart';
 import '../../../drift_schemas/schema_v1.dart' as v1;
 import '../../../drift_schemas/schema_v3.dart' as v3;
 import '../../../drift_schemas/schema_v4.dart' as v4;
+import '../../../drift_schemas/schema_v5.dart' as v5;
 
 /// Migration tests for [AppDatabase].
 ///
@@ -71,9 +72,9 @@ void main() {
 
         await verifier.testWithDataIntegrity(
           oldVersion: 1,
-          newVersion: 4,
+          newVersion: 5,
           createOld: v1.DatabaseAtV1.new,
-          createNew: v4.DatabaseAtV4.new,
+          createNew: v5.DatabaseAtV5.new,
           openTestedDatabase: AppDatabase.forTesting,
           createItems: (batch, db) {
             batch.insert(
@@ -133,7 +134,8 @@ void main() {
     });
   });
 
-  group('Given a v3 database -- what almost every real install is on today', () {
+  group('Given a v3 database -- what almost every real install is on today',
+      () {
     group('When it migrates to v4 (the daily habit loop tables)', () {
       test('Then existing notes survive AND the new tables are usable',
           () async {
@@ -145,9 +147,9 @@ void main() {
 
         await verifier.testWithDataIntegrity(
           oldVersion: 3,
-          newVersion: 4,
+          newVersion: 5,
           createOld: v3.DatabaseAtV3.new,
-          createNew: v4.DatabaseAtV4.new,
+          createNew: v5.DatabaseAtV5.new,
           openTestedDatabase: AppDatabase.forTesting,
           createItems: (batch, db) {
             batch.insert(
@@ -186,20 +188,20 @@ void main() {
             // against a snapshot generated from that same wrong shape -- only
             // actually writing a row proves it is usable.
             await db.into(db.readingDays).insert(
-                  v4.ReadingDaysCompanion.insert(
+                  v5.ReadingDaysCompanion.insert(
                     dateKey: '2026-01-15',
                     source: 'plan',
                     completedAt: createdAt,
                   ),
                 );
             await db.into(db.planSubscriptions).insert(
-                  v4.PlanSubscriptionsCompanion.insert(
+                  v5.PlanSubscriptionsCompanion.insert(
                     planId: 'bible-in-a-year',
                     startDateKey: '2026-01-15',
                   ),
                 );
             await db.into(db.planDayProgress).insert(
-                  v4.PlanDayProgressCompanion.insert(
+                  v5.PlanDayProgressCompanion.insert(
                     id: 'bible-in-a-year:1',
                     planId: 'bible-in-a-year',
                     dayIndex: 1,
@@ -213,6 +215,76 @@ void main() {
           },
         );
       });
+    });
+  });
+
+  group('Given a v4 database with reading progress and notes', () {
+    test('Then v5 keeps every row and queues them all for first sync',
+        () async {
+      final at = DateTime.utc(2026, 1, 15, 9, 30);
+
+      await verifier.testWithDataIntegrity(
+        oldVersion: 4,
+        newVersion: 5,
+        createOld: v4.DatabaseAtV4.new,
+        createNew: v5.DatabaseAtV5.new,
+        openTestedDatabase: AppDatabase.forTesting,
+        createItems: (batch, db) {
+          batch.insert(
+            db.notes,
+            v4.NotesCompanion.insert(
+              id: 'n1',
+              title: const Value('Grace'),
+              contentMarkdown: const Value('body'),
+              createdAt: at,
+              updatedAt: at,
+            ),
+          );
+          batch.insert(
+            db.readingDays,
+            v4.ReadingDaysCompanion.insert(
+                dateKey: '2026-01-15', source: 'plan', completedAt: at),
+          );
+          batch.insert(
+            db.planSubscriptions,
+            v4.PlanSubscriptionsCompanion.insert(
+                planId: 'bible-in-a-year', startDateKey: '2026-01-01'),
+          );
+          batch.insert(
+            db.planDayProgress,
+            v4.PlanDayProgressCompanion.insert(
+                id: 'bible-in-a-year:1',
+                planId: 'bible-in-a-year',
+                dayIndex: 1,
+                completedAt: at),
+          );
+        },
+        validateItems: (db) async {
+          expect((await db.select(db.notes).getSingle()).title, 'Grace');
+          expect(await db.select(db.readingDays).get(), hasLength(1));
+          final sub = await db.select(db.planSubscriptions).getSingle();
+          expect(sub.planId, 'bible-in-a-year');
+          expect(sub.isActive, isTrue);
+          // Pre-v5 rows read as the epoch so any real edit beats them.
+          expect(sub.updatedAt.millisecondsSinceEpoch, 0);
+          expect(await db.select(db.planDayProgress).get(), hasLength(1));
+
+          final queued = await db.select(db.syncOutbox).get();
+          expect(queued.map((r) => r.entity).toSet(), {
+            'notes',
+            'reading_days',
+            'plan_subscriptions',
+            'plan_day_progress'
+          });
+          expect(queued, hasLength(4));
+
+          // Triggers are live after the upgrade.
+          await db.customStatement('DELETE FROM sync_outbox');
+          await db.delete(db.readingDays).go();
+          final after = await db.select(db.syncOutbox).getSingle();
+          expect((after.entity, after.op), ('reading_days', 'delete'));
+        },
+      );
     });
   });
 

@@ -8,7 +8,8 @@ import 'package:openbaptisthymnal/core/widgets/split_pane.dart';
 void main() {
   Widget host(Widget child) => MaterialApp(home: Scaffold(body: child));
 
-  testWidgets('vertical orientation lays out children in a Row', (tester) async {
+  testWidgets('vertical orientation lays out children in a Row',
+      (tester) async {
     await tester.pumpWidget(host(const SplitPane(
       orientation: SplitOrientation.vertical,
       primary: Text('left'),

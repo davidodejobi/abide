@@ -205,386 +205,577 @@ class LumColors {
 
   /// `color/bg/page`
   final Color bgPage;
+
   /// `color/bg/surface`
   final Color bgSurface;
+
   /// `color/bg/surface-sunken`
   final Color bgSurfaceSunken;
+
   /// `color/bg/primary`
   final Color bgPrimary;
+
   /// `color/bg/primary-container`
   final Color bgPrimaryContainer;
+
   /// `color/bg/secondary`
   final Color bgSecondary;
+
   /// `color/bg/secondary-container`
   final Color bgSecondaryContainer;
+
   /// `color/bg/accent-container`
   final Color bgAccentContainer;
+
   /// `color/bg/success-container`
   final Color bgSuccessContainer;
+
   /// `color/bg/danger`
   final Color bgDanger;
+
   /// `color/bg/danger-container`
   final Color bgDangerContainer;
+
   /// `color/bg/disabled`
   final Color bgDisabled;
+
   /// `color/bg/inverse`
   final Color bgInverse;
+
   /// `color/bg/elevated`
   final Color bgElevated;
+
   /// `color/bg/grouped`
   final Color bgGrouped;
+
   /// `color/bg/grouped-cell`
   final Color bgGroupedCell;
+
   /// `color/bg/feature`
   final Color bgFeature;
+
   /// `color/bg/tonal`
   final Color bgTonal;
+
   /// `color/bg/avatar`
   final Color bgAvatar;
+
   /// `color/bg/projection`
   final Color bgProjection;
+
   /// `color/text/primary`
   final Color textPrimary;
+
   /// `color/text/secondary`
   final Color textSecondary;
+
   /// `color/text/brand`
   final Color textBrand;
+
   /// `color/text/accent`
   final Color textAccent;
+
   /// `color/text/danger`
   final Color textDanger;
+
   /// `color/text/disabled`
   final Color textDisabled;
+
   /// `color/text/inverse`
   final Color textInverse;
+
   /// `color/text/on-primary`
   final Color textOnPrimary;
+
   /// `color/text/on-primary-container`
   final Color textOnPrimaryContainer;
+
   /// `color/text/on-secondary`
   final Color textOnSecondary;
+
   /// `color/text/on-secondary-container`
   final Color textOnSecondaryContainer;
+
   /// `color/text/on-accent-container`
   final Color textOnAccentContainer;
+
   /// `color/text/on-success-container`
   final Color textOnSuccessContainer;
+
   /// `color/text/on-danger`
   final Color textOnDanger;
+
   /// `color/text/on-danger-container`
   final Color textOnDangerContainer;
+
   /// `color/text/on-lamp`
   final Color textOnLamp;
+
   /// `color/text/on-feature`
   final Color textOnFeature;
+
   /// `color/text/on-tonal`
   final Color textOnTonal;
+
   /// `color/text/on-avatar`
   final Color textOnAvatar;
+
   /// `color/text/on-evening-sky`
   final Color textOnEveningSky;
+
   /// `color/text/on-projection`
   final Color textOnProjection;
+
   /// `color/icon/default`
   final Color iconDefault;
+
   /// `color/icon/secondary`
   final Color iconSecondary;
+
   /// `color/icon/brand`
   final Color iconBrand;
+
   /// `color/icon/accent`
   final Color iconAccent;
+
   /// `color/icon/on-primary`
   final Color iconOnPrimary;
+
   /// `color/icon/success`
   final Color iconSuccess;
+
   /// `color/icon/danger`
   final Color iconDanger;
+
   /// `color/border/subtle`
   final Color borderSubtle;
+
   /// `color/border/strong`
   final Color borderStrong;
+
   /// `color/border/focus`
   final Color borderFocus;
+
   /// `color/border/tonal`
   final Color borderTonal;
+
   /// `color/state/pressed`
   final Color statePressed;
+
   /// `color/state/focus-ring`
   final Color stateFocusRing;
+
   /// `color/highlight/sun`
   final Color highlightSun;
+
   /// `color/highlight/leaf`
   final Color highlightLeaf;
+
   /// `color/highlight/sky`
   final Color highlightSky;
+
   /// `color/highlight/rose`
   final Color highlightRose;
+
   /// `color/highlight/lilac`
   final Color highlightLilac;
+
   /// `color/glass/fill`
   final Color glassFill;
+
   /// `color/glass/fill-opaque`
   final Color glassFillOpaque;
+
   /// `color/glass/stroke`
   final Color glassStroke;
+
   /// `color/glass/edge-shadow`
   final Color glassEdgeShadow;
+
   /// `color/scrim/edge`
   final Color scrimEdge;
+
   /// `color/scrim/page-clear`
   final Color scrimPageClear;
+
   /// `color/control/switch-on`
   final Color controlSwitchOn;
+
   /// `color/control/switch-off`
   final Color controlSwitchOff;
+
   /// `color/control/switch-locked`
   final Color controlSwitchLocked;
+
   /// `color/control/track-off`
   final Color controlTrackOff;
+
   /// `color/control/knob`
   final Color controlKnob;
+
   /// `color/lamp/flame`
   final Color lampFlame;
+
   /// `color/lamp/flame-core`
   final Color lampFlameCore;
+
   /// `color/lamp/glow`
   final Color lampGlow;
+
   /// `color/lamp/body`
   final Color lampBody;
+
   /// `color/lamp/oil`
   final Color lampOil;
+
   /// `color/lamp/unlit`
   final Color lampUnlit;
+
   /// `color/lamp/mark`
   final Color lampMark;
+
   /// `color/qr/module`
   final Color qrModule;
+
   /// `color/qr/tile`
   final Color qrTile;
+
   /// `color/media/dim`
   final Color mediaDim;
+
   /// `color/media/on-dim`
   final Color mediaOnDim;
+
   /// `color/live/bg`
   final Color liveBg;
+
   /// `color/live/on-bg`
   final Color liveOnBg;
+
   /// `color/live/container`
   final Color liveContainer;
+
   /// `color/glow/tint`
   final Color glowTint;
+
   /// `color/glow/page-tl`
   final Color glowPageTl;
+
   /// `color/glow/page-br`
   final Color glowPageBr;
+
   /// `color/button/primary-lip`
   final Color buttonPrimaryLip;
+
   /// `color/button/gold-top`
   final Color buttonGoldTop;
+
   /// `color/button/gold-bottom`
   final Color buttonGoldBottom;
+
   /// `color/button/gold-lip`
   final Color buttonGoldLip;
+
   /// `color/button/on-gold`
   final Color buttonOnGold;
+
   /// `color/button/secondary`
   final Color buttonSecondary;
+
   /// `color/button/secondary-lip`
   final Color buttonSecondaryLip;
+
   /// `color/button/danger-lip`
   final Color buttonDangerLip;
+
   /// `color/tile/selected`
   final Color tileSelected;
+
   /// `color/tile/selected-stroke`
   final Color tileSelectedStroke;
+
   /// `color/tile/on-selected`
   final Color tileOnSelected;
+
   /// `color/tile/on-selected-accent`
   final Color tileOnSelectedAccent;
+
   /// `color/tile/on-selected-secondary`
   final Color tileOnSelectedSecondary;
+
   /// `color/tile/streak`
   final Color tileStreak;
+
   /// `color/tile/on-streak`
   final Color tileOnStreak;
+
   /// `color/tab/active`
   final Color tabActive;
+
   /// `color/chip`
   final Color chip;
+
   /// `scene/sky/top`
   final Color sceneSkyTop;
+
   /// `scene/sky/mid`
   final Color sceneSkyMid;
+
   /// `scene/sky/horizon`
   final Color sceneSkyHorizon;
+
   /// `scene/sun`
   final Color sceneSun;
+
   /// `scene/star`
   final Color sceneStar;
+
   /// `scene/cloud`
   final Color sceneCloud;
+
   /// `scene/cloud-shade`
   final Color sceneCloudShade;
+
   /// `scene/mountain/top`
   final Color sceneMountainTop;
+
   /// `scene/mountain/bottom`
   final Color sceneMountainBottom;
+
   /// `scene/hill-far/top`
   final Color sceneHillFarTop;
+
   /// `scene/hill-far/bottom`
   final Color sceneHillFarBottom;
+
   /// `scene/haze`
   final Color sceneHaze;
+
   /// `scene/hill-near/top`
   final Color sceneHillNearTop;
+
   /// `scene/hill-near/bottom`
   final Color sceneHillNearBottom;
+
   /// `scene/hill-rim`
   final Color sceneHillRim;
+
   /// `scene/meadow/top`
   final Color sceneMeadowTop;
+
   /// `scene/meadow/bottom`
   final Color sceneMeadowBottom;
+
   /// `scene/road`
   final Color sceneRoad;
+
   /// `scene/road-far`
   final Color sceneRoadFar;
+
   /// `scene/road-edge`
   final Color sceneRoadEdge;
+
   /// `scene/tree/light`
   final Color sceneTreeLight;
+
   /// `scene/tree/dark`
   final Color sceneTreeDark;
+
   /// `scene/tree/highlight`
   final Color sceneTreeHighlight;
+
   /// `scene/tree/trunk`
   final Color sceneTreeTrunk;
+
   /// `scene/water/top`
   final Color sceneWaterTop;
+
   /// `scene/water/bottom`
   final Color sceneWaterBottom;
+
   /// `scene/water/rim`
   final Color sceneWaterRim;
+
   /// `scene/flower/pink`
   final Color sceneFlowerPink;
+
   /// `scene/flower/gold`
   final Color sceneFlowerGold;
+
   /// `scene/shadow`
   final Color sceneShadow;
+
   /// `scene/glow`
   final Color sceneGlow;
+
   /// `scene/evening/top`
   final Color sceneEveningTop;
+
   /// `scene/evening/horizon`
   final Color sceneEveningHorizon;
+
   /// `scene/evening/ground`
   final Color sceneEveningGround;
+
   /// `scene/panel`
   final Color scenePanel;
+
   /// `scene/stop/done-top`
   final Color sceneStopDoneTop;
+
   /// `scene/stop/done-bottom`
   final Color sceneStopDoneBottom;
+
   /// `scene/stop/done-side`
   final Color sceneStopDoneSide;
+
   /// `scene/stop/done-rim`
   final Color sceneStopDoneRim;
+
   /// `scene/stop/current-top`
   final Color sceneStopCurrentTop;
+
   /// `scene/stop/current-bottom`
   final Color sceneStopCurrentBottom;
+
   /// `scene/stop/current-side`
   final Color sceneStopCurrentSide;
+
   /// `scene/stop/current-rim`
   final Color sceneStopCurrentRim;
+
   /// `scene/stop/on-current`
   final Color sceneStopOnCurrent;
+
   /// `scene/stop/upcoming-top`
   final Color sceneStopUpcomingTop;
+
   /// `scene/stop/upcoming-bottom`
   final Color sceneStopUpcomingBottom;
+
   /// `scene/stop/upcoming-side`
   final Color sceneStopUpcomingSide;
+
   /// `scene/stop/upcoming-rim`
   final Color sceneStopUpcomingRim;
+
   /// `scene/stop/on-upcoming`
   final Color sceneStopOnUpcoming;
+
   /// `scene/stop/grace-top`
   final Color sceneStopGraceTop;
+
   /// `scene/stop/grace-bottom`
   final Color sceneStopGraceBottom;
+
   /// `scene/stop/grace-side`
   final Color sceneStopGraceSide;
+
   /// `scene/stop/grace-rim`
   final Color sceneStopGraceRim;
+
   /// `scene/stop/highlight`
   final Color sceneStopHighlight;
+
   /// `scene/traveller/cloak-top`
   final Color sceneTravellerCloakTop;
+
   /// `scene/traveller/cloak-bottom`
   final Color sceneTravellerCloakBottom;
+
   /// `scene/traveller/rim`
   final Color sceneTravellerRim;
+
   /// `scene/traveller/skin-top`
   final Color sceneTravellerSkinTop;
+
   /// `scene/traveller/skin-bottom`
   final Color sceneTravellerSkinBottom;
+
   /// `scene/traveller/scarf`
   final Color sceneTravellerScarf;
+
   /// `scene/traveller/scarf-shade`
   final Color sceneTravellerScarfShade;
+
   /// `scene/traveller/satchel`
   final Color sceneTravellerSatchel;
+
   /// `scene/traveller/strap`
   final Color sceneTravellerStrap;
+
   /// `scene/traveller/staff`
   final Color sceneTravellerStaff;
+
   /// `scene/traveller/boots`
   final Color sceneTravellerBoots;
+
   /// `scene/traveller/ink`
   final Color sceneTravellerInk;
+
   /// `scene/traveller/highlight`
   final Color sceneTravellerHighlight;
+
   /// `scene/dusk/sky-top`
   final Color sceneDuskSkyTop;
+
   /// `scene/dusk/sky-mid`
   final Color sceneDuskSkyMid;
+
   /// `scene/dusk/sky-horizon`
   final Color sceneDuskSkyHorizon;
+
   /// `scene/dusk/sun`
   final Color sceneDuskSun;
+
   /// `scene/dusk/sun-disc`
   final Color sceneDuskSunDisc;
+
   /// `scene/dusk/land`
   final Color sceneDuskLand;
+
   /// `scene/dusk/scrim`
   final Color sceneDuskScrim;
+
   /// `scene/reader`
   final Color sceneReader;
+
   /// `scene/reader-glow`
   final Color sceneReaderGlow;
+
   /// `scene/marker`
   final Color sceneMarker;
+
   /// `scene/sky/top-clear`
   final Color sceneSkyTopClear;
+
   /// `scene/sun-clear`
   final Color sceneSunClear;
+
   /// `scene/haze-clear`
   final Color sceneHazeClear;
+
   /// `scene/shadow-clear`
   final Color sceneShadowClear;
+
   /// `scene/glow-clear`
   final Color sceneGlowClear;
+
   /// `scene/evening-clear`
   final Color sceneEveningClear;
+
   /// `scene/panel-clear`
   final Color scenePanelClear;
+
   /// `scene/dusk/sun-clear`
   final Color sceneDuskSunClear;
+
   /// `scene/dusk/land-clear`
   final Color sceneDuskLandClear;
+
   /// `scene/dusk/scrim-clear`
   final Color sceneDuskScrimClear;
+
   /// `scene/reader-glow-clear`
   final Color sceneReaderGlowClear;
 
@@ -1026,59 +1217,237 @@ abstract final class LumMotion {
 /// Text styles (Figma `Type/*` and `Road/*`). Colour comes from LumColors at the call site.
 abstract final class LumText {
   /// `Type/Large Title` Inter 700 34/41
-  static const largeTitle = TextStyle(fontFamily: 'Inter', fontSize: 34, height: 1.206, letterSpacing: -0.68, fontWeight: FontWeight.w700);
+  static const largeTitle = TextStyle(
+      fontFamily: 'Inter',
+      fontSize: 34,
+      height: 1.206,
+      letterSpacing: -0.68,
+      fontWeight: FontWeight.w700);
+
   /// `Type/Title 1` Inter 700 28/34
-  static const title1 = TextStyle(fontFamily: 'Inter', fontSize: 28, height: 1.214, letterSpacing: -0.42, fontWeight: FontWeight.w700);
+  static const title1 = TextStyle(
+      fontFamily: 'Inter',
+      fontSize: 28,
+      height: 1.214,
+      letterSpacing: -0.42,
+      fontWeight: FontWeight.w700);
+
   /// `Type/Title 2` Inter 600 22/28
-  static const title2 = TextStyle(fontFamily: 'Inter', fontSize: 22, height: 1.273, letterSpacing: -0.403, fontWeight: FontWeight.w600);
+  static const title2 = TextStyle(
+      fontFamily: 'Inter',
+      fontSize: 22,
+      height: 1.273,
+      letterSpacing: -0.403,
+      fontWeight: FontWeight.w600);
+
   /// `Type/Title 3` Inter 600 20/25
-  static const title3 = TextStyle(fontFamily: 'Inter', fontSize: 20, height: 1.25, letterSpacing: -0.334, fontWeight: FontWeight.w600);
+  static const title3 = TextStyle(
+      fontFamily: 'Inter',
+      fontSize: 20,
+      height: 1.25,
+      letterSpacing: -0.334,
+      fontWeight: FontWeight.w600);
+
   /// `Type/Headline` Inter 600 17/22
-  static const headline = TextStyle(fontFamily: 'Inter', fontSize: 17, height: 1.294, letterSpacing: -0.218, fontWeight: FontWeight.w600);
+  static const headline = TextStyle(
+      fontFamily: 'Inter',
+      fontSize: 17,
+      height: 1.294,
+      letterSpacing: -0.218,
+      fontWeight: FontWeight.w600);
+
   /// `Type/Body` Inter 400 17/22
-  static const body = TextStyle(fontFamily: 'Inter', fontSize: 17, height: 1.294, letterSpacing: -0.218, fontWeight: FontWeight.w400);
+  static const body = TextStyle(
+      fontFamily: 'Inter',
+      fontSize: 17,
+      height: 1.294,
+      letterSpacing: -0.218,
+      fontWeight: FontWeight.w400);
+
   /// `Type/Body Emphasized` Inter 600 17/22
-  static const bodyEmphasized = TextStyle(fontFamily: 'Inter', fontSize: 17, height: 1.294, letterSpacing: -0.218, fontWeight: FontWeight.w600);
+  static const bodyEmphasized = TextStyle(
+      fontFamily: 'Inter',
+      fontSize: 17,
+      height: 1.294,
+      letterSpacing: -0.218,
+      fontWeight: FontWeight.w600);
+
   /// `Type/Callout` Inter 400 16/21
-  static const callout = TextStyle(fontFamily: 'Inter', fontSize: 16, height: 1.312, letterSpacing: -0.176, fontWeight: FontWeight.w400);
+  static const callout = TextStyle(
+      fontFamily: 'Inter',
+      fontSize: 16,
+      height: 1.312,
+      letterSpacing: -0.176,
+      fontWeight: FontWeight.w400);
+
   /// `Type/Subheadline` Inter 400 15/20
-  static const subheadline = TextStyle(fontFamily: 'Inter', fontSize: 15, height: 1.333, letterSpacing: -0.132, fontWeight: FontWeight.w400);
+  static const subheadline = TextStyle(
+      fontFamily: 'Inter',
+      fontSize: 15,
+      height: 1.333,
+      letterSpacing: -0.132,
+      fontWeight: FontWeight.w400);
+
   /// `Type/Subheadline Emphasized` Inter 600 15/20
-  static const subheadlineEmphasized = TextStyle(fontFamily: 'Inter', fontSize: 15, height: 1.333, letterSpacing: -0.132, fontWeight: FontWeight.w600);
+  static const subheadlineEmphasized = TextStyle(
+      fontFamily: 'Inter',
+      fontSize: 15,
+      height: 1.333,
+      letterSpacing: -0.132,
+      fontWeight: FontWeight.w600);
+
   /// `Type/Footnote` Inter 400 13/18
-  static const footnote = TextStyle(fontFamily: 'Inter', fontSize: 13, height: 1.385, letterSpacing: -0.042, fontWeight: FontWeight.w400);
+  static const footnote = TextStyle(
+      fontFamily: 'Inter',
+      fontSize: 13,
+      height: 1.385,
+      letterSpacing: -0.042,
+      fontWeight: FontWeight.w400);
+
   /// `Type/Footnote Emphasized` Inter 600 13/18
-  static const footnoteEmphasized = TextStyle(fontFamily: 'Inter', fontSize: 13, height: 1.385, letterSpacing: -0.042, fontWeight: FontWeight.w600);
+  static const footnoteEmphasized = TextStyle(
+      fontFamily: 'Inter',
+      fontSize: 13,
+      height: 1.385,
+      letterSpacing: -0.042,
+      fontWeight: FontWeight.w600);
+
   /// `Type/Caption` Inter 500 12/16
-  static const caption = TextStyle(fontFamily: 'Inter', fontSize: 12, height: 1.333, letterSpacing: 0.006, fontWeight: FontWeight.w500);
+  static const caption = TextStyle(
+      fontFamily: 'Inter',
+      fontSize: 12,
+      height: 1.333,
+      letterSpacing: 0.006,
+      fontWeight: FontWeight.w500);
+
   /// `Type/Hero Numeral` Bricolage Grotesque 800 56/60
-  static const heroNumeral = TextStyle(fontFamily: 'BricolageGrotesque', fontSize: 56, height: 1.071, letterSpacing: -1.68, fontWeight: FontWeight.w800, fontVariations: [FontVariation('wght', 800), FontVariation('opsz', 14)], fontFeatures: [FontFeature.tabularFigures()]);
+  static const heroNumeral = TextStyle(
+      fontFamily: 'BricolageGrotesque',
+      fontSize: 56,
+      height: 1.071,
+      letterSpacing: -1.68,
+      fontWeight: FontWeight.w800,
+      fontVariations: [FontVariation('wght', 800), FontVariation('opsz', 14)],
+      fontFeatures: [FontFeature.tabularFigures()]);
+
   /// `Type/Reading/Scripture` Gentium Book Plus 400 20/32
-  static const readingScripture = TextStyle(fontFamily: 'GentiumBookPlus', fontSize: 20, height: 1.6, letterSpacing: 0, fontWeight: FontWeight.w400);
+  static const readingScripture = TextStyle(
+      fontFamily: 'GentiumBookPlus',
+      fontSize: 20,
+      height: 1.6,
+      letterSpacing: 0,
+      fontWeight: FontWeight.w400);
+
   /// `Type/Reading/Lyrics` Gentium Book Plus 400 20/31
-  static const readingLyrics = TextStyle(fontFamily: 'GentiumBookPlus', fontSize: 20, height: 1.55, letterSpacing: 0, fontWeight: FontWeight.w400);
+  static const readingLyrics = TextStyle(
+      fontFamily: 'GentiumBookPlus',
+      fontSize: 20,
+      height: 1.55,
+      letterSpacing: 0,
+      fontWeight: FontWeight.w400);
+
   /// `Type/Reading/Lyrics Compact` Gentium Book Plus 400 17/26
-  static const readingLyricsCompact = TextStyle(fontFamily: 'GentiumBookPlus', fontSize: 17, height: 1.529, letterSpacing: 0, fontWeight: FontWeight.w400);
+  static const readingLyricsCompact = TextStyle(
+      fontFamily: 'GentiumBookPlus',
+      fontSize: 17,
+      height: 1.529,
+      letterSpacing: 0,
+      fontWeight: FontWeight.w400);
+
   /// `Type/Reading/Verse Quote` Gentium Book Plus 400 18/27
-  static const readingVerseQuote = TextStyle(fontFamily: 'GentiumBookPlus', fontSize: 18, height: 1.5, letterSpacing: 0, fontWeight: FontWeight.w400, fontStyle: FontStyle.italic);
+  static const readingVerseQuote = TextStyle(
+      fontFamily: 'GentiumBookPlus',
+      fontSize: 18,
+      height: 1.5,
+      letterSpacing: 0,
+      fontWeight: FontWeight.w400,
+      fontStyle: FontStyle.italic);
+
   /// `Type/Reading/Verse Number` Inter 600 12/16
-  static const readingVerseNumber = TextStyle(fontFamily: 'Inter', fontSize: 12, height: 1.333, letterSpacing: 0.006, fontWeight: FontWeight.w600);
+  static const readingVerseNumber = TextStyle(
+      fontFamily: 'Inter',
+      fontSize: 12,
+      height: 1.333,
+      letterSpacing: 0.006,
+      fontWeight: FontWeight.w600);
+
   /// `Type/Display/Verse` Gentium Book Plus 400 28/36
-  static const displayVerse = TextStyle(fontFamily: 'GentiumBookPlus', fontSize: 28, height: 1.286, letterSpacing: 0, fontWeight: FontWeight.w400);
+  static const displayVerse = TextStyle(
+      fontFamily: 'GentiumBookPlus',
+      fontSize: 28,
+      height: 1.286,
+      letterSpacing: 0,
+      fontWeight: FontWeight.w400);
+
   /// `Road/Display/Hero 120` Bricolage Grotesque 800 120/108
-  static const roadDisplayHero120 = TextStyle(fontFamily: 'BricolageGrotesque', fontSize: 120, height: 0.9, letterSpacing: -3.6, fontWeight: FontWeight.w800, fontVariations: [FontVariation('wght', 800), FontVariation('opsz', 96)], fontFeatures: [FontFeature.tabularFigures()]);
+  static const roadDisplayHero120 = TextStyle(
+      fontFamily: 'BricolageGrotesque',
+      fontSize: 120,
+      height: 0.9,
+      letterSpacing: -3.6,
+      fontWeight: FontWeight.w800,
+      fontVariations: [FontVariation('wght', 800), FontVariation('opsz', 96)],
+      fontFeatures: [FontFeature.tabularFigures()]);
+
   /// `Road/Display/Large 76` Bricolage Grotesque 800 76/72.2
-  static const roadDisplayLarge76 = TextStyle(fontFamily: 'BricolageGrotesque', fontSize: 76, height: 0.95, letterSpacing: -2.28, fontWeight: FontWeight.w800, fontVariations: [FontVariation('wght', 800), FontVariation('opsz', 96)], fontFeatures: [FontFeature.tabularFigures()]);
+  static const roadDisplayLarge76 = TextStyle(
+      fontFamily: 'BricolageGrotesque',
+      fontSize: 76,
+      height: 0.95,
+      letterSpacing: -2.28,
+      fontWeight: FontWeight.w800,
+      fontVariations: [FontVariation('wght', 800), FontVariation('opsz', 96)],
+      fontFeatures: [FontFeature.tabularFigures()]);
+
   /// `Road/Display/Medium 56` Bricolage Grotesque 800 56/56
-  static const roadDisplayMedium56 = TextStyle(fontFamily: 'BricolageGrotesque', fontSize: 56, height: 1, letterSpacing: -1.68, fontWeight: FontWeight.w800, fontVariations: [FontVariation('wght', 800), FontVariation('opsz', 14)], fontFeatures: [FontFeature.tabularFigures()]);
+  static const roadDisplayMedium56 = TextStyle(
+      fontFamily: 'BricolageGrotesque',
+      fontSize: 56,
+      height: 1,
+      letterSpacing: -1.68,
+      fontWeight: FontWeight.w800,
+      fontVariations: [FontVariation('wght', 800), FontVariation('opsz', 14)],
+      fontFeatures: [FontFeature.tabularFigures()]);
+
   /// `Road/Display/Stat 28` Bricolage Grotesque 800 28/30.8
-  static const roadDisplayStat28 = TextStyle(fontFamily: 'BricolageGrotesque', fontSize: 28, height: 1.1, letterSpacing: -0.84, fontWeight: FontWeight.w800, fontVariations: [FontVariation('wght', 800), FontVariation('opsz', 14)], fontFeatures: [FontFeature.tabularFigures()]);
+  static const roadDisplayStat28 = TextStyle(
+      fontFamily: 'BricolageGrotesque',
+      fontSize: 28,
+      height: 1.1,
+      letterSpacing: -0.84,
+      fontWeight: FontWeight.w800,
+      fontVariations: [FontVariation('wght', 800), FontVariation('opsz', 14)],
+      fontFeatures: [FontFeature.tabularFigures()]);
+
   /// `Road/Title/Large 34` Inter 700 34/37.4
-  static const roadTitleLarge34 = TextStyle(fontFamily: 'Inter', fontSize: 34, height: 1.1, letterSpacing: -0.68, fontWeight: FontWeight.w700);
+  static const roadTitleLarge34 = TextStyle(
+      fontFamily: 'Inter',
+      fontSize: 34,
+      height: 1.1,
+      letterSpacing: -0.68,
+      fontWeight: FontWeight.w700);
+
   /// `Road/Title/Small 24` Inter 700 24/27.6
-  static const roadTitleSmall24 = TextStyle(fontFamily: 'Inter', fontSize: 24, height: 1.15, letterSpacing: -0.24, fontWeight: FontWeight.w700);
+  static const roadTitleSmall24 = TextStyle(
+      fontFamily: 'Inter',
+      fontSize: 24,
+      height: 1.15,
+      letterSpacing: -0.24,
+      fontWeight: FontWeight.w700);
+
   /// `Road/Label/Caps 11` Inter 600 11/14.3
-  static const roadLabelCaps11 = TextStyle(fontFamily: 'Inter', fontSize: 11, height: 1.3, letterSpacing: 0.88, fontWeight: FontWeight.w600);
+  static const roadLabelCaps11 = TextStyle(
+      fontFamily: 'Inter',
+      fontSize: 11,
+      height: 1.3,
+      letterSpacing: 0.88,
+      fontWeight: FontWeight.w600);
+
   /// `Road/Reading/Scripture 19` Gentium Book Plus 400 19/31
-  static const roadReadingScripture19 = TextStyle(fontFamily: 'GentiumBookPlus', fontSize: 19, height: 1.632, letterSpacing: 0, fontWeight: FontWeight.w400);
+  static const roadReadingScripture19 = TextStyle(
+      fontFamily: 'GentiumBookPlus',
+      fontSize: 19,
+      height: 1.632,
+      letterSpacing: 0,
+      fontWeight: FontWeight.w400);
 }

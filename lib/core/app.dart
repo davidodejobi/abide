@@ -8,6 +8,7 @@ import 'package:openbaptisthymnal/features/tablet/providers/tablets_providers.da
 import 'package:toastification/toastification.dart';
 
 import 'router/app_router.dart';
+import 'sync/sync_providers.dart';
 import 'storage/storage_provider.dart';
 import 'theme/theme.dart';
 import 'theme/theme_provider.dart';
@@ -28,6 +29,7 @@ class AbideApp extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final appRouter = ref.watch(appRouterProvider);
     final themeMode = ref.watch(themeModeProvider);
+    ref.watch(syncControllerProvider); // no-op unless Supabase is configured
 
     // One-shot: drop the example "Welcome to your notes" note in the notes
     // tab the first time this build of the app starts up, and a "what's new"

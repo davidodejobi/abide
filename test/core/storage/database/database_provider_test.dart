@@ -54,7 +54,8 @@ void main() {
           expect(
             entry.value.attachedDatabase,
             same(db),
-            reason: '${entry.key} DAO must use the shared database, not its own',
+            reason:
+                '${entry.key} DAO must use the shared database, not its own',
           );
         }
       });

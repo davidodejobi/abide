@@ -13,6 +13,7 @@ import 'daos/note_links_dao.dart';
 import 'daos/notes_dao.dart';
 import 'daos/reading_plans_dao.dart';
 import 'daos/tags_dao.dart';
+import '../../sync/sync_triggers.dart';
 import 'tables.dart';
 
 part 'app_database.g.dart';
@@ -29,6 +30,8 @@ part 'app_database.g.dart';
     ReadingDays,
     PlanSubscriptions,
     PlanDayProgress,
+    SyncOutbox,
+    SyncState,
   ],
   daos: [
     NotesDao,
@@ -51,13 +54,14 @@ class AppDatabase extends _$AppDatabase {
   // `tables:` but never reaches `onUpgrade` exists on fresh installs (via
   // createAll) and is silently missing for everyone who upgrades.
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
         onCreate: (m) async {
           await m.createAll();
           await _createNotesSearchIndex();
+          await createSyncTriggers(this);
         },
         onUpgrade: (m, from, to) async {
           if (from < 2) {
@@ -75,6 +79,21 @@ class AppDatabase extends _$AppDatabase {
             await m.createTable(readingDays);
             await m.createTable(planSubscriptions);
             await m.createTable(planDayProgress);
+          }
+          if (from < 5) {
+            // Sync groundwork. The only change to an existing table is
+            // plan_subscriptions.updatedAt (defaults to the epoch, so no row is
+            // rewritten); everything else is new. From < 4 the table was just
+            // created with the column already, so adding it would be a
+            // duplicate. Backfilling the outbox means data written before sync
+            // existed is pushed on the first run instead of being stranded.
+            if (from >= 4) {
+              await m.addColumn(planSubscriptions, planSubscriptions.updatedAt);
+            }
+            await m.createTable(syncOutbox);
+            await m.createTable(syncState);
+            await createSyncTriggers(this);
+            await backfillSyncOutbox(this);
           }
         },
         beforeOpen: (details) async {
