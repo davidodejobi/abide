@@ -3,6 +3,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:openbaptisthymnal/core/notifications/notification_service.dart';
 import 'package:openbaptisthymnal/core/providers/bottom_nav_provider.dart';
+import 'package:openbaptisthymnal/features/daily/providers/daily_providers.dart';
 import 'package:openbaptisthymnal/features/app_update/ui/app_update_overlay.dart';
 import 'package:openbaptisthymnal/features/onboarding/domain/seed_welcome_note.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/seed_release_notes.dart';
@@ -48,6 +49,13 @@ class AbideApp extends HookConsumerWidget {
         storage: storage,
         createNote: repo.createNote,
       );
+      return null;
+    }, const []);
+
+    // After the first frame, re-register saved reminders (no permission prompt).
+    useEffect(() {
+      WidgetsBinding.instance.addPostFrameCallback(
+          (_) => ref.read(rescheduleRemindersProvider)());
       return null;
     }, const []);
 

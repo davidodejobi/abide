@@ -13,6 +13,9 @@ abstract class NotificationService {
   /// Asks the OS for permission. Call only when the user turns a reminder on.
   Future<bool> requestPermission();
 
+  /// Whether permission is already granted. Never prompts.
+  Future<bool> hasPermission();
+
   /// Repeats every day at [hour]:[minute] local time.
   Future<void> scheduleDaily({
     required int id,
@@ -34,6 +37,44 @@ abstract class NotificationService {
 
   /// Emits when the user taps a notification while the app is running.
   Stream<void> get taps;
+}
+
+/// First time a daily reminder at [hour]:[minute] should fire: today if that
+/// is still ahead of [now], otherwise tomorrow. Pure; wall-clock fields only.
+DateTime nextDailyFire(DateTime now, int hour, int minute) {
+  final today = DateTime(now.year, now.month, now.day, hour, minute);
+  return today.isAfter(now)
+      ? today
+      : DateTime(now.year, now.month, now.day + 1, hour, minute);
+}
+
+/// Does nothing. The default, and what web gets, so a failed init never
+/// blocks launch and callers need no null checks.
+class NoopNotificationService implements NotificationService {
+  const NoopNotificationService();
+  @override
+  Future<bool> requestPermission() async => false;
+  @override
+  Future<bool> hasPermission() async => false;
+  @override
+  Future<void> scheduleDaily({
+    required int id,
+    required int hour,
+    required int minute,
+    required String title,
+    required String body,
+  }) async {}
+  @override
+  Future<void> scheduleOnce({
+    required int id,
+    required DateTime at,
+    required String title,
+    required String body,
+  }) async {}
+  @override
+  Future<void> cancel(int id) async {}
+  @override
+  Stream<void> get taps => const Stream.empty();
 }
 
 /// Ids are fixed so a reschedule replaces the old one.
@@ -69,9 +110,6 @@ class LocalNotificationService implements NotificationService {
   @override
   Stream<void> get taps => _taps.stream;
 
-  /// True when the app was cold-started by tapping a notification.
-  bool launchedByNotification = false;
-
   /// Does not prompt: permission is requested later, on demand.
   Future<void> init() async {
     tzdata.initializeTimeZones();
@@ -79,11 +117,11 @@ class LocalNotificationService implements NotificationService {
       final zone = await FlutterTimezone.getLocalTimezone();
       tz.setLocalLocation(tz.getLocation(zone.identifier));
     } catch (e) {
-      debugPrint('Timezone lookup failed, using UTC: $e');
+      debugPrint('Timezone lookup failed, reminders will use UTC: $e');
     }
     await _plugin.initialize(
       settings: const InitializationSettings(
-        android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+        android: AndroidInitializationSettings('ic_stat_lumway'),
         iOS: DarwinInitializationSettings(
           requestAlertPermission: false,
           requestBadgePermission: false,
@@ -92,8 +130,16 @@ class LocalNotificationService implements NotificationService {
       ),
       onDidReceiveNotificationResponse: (_) => _taps.add(null),
     );
-    final launch = await _plugin.getNotificationAppLaunchDetails();
-    launchedByNotification = launch?.didNotificationLaunchApp ?? false;
+  }
+
+  @override
+  Future<bool> hasPermission() async {
+    final android = _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    if (android != null) return await android.areNotificationsEnabled() ?? false;
+    final ios = _plugin.resolvePlatformSpecificImplementation<
+        IOSFlutterLocalNotificationsPlugin>();
+    return (await ios?.checkPermissions())?.isEnabled ?? false;
   }
 
   @override
@@ -116,10 +162,8 @@ class LocalNotificationService implements NotificationService {
     required String title,
     required String body,
   }) {
-    final now = tz.TZDateTime.now(tz.local);
-    var first =
-        tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
-    if (!first.isAfter(now)) first = first.add(const Duration(days: 1));
+    final f = nextDailyFire(tz.TZDateTime.now(tz.local), hour, minute);
+    final first = tz.TZDateTime(tz.local, f.year, f.month, f.day, f.hour, f.minute);
     return _plugin.zonedSchedule(
       id: id,
       title: title,
@@ -155,7 +199,7 @@ class LocalNotificationService implements NotificationService {
   Future<void> cancel(int id) => _plugin.cancel(id: id);
 }
 
-/// Overridden in `main` with the initialised [LocalNotificationService].
-final notificationServiceProvider = Provider<NotificationService>((ref) {
-  throw UnimplementedError('Override notificationServiceProvider in main.dart');
-});
+/// A no-op until `main` overrides it with an initialised
+/// [LocalNotificationService].
+final notificationServiceProvider =
+    Provider<NotificationService>((ref) => const NoopNotificationService());

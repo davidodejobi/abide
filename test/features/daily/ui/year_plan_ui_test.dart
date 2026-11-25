@@ -1,7 +1,9 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:openbaptisthymnal/core/notifications/notification_service.dart';
 import 'package:openbaptisthymnal/core/storage/database/database_provider.dart';
+import '../../../support/fake_notifications.dart';
 import 'package:openbaptisthymnal/core/storage/storage_provider.dart';
 import 'package:openbaptisthymnal/core/theme/app_theme.dart';
 import 'package:openbaptisthymnal/features/bible/domain/verse_ref.dart';
@@ -38,6 +40,7 @@ void main() {
   ProviderContainer container(DateTime now) {
     final c = ProviderContainer(overrides: [
       sharedPreferencesProvider.overrideWithValue(prefs),
+      notificationServiceProvider.overrideWithValue(FakeNotifications()),
       dayPartClockProvider.overrideWithValue(() => now),
       availablePlansProvider.overrideWith((_) async => [
             _plan('psalms-30', 30),

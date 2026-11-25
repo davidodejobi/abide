@@ -15,17 +15,22 @@ class ReadingReminderNotifier extends Notifier<int?> {
   int? build() => ref.watch(storageServiceProvider).getReadingReminderMinutes();
 
   /// Turns the reminder on at [hour]:[minute], asking permission first.
-  /// Returns false (and stays off) when permission is refused.
+  /// Returns false (and stays off) when permission is refused or scheduling
+  /// fails.
   Future<bool> enable(int hour, int minute) async {
     final service = ref.read(notificationServiceProvider);
     if (!await service.requestPermission()) return false;
-    await service.scheduleDaily(
-      id: NotificationIds.dailyReading,
-      hour: hour,
-      minute: minute,
-      title: title,
-      body: body,
-    );
+    try {
+      await service.scheduleDaily(
+        id: NotificationIds.dailyReading,
+        hour: hour,
+        minute: minute,
+        title: title,
+        body: body,
+      );
+    } catch (_) {
+      return false;
+    }
     state = hour * 60 + minute;
     await ref.read(storageServiceProvider).saveReadingReminderMinutes(state);
     return true;

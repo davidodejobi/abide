@@ -24,7 +24,7 @@ abstract final class YouStrings {
   static const reminderOff = 'Off';
   static const reminderPickTime = 'Choose a time';
   static const reminderDenied =
-      'Notifications are off for Lumway. You can turn them on in your phone settings.';
+      'Could not turn on the reminder. Check that notifications are allowed for Lumway in your phone settings.';
 
   static const voiceNotes = 'Voice notes';
   static const recordingQuality = 'Recording quality';

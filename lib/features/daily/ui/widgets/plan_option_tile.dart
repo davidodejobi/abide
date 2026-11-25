@@ -6,6 +6,7 @@ import '../../domain/plan_schedule.dart';
 import '../../domain/plan_summary.dart';
 import '../../domain/reading_plan.dart';
 import '../../providers/daily_providers.dart';
+import 'package:openbaptisthymnal/features/settings/ui/you_strings.dart';
 import '../daily_strings.dart';
 
 /// One plan as a row: title and pace on the left, the day count big on the
@@ -187,8 +188,15 @@ class PlanTile extends ConsumerWidget {
               schedule.startLabel, schedule.daysToGo(today))
           : null,
       reminderOn: remind,
-      onReminderChanged: (on) =>
-          ref.read(planRemindersProvider.notifier).toggle(plan.id, on),
+      onReminderChanged: (on) async {
+        final messenger = ScaffoldMessenger.maybeOf(context);
+        final ok =
+            await ref.read(planRemindersProvider.notifier).toggle(plan.id, on);
+        if (!ok) {
+          messenger?.showSnackBar(
+              const SnackBar(content: Text(YouStrings.reminderDenied)));
+        }
+      },
     );
   }
 }

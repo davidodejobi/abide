@@ -1,4 +1,5 @@
 import 'package:auto_route/auto_route.dart';
+import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
@@ -100,14 +101,16 @@ class _SettingsTabScreenState extends ConsumerState<SettingsTabScreen>
               _BibleLinkRow(),
               _HymnLinkRow(),
             ]),
-            const YouSectionLabel(YouStrings.reminders),
-            YouGroup(children: [
-              YouControlRow(
-                icon: PhosphorIcons.bell(),
-                title: YouStrings.dailyReminder,
-                child: const _ReadingReminderControl(),
-              ),
-            ]),
+            if (!kIsWeb) ...[
+              const YouSectionLabel(YouStrings.reminders),
+              YouGroup(children: [
+                YouControlRow(
+                  icon: PhosphorIcons.bell(),
+                  title: YouStrings.dailyReminder,
+                  child: const _ReadingReminderControl(),
+                ),
+              ]),
+            ],
             const YouSectionLabel(YouStrings.voiceNotes),
             YouGroup(children: [
               YouControlRow(

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -16,8 +17,18 @@ void main() async {
   await FileStorageService.init();
   final prefs = await SharedPreferences.getInstance();
 
-  final notifications = LocalNotificationService();
-  await notifications.init();
+  // Never let notification setup block launch: on failure the no-op default
+  // stays in place.
+  NotificationService? notifications;
+  if (!kIsWeb) {
+    try {
+      final service = LocalNotificationService();
+      await service.init();
+      notifications = service;
+    } catch (e) {
+      debugPrint('Notifications unavailable: $e');
+    }
+  }
 
   // The intro's art, built while the native splash still shows.
   await SplashIntro.preload();
@@ -26,7 +37,8 @@ void main() async {
     ProviderScope(
       overrides: [
         sharedPreferencesProvider.overrideWithValue(prefs),
-        notificationServiceProvider.overrideWithValue(notifications),
+        if (notifications != null)
+          notificationServiceProvider.overrideWithValue(notifications),
       ],
       child: const AbideApp(),
     ),

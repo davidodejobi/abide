@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openbaptisthymnal/core/notifications/notification_service.dart';
 import 'package:openbaptisthymnal/core/storage/database/app_database.dart';
+import 'package:openbaptisthymnal/features/settings/providers/reading_reminder_provider.dart';
 import 'package:openbaptisthymnal/core/storage/database/database_provider.dart';
 import 'package:openbaptisthymnal/core/storage/storage_provider.dart';
 import 'package:openbaptisthymnal/core/utils/day_part_provider.dart';
@@ -136,36 +137,85 @@ class PlanRemindersNotifier extends Notifier<Set<String>> {
   @override
   Set<String> build() => ref.watch(storageServiceProvider).getPlanReminders();
 
-  void toggle(String planId, bool on) {
-    state = on ? {...state, planId} : ({...state}..remove(planId));
-    ref.read(storageServiceProvider).savePlanReminders(state);
-    _syncNotification(planId, on);
+  /// Returns false when the notification could not be set up (permission
+  /// refused or scheduling failed); the reminder is then left off.
+  Future<bool> toggle(String planId, bool on) async {
+    _set(planId, on);
+    if (!on) {
+      try {
+        await ref
+            .read(notificationServiceProvider)
+            .cancel(NotificationIds.forPlan(planId));
+      } catch (_) {}
+      return true;
+    }
+    final ok = await _schedulePlanStart(ref, planId, ask: true);
+    if (!ok) _set(planId, false);
+    return ok;
   }
 
-  Future<void> _syncNotification(String planId, bool on) async {
-    try {
-      final service = ref.read(notificationServiceProvider);
-      final id = NotificationIds.forPlan(planId);
-      if (!on) return await service.cancel(id);
-      final plans = await ref.read(availablePlansProvider.future);
-      final plan = plans.where((p) => p.id == planId).firstOrNull;
-      final opens = plan == null ? null : PlanSchedule(plan).opensOn;
-      if (plan == null || opens == null) return;
-      final at = DateTime(opens.year, opens.month, opens.day, 8);
-      if (!at.isAfter(ref.read(dayPartClockProvider)())) return;
-      // Permission is asked here, the moment the user turns a reminder on.
-      if (!await service.requestPermission()) return;
-      await service.scheduleOnce(
-        id: id,
-        at: at,
-        title: '${plan.title} starts today',
-        body: 'Day 1 is ready when you are.',
-      );
-    } catch (_) {
-      // The in-app reminder still works without the notification.
-    }
+  void _set(String planId, bool on) {
+    state = on ? {...state, planId} : ({...state}..remove(planId));
+    ref.read(storageServiceProvider).savePlanReminders(state);
   }
 }
+
+/// One-off "starts today" notification at 08:00 local on the plan's opening
+/// day. A plan with no fixed start, or a start already passed, needs none and
+/// counts as success. With [ask] false permission is never requested: an
+/// ungranted permission just skips quietly (startup reschedule).
+Future<bool> _schedulePlanStart(Ref ref, String planId,
+    {required bool ask}) async {
+  try {
+    final service = ref.read(notificationServiceProvider);
+    final plans = await ref.read(availablePlansProvider.future);
+    final plan = plans.where((p) => p.id == planId).firstOrNull;
+    final opens = plan == null ? null : PlanSchedule(plan).opensOn;
+    if (plan == null || opens == null) return true;
+    final at = DateTime(opens.year, opens.month, opens.day, 8);
+    if (!at.isAfter(ref.read(dayPartClockProvider)())) return true;
+    final granted =
+        ask ? await service.requestPermission() : await service.hasPermission();
+    if (!granted) return !ask;
+    await service.scheduleOnce(
+      id: NotificationIds.forPlan(planId),
+      at: at,
+      title: '${plan.title} starts today',
+      body: 'Day 1 is ready when you are.',
+    );
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+/// Re-registers saved reminders after launch (the OS can drop them after a
+/// reinstall or restore). Never prompts: does nothing unless permission is
+/// already granted. Call after the first frame.
+final rescheduleRemindersProvider = Provider<Future<void> Function()>((ref) {
+  return () async {
+    try {
+      final service = ref.read(notificationServiceProvider);
+      if (!await service.hasPermission()) return;
+      final storage = ref.read(storageServiceProvider);
+      final minutes = storage.getReadingReminderMinutes();
+      if (minutes != null) {
+        await service.scheduleDaily(
+          id: NotificationIds.dailyReading,
+          hour: minutes ~/ 60,
+          minute: minutes % 60,
+          title: ReadingReminderNotifier.title,
+          body: ReadingReminderNotifier.body,
+        );
+      }
+      for (final id in storage.getPlanReminders()) {
+        await _schedulePlanStart(ref, id, ask: false);
+      }
+    } catch (e) {
+      debugPrint('Reminder reschedule failed: $e');
+    }
+  };
+});
 
 /// Plan days of [planId] completed today (by `completedAt`), read-only. The
 /// "done" panel names one of these instead of guessing it is `next - 1`.
