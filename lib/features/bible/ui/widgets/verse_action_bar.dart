@@ -106,42 +106,41 @@ class VerseActionBar extends ConsumerWidget {
       child: LumGlassBar(
         padding: const EdgeInsets.symmetric(horizontal: LumSpace.xs),
         // Scrolls sideways rather than overflowing on narrow or zoomed screens.
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-                minWidth: MediaQuery.sizeOf(context).width -
-                    2 * LumSpace.md -
-                    2 * LumSpace.xs),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                LumCircleButton(
-                  plain: true,
-                  icon: PhosphorIcons.x(),
-                  label: BibleStrings.clearSelection,
-                  onPressed: onClear,
-                ),
-                for (final h in HighlightColor.values)
-                  _Swatch(
-                    color: highlightColorFor(c, h),
-                    label: '${BibleStrings.highlightPrefix} ${h.key}',
-                    checked: sharedKey == h.key,
-                    onTap: () => applyColor(h),
+        child: LayoutBuilder(
+          builder: (context, box) => SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minWidth: box.maxWidth),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  LumCircleButton(
+                    plain: true,
+                    icon: PhosphorIcons.x(),
+                    label: BibleStrings.clearSelection,
+                    onPressed: onClear,
                   ),
-                LumCircleButton(
-                  plain: true,
-                  icon: PhosphorIcons.pencilSimple(),
-                  label: BibleStrings.addNote,
-                  onPressed: addNote,
-                ),
-                LumCircleButton(
-                  plain: true,
-                  icon: PhosphorIcons.export(),
-                  label: BibleStrings.share,
-                  onPressed: chapterData == null ? null : share,
-                ),
-              ],
+                  for (final h in HighlightColor.values)
+                    _Swatch(
+                      color: highlightColorFor(c, h),
+                      label: '${BibleStrings.highlightPrefix} ${h.key}',
+                      checked: sharedKey == h.key,
+                      onTap: () => applyColor(h),
+                    ),
+                  LumCircleButton(
+                    plain: true,
+                    icon: PhosphorIcons.pencilSimple(),
+                    label: BibleStrings.addNote,
+                    onPressed: addNote,
+                  ),
+                  LumCircleButton(
+                    plain: true,
+                    icon: PhosphorIcons.export(),
+                    label: BibleStrings.share,
+                    onPressed: chapterData == null ? null : share,
+                  ),
+                ],
+              ),
             ),
           ),
         ),

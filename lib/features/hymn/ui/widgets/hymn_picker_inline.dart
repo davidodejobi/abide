@@ -141,13 +141,7 @@ class HymnPickerInline extends HookConsumerWidget {
                   return DecoratedBox(
                     decoration: BoxDecoration(
                       color: c.bgSurface,
-                      borderRadius: i == 0
-                          ? const BorderRadius.vertical(
-                              top: Radius.circular(LumRadius.xl))
-                          : i == filtered.length - 1
-                              ? const BorderRadius.vertical(
-                                  bottom: Radius.circular(LumRadius.xl))
-                              : null,
+                      borderRadius: HymnListTile.edgeRadius(i, filtered.length),
                     ),
                     child: HymnListTile(
                       number: e.number.toString(),

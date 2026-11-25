@@ -162,7 +162,8 @@ class HymnDetailPage extends HookConsumerWidget {
                 translation: primary,
                 textScale: textScale,
                 onShare: shareText,
-                languageLabel: isSplit ? language : null,
+                languageLabel:
+                    isSplit ? HymnStrings.languageName(language) : null,
                 meta: isSplit
                     ? null
                     : '${HymnStrings.stanzas(primary.lyrics.stanzas.length)} · ${HymnStrings.languageName(language)}',
@@ -389,7 +390,7 @@ class _SecondaryHymnPane extends ConsumerWidget {
           translation: translation,
           textScale: textScale,
           onShare: onShare,
-          languageLabel: language,
+          languageLabel: HymnStrings.languageName(language),
           bottomExtraSpace: LumSpace.lg,
           compact: true,
           trailingHeader: Align(

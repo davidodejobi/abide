@@ -218,17 +218,27 @@ class _VerseListState extends ConsumerState<_VerseList> {
               if (hasBacklink)
                 WidgetSpan(
                   alignment: PlaceholderAlignment.middle,
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
+                  child: Semantics(
+                    button: true,
+                    label: BibleStrings.backlinks,
+                    excludeSemantics: true,
                     onTap: widget.onTapBacklink == null
                         ? null
                         : () => widget.onTapBacklink!(verse.number),
-                    child: Padding(
-                      padding: const EdgeInsets.only(right: LumSpace.xs),
-                      child: Icon(
-                        PhosphorIcons.chatTeardropText(),
-                        size: 14 * widget.textScale,
-                        color: c.iconAccent,
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: widget.onTapBacklink == null
+                          ? null
+                          : () => widget.onTapBacklink!(verse.number),
+                      child: Container(
+                        width: LumSize.touchTarget,
+                        height: LumSize.touchTarget,
+                        alignment: Alignment.center,
+                        child: Icon(
+                          PhosphorIcons.chatTeardropText(),
+                          size: 14 * widget.textScale,
+                          color: c.iconAccent,
+                        ),
                       ),
                     ),
                   ),
