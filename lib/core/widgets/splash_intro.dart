@@ -13,8 +13,9 @@ import '../theme/lum_tokens.dart';
 ///
 /// - 0-520 ms: the gold rays turn a few degrees and the core brightens with a
 ///   soft glow pulse.
-/// - 520-1200 ms: a circle opens from the core and grows to reveal the app,
-///   while the mark swells slightly and fades (one light haptic as it opens).
+/// - 520-800 ms: the mark swells slightly and fades over the page colour (one
+///   light haptic as it starts to go).
+/// - 800-1200 ms: a circle opens from the core and grows to reveal the app.
 ///
 /// Reduce motion: a 200 ms fade. Plays once per cold launch, over whatever the
 /// app shows first (onboarding or Today), and never waits on loading. Without
@@ -204,10 +205,10 @@ class _IntroPainter extends CustomPainter {
     final pulse = math.sin(math.pi * _span(ms, 0, _openAtMs));
     // Phase 2: the circle opens from the core; the mark swells and fades.
     final open = Curves.easeInCubic
-        .transform(_span(ms, _openAtMs, _total.inMilliseconds.toDouble()));
+        .transform(_span(ms, 800, _total.inMilliseconds.toDouble()));
     final swell =
-        1 + 0.12 * Curves.easeOut.transform(_span(ms, _openAtMs, 1000));
-    final fade = 1 - Curves.easeIn.transform(_span(ms, _openAtMs + 40, 1000));
+        1 + 0.12 * Curves.easeOut.transform(_span(ms, _openAtMs, 800));
+    final fade = 1 - Curves.easeIn.transform(_span(ms, _openAtMs, 800));
 
     // The page, with a hole growing from the core to the far corner.
     final far =
@@ -218,6 +219,9 @@ class _IntroPainter extends CustomPainter {
       ..addOval(Rect.fromCircle(center: centre, radius: far * open));
     canvas.drawPath(hole, Paint()..color = page);
     if (fade <= 0) return;
+    // The mark fades over a page-coloured disc, so the app showing through
+    // the hole never darkens it. The hole opens once the mark has gone.
+    canvas.drawCircle(centre, 450 * _unit * swell, Paint()..color = page);
 
     canvas
       ..saveLayer(
