@@ -20,6 +20,9 @@ dependencies:
   toastification: ^3.0.3
   vector_graphics: ^1.1.19
   phosphor_flutter: ^2.1.0
+  # Spike: 3D landmarks. 0.15.x is the newest line that builds on Flutter 3.38.
+  flutter_scene: 0.15.0
+  vector_math: ^2.1.4
   auto_size_text: ^3.0.0
   lottie: ^3.3.2
   auto_route: ^10.1.2
@@ -57,6 +60,7 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
+    - assets/landmarks3d/
     - assets/hymnal/
     - assets/hymnal/languages/
     - assets/hymnal/pairs/
