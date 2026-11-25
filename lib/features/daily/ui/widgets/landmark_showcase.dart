@@ -348,7 +348,7 @@ class _LandmarkShowcaseState extends ConsumerState<LandmarkShowcase>
                 ),
               ),
               Positioned(
-                top: 18,
+                top: 36,
                 left: 0,
                 right: 0,
                 child: Center(
