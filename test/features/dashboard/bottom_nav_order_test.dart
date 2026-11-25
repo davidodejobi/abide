@@ -1,5 +1,7 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:openbaptisthymnal/core/providers/bottom_nav_provider.dart';
+import 'package:openbaptisthymnal/core/theme/app_theme.dart';
 import 'package:openbaptisthymnal/features/dashboard/ui/widgets/bottom_nav_bar/bottom_nav_bar.dart';
 
 import '../../support/pump_app.dart';
@@ -25,4 +27,42 @@ void main() {
     }
     await tester.flushTimers();
   });
+
+  for (final reduce in [false, true]) {
+    testWidgets('selection change settles and marks selected (reduce=$reduce)',
+        (tester) async {
+      var sel = 0;
+      late StateSetter set;
+      await tester.pumpWidget(MediaQuery(
+        data: MediaQueryData(disableAnimations: reduce),
+        child: MaterialApp(
+          theme: AppTheme.darkTheme,
+          home: StatefulBuilder(builder: (context, s) {
+            set = s;
+            return Scaffold(
+              body: GlassTabBar(
+                labels: const ['Today', 'Bible', 'Songs', 'Notes', 'You'],
+                selectedIndex: sel,
+                onTabSelected: (_) {},
+              ),
+            );
+          }),
+        ),
+      ));
+      set(() => sel = 3);
+      await tester.pumpAndSettle();
+      expect(
+        tester.getSemantics(find.bySemanticsLabel('Notes')),
+        matchesSemantics(
+          label: 'Notes',
+          isButton: true,
+          isSelected: true,
+          hasSelectedState: true,
+          hasTapAction: true,
+          hasEnabledState: false,
+          isEnabled: false,
+        ),
+      );
+    });
+  }
 }
