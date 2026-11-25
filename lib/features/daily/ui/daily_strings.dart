@@ -49,7 +49,7 @@ abstract final class DailyStrings {
   static const shareRoadTitle = 'Share your road';
   static const shareLandmarkCard = 'Share as a card';
   static String dayOfPlan(int n, String plan) => 'Day $n of $plan';
-  static String streakDays(int n) => '$n day streak';
+  static String streakCount(int n) => '$n day streak';
   static String nearLandmark(String title) => 'Near $title';
   static String roadShareText({
     required int day,
@@ -60,7 +60,7 @@ abstract final class DailyStrings {
   }) =>
       [
         dayOfPlan(day, plan),
-        if (streak > 0) streakDays(streak),
+        if (streak > 0) streakCount(streak),
         if (passage != null) passage,
         if (landmark != null) nearLandmark(landmark),
       ].join('\n');

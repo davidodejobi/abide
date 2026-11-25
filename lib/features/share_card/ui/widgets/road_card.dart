@@ -105,7 +105,7 @@ class _Words extends StatelessWidget {
               style: LumText.title1.copyWith(color: t.textPrimary)),
         if (card.streak > 0) ...[
           const SizedBox(height: LumSpace.xs),
-          Text(DailyStrings.streakDays(card.streak),
+          Text(DailyStrings.streakCount(card.streak),
               style: LumText.footnoteEmphasized.copyWith(color: t.textAccent)),
         ],
         if (card.landmarkTitle != null) ...[

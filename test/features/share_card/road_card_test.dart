@@ -36,7 +36,7 @@ void main() {
         await t.pumpWidget(card(style, format, landmark: 'The Garden'));
         expect(find.text('DAY 42 OF BIBLE IN A YEAR'), findsOneWidget);
         expect(find.text('John 3'), findsOneWidget);
-        expect(find.text(DailyStrings.streakDays(7)), findsOneWidget);
+        expect(find.text(DailyStrings.streakCount(7)), findsOneWidget);
         expect(find.text('Near The Garden'), findsOneWidget);
         expect(find.text('Lumway'), findsOneWidget);
         expect(t.takeException(), isNull);
