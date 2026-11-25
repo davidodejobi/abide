@@ -72,18 +72,21 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
     // Which plan day was finished today (the highest one before the next
     // unread day), or null if none, e.g. day 1 was unmarked again.
     final doneAsync =
-        hasPlan ? ref.watch(planDaysDoneTodayProvider(data.plan.id)) : null;
+        hasPlan ? ref.watch(planDaysDoneTodayProvider(data.progressKey)) : null;
     final next = data?.day?.dayIndex;
-    final doneIndex = next == null
-        ? null
-        : (doneAsync?.valueOrNull ?? const <int>{})
-            .where((i) => i >= 1 && i < next)
-            .fold<int?>(null, (m, i) => m == null || i > m ? i : m);
+    final anchored = data?.isAnchored ?? false;
+    // Anchored plans: done means today's calendar day is read, nothing else.
+    final doneIndex = anchored
+        ? (data!.todayRead ? data.statuses!.today : null)
+        : next == null
+            ? null
+            : (doneAsync?.valueOrNull ?? const <int>{})
+                .where((i) => i >= 1 && i < next)
+                .fold<int?>(null, (m, i) => m == null || i > m ? i : m);
     final done = hasPlan &&
-        todayDone &&
-        data.completedDays > 0 &&
         !_readAhead &&
-        doneIndex != null;
+        doneIndex != null &&
+        (anchored || (todayDone && data.completedDays > 0));
     // The sky and greeting follow the clock; `done` only changes the words.
     final part = ref.watch(dayPartProvider);
     final dark = part == DayPart.evening || part == DayPart.night;
@@ -132,7 +135,7 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
         ? DailyStrings.choosePlan
         : data.isFinished
             ? DailyStrings.planCompleteTitle
-            : done
+            : done && data.day!.dayIndex > doneIndex
                 ? '${DailyStrings.tomorrow} · $nextPassage'
                 : '${DailyStrings.dayN(data.day!.dayIndex)} · $nextPassage';
 
@@ -205,6 +208,7 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
                   totalDays: total,
                   plan: data?.plan,
                   showTomorrowTag: done,
+                  statuses: data?.statuses,
                   onStopTap: data == null
                       ? null
                       : (day) => _openStop(data, day, evening: done),
@@ -320,7 +324,9 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
                                           onStart: () => _startReading(d),
                                         ),
                         ),
-                        _PlanNoteCard(catchUpDays: data?.catchUpDays ?? 0),
+                        _PlanNoteCard(
+                          catchUpDays: data?.catchUpDays ?? 0,
+                          calendarDay: data?.statuses?.today ?? 0),
                       ],
                     ),
                   ),
@@ -476,28 +482,46 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
     final day = d.plan.dayAt(dayIndex);
     if (day == null) return;
     final current = d.day?.dayIndex;
-    // The road's own rule: everything before the traveller is read, and
-    // everything from them on is still ahead (even a day read past a gap).
-    final isDone = d.isFinished || (current != null && dayIndex < current);
-    final status = isDone
-        ? StopStatus.done
-        : dayIndex == current
-            ? (evening ? StopStatus.tomorrow : StopStatus.today)
-            : StopStatus.ahead;
-    final today = DateTime.now();
-    final date = current == null || isDone
-        ? null
-        : dateForDay(
-            day: dayIndex,
-            currentDay: current,
-            today: evening ? nextDay(today) : today,
-          );
+    final st = d.statuses;
+    final StopStatus status;
+    final DateTime? date;
+    final now = DateTime.now();
+    if (st != null) {
+      // Anchored: the same status source the road draws from.
+      final isTomorrow = evening && dayIndex == current;
+      status = switch (st.of(dayIndex)) {
+        DayStatus.done => StopStatus.done,
+        DayStatus.catchUp => StopStatus.catchUp,
+        DayStatus.today => StopStatus.today,
+        DayStatus.ahead => isTomorrow ? StopStatus.tomorrow : StopStatus.ahead,
+      };
+      date = status == StopStatus.done || status == StopStatus.catchUp
+          ? null
+          : dateForDay(day: dayIndex, currentDay: st.today, today: now);
+    } else {
+      // The road's own rule: everything before the traveller is read, and
+      // everything from them on is still ahead (even a day read past a gap).
+      final isDone = d.isFinished || (current != null && dayIndex < current);
+      status = isDone
+          ? StopStatus.done
+          : dayIndex == current
+              ? (evening ? StopStatus.tomorrow : StopStatus.today)
+              : StopStatus.ahead;
+      date = current == null || isDone
+          ? null
+          : dateForDay(
+              day: dayIndex,
+              currentDay: current,
+              today: evening ? nextDay(now) : now,
+            );
+    }
     final open = await showStopSheet(
       context,
       plan: d.plan,
       day: day,
       status: status,
       date: date,
+      progressId: d.progressKey,
       bookNames: ref.read(planBookNamesProvider).valueOrNull ?? const {},
     );
     await _open(open);
@@ -543,7 +567,7 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
       context,
       ref,
       targetKey: openingRefFor(d.day!),
-      planId: d.plan.id,
+      planId: d.progressKey,
       dayIndex: d.day!.dayIndex,
     );
     if (marked == true && mounted) setState(() => _readAhead = false);
@@ -968,8 +992,9 @@ class _DayDone extends ConsumerWidget {
             textScaler: TextScaler.noScaling,
             style: LumText.roadDisplayLarge76.copyWith(color: c.textPrimary)),
         const SizedBox(height: 4),
-        Text(DailyStrings.tomorrowDay(next),
-            style: LumText.callout.copyWith(color: c.textSecondary)),
+        if (next > doneIndex)
+          Text(DailyStrings.tomorrowDay(next),
+              style: LumText.callout.copyWith(color: c.textSecondary)),
         const SizedBox(height: 16),
         Row(
           children: [
@@ -1145,12 +1170,13 @@ class _Roomy extends StatelessWidget {
 }
 
 /// Small cards under the panel content: the countdown for a locked plan the
-/// person asked to be reminded about, and the kind catch-up line for a late
-/// joiner. Renders nothing when neither applies.
+/// person asked to see on Today, a Join card once it opens (until they join or
+/// dismiss), and the kind catch-up line. Renders nothing when none applies.
 class _PlanNoteCard extends ConsumerWidget {
-  const _PlanNoteCard({required this.catchUpDays});
+  const _PlanNoteCard({required this.catchUpDays, required this.calendarDay});
 
   final int catchUpDays;
+  final int calendarDay;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -1160,13 +1186,23 @@ class _PlanNoteCard extends ConsumerWidget {
         dateFromKey(ref.watch(todayKeyProvider)) ?? fallbackToday;
     final reminders = ref.watch(planRemindersProvider);
     final plans = ref.watch(availablePlansProvider).valueOrNull ?? const [];
-    final lines = <String>[
-      for (final p in plans)
-        if (reminders.contains(p.id) && PlanSchedule(p).isLocked(today))
-          DailyStrings.yearStartsIn(p.title, PlanSchedule(p).daysToGo(today)),
-      if (catchUpDays > 0) DailyStrings.catchUp(catchUpDays),
-    ];
-    if (lines.isEmpty) return const SizedBox.shrink();
+    final lines = <String>[];
+    final joinable = <ReadingPlan>[];
+    for (final p in plans) {
+      if (!reminders.contains(p.id)) continue;
+      final schedule = PlanSchedule(p);
+      if (!schedule.isFixed) continue;
+      if (schedule.isLocked(today)) {
+        lines.add(DailyStrings.yearStartsIn(p.title, schedule.daysToGo(today)));
+        continue;
+      }
+      final sub = ref.watch(planSubscriptionProvider(p.id)).valueOrNull;
+      if (!schedule.runFor(sub?.startDateKey, today).joined) joinable.add(p);
+    }
+    if (catchUpDays > 0) {
+      lines.add(DailyStrings.catchUp(calendarDay, catchUpDays));
+    }
+    if (lines.isEmpty && joinable.isEmpty) return const SizedBox.shrink();
     return Padding(
       padding: const EdgeInsets.only(top: LumSpace.lg),
       child: Container(
@@ -1181,6 +1217,30 @@ class _PlanNoteCard extends ConsumerWidget {
             for (final line in lines)
               Text(line,
                   style: LumText.subheadline.copyWith(color: c.textSecondary)),
+            for (final p in joinable) ...[
+              Text(
+                  PlanSchedule(p).calendarDay(today) == 1
+                      ? DailyStrings.yearOpenToday(p.title)
+                      : DailyStrings.yearOpenNow(
+                          p.title, PlanSchedule(p).calendarDay(today)),
+                  style: LumText.subheadline.copyWith(color: c.textPrimary)),
+              const SizedBox(height: LumSpace.sm),
+              Row(children: [
+                Expanded(
+                  child: LumButton(
+                    label: DailyStrings.joinCaps,
+                    onPressed: () => ref.read(startPlanProvider)(p),
+                  ),
+                ),
+                const SizedBox(width: LumSpace.sm),
+                TextButton(
+                  onPressed: () => ref
+                      .read(planRemindersProvider.notifier)
+                      .toggle(p.id, false),
+                  child: const Text(DailyStrings.dismiss),
+                ),
+              ]),
+            ],
           ],
         ),
       ),

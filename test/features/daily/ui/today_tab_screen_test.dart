@@ -9,6 +9,7 @@ import 'package:openbaptisthymnal/core/theme/app_theme.dart';
 import 'package:openbaptisthymnal/core/utils/day_part_provider.dart';
 import 'package:openbaptisthymnal/features/daily/domain/date_key.dart';
 import 'package:openbaptisthymnal/features/bible/domain/verse_ref.dart';
+import 'package:openbaptisthymnal/features/daily/domain/plan_schedule.dart';
 import 'package:openbaptisthymnal/features/daily/domain/reading_plan.dart';
 import 'package:openbaptisthymnal/features/daily/domain/road_geometry.dart';
 import 'package:openbaptisthymnal/features/daily/domain/streak.dart';
@@ -136,8 +137,7 @@ void main() {
     expect(tester(t), isNull);
   });
 
-  testWidgets(
-      'Given today is done, Then it shows done and names tomorrow',
+  testWidgets('Given today is done, Then it shows done and names tomorrow',
       (t) async {
     final plan = _plan();
     await pump(
@@ -377,6 +377,74 @@ void main() {
     expect(find.text(DailyStrings.noPlanTitle), findsOneWidget);
     expect(find.text(DailyStrings.choosePlan), findsOneWidget);
     expect(find.text(DailyStrings.dayStreak), findsNothing);
+  });
+
+  testWidgets(
+      'Given an anchored plan 14 days behind, Then today is the calendar day and catch-up is offered',
+      (t) async {
+    final plan = _plan();
+    await pump(
+      t,
+      _app([
+        streakProvider.overrideWithValue(_streak()),
+        isTodayCompleteProvider.overrideWithValue(false),
+        todaysReadingProvider.overrideWith((_) async => TodaysReading(
+              plan: plan,
+              day: plan.dayAt(15),
+              completedDays: 0,
+              catchUpDays: 14,
+              progressId: 'nt-90@2027',
+              statuses: const PlanDayStatuses(done: {}, today: 15),
+            )),
+        planDaysDoneTodayProvider.overrideWith((_, __) => Stream.value({})),
+      ]),
+    );
+    expect(find.text('15'), findsWidgets);
+    expect(find.text(DailyStrings.catchUp(15, 14)), findsOneWidget);
+    expect(tester(t), isNull);
+  });
+
+  testWidgets(
+      'Given a reminder and the plan open today, Then a Join card starts it',
+      (t) async {
+    SharedPreferences.setMockInitialValues({
+      'plan_reminders': ['bible-in-a-year']
+    });
+    final prefs = await SharedPreferences.getInstance();
+    final db = testDb();
+    addTearDown(db.close);
+    final year = ReadingPlan(
+      id: 'bible-in-a-year',
+      title: 'The Bible in a Year',
+      description: '',
+      days: [
+        for (var i = 1; i <= 365; i++) PlanDay(dayIndex: i, passages: const [])
+      ],
+      startsOn: '01-01',
+      firstRunYear: 2027,
+    );
+    await pump(
+      t,
+      _app([
+        sharedPreferencesProvider.overrideWithValue(prefs),
+        appDatabaseProvider.overrideWithValue(db),
+        availablePlansProvider.overrideWith((_) async => [year]),
+        dayPartClockProvider.overrideWithValue(() => DateTime(2027, 1, 1, 9)),
+        streakProvider.overrideWithValue(_streak()),
+        isTodayCompleteProvider.overrideWithValue(false),
+        todaysReadingProvider.overrideWith((_) async => null),
+      ]),
+    );
+    expect(find.text(DailyStrings.yearOpenToday('The Bible in a Year')),
+        findsOneWidget);
+    await t.ensureVisible(find.text(DailyStrings.joinCaps));
+    await t.tap(find.text(DailyStrings.joinCaps));
+    await t.pump(const Duration(milliseconds: 300));
+    final active = await db.readingPlansDao.activePlan();
+    expect(active?.planId, 'bible-in-a-year');
+    expect(active?.startDateKey, '2027-01-01');
+    await t.pumpWidget(const SizedBox());
+    await t.pump(const Duration(milliseconds: 100));
   });
 }
 

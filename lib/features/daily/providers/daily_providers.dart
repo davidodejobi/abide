@@ -57,6 +57,14 @@ final activePlanSubscriptionProvider = StreamProvider<PlanSubscription?>(
   (ref) => ref.watch(readingPlansDaoProvider).watchActivePlan(),
 );
 
+/// The subscription row for one plan, active or not (null if never joined).
+final planSubscriptionProvider =
+    StreamProvider.family<PlanSubscription?, String>((ref, planId) {
+  final db = ref.watch(appDatabaseProvider);
+  return (db.select(db.planSubscriptions)..where((t) => t.planId.equals(planId)))
+      .watchSingleOrNull();
+});
+
 /// Which days of the active plan are done.
 final planProgressProvider = StreamProvider.family<Set<int>, String>(
   (ref, planId) =>
@@ -173,9 +181,6 @@ final todaysReadingProvider = FutureProvider<TodaysReading?>((ref) async {
   if (subscription == null) return null;
 
   final plan = await ref.watch(planByIdProvider(subscription.planId).future);
-  final done =
-      await ref.watch(planProgressProvider(subscription.planId).future);
-
   final schedule = PlanSchedule(plan);
   // Only a calendar-anchored plan changes with the day, so only it follows the
   // midnight roll; a progress-driven one must not reload at midnight.
@@ -183,25 +188,37 @@ final todaysReadingProvider = FutureProvider<TodaysReading?>((ref) async {
   final DateTime today = schedule.isFixed
       ? (dateFromKey(ref.watch(todayKeyProvider)) ?? fallbackToday)
       : fallbackToday;
-  // A fixed-start plan from a past year is a finished run, not today's plan:
-  // show the picker so they can join this year's.
-  if (schedule.isFixed &&
-      !schedule.isCurrentRun(subscription.startDateKey, today)) {
-    return null;
+  final run = schedule.runFor(subscription.startDateKey, today);
+  // A fixed-start run from a past year is history, not today's plan: show the
+  // picker so they can join this year's. Its progress stays where it is.
+  if (!run.joined) return null;
+
+  final done = await ref.watch(planProgressProvider(run.progressId).future);
+
+  if (!run.anchored) {
+    final next = nextPlanDayIndex(done, plan.dayCount);
+    return TodaysReading(
+      plan: plan,
+      day: next == null ? null : plan.dayAt(next),
+      completedDays: done.length,
+      progressId: run.progressId,
+    );
   }
 
-  final next = schedule.isFixed
-      ? schedule.nextDay(done, subscription.startDateKey)
-      : nextPlanDayIndex(done, plan.dayCount);
-  if (next == null) {
-    return TodaysReading(plan: plan, day: null, completedDays: done.length);
-  }
-
+  // Anchored: today's reading is the calendar day for everyone. Unread days
+  // before it are an optional catch-up list, never "done".
+  final c = run.calendarDay;
+  final todayRead = done.contains(c);
+  final finished = done.length >= plan.dayCount;
   return TodaysReading(
     plan: plan,
-    day: plan.dayAt(next),
+    day: finished
+        ? null
+        : plan.dayAt(!todayRead ? c : (c < plan.dayCount ? c + 1 : c)),
     completedDays: done.length,
-    catchUpDays: schedule.isFixed ? schedule.catchUpCount(done, today) : 0,
+    catchUpDays: schedule.catchUpCount(done, today),
+    progressId: run.progressId,
+    statuses: PlanDayStatuses(done: done, today: c),
   );
 });
 
@@ -212,11 +229,14 @@ class TodaysReading {
     required this.day,
     required this.completedDays,
     this.catchUpDays = 0,
+    this.progressId,
+    this.statuses,
   });
 
   final ReadingPlan plan;
 
-  /// The day to read next, or null when the plan is finished.
+  /// The day to read next, or null when the plan is finished. On an anchored
+  /// plan: today's calendar day, or tomorrow's once today is read.
   final PlanDay? day;
 
   final int completedDays;
@@ -224,6 +244,18 @@ class TodaysReading {
   /// Unread days before today's calendar day on a fixed-start plan. Offered as
   /// catch-up, never as missed.
   final int catchUpDays;
+
+  /// Where this run's progress is stored; the plan id for ordinary plans.
+  final String? progressId;
+  String get progressKey => progressId ?? plan.id;
+
+  /// Set for anchored plans only; the one status source for road and sheets.
+  final PlanDayStatuses? statuses;
+  bool get isAnchored => statuses != null;
+
+  /// Anchored: today's calendar day has been read.
+  bool get todayRead =>
+      statuses != null && statuses!.done.contains(statuses!.today);
 
   bool get isFinished => day == null;
 
@@ -259,23 +291,25 @@ final startPlanProvider =
   return (plan) async {
     final today = ref.read(planTodayProvider);
     final schedule = PlanSchedule(plan);
-    if (schedule.isLocked(today)) return;
-
     final db = ref.read(appDatabaseProvider);
-    final dao = ref.read(readingPlansDaoProvider);
-    var startKey = dayKey(today);
-    if (schedule.isFixed) {
-      final existing = await (db.select(db.planSubscriptions)
-            ..where((t) => t.planId.equals(plan.id)))
-          .getSingleOrNull();
-      if (existing != null) {
-        if (schedule.isCurrentRun(existing.startDateKey, today)) {
-          startKey = existing.startDateKey;
-        } else {
-          await dao.clearPlanProgress(plan.id);
-        }
-      }
-    }
-    await dao.startPlan(planId: plan.id, startDateKey: startKey);
+    final existing = await (db.select(db.planSubscriptions)
+          ..where((t) => t.planId.equals(plan.id)))
+        .getSingleOrNull();
+
+    // Someone who was already on the plan keeps it (their join date and their
+    // progress), locked or not.
+    final legacy = existing != null && schedule.isLegacy(existing.startDateKey);
+    if (schedule.isLocked(today) && !legacy) return;
+
+    // Re-picking inside the same run keeps the original join day. A new year
+    // gets a new join day and a new progress bucket; nothing is deleted.
+    final keep = existing != null &&
+        (!schedule.isFixed ||
+            legacy ||
+            schedule.isCurrentRun(existing.startDateKey, today));
+    await ref.read(readingPlansDaoProvider).startPlan(
+          planId: plan.id,
+          startDateKey: keep ? existing.startDateKey : dayKey(today),
+        );
   };
 });

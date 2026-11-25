@@ -24,12 +24,13 @@ class RoadOpen {
 
 enum StopStatus {
   done,
+  catchUp,
   today,
   tomorrow,
   ahead;
 
   /// The reading the traveller stands on: the one Mark read applies to.
-  bool get readable => this == today || this == tomorrow;
+  bool get readable => this == today || this == tomorrow || this == catchUp;
 }
 
 /// A stop on the road: the day, the date it falls on, its passages, and how to
@@ -42,10 +43,12 @@ Future<RoadOpen?> showStopSheet(
   required StopStatus status,
   required DateTime? date,
   required Map<String, String> bookNames,
+  String? progressId,
 }) {
   return _show(
     context,
     (_) => StopSheet(
+      progressId: progressId,
       plan: plan,
       day: day,
       status: status,
@@ -118,8 +121,11 @@ class StopSheet extends StatelessWidget {
     required this.status,
     required this.date,
     required this.bookNames,
+    this.progressId,
   });
 
+  /// Where this plan's progress is stored (the plan id unless anchored).
+  final String? progressId;
   final ReadingPlan plan;
   final PlanDay day;
   final StopStatus status;
@@ -134,6 +140,11 @@ class StopSheet extends StatelessWidget {
           DailyStrings.sheetDone,
           Icons.check_circle_rounded,
           c.iconSuccess
+        ),
+      StopStatus.catchUp => (
+          DailyStrings.sheetCatchUp,
+          Icons.history_rounded,
+          c.textSecondary
         ),
       StopStatus.today => (
           DailyStrings.sheetToday,
@@ -211,6 +222,7 @@ class StopSheet extends StatelessWidget {
         LumButton(
           label: switch (status) {
             StopStatus.today || StopStatus.tomorrow => DailyStrings.readDay,
+            StopStatus.catchUp => DailyStrings.readCatchUp,
             StopStatus.done => DailyStrings.readAgain,
             StopStatus.ahead => DailyStrings.previewDay,
           },
@@ -221,7 +233,7 @@ class StopSheet extends StatelessWidget {
             openingRefFor(day),
             // Only today's reading can be marked from the road: a day ahead
             // is a preview, and one already read has been marked.
-            planId: status.readable ? plan.id : null,
+            planId: status.readable ? (progressId ?? plan.id) : null,
             dayIndex: status.readable ? day.dayIndex : null,
           )),
         ),

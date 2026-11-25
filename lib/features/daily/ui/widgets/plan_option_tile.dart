@@ -53,8 +53,8 @@ class PlanOptionTile extends StatelessWidget {
     final label = '${plan.title}, ${plan.dayCount} days, ${pace(plan)}'
         '${note == null ? '' : ', $note'}';
     return Semantics(
-      button: true,
-      selected: selected,
+      button: !locked,
+      selected: selected && !locked,
       label: label,
       excludeSemantics: !locked,
       onTap: locked ? null : onTap,
@@ -172,7 +172,10 @@ class PlanTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final schedule = PlanSchedule(plan);
     final today = ref.watch(planTodayProvider);
-    final locked = schedule.isLocked(today);
+    final sub = ref.watch(planSubscriptionProvider(plan.id)).valueOrNull;
+    // Someone already on the plan before it was anchored keeps it open.
+    final legacy = sub != null && schedule.isLegacy(sub.startDateKey);
+    final locked = schedule.isLocked(today) && !legacy;
     final remind = ref.watch(planRemindersProvider).contains(plan.id);
     return PlanOptionTile(
       plan: plan,

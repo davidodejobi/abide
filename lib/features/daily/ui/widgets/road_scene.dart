@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:openbaptisthymnal/core/theme/lum_theme.dart';
 
+import '../../domain/plan_schedule.dart';
 import '../../domain/reading_plan.dart';
 import '../../domain/road_days.dart';
 import '../../domain/road_geometry.dart';
@@ -42,6 +43,7 @@ class RoadScene extends StatefulWidget {
     required this.totalDays,
     this.plan,
     this.showTomorrowTag = false,
+    this.statuses,
     this.height,
     this.visibleBottom,
     this.hideBack,
@@ -79,6 +81,11 @@ class RoadScene extends StatefulWidget {
   /// Used to place landmarks by passage; null draws the road without them.
   final ReadingPlan? plan;
   final bool showTomorrowTag;
+
+  /// Per-day status for a calendar-anchored plan (read, catch-up, today,
+  /// ahead). Null: the road's own rule, everything before the traveller is
+  /// done.
+  final PlanDayStatuses? statuses;
 
   static const double designWidth = 390;
   static const double designHeight = 560;
@@ -513,6 +520,7 @@ class RoadSceneState extends State<RoadScene> with TickerProviderStateMixin {
       finished: widget.currentDay == null,
       landmarks: _landmarks,
       showTomorrowTag: widget.showTomorrowTag && widget.currentDay != null,
+      statuses: widget.statuses,
       semantics: _semantics,
       lookOf: _lookNow,
       focusOf: () => _focus,
@@ -586,13 +594,24 @@ class RoadSceneState extends State<RoadScene> with TickerProviderStateMixin {
       final s = _geo.stop(n);
       final c = Offset(s.x + cam.dx, s.y + cam.dy);
       if (c.dy < 24 || c.dy > limit) continue;
-      final state = current == null || n < current
-          ? DailyStrings.stopDone
-          : n == current
-              ? (widget.showTomorrowTag
+      final st = widget.statuses;
+      final isCurrent = n == current;
+      final state = st != null
+          ? switch (st.of(n)) {
+              DayStatus.done => DailyStrings.stopDone,
+              DayStatus.catchUp => DailyStrings.stopCatchUp,
+              DayStatus.today => DailyStrings.stopToday,
+              DayStatus.ahead => isCurrent && widget.showTomorrowTag
                   ? DailyStrings.tomorrow
-                  : DailyStrings.stopToday)
-              : DailyStrings.stopAhead;
+                  : DailyStrings.stopAhead,
+            }
+          : current == null || n < current
+              ? DailyStrings.stopDone
+              : isCurrent
+                  ? (widget.showTomorrowTag
+                      ? DailyStrings.tomorrow
+                      : DailyStrings.stopToday)
+                  : DailyStrings.stopAhead;
       out.add(CustomPainterSemantics(
         rect: Rect.fromCenter(center: c * k, width: 70 * k, height: 50 * k),
         properties: SemanticsProperties(
@@ -800,6 +819,7 @@ class _RoadPainter extends CustomPainter {
     required this.finished,
     required this.landmarks,
     required this.showTomorrowTag,
+    required this.statuses,
     required this.semantics,
     required this.lookOf,
     required this.focusOf,
@@ -813,6 +833,7 @@ class _RoadPainter extends CustomPainter {
   final double from, to, dusk0, dusk1;
   final int total;
   final bool finished, showTomorrowTag;
+  final PlanDayStatuses? statuses;
   final Map<int, List<Landmark>> landmarks;
   final geo = const RoadGeometry();
   final List<CustomPainterSemantics> Function(Size, _RoadPainter) semantics;
@@ -1135,7 +1156,12 @@ class _RoadPainter extends CustomPainter {
         cur = art?['stop_cur'];
     final s = _stopAt(n, cam);
     if (s.dy < 20 || s.dy > ch + 80) return;
-    final isDone = finished ? true : pos > n + .0001;
+    final st = statuses;
+    final isDone = st != null
+        ? st.done.contains(n)
+        : finished
+            ? true
+            : pos > n + .0001;
     final base = isDone ? done : lock;
     final dst = Rect.fromLTWH(
         s.dx - _coin.dx * _s, s.dy - _coin.dy * _s, 307 * _s, 249 * _s);
@@ -1163,6 +1189,16 @@ class _RoadPainter extends CustomPainter {
               center: Offset(s.dx, s.dy + 2),
               width: 78 + 12 * pulse,
               height: 48 + 8 * pulse),
+          ring);
+    }
+    if (st != null && st.of(n) == DayStatus.catchUp) {
+      // Unread but behind today: a quiet ring, an invitation not a warning.
+      final ring = cache.stroke
+        ..strokeWidth = 1.6
+        ..color = c.sceneGlow.withValues(alpha: .45);
+      canvas.drawOval(
+          Rect.fromCenter(
+              center: Offset(s.dx, s.dy + 2), width: 70, height: 42),
           ring);
     }
     final label = _text(

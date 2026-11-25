@@ -30,7 +30,6 @@ void main() {
     expect(s.isLocked(day), isFalse);
     expect(s.daysToGo(day), 0);
     expect(s.calendarDay(day), 1);
-    expect(s.nextDay({}, '2027-01-01'), 1);
   });
 
   test('31 Dec is the last day, then the year rolls to a new run', () {
@@ -46,17 +45,42 @@ void main() {
     expect(s.calendarDay(DateTime(2028, 12, 31)), 365);
   });
 
-  test('late joiner on 15 Jan starts at day 15 with 14 catch-up days', () {
-    expect(s.nextDay({}, '2027-01-15'), 15);
-    expect(s.nextDay({15}, '2027-01-15'), 16);
+  test('statuses: read is done, unread past is catch-up, then today, ahead',
+      () {
+    const st = PlanDayStatuses(done: {1, 3}, today: 5);
+    expect(st.of(1), DayStatus.done);
+    expect(st.of(2), DayStatus.catchUp);
+    expect(st.of(5), DayStatus.today);
+    expect(st.of(6), DayStatus.ahead);
+    // A day read ahead of time is done, not ahead.
+    expect(const PlanDayStatuses(done: {9}, today: 5).of(9), DayStatus.done);
+    expect(st, const PlanDayStatuses(done: {3, 1}, today: 5));
+  });
+
+  test('catch-up count is unread days before today', () {
     expect(s.catchUpCount({}, DateTime(2027, 1, 15)), 14);
     expect(s.catchUpCount({1, 2, 3}, DateTime(2027, 1, 15)), 11);
   });
 
-  test('catch-up days come back once everything ahead is read', () {
-    final done = {for (var i = 15; i <= 365; i++) i};
-    expect(s.nextDay(done, '2027-01-15'), 1);
-    expect(s.nextDay({for (var i = 1; i <= 365; i++) i}, '2027-01-15'), isNull);
+  test('runFor keys anchored progress per run year', () {
+    final a = s.runFor('2027-01-15', DateTime(2027, 6, 1));
+    expect(a.anchored, isTrue);
+    expect(a.joined, isTrue);
+    expect(a.progressId, 'year@2027');
+    expect(a.calendarDay, 152);
+    final next = s.runFor('2027-01-15', DateTime(2028, 1, 1));
+    expect(next.joined, isFalse);
+    expect(next.progressId, 'year@2028');
+    expect(s.runFor(null, DateTime(2027, 1, 1)).joined, isFalse);
+  });
+
+  test('legacy subscribers keep the old progress-driven plan', () {
+    expect(s.isLegacy('2026-11-01'), isTrue);
+    expect(s.isLegacy('2027-01-01'), isFalse);
+    final r = s.runFor('2026-11-01', DateTime(2028, 5, 1));
+    expect(r.anchored, isFalse);
+    expect(r.joined, isTrue);
+    expect(r.progressId, 'year');
   });
 
   test('a plan with no startsOn is open and not fixed', () {
