@@ -4,7 +4,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:openbaptisthymnal/core/storage/database/app_database.dart';
 import 'package:openbaptisthymnal/core/sync/in_memory_sync_remote.dart';
 import 'package:openbaptisthymnal/core/sync/supabase_sync_remote.dart';
+import 'package:supabase_flutter/supabase_flutter.dart'
+    show PostgrestException, SupabaseClient;
 import 'package:uuid/uuid.dart';
+import 'package:openbaptisthymnal/core/sync/sync_remote.dart';
 import 'package:openbaptisthymnal/core/sync/sync_service.dart';
 
 DateTime t(int minutes) =>
@@ -343,6 +346,117 @@ void main() {
           isNot(highlightRemoteId('u2', 'JHN', 3, 16)));
       expect(highlightRemoteId('u1', 'JHN', 3, 16),
           highlightRemoteId('u1', 'JHN', 3, 16));
+    });
+  });
+
+  group('auth loss (42501)', () {
+    const denied = PostgrestException(message: 'rls', code: '42501');
+
+    test('is not treated as a permanent rejection', () {
+      final remote =
+          SupabaseSyncRemote(SupabaseClient('http://localhost:1', 'k'));
+      expect(remote.isPermanent(denied), isFalse);
+      expect(
+          remote.isPermanent(
+              const PostgrestException(message: 'x', code: '23505')),
+          isTrue);
+    });
+
+    test('re-authenticates and retries once', () async {
+      var calls = 0, reauths = 0;
+      final r = await retryAfterAuthLoss(() async {
+        if (++calls == 1) throw denied;
+        return 'ok';
+      }, () async => reauths++);
+      expect((r, calls, reauths), ('ok', 2, 1));
+    });
+
+    test('still denied after the retry propagates (outbox is kept)', () async {
+      var calls = 0;
+      await expectLater(
+        retryAfterAuthLoss<void>(() async {
+          calls++;
+          throw denied;
+        }, () async {}),
+        throwsA(isA<PostgrestException>()),
+      );
+      expect(calls, 2);
+    });
+
+    test('413 is recognised as payload too large', () {
+      expect(
+          isPayloadTooLarge(
+              const PostgrestException(message: 'x', code: '413')),
+          isTrue);
+      expect(
+          isPayloadTooLarge(
+              const PostgrestException(message: 'x', code: '500')),
+          isFalse);
+    });
+  });
+
+  group('pausing', () {
+    test('keeps queueing while paused and resumes without a re-queue',
+        () async {
+      var on = true;
+      final d = Device(remote, enabled: () => on);
+      addTearDown(d.db.close);
+      await d.writeNote('n1', 'one', t(1));
+      await d.service.sync();
+      expect(remote.get('notes', 'n1'), isNotNull);
+
+      on = false;
+      await d.writeNote('n2', 'two', t(2));
+      expect(await d.service.sync(), isFalse);
+      expect(await d.outbox(), 1, reason: 'kept while paused');
+      expect(remote.get('notes', 'n2'), isNull);
+
+      await d.writeNote('n3', 'three', t(3));
+      expect(await d.outbox(), 2, reason: 'still queueing while paused');
+
+      on = true;
+      await d.service.sync();
+      expect(remote.get('notes', 'n2'), isNotNull);
+      expect(remote.get('notes', 'n3'), isNotNull);
+      expect(await d.outbox(), 0);
+    });
+  });
+
+  group('pull failures', () {
+    test(
+        'a constraint violation skips that row; others apply and the local '
+        'edit stays queued', () async {
+      await a.writeNote('bad', 'mine', t(1));
+      await a.service.sync();
+      remote.pushed.clear();
+      await a.writeNote('bad', 'mine v2', t(2));
+
+      // Newer server copy that violates NOT NULL on title, plus a good row.
+      await remote.push([
+        SyncRecord(entity: 'notes', rowId: 'bad', updatedAt: t(50), payload: {
+          'id': 'bad',
+          'title': null,
+          'content_markdown': 'x',
+          'created_at': 1,
+          'updated_at': 3000,
+          'is_deleted': 0,
+        }),
+        SyncRecord(entity: 'notes', rowId: 'good', updatedAt: t(51), payload: {
+          'id': 'good',
+          'title': 't',
+          'content_markdown': 'fine',
+          'created_at': 1,
+          'updated_at': 3060,
+          'is_deleted': 0,
+        }),
+      ]);
+      remote.pushed.clear();
+
+      expect(await a.service.sync(), isTrue);
+      expect(await a.body('good'), 'fine');
+      expect(await a.body('bad'), 'mine v2');
+      expect(remote.pushed, contains('bad'),
+          reason: 'the unapplied local change was still in the outbox');
     });
   });
 }

@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:logging/logging.dart';
+import 'package:sqlite3/common.dart' show SqliteException;
 import 'package:uuid/uuid.dart';
 
 import '../storage/database/app_database.dart';
@@ -53,9 +54,12 @@ class SyncService {
   /// coalesce into one follow-up run.
   Future<bool> sync() async {
     if (!enabled) {
-      // Local-only: stop queueing and drop whatever was queued.
-      await _setState('sync_enabled', '0');
-      await _db.customStatement('DELETE FROM sync_outbox');
+      // Paused (consent withdrawn, local-only): nothing leaves the device, but
+      // keep queueing so re-enabling pushes without a full re-queue. Only an
+      // already-on queue is paused; a never-enabled one stays off.
+      if (await _state('sync_enabled') == '1') {
+        await _setState('sync_enabled', 'paused');
+      }
       return false;
     }
     if (_inFlight != null) {
@@ -94,9 +98,16 @@ class SyncService {
   /// server has never seen this data, and its cursors mean nothing here).
   Future<void> _prepare() async {
     final owner = await _remote.identity();
-    final wasOn = await _state('sync_enabled') == '1';
+    final flag = await _state('sync_enabled');
+    final wasOn = flag == '1' || flag == 'paused';
     final sameOwner = await _state('owner') == owner;
-    if (wasOn && sameOwner) return;
+    if (wasOn && sameOwner) {
+      if (flag == 'paused') await _setState('sync_enabled', '1');
+      return;
+    }
+    // TODO(sync): a device that signs in to an existing account (second device,
+    // email sign-in) takes the owner-change path: it re-queues local rows into
+    // the other account. Decide merge vs. replace before launching linking.
     await _db.transaction(() async {
       await _setState('sync_enabled', '1');
       await _setState('owner', owner);
@@ -206,7 +217,10 @@ class SyncService {
               try {
                 await _apply(r, copies);
               } catch (e) {
-                // A row this app cannot store must not wedge the whole pull.
+                // Only a constraint failure means "this row can never be
+                // stored here". Anything else (disk, locked, a bug) aborts the
+                // page so it is retried instead of silently skipped.
+                if (e is! SqliteException || e.resultCode != 19) rethrow;
                 _log.severe('skipping ${r.entity}/${r.rowId}', e);
               }
             }
@@ -249,10 +263,6 @@ class SyncService {
     if (pending != null) {
       // Unsent local change: keep it unless the server copy is strictly newer.
       if (localTime != null && !r.updatedAt.isAfter(localTime)) return;
-      await _db.customStatement(
-        'DELETE FROM sync_outbox WHERE entity = ? AND row_id = ?',
-        [entity, r.rowId],
-      );
       // The local edit is about to lose. For notes, keep its text as a copy so
       // nothing typed is ever dropped.
       if (entity == 'notes' && local != null && !r.deleted) {
@@ -274,11 +284,21 @@ class SyncService {
       if (r.updatedAt.isBefore(localTime!)) return;
     }
 
+    // The local change leaves the outbox only once the remote one is stored.
+    Future<void> settle() async {
+      if (pending == null) return;
+      await _db.customStatement(
+        'DELETE FROM sync_outbox WHERE entity = ? AND row_id = ?',
+        [entity, r.rowId],
+      );
+    }
+
     if (r.deleted) {
       await _db.customStatement(
         'DELETE FROM $entity WHERE $keyCol = ?',
         [r.rowId],
       );
+      await settle();
       return;
     }
     final payload = {...r.payload};
@@ -288,6 +308,7 @@ class SyncService {
       }
     }
     await _insert(entity, payload);
+    await settle();
   }
 
   /// Insert-or-update by primary key (an upsert, not REPLACE, so triggers such

@@ -12,6 +12,9 @@ class InMemorySyncRemote implements SyncRemote {
   /// Row ids the "server" refuses permanently (like a constraint violation).
   final rejectIds = <String>{};
 
+  /// Row ids of every record ever pushed, in order (for assertions).
+  final pushed = <String>[];
+
   @override
   Future<String> identity() async {
     if (!online) throw StateError('offline');
@@ -28,6 +31,7 @@ class InMemorySyncRemote implements SyncRemote {
   Future<void> push(List<SyncRecord> records) async {
     if (!online) throw StateError('offline');
     for (final r in records) {
+      pushed.add(r.rowId);
       if (rejectIds.contains(r.rowId)) throw PermanentSyncError(r.rowId);
     }
     for (final r in records) {

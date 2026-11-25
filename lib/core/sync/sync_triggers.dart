@@ -11,12 +11,13 @@ const syncedEntities = <String, String>{
   'plan_day_progress': 'id',
 };
 
-/// Writes are queued only while sync is on (`sync_enabled` = 1) and not while a
+/// Writes are queued only while sync is on or paused (`sync_enabled` = 1 or
+/// 'paused': paused keeps queueing so nothing is lost) and not while a
 /// pull is being applied. With sync off the outbox therefore never grows; the
 /// whole database is queued in one go when sync is switched on.
 const _quiet = "COALESCE((SELECT value FROM sync_state WHERE key = 'applying'),"
     " '0') = '0' AND COALESCE((SELECT value FROM sync_state WHERE key = "
-    "'sync_enabled'), '0') = '1'";
+    "'sync_enabled'), '0') IN ('1', 'paused')";
 
 String _enqueue(String entity, String keyExpr, String op) =>
     'INSERT INTO sync_outbox(entity, row_id, op, seq, queued_at) '

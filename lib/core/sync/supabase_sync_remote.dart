@@ -11,6 +11,27 @@ String highlightRemoteId(
       '$appUserId:highlight:$book.$chapter.$verse',
     );
 
+/// HTTP 413 from PostgREST / the gateway.
+bool isPayloadTooLarge(Object e) =>
+    e is PostgrestException &&
+    (e.code == '413' || (e.message.toLowerCase().contains('too large')));
+
+/// Runs [op]; on an RLS denial (42501) re-establishes the user via [reauth] and
+/// retries once. If it is still denied the error propagates, and since 42501 is
+/// not "permanent" the outbox is kept for the next run.
+Future<T> retryAfterAuthLoss<T>(
+  Future<T> Function() op,
+  Future<void> Function() reauth,
+) async {
+  try {
+    return await op();
+  } on PostgrestException catch (e) {
+    if (e.code != '42501') rethrow;
+    await reauth();
+    return op();
+  }
+}
+
 /// Supabase implementation, mapped onto the reader tables in abide-backend
 /// (migration 23). Local entity -> remote table:
 ///
@@ -53,17 +74,15 @@ class SupabaseSyncRemote implements SyncRemote {
   @override
   Future<String> identity() => _ensureUser();
 
-  /// Constraint (22/23), permission (42501) and trigger (P0001) errors, or a
-  /// record we could not map, will fail forever; anything else (network, 5xx,
-  /// auth) is worth retrying.
+  /// Constraint (22/23) and trigger (P0001) errors, or a record we could not
+  /// map, will fail forever; anything else (network, 5xx, auth) is worth
+  /// retrying. 42501 (RLS) is NOT permanent: it usually means our app user row
+  /// or session is stale; see [retryAfterAuthLoss].
   @override
   bool isPermanent(Object error) {
     if (error is PostgrestException) {
       final c = error.code ?? '';
-      return c.startsWith('22') ||
-          c.startsWith('23') ||
-          c == '42501' ||
-          c == 'P0001';
+      return c.startsWith('22') || c.startsWith('23') || c == 'P0001';
     }
     return error is FormatException || error is RangeError;
   }
@@ -117,7 +136,15 @@ class SupabaseSyncRemote implements SyncRemote {
   // --- push ------------------------------------------------------------------
 
   @override
-  Future<void> push(List<SyncRecord> records) async {
+  Future<void> push(List<SyncRecord> records) =>
+      retryAfterAuthLoss(() => _push(records), _reauth);
+
+  Future<void> _reauth() async {
+    _appUserId = null;
+    await _ensureUser();
+  }
+
+  Future<void> _push(List<SyncRecord> records) async {
     await _ensureUser();
     final upserts = <String, List<Map<String, Object?>>>{};
     final conflict = <String, String>{};
@@ -193,7 +220,32 @@ class SupabaseSyncRemote implements SyncRemote {
     }
 
     for (final e in upserts.entries) {
-      await _client.from(e.key).upsert(e.value, onConflict: conflict[e.key]);
+      // Notes carry whole bodies, so they go in small batches.
+      final size = e.key == 'u_notes' ? 25 : 200;
+      for (var i = 0; i < e.value.length; i += size) {
+        await _upsert(
+          e.key,
+          e.value.sublist(
+              i, i + size > e.value.length ? e.value.length : i + size),
+          conflict[e.key]!,
+        );
+      }
+    }
+  }
+
+  /// Upserts [rows], halving the batch whenever the server answers 413.
+  Future<void> _upsert(
+    String table,
+    List<Map<String, Object?>> rows,
+    String onConflict,
+  ) async {
+    try {
+      await _client.from(table).upsert(rows, onConflict: onConflict);
+    } catch (e) {
+      if (rows.length < 2 || !isPayloadTooLarge(e)) rethrow;
+      final mid = rows.length ~/ 2;
+      await _upsert(table, rows.sublist(0, mid), onConflict);
+      await _upsert(table, rows.sublist(mid), onConflict);
     }
   }
 
@@ -234,7 +286,10 @@ class SupabaseSyncRemote implements SyncRemote {
   // --- pull ------------------------------------------------------------------
 
   @override
-  Future<SyncPage> pull(String entity, String? cursor) async {
+  Future<SyncPage> pull(String entity, String? cursor) =>
+      retryAfterAuthLoss(() => _pull(entity, cursor), _reauth);
+
+  Future<SyncPage> _pull(String entity, String? cursor) async {
     await _ensureUser();
     final table = switch (entity) {
       'notes' => 'u_notes',
