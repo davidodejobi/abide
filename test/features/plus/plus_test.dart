@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:openbaptisthymnal/core/storage/storage_provider.dart';
+import 'package:openbaptisthymnal/core/theme/app_theme.dart';
 import 'package:openbaptisthymnal/features/plus/data/purchase_service.dart';
 import 'package:openbaptisthymnal/features/plus/domain/plus_rules.dart';
 import 'package:openbaptisthymnal/features/plus/plus_config.dart';
@@ -69,34 +70,56 @@ void main() {
         ),
       );
 
+  // The sheet route lives above the Scaffold, so the scope must sit above
+  // MaterialApp, as in the real app.
+  Future<void> pumpGate(WidgetTester t) async {
+    await t.pumpWidget(ProviderScope(
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(prefs),
+        purchaseServiceProvider.overrideWithValue(
+            const FakePurchaseService(delay: Duration(milliseconds: 10))),
+      ],
+      child: MaterialApp(
+        theme: AppTheme.darkTheme,
+        home: Scaffold(body: gateButton()),
+      ),
+    ));
+    await t.pump();
+  }
+
   testWidgets('gate sheet opens for free readers, Not now closes it',
       (t) async {
-    await t.pumpApp(scope(gateButton()));
+    await pumpGate(t);
     await t.tap(find.text('open'));
+    await t.pump();
     await t.pump(const Duration(seconds: 1));
     expect(find.text(PlusFeature.sync.title), findsOneWidget);
     expect(find.text(PlusStrings.startTrial), findsOneWidget);
     await t.tap(find.text(PlusStrings.notNow));
+    await t.pump();
     await t.pump(const Duration(seconds: 1));
     expect(find.text(PlusStrings.notNow), findsNothing);
   });
 
   testWidgets('gate does not open for Plus readers', (t) async {
     await prefs.setBool('plus_active', true);
-    await t.pumpApp(scope(gateButton()));
+    await pumpGate(t);
     await t.tap(find.text('open'));
+    await t.pump();
     await t.pump(const Duration(seconds: 1));
     expect(find.text(PlusStrings.startTrial), findsNothing);
   });
 
   testWidgets('starting the trial from the sheet grants Plus', (t) async {
-    await t.pumpApp(scope(gateButton()));
+    await pumpGate(t);
     await t.tap(find.text('open'));
-    await t.pump(const Duration(seconds: 1));
-    await t.tap(find.text(PlusStrings.startTrial));
-    await t.pump(const Duration(milliseconds: 100));
+    await t.pump();
     await t.pump(const Duration(seconds: 1));
     final c = ProviderScope.containerOf(t.element(find.text('open')));
+    await t.tap(find.text(PlusStrings.startTrial));
+    await t.pump(const Duration(milliseconds: 100));
+    await t.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
+    await t.pump(const Duration(seconds: 1));
     expect(c.read(plusProvider).isPlus, isTrue);
     expect(c.read(plusProvider).trialStartedAt, isNotNull);
   });

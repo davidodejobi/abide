@@ -324,6 +324,22 @@ class PlanDaysRouteArgs {
 }
 
 /// generated route for
+/// [PlusPage]
+class PlusRoute extends PageRouteInfo<void> {
+  const PlusRoute({List<PageRouteInfo>? children})
+      : super(PlusRoute.name, initialChildren: children);
+
+  static const String name = 'PlusRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const PlusPage();
+    },
+  );
+}
+
+/// generated route for
 /// [ScriptureShareCardPage]
 class ScriptureShareCardRoute
     extends PageRouteInfo<ScriptureShareCardRouteArgs> {
@@ -412,7 +428,7 @@ class ShareCardRoute extends PageRouteInfo<ShareCardRouteArgs> {
     Key? key,
     required String hymnNumber,
     required String title,
-    required String body,
+    String body = '',
     List<({String label, String text})> parts = const [],
     List<PageRouteInfo>? children,
   }) : super(
@@ -449,7 +465,7 @@ class ShareCardRouteArgs {
     this.key,
     required this.hymnNumber,
     required this.title,
-    required this.body,
+    this.body = '',
     this.parts = const [],
   });
 
@@ -486,6 +502,22 @@ class ShareCardRouteArgs {
       title.hashCode ^
       body.hashCode ^
       const ListEquality().hash(parts);
+}
+
+/// generated route for
+/// [SponsorPage]
+class SponsorRoute extends PageRouteInfo<void> {
+  const SponsorRoute({List<PageRouteInfo>? children})
+      : super(SponsorRoute.name, initialChildren: children);
+
+  static const String name = 'SponsorRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const SponsorPage();
+    },
+  );
 }
 
 /// generated route for
