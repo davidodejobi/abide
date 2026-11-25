@@ -99,6 +99,40 @@ void main() {
     expect(find.byType(RawImage), findsNothing);
   });
 
+  testWidgets('after closing, the overlay rebuilds cleanly and nothing leaks',
+      (t) async {
+    await open(t, from: const Rect.fromLTWH(20, 500, 120, 100));
+    // Handles held by the road's own sprite are the baseline.
+    final before = sprite.debugGetOpenHandleStackTraces()!.length;
+    await _pumpFor(t, 1400);
+    Navigator.of(t.element(find.byKey(_staticKey))).pop();
+    await _pumpFor(t, 250);
+    // Any overlay rebuild (a dialog here) must not touch a disposed image.
+    final ctx = t.element(find.byType(TextButton));
+    showDialog<void>(context: ctx, builder: (_) => const AlertDialog(title: Text('hi')));
+    await _pumpFor(t, 600);
+    expect(t.takeException(), isNull);
+    expect(find.text('hi'), findsOneWidget);
+    expect(find.byType(ErrorWidget), findsNothing);
+    expect(done, isTrue);
+    expect(find.byType(RawImage), findsNothing, reason: 'fliers removed');
+    expect(sprite.debugGetOpenHandleStackTraces()!.length, before,
+        reason: 'no handle left over from the sheet');
+  });
+
+  testWidgets('opening another landmark while one closes is independent',
+      (t) async {
+    await open(t, from: const Rect.fromLTWH(20, 500, 120, 100));
+    await _pumpFor(t, 1400);
+    Navigator.of(t.element(find.byKey(_staticKey))).pop();
+    await _pumpFor(t, 100);
+    t.widget<TextButton>(find.byType(TextButton)).onPressed!();
+    await _pumpFor(t, 1500);
+    expect(t.takeException(), isNull);
+    expect(find.byKey(_staticKey), findsOneWidget);
+    expect(find.text(lm.title), findsOneWidget);
+  });
+
   testWidgets('reduced motion: no flight, picture is simply there',
       (t) async {
     await open(t, reduce: true, from: const Rect.fromLTWH(20, 500, 120, 100));

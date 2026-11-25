@@ -5,7 +5,6 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openbaptisthymnal/core/theme/lum_theme.dart';
 
 import '../../domain/landmark_spin.dart';
@@ -29,75 +28,6 @@ class ShowcaseFlight {
     if (!_done.isCompleted) _done.complete();
   }
 }
-
-class ShowcaseState {
-  const ShowcaseState({this.spin, this.palette = const [], this.landed = false});
-
-  /// The decoded turntable sheet; null until it is ready (the static sprite
-  /// stands in).
-  final ui.Image? spin;
-  final List<Color> palette;
-  final bool landed;
-
-  ShowcaseState copyWith({ui.Image? spin, List<Color>? palette, bool? landed}) =>
-      ShowcaseState(
-        spin: spin ?? this.spin,
-        palette: palette ?? this.palette,
-        landed: landed ?? this.landed,
-      );
-}
-
-/// Holds the showcase's lazily decoded turntable and palette. Auto-disposed
-/// with the sheet, which frees the sheet's memory.
-class ShowcaseNotifier extends AutoDisposeNotifier<ShowcaseState> {
-  bool _dead = false;
-  ui.Image? _spin;
-
-  @override
-  ShowcaseState build() {
-    ref.onDispose(() {
-      _dead = true;
-      _spin?.dispose();
-      _spin = null;
-    });
-    return const ShowcaseState();
-  }
-
-  void land() {
-    if (!_dead && !state.landed) state = state.copyWith(landed: true);
-  }
-
-  /// Decodes the turntable for [art] and reads a palette off [sprite]. Either
-  /// failing leaves the static picture and default colours.
-  Future<void> load(String art, ui.Image? sprite) async {
-    unawaited(_palette(sprite));
-    try {
-      final img = await RoadArt.loadSpin(art);
-      if (_dead) {
-        img.dispose();
-        return;
-      }
-      _spin = img;
-      state = state.copyWith(spin: img);
-    } catch (_) {}
-  }
-
-  Future<void> _palette(ui.Image? sprite) async {
-    if (sprite == null) return;
-    try {
-      final bytes = await sprite.toByteData(format: ui.ImageByteFormat.rawRgba);
-      if (bytes == null || _dead) return;
-      final p = spinPalette(bytes.buffer.asUint8List());
-      if (p.isNotEmpty && !_dead) {
-        state = state.copyWith(palette: [for (final v in p) Color(v)]);
-      }
-    } catch (_) {}
-  }
-}
-
-final showcaseProvider =
-    NotifierProvider.autoDispose<ShowcaseNotifier, ShowcaseState>(
-        ShowcaseNotifier.new);
 
 // ------------------------------------------------------------------ physics
 class _Whoosh extends Simulation {
@@ -133,7 +63,7 @@ class _Idle extends Simulation {
 /// The showcase header of a landmark sheet: the sprite lifts off the road and
 /// flies here, lands on a lit podium, spins, and the title reveals. Drag to
 /// spin it yourself.
-class LandmarkShowcase extends ConsumerStatefulWidget {
+class LandmarkShowcase extends StatefulWidget {
   const LandmarkShowcase({
     super.key,
     required this.art,
@@ -149,10 +79,10 @@ class LandmarkShowcase extends ConsumerStatefulWidget {
   final ShowcaseFlight? flight;
 
   @override
-  ConsumerState<LandmarkShowcase> createState() => _LandmarkShowcaseState();
+  State<LandmarkShowcase> createState() => _LandmarkShowcaseState();
 }
 
-class _LandmarkShowcaseState extends ConsumerState<LandmarkShowcase>
+class _LandmarkShowcaseState extends State<LandmarkShowcase>
     with TickerProviderStateMixin {
   static const _stageHeight = 290.0;
   static const _heroSize = 210.0;
@@ -167,6 +97,10 @@ class _LandmarkShowcaseState extends ConsumerState<LandmarkShowcase>
   late final _burst =
       AnimationController(vsync: this, duration: const Duration(milliseconds: 700));
 
+  /// The decoded turntable; null until ready (the static sprite stands in).
+  ui.Image? _sheet;
+  List<Color> _palette = const [];
+  bool _landed = false;
   bool _init = false, _reduce = false, _flying = false, _started = false;
   bool _dragging = false;
   Rect _lastSlot = Rect.zero;
@@ -184,9 +118,35 @@ class _LandmarkShowcaseState extends ConsumerState<LandmarkShowcase>
     });
     scheduleMicrotask(() {
       if (mounted) {
-        ref.read(showcaseProvider.notifier).load(widget.art, _mine);
+        _loadPalette();
+        _loadSheet();
       }
     });
+  }
+
+  Future<void> _loadSheet() async {
+    try {
+      final img = await RoadArt.loadSpin(widget.art);
+      if (!mounted) {
+        img.dispose();
+        return;
+      }
+      final old = _sheet;
+      setState(() => _sheet = img);
+      old?.dispose();
+      _maybeSpin();
+    } catch (_) {}
+  }
+
+  Future<void> _loadPalette() async {
+    try {
+      final bytes = await _mine.toByteData(format: ui.ImageByteFormat.rawRgba);
+      if (bytes == null || !mounted) return;
+      final p = spinPalette(bytes.buffer.asUint8List());
+      if (p.isNotEmpty && mounted) {
+        setState(() => _palette = [for (final v in p) Color(v)]);
+      }
+    } catch (_) {}
   }
 
   @override
@@ -218,6 +178,8 @@ class _LandmarkShowcaseState extends ConsumerState<LandmarkShowcase>
     _reveal.dispose();
     _burst.dispose();
     _mine.dispose();
+    _sheet?.dispose();
+    _sheet = null;
     super.dispose();
   }
 
@@ -230,19 +192,22 @@ class _LandmarkShowcaseState extends ConsumerState<LandmarkShowcase>
   }
 
   Color get _glow {
-    final p = ref.read(showcaseProvider).palette;
-    return p.isEmpty ? context.lum.sceneGlow : p.first;
+    return _palette.isEmpty ? context.lum.sceneGlow : _palette.first;
   }
 
   void _startFlight() {
     final from = widget.flight!.from!;
     _lastSlot = from;
+    // Cloned and resolved once, here: a builder runs again on any overlay
+    // rebuild, and the flier owns (disposes) this one handle.
+    final image = _mine.clone();
+    final glow = _glow;
     final entry = OverlayEntry(
       builder: (_) => _Flier(
-        image: _mine.clone(),
+        image: image,
         from: from,
         to: _slotRect,
-        glow: _glow,
+        glow: glow,
         onDone: () {
           _entry?.remove();
           _entry = null;
@@ -262,13 +227,16 @@ class _LandmarkShowcaseState extends ConsumerState<LandmarkShowcase>
     _entry?.remove();
     _entry = null;
     final start = _slotRect();
+    final image = _mine.clone();
+    final glow = _glow;
+    setState(() => _flying = true); // the flier is the only copy on screen
     late final OverlayEntry back;
     back = OverlayEntry(
       builder: (_) => _Flier(
-        image: _mine.clone(),
+        image: image,
         from: start,
         to: () => f.from!,
-        glow: _glow,
+        glow: glow,
         back: true,
         onDone: () {
           back.remove();
@@ -280,9 +248,11 @@ class _LandmarkShowcaseState extends ConsumerState<LandmarkShowcase>
   }
 
   void _land() {
-    setState(() => _flying = false);
+    setState(() {
+      _flying = false;
+      _landed = true;
+    });
     HapticFeedback.lightImpact();
-    ref.read(showcaseProvider.notifier).land();
     _reveal.duration = Duration(milliseconds: _reduce ? 250 : 900);
     _reveal.forward();
     if (!_reduce) {
@@ -294,8 +264,7 @@ class _LandmarkShowcaseState extends ConsumerState<LandmarkShowcase>
 
   /// The whoosh plays once the picture has landed and the turntable is ready.
   void _maybeSpin() {
-    final st = ref.read(showcaseProvider);
-    if (_started || !st.landed || st.spin == null) return;
+    if (_started || !_landed || _sheet == null) return;
     _started = true;
     if (!_reduce) _spin.animateWith(_Whoosh(_spin.value, 2, 1.2));
   }
@@ -320,10 +289,9 @@ class _LandmarkShowcaseState extends ConsumerState<LandmarkShowcase>
   @override
   Widget build(BuildContext context) {
     final c = context.lum;
-    final st = ref.watch(showcaseProvider);
-    ref.listen(showcaseProvider, (_, __) => _maybeSpin());
-    final colors = st.palette.isEmpty ? [c.sceneGlow] : st.palette;
-    final live = st.landed && !_reduce;
+    final sheet = _sheet;
+    final colors = _palette.isEmpty ? [c.sceneGlow] : _palette;
+    final live = _landed && !_reduce;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -354,9 +322,10 @@ class _LandmarkShowcaseState extends ConsumerState<LandmarkShowcase>
                 child: Center(
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
-                    onHorizontalDragStart: st.spin == null ? null : _dragStart,
-                    onHorizontalDragUpdate: st.spin == null ? null : _dragUpdate,
-                    onHorizontalDragEnd: st.spin == null ? null : _dragEnd,
+                    excludeFromSemantics: true,
+                    onHorizontalDragStart: sheet == null ? null : _dragStart,
+                    onHorizontalDragUpdate: sheet == null ? null : _dragUpdate,
+                    onHorizontalDragEnd: sheet == null ? null : _dragEnd,
                     child: SizedBox(
                       key: _slot,
                       width: _heroSize,
@@ -366,7 +335,7 @@ class _LandmarkShowcaseState extends ConsumerState<LandmarkShowcase>
                           opacity: _flying ? 0 : 1,
                           child: AnimatedSwitcher(
                             duration: const Duration(milliseconds: 180),
-                            child: st.spin == null
+                            child: sheet == null
                                 ? RawImage(
                                     key: const ValueKey('showcase-static'),
                                     image: _mine,
@@ -375,7 +344,7 @@ class _LandmarkShowcaseState extends ConsumerState<LandmarkShowcase>
                                     key: const ValueKey('showcase-spin'),
                                     child: CustomPaint(
                                       painter: _SpinPainter(
-                                        sheet: st.spin!,
+                                        sheet: sheet,
                                         turns: _spin,
                                         clock: _clock,
                                         bob: live,
@@ -440,6 +409,7 @@ class _LandmarkShowcaseState extends ConsumerState<LandmarkShowcase>
         final t = _reduce ? _reveal.value : curve.transform(_reveal.value);
         return Opacity(
           opacity: t,
+          alwaysIncludeSemantics: true,
           child: Transform.translate(
               offset: Offset(0, _reduce ? 0 : (1 - t) * lift), child: child),
         );

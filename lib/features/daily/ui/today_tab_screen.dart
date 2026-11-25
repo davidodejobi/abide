@@ -521,7 +521,7 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
         day: day,
         sprite: sprite,
         from: sprite == null ? null : from);
-    if (mounted && _lifted != null) setState(() => _lifted = null);
+    if (mounted && _lifted == landmark.id) setState(() => _lifted = null);
     await _open(open);
   }
 

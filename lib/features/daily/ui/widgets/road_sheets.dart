@@ -1,7 +1,6 @@
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openbaptisthymnal/core/theme/lum_theme.dart';
 import 'package:openbaptisthymnal/core/utils/services/share_service.dart';
 import 'package:openbaptisthymnal/core/widgets/lum_button.dart';
@@ -72,15 +71,12 @@ Future<RoadOpen?> showLandmarkSheet(
   final flight = ShowcaseFlight(from);
   final open = await _show(
     context,
-    // Its own scope: the showcase's decoded turntable dies with the sheet.
-    (_) => ProviderScope(
-      child: LandmarkSheet(
-        landmark: landmark,
-        story: story,
-        day: day,
-        sprite: sprite,
-        flight: flight,
-      ),
+    (_) => LandmarkSheet(
+      landmark: landmark,
+      story: story,
+      day: day,
+      sprite: sprite,
+      flight: flight,
     ),
   );
   if (!flight.backStarted) flight.finish();
