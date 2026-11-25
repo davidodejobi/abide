@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:openbaptisthymnal/core/theme/lum_theme.dart';
 
 /// Page colour plus the two soft glows (top-left, bottom-right) from the

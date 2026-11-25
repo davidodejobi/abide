@@ -1,6 +1,6 @@
-// coverage:ignore-file
 // GENERATED CODE - DO NOT MODIFY BY HAND
-// ignore_for_file: type=lint
+// coverage:ignore-file
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'lyrics.dart';
@@ -9,85 +9,66 @@ part of 'lyrics.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// dart format off
 T _$identity<T>(T value) => value;
-
-final _privateConstructorUsedError = UnsupportedError(
-    'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
-
-Lyrics _$LyricsFromJson(Map<String, dynamic> json) {
-  return _Lyrics.fromJson(json);
-}
 
 /// @nodoc
 mixin _$Lyrics {
-  List<Stanza> get stanzas => throw _privateConstructorUsedError;
-  String? get chorus => throw _privateConstructorUsedError;
-
-  /// Serializes this Lyrics to a JSON map.
-  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+  List<Stanza> get stanzas;
+  String? get chorus;
 
   /// Create a copy of Lyrics
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
-  $LyricsCopyWith<Lyrics> get copyWith => throw _privateConstructorUsedError;
-}
-
-/// @nodoc
-abstract class $LyricsCopyWith<$Res> {
-  factory $LyricsCopyWith(Lyrics value, $Res Function(Lyrics) then) =
-      _$LyricsCopyWithImpl<$Res, Lyrics>;
-  @useResult
-  $Res call({List<Stanza> stanzas, String? chorus});
-}
-
-/// @nodoc
-class _$LyricsCopyWithImpl<$Res, $Val extends Lyrics>
-    implements $LyricsCopyWith<$Res> {
-  _$LyricsCopyWithImpl(this._value, this._then);
-
-  // ignore: unused_field
-  final $Val _value;
-  // ignore: unused_field
-  final $Res Function($Val) _then;
-
-  /// Create a copy of Lyrics
-  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
+  $LyricsCopyWith<Lyrics> get copyWith =>
+      _$LyricsCopyWithImpl<Lyrics>(this as Lyrics, _$identity);
+
+  /// Serializes this Lyrics to a JSON map.
+  Map<String, dynamic> toJson();
+
   @override
-  $Res call({
-    Object? stanzas = null,
-    Object? chorus = freezed,
-  }) {
-    return _then(_value.copyWith(
-      stanzas: null == stanzas
-          ? _value.stanzas
-          : stanzas // ignore: cast_nullable_to_non_nullable
-              as List<Stanza>,
-      chorus: freezed == chorus
-          ? _value.chorus
-          : chorus // ignore: cast_nullable_to_non_nullable
-              as String?,
-    ) as $Val);
+  bool operator ==(Object other) {
+    final _this = this as Lyrics;
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is Lyrics &&
+            const DeepCollectionEquality()
+                .equals(other.stanzas, _this.stanzas) &&
+            (identical(other.chorus, _this.chorus) ||
+                other.chorus == _this.chorus));
+  }
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  int get hashCode {
+    final _this = this as Lyrics;
+    return Object.hash(runtimeType,
+        const DeepCollectionEquality().hash(_this.stanzas), _this.chorus);
+  }
+
+  @override
+  String toString() {
+    final _this = this as Lyrics;
+    return 'Lyrics(stanzas: ${_this.stanzas}, chorus: ${_this.chorus})';
   }
 }
 
 /// @nodoc
-abstract class _$$LyricsImplCopyWith<$Res> implements $LyricsCopyWith<$Res> {
-  factory _$$LyricsImplCopyWith(
-          _$LyricsImpl value, $Res Function(_$LyricsImpl) then) =
-      __$$LyricsImplCopyWithImpl<$Res>;
-  @override
+abstract mixin class $LyricsCopyWith<$Res> {
+  factory $LyricsCopyWith(Lyrics value, $Res Function(Lyrics) _then) =
+      _$LyricsCopyWithImpl;
   @useResult
   $Res call({List<Stanza> stanzas, String? chorus});
 }
 
 /// @nodoc
-class __$$LyricsImplCopyWithImpl<$Res>
-    extends _$LyricsCopyWithImpl<$Res, _$LyricsImpl>
-    implements _$$LyricsImplCopyWith<$Res> {
-  __$$LyricsImplCopyWithImpl(
-      _$LyricsImpl _value, $Res Function(_$LyricsImpl) _then)
-      : super(_value, _then);
+class _$LyricsCopyWithImpl<$Res> implements $LyricsCopyWith<$Res> {
+  _$LyricsCopyWithImpl(this._self, this._then);
+
+  final Lyrics _self;
+  final $Res Function(Lyrics) _then;
 
   /// Create a copy of Lyrics
   /// with the given fields replaced by the non-null parameter values.
@@ -97,27 +78,182 @@ class __$$LyricsImplCopyWithImpl<$Res>
     Object? stanzas = null,
     Object? chorus = freezed,
   }) {
-    return _then(_$LyricsImpl(
+    return _then(Lyrics(
       stanzas: null == stanzas
-          ? _value._stanzas
+          ? _self.stanzas
           : stanzas // ignore: cast_nullable_to_non_nullable
               as List<Stanza>,
       chorus: freezed == chorus
-          ? _value.chorus
+          ? _self.chorus
           : chorus // ignore: cast_nullable_to_non_nullable
               as String?,
     ));
   }
 }
 
+/// Adds pattern-matching-related methods to [Lyrics].
+extension LyricsPatterns on Lyrics {
+  /// A variant of `map` that fallback to returning `orElse`.
+  ///
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case final Subclass value:
+  ///     return ...;
+  ///   case _:
+  ///     return orElse();
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>(
+    TResult Function(_Lyrics value)? $default, {
+    required TResult orElse(),
+  }) {
+    final _that = this;
+    switch (_that) {
+      case _Lyrics() when $default != null:
+        return $default(_that);
+      case _:
+        return orElse();
+    }
+  }
+
+  /// A `switch`-like method, using callbacks.
+  ///
+  /// Callbacks receives the raw object, upcasted.
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case final Subclass value:
+  ///     return ...;
+  ///   case final Subclass2 value:
+  ///     return ...;
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>(
+    TResult Function(_Lyrics value) $default,
+  ) {
+    final _that = this;
+    switch (_that) {
+      case _Lyrics():
+        return $default(_that);
+      case _:
+        throw StateError('Unexpected subclass');
+    }
+  }
+
+  /// A variant of `map` that fallback to returning `null`.
+  ///
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case final Subclass value:
+  ///     return ...;
+  ///   case _:
+  ///     return null;
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>(
+    TResult? Function(_Lyrics value)? $default,
+  ) {
+    final _that = this;
+    switch (_that) {
+      case _Lyrics() when $default != null:
+        return $default(_that);
+      case _:
+        return null;
+    }
+  }
+
+  /// A variant of `when` that fallback to an `orElse` callback.
+  ///
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case Subclass(:final field):
+  ///     return ...;
+  ///   case _:
+  ///     return orElse();
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>(
+    TResult Function(List<Stanza> stanzas, String? chorus)? $default, {
+    required TResult orElse(),
+  }) {
+    final _that = this;
+    switch (_that) {
+      case _Lyrics() when $default != null:
+        return $default(_that.stanzas, _that.chorus);
+      case _:
+        return orElse();
+    }
+  }
+
+  /// A `switch`-like method, using callbacks.
+  ///
+  /// As opposed to `map`, this offers destructuring.
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case Subclass(:final field):
+  ///     return ...;
+  ///   case Subclass2(:final field2):
+  ///     return ...;
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>(
+    TResult Function(List<Stanza> stanzas, String? chorus) $default,
+  ) {
+    final _that = this;
+    switch (_that) {
+      case _Lyrics():
+        return $default(_that.stanzas, _that.chorus);
+      case _:
+        throw StateError('Unexpected subclass');
+    }
+  }
+
+  /// A variant of `when` that fallback to returning `null`
+  ///
+  /// It is equivalent to doing:
+  /// ```dart
+  /// switch (sealedClass) {
+  ///   case Subclass(:final field):
+  ///     return ...;
+  ///   case _:
+  ///     return null;
+  /// }
+  /// ```
+
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>(
+    TResult? Function(List<Stanza> stanzas, String? chorus)? $default,
+  ) {
+    final _that = this;
+    switch (_that) {
+      case _Lyrics() when $default != null:
+        return $default(_that.stanzas, _that.chorus);
+      case _:
+        return null;
+    }
+  }
+}
+
 /// @nodoc
 @JsonSerializable()
-class _$LyricsImpl implements _Lyrics {
-  const _$LyricsImpl({required final List<Stanza> stanzas, this.chorus})
+class _Lyrics implements Lyrics {
+  const _Lyrics({required List<Stanza> stanzas, this.chorus})
       : _stanzas = stanzas;
-
-  factory _$LyricsImpl.fromJson(Map<String, dynamic> json) =>
-      _$$LyricsImplFromJson(json);
+  factory _Lyrics.fromJson(Map<String, dynamic> json) => _$LyricsFromJson(json);
 
   final List<Stanza> _stanzas;
   @override
@@ -130,57 +266,78 @@ class _$LyricsImpl implements _Lyrics {
   @override
   final String? chorus;
 
+  /// Create a copy of Lyrics
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  String toString() {
-    return 'Lyrics(stanzas: $stanzas, chorus: $chorus)';
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @pragma('vm:prefer-inline')
+  _$LyricsCopyWith<_Lyrics> get copyWith =>
+      __$LyricsCopyWithImpl<_Lyrics>(this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$LyricsToJson(
+      this,
+    );
   }
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$LyricsImpl &&
-            const DeepCollectionEquality().equals(other._stanzas, _stanzas) &&
+            other is _Lyrics &&
+            const DeepCollectionEquality().equals(other.stanzas, _stanzas) &&
             (identical(other.chorus, chorus) || other.chorus == chorus));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(
-      runtimeType, const DeepCollectionEquality().hash(_stanzas), chorus);
-
-  /// Create a copy of Lyrics
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$LyricsImplCopyWith<_$LyricsImpl> get copyWith =>
-      __$$LyricsImplCopyWithImpl<_$LyricsImpl>(this, _$identity);
+  int get hashCode {
+    return Object.hash(
+        runtimeType, const DeepCollectionEquality().hash(_stanzas), chorus);
+  }
 
   @override
-  Map<String, dynamic> toJson() {
-    return _$$LyricsImplToJson(
-      this,
-    );
+  String toString() {
+    return 'Lyrics(stanzas: $stanzas, chorus: $chorus)';
   }
 }
 
-abstract class _Lyrics implements Lyrics {
-  const factory _Lyrics(
-      {required final List<Stanza> stanzas,
-      final String? chorus}) = _$LyricsImpl;
-
-  factory _Lyrics.fromJson(Map<String, dynamic> json) = _$LyricsImpl.fromJson;
-
+/// @nodoc
+abstract mixin class _$LyricsCopyWith<$Res> implements $LyricsCopyWith<$Res> {
+  factory _$LyricsCopyWith(_Lyrics value, $Res Function(_Lyrics) _then) =
+      __$LyricsCopyWithImpl;
   @override
-  List<Stanza> get stanzas;
-  @override
-  String? get chorus;
+  @useResult
+  $Res call({List<Stanza> stanzas, String? chorus});
+}
+
+/// @nodoc
+class __$LyricsCopyWithImpl<$Res> implements _$LyricsCopyWith<$Res> {
+  __$LyricsCopyWithImpl(this._self, this._then);
+
+  final _Lyrics _self;
+  final $Res Function(_Lyrics) _then;
 
   /// Create a copy of Lyrics
   /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$LyricsImplCopyWith<_$LyricsImpl> get copyWith =>
-      throw _privateConstructorUsedError;
+  @pragma('vm:prefer-inline')
+  $Res call({
+    Object? stanzas = null,
+    Object? chorus = freezed,
+  }) {
+    return _then(_Lyrics(
+      stanzas: null == stanzas
+          ? _self._stanzas
+          : stanzas // ignore: cast_nullable_to_non_nullable
+              as List<Stanza>,
+      chorus: freezed == chorus
+          ? _self.chorus
+          : chorus // ignore: cast_nullable_to_non_nullable
+              as String?,
+    ));
+  }
 }
+
+// dart format on
