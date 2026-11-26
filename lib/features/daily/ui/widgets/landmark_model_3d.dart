@@ -45,6 +45,18 @@ class LandmarkModel3d extends StatefulWidget {
     return _LandmarkModel3dState._framings![art];
   }
 
+  static Future<void>? _warm;
+
+  /// Readies the 3D engine (shaders, GPU resources) and the framing manifest
+  /// ahead of the first landmark, which would otherwise pay for them while the
+  /// sheet opens. Safe to call often and anywhere: once, never throws.
+  static Future<void> warm() => _warm ??= () async {
+        try {
+          await Scene.initializeStaticResources();
+          await framingFor('');
+        } catch (_) {}
+      }();
+
   @override
   State<LandmarkModel3d> createState() => _LandmarkModel3dState();
 }

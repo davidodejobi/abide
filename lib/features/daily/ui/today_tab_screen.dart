@@ -27,8 +27,10 @@ import '../domain/road_days.dart';
 import '../domain/road_landmarks.dart';
 import '../domain/world_company.dart';
 import '../providers/daily_providers.dart';
+import '../providers/landmark_prefetch_provider.dart';
 import 'daily_strings.dart';
 import 'widgets/lamp_icon.dart';
+import 'widgets/landmark_model_3d.dart';
 import 'widgets/plan_picker_sheet.dart';
 import 'widgets/road_art.dart';
 import 'widgets/road_scene.dart';
@@ -61,6 +63,9 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
   /// a reader catching up can keep going. Plan days are progress-driven, so
   /// marking more than one a day is allowed (see the old card's notes).
   bool _readAhead = false;
+
+  /// `plan:day` last handed to the landmark prefetch.
+  String? _prefetchKey;
 
   @override
   Widget build(BuildContext context) {
@@ -96,6 +101,20 @@ class _TodayTabScreenState extends ConsumerState<TodayTabScreen>
 
     final data = reading.valueOrNull;
     final hasPlan = data != null;
+    // Quietly fetch this week's landmark models, once per plan day shown.
+    final prefetchDay = data?.day?.dayIndex;
+    if (data != null && prefetchDay != null) {
+      final key = '${data.plan.id}:$prefetchDay';
+      if (key != _prefetchKey) {
+        _prefetchKey = key;
+        final plan = data.plan;
+        Future(() {
+          if (!mounted) return;
+          LandmarkModel3d.warm();
+          ref.read(landmarkPrefetchProvider)(plan, prefetchDay);
+        });
+      }
+    }
     // Which plan day was finished today (the highest one before the next
     // unread day), or null if none, e.g. day 1 was unmarked again.
     final doneAsync =

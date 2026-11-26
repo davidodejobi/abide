@@ -19,6 +19,12 @@ final remoteLandmarkModelsProvider =
   return [for (final m in all.values) if (!m.bundled) m];
 });
 
+/// The whole catalog (every model, every day), parsed once.
+final landmarkCatalogProvider = FutureProvider<LandmarkCatalog>((ref) async =>
+    parseLandmarkCatalog(
+        await rootBundle.loadString('assets/images/road/landmarks.json'),
+        await rootBundle.loadString('assets/images/road/landmark_days.json')));
+
 enum LandmarkDownloadStatus { idle, downloading, done, failed }
 
 class LandmarkDownloadState {
@@ -30,6 +36,7 @@ class LandmarkDownloadState {
     this.totalBytes = 0,
     this.accepted = false,
     this.declined = false,
+    this.doneArts = const {},
   });
 
   final LandmarkDownloadStatus status;
@@ -37,6 +44,9 @@ class LandmarkDownloadState {
 
   /// The saved choice: "Download now" / "Later" (or removed).
   final bool accepted, declined;
+
+  /// Art keys of the downloaded models, so the road-ahead page can light them.
+  final Set<String> doneArts;
 
   double get progress => totalBytes == 0 ? 0 : doneBytes / totalBytes;
 
@@ -48,6 +58,7 @@ class LandmarkDownloadState {
     int? totalBytes,
     bool? accepted,
     bool? declined,
+    Set<String>? doneArts,
   }) =>
       LandmarkDownloadState(
         status: status ?? this.status,
@@ -57,6 +68,7 @@ class LandmarkDownloadState {
         totalBytes: totalBytes ?? this.totalBytes,
         accepted: accepted ?? this.accepted,
         declined: declined ?? this.declined,
+        doneArts: doneArts ?? this.doneArts,
       );
 }
 
@@ -116,7 +128,7 @@ class LandmarkDownloadNotifier extends Notifier<LandmarkDownloadState> {
   /// Counts what is already on disk, for the status row.
   Future<void> refresh() async {
     if (state.status == LandmarkDownloadStatus.downloading) return;
-    final (done, doneBytes, models) = await _scan();
+    final (done, doneBytes, models, arts) = await _scan();
     final total = models.fold<int>(0, (a, m) => a + m.bytes);
     state = state.copyWith(
       status: done == models.length && models.isNotEmpty
@@ -126,6 +138,7 @@ class LandmarkDownloadNotifier extends Notifier<LandmarkDownloadState> {
       totalFiles: models.length,
       doneBytes: doneBytes,
       totalBytes: total,
+      doneArts: arts,
     );
   }
 
@@ -143,6 +156,7 @@ class LandmarkDownloadNotifier extends Notifier<LandmarkDownloadState> {
         status: LandmarkDownloadStatus.idle,
         doneFiles: 0,
         doneBytes: 0,
+        doneArts: const {},
         accepted: false,
         declined: true);
     await _save(declined);
@@ -156,19 +170,21 @@ class LandmarkDownloadNotifier extends Notifier<LandmarkDownloadState> {
     }
   }
 
-  Future<(int, int, List<LandmarkModelInfo>)> _scan() async {
+  Future<(int, int, List<LandmarkModelInfo>, Set<String>)> _scan() async {
     final cache = ref.read(landmarkLoaderProvider).cache;
     final models = await _models();
     var done = 0, bytes = 0;
+    final arts = <String>{};
     for (final m in models) {
       try {
         if (cache != null && await cache.has(m.remoteName)) {
           done++;
           bytes += m.bytes;
+          arts.add(m.art);
         }
       } catch (_) {}
     }
-    return (done, bytes, models);
+    return (done, bytes, models, arts);
   }
 
   Future<void> _download() async {
@@ -178,6 +194,7 @@ class LandmarkDownloadNotifier extends Notifier<LandmarkDownloadState> {
     final cache = loader.cache!;
     final models = await _models();
     final missing = <LandmarkModelInfo>[];
+    final arts = <String>{};
     var haveBytes = 0;
     for (final m in models) {
       var have = false;
@@ -185,6 +202,7 @@ class LandmarkDownloadNotifier extends Notifier<LandmarkDownloadState> {
         have = await cache.has(m.remoteName);
       } catch (_) {}
       if (have) {
+        arts.add(m.art);
         haveBytes += m.bytes;
       } else {
         missing.add(m);
@@ -200,6 +218,7 @@ class LandmarkDownloadNotifier extends Notifier<LandmarkDownloadState> {
       totalFiles: models.length,
       doneBytes: doneBytes,
       totalBytes: total,
+      doneArts: Set.of(arts),
     );
     if (missing.isEmpty) return;
 
@@ -217,7 +236,11 @@ class LandmarkDownloadNotifier extends Notifier<LandmarkDownloadState> {
         if (ok) {
           doneFiles++;
           doneBytes += m.bytes;
-          state = state.copyWith(doneFiles: doneFiles, doneBytes: doneBytes);
+          arts.add(m.art);
+          state = state.copyWith(
+              doneFiles: doneFiles,
+              doneBytes: doneBytes,
+              doneArts: Set.of(arts));
         }
       }
     }

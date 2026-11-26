@@ -295,7 +295,7 @@ class _HymnLinkRow extends ConsumerWidget {
   }
 }
 
-/// Status of the 3D road landmarks with a sheet to download or remove them.
+/// Status of the 3D road landmarks; opens the "Your road ahead" page.
 class RoadLandmarksRow extends ConsumerStatefulWidget {
   const RoadLandmarksRow({super.key});
 
@@ -304,8 +304,6 @@ class RoadLandmarksRow extends ConsumerStatefulWidget {
 }
 
 class _RoadLandmarksRowState extends ConsumerState<RoadLandmarksRow> {
-  static const _download = 'download', _remove = 'remove';
-
   @override
   void initState() {
     super.initState();
@@ -326,29 +324,11 @@ class _RoadLandmarksRowState extends ConsumerState<RoadLandmarksRow> {
   @override
   Widget build(BuildContext context) {
     final s = ref.watch(landmarkDownloadProvider);
-    final notifier = ref.read(landmarkDownloadProvider.notifier);
     return YouRow(
       icon: PhosphorIcons.mountains(),
       title: YouStrings.roadLandmarks,
       subtitle: _status(s),
-      onTap: () async {
-        final picked = await showYouPicker(
-          context,
-          title: YouStrings.roadLandmarks,
-          selected: null,
-          options: [
-            if (s.status != LandmarkDownloadStatus.done)
-              const YouChoice(id: _download, label: YouStrings.roadDownload),
-            if (s.doneFiles > 0)
-              const YouChoice(id: _remove, label: YouStrings.roadRemove),
-          ],
-        );
-        if (picked?.id == _download) {
-          notifier.start();
-        } else if (picked?.id == _remove) {
-          await notifier.remove();
-        }
-      },
+      onTap: () => context.router.push(const RoadAheadRoute()),
     );
   }
 }

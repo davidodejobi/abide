@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:openbaptisthymnal/core/theme/lum_theme.dart';
 import 'package:openbaptisthymnal/features/daily/providers/landmark_download_provider.dart';
+import 'package:openbaptisthymnal/features/daily/ui/widgets/road_parade.dart';
 
 import '../onboarding_strings.dart';
 import '../widgets/onboarding_frame.dart';
@@ -48,6 +49,8 @@ class RoadDownloadScreen extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          const RoadAheadHero(height: 150),
+          const SizedBox(height: LumSpace.md),
           Semantics(
             header: true,
             child: Text(OnboardingStrings.roadTitle,

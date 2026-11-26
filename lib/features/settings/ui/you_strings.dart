@@ -26,8 +26,6 @@ abstract final class YouStrings {
 
   static const road = 'Reading road';
   static const roadLandmarks = 'Road landmarks';
-  static const roadDownload = 'Download all';
-  static const roadRemove = 'Remove downloaded files';
   static const roadDownloaded = 'Downloaded';
   static const roadNone = 'Not downloaded';
   static String roadPartial(int done, int total) => '$done of $total';

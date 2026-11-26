@@ -340,6 +340,22 @@ class PlusRoute extends PageRouteInfo<void> {
 }
 
 /// generated route for
+/// [RoadAheadPage]
+class RoadAheadRoute extends PageRouteInfo<void> {
+  const RoadAheadRoute({List<PageRouteInfo>? children})
+      : super(RoadAheadRoute.name, initialChildren: children);
+
+  static const String name = 'RoadAheadRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const RoadAheadPage();
+    },
+  );
+}
+
+/// generated route for
 /// [RoadShareCardPage]
 class RoadShareCardRoute extends PageRouteInfo<RoadShareCardRouteArgs> {
   RoadShareCardRoute({
