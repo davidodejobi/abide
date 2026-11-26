@@ -7,6 +7,9 @@ import 'package:openbaptisthymnal/core/storage/database/database_provider.dart';
 import 'package:openbaptisthymnal/core/storage/storage_provider.dart';
 import 'package:openbaptisthymnal/core/theme/app_theme.dart';
 import 'package:openbaptisthymnal/core/utils/day_part_provider.dart';
+import 'package:openbaptisthymnal/features/account/data/fake_auth_repository.dart';
+import 'package:openbaptisthymnal/features/account/providers/account_providers.dart';
+import 'package:openbaptisthymnal/features/account/ui/account_strings.dart';
 import 'package:openbaptisthymnal/features/daily/domain/date_key.dart';
 import 'package:openbaptisthymnal/features/bible/domain/verse_ref.dart';
 import 'package:openbaptisthymnal/features/daily/domain/plan_schedule.dart';
@@ -84,6 +87,47 @@ void main() {
     await t.pump(const Duration(milliseconds: 100));
     await t.pump(const Duration(milliseconds: 100));
   }
+
+  testWidgets('Given days go 2 to 3, Then Save your road shows exactly once',
+      (t) async {
+    final plan = _plan();
+    final days = StreamController<Set<String>>();
+    addTearDown(days.close);
+    SharedPreferences.setMockInitialValues({});
+    _prefs = await SharedPreferences.getInstance();
+    await pump(
+      t,
+      _app([
+        authRepositoryProvider.overrideWithValue(FakeAuthRepository()),
+        completedDayKeysProvider.overrideWith((_) => days.stream),
+        streakProvider.overrideWithValue(_streak()),
+        isTodayCompleteProvider.overrideWithValue(false),
+        todaysReadingProvider.overrideWith((_) async =>
+            TodaysReading(plan: plan, day: plan.dayAt(3), completedDays: 2)),
+        planDaysDoneTodayProvider.overrideWith((_, __) => Stream.value({})),
+      ]),
+    );
+    Future<void> emit(Set<String> v) async {
+      days.add(v);
+      await t.pump();
+      await t.pump(const Duration(milliseconds: 400));
+      await t.pump(const Duration(milliseconds: 400));
+    }
+
+    await emit({'a', 'b'});
+    expect(find.text(AccountStrings.sendCode), findsNothing);
+    await emit({'a', 'b', 'c'});
+    expect(find.text(AccountStrings.sendCode), findsOneWidget);
+    expect(_prefs.getBool('save_road_prompted'), isTrue);
+
+    // Dismiss, then reach 3 again (4 then back down and up): never twice.
+    await t.tap(find.text(AccountStrings.notNow));
+    await t.pump();
+    await t.pump(const Duration(milliseconds: 500));
+    await emit({'a', 'b'});
+    await emit({'a', 'b', 'c'});
+    expect(find.text(AccountStrings.sendCode), findsNothing);
+  });
 
   testWidgets(
       'Given a plan in progress, Then today shows the day, passage and Start reading',

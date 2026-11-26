@@ -5,11 +5,15 @@ import 'package:openbaptisthymnal/core/router/app_router.dart';
 import 'package:openbaptisthymnal/core/theme/lum_theme.dart';
 import 'package:openbaptisthymnal/features/daily/providers/landmark_download_provider.dart';
 
+import 'package:openbaptisthymnal/features/plus/domain/plus_rules.dart';
+import 'package:openbaptisthymnal/features/plus/providers/plus_providers.dart';
+
 import '../providers/onboarding_provider.dart';
 import 'screens/bible_screen.dart';
 import 'screens/name_screen.dart';
 import 'screens/plan_screen.dart';
 import 'screens/road_download_screen.dart';
+import 'screens/plus_offer_screen.dart';
 import 'screens/welcome_screen.dart';
 
 /// Hosts the first-run flow: welcome, then up to four steps on the road (Bible,
@@ -36,6 +40,12 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
 
   void _finish() => context.router.replaceAll([const DashboardRoute()]);
 
+  /// Onboarding is saved; offer Plus once, softly, to readers without it.
+  void _afterName() => showOnboardingOffer(ref.read(plusProvider),
+          enabled: ref.read(plusEnabledProvider))
+      ? _goTo(_namePage + 1)
+      : _finish();
+
   Widget _buildPage() {
     switch (_page) {
       case 0:
@@ -56,8 +66,8 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
           onNext: () => _goTo(3),
           onBack: () => _goTo(1),
         );
-      default:
-        if (_road && _page == 3) {
+      case 3:
+        if (_road) {
           return RoadDownloadScreen(
             key: const ValueKey(3),
             step: 3,
@@ -66,15 +76,29 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
             onBack: () => _goTo(2),
           );
         }
-        return NameScreen(
-          key: ValueKey(_namePage),
-          step: _namePage,
-          total: _steps,
-          onDone: _finish,
-          onBack: () => _goTo(_namePage - 1),
-        );
+        return _nameScreen();
+      case 4:
+        if (_road) return _nameScreen();
+        return _plusOffer();
+      default:
+        return _plusOffer();
     }
   }
+
+  Widget _nameScreen() => NameScreen(
+        key: ValueKey(_namePage),
+        step: _namePage,
+        total: _steps,
+        onDone: _afterName,
+        onBack: () => _goTo(_namePage - 1),
+      );
+
+  Widget _plusOffer() => PlusOfferScreen(
+        key: const ValueKey(99),
+        onDone: _finish,
+        onSeePlans: () => context.router
+            .replaceAll([const DashboardRoute(), const PlusRoute()]),
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -82,7 +106,9 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
     return PopScope(
       canPop: _page == 0 && !saving,
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop && !saving && _page > 0) _goTo(_page - 1);
+        if (didPop || saving || _page == 0) return;
+        // Everything is saved by the offer step, so back means skip it.
+        _page == _namePage + 1 ? _finish() : _goTo(_page - 1);
       },
       child: Scaffold(
         backgroundColor: context.lum.bgPage,

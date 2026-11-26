@@ -40,6 +40,7 @@ dependencies:
   appflowy_editor:
     path: third_party/appflowy_editor
   gal: ^2.3.3
+  supabase_flutter: ^2.18.3
   material_ui: ^1.11.1
   flutter_scene: ^0.24.6
   vector_math: ^2.1.4

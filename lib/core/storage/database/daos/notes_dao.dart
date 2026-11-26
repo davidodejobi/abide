@@ -77,10 +77,14 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
         .toList();
   }
 
-  /// Undoes [softDelete]. Leaves updatedAt alone so the note keeps its place.
+  /// Undoes [softDelete]. Bumps updatedAt: sync is last-write-wins, so the
+  /// restore must be newer than the delete.
   Future<void> restore(String id) =>
-      (update(notes)..where((t) => t.id.equals(id)))
-          .write(const NotesCompanion(isDeleted: Value(false)));
+      (update(notes)..where((t) => t.id.equals(id))).write(NotesCompanion(
+        isDeleted: const Value(false),
+        // Bumped so the restore beats the delete on other devices.
+        updatedAt: Value(DateTime.now()),
+      ));
 
   Future<void> softDelete(String id) =>
       (update(notes)..where((t) => t.id.equals(id))).write(

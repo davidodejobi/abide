@@ -12,6 +12,7 @@ import 'daos/note_links_dao.dart';
 import 'daos/notes_dao.dart';
 import 'daos/reading_plans_dao.dart';
 import 'daos/tags_dao.dart';
+import '../../sync/sync_triggers.dart';
 import 'tables.dart';
 
 part 'app_database.g.dart';
@@ -28,6 +29,8 @@ part 'app_database.g.dart';
     ReadingDays,
     PlanSubscriptions,
     PlanDayProgress,
+    SyncOutbox,
+    SyncState,
   ],
   daos: [
     NotesDao,
@@ -50,13 +53,14 @@ class AppDatabase extends _$AppDatabase {
   // `tables:` but never reaches `onUpgrade` exists on fresh installs (via
   // createAll) and is silently missing for everyone who upgrades.
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
         onCreate: (m) async {
           await m.createAll();
           await _createNotesSearchIndex();
+          await createSyncTriggers(this);
         },
         onUpgrade: (m, from, to) async {
           if (from < 2) {
@@ -74,6 +78,23 @@ class AppDatabase extends _$AppDatabase {
             await m.createTable(readingDays);
             await m.createTable(planSubscriptions);
             await m.createTable(planDayProgress);
+          }
+          if (from < 5) {
+            // One transaction: a crash part-way must not leave a half-applied
+            // v5 that fails to re-run. addColumn is also guarded, since from < 4
+            // creates plan_subscriptions with the column already in place.
+            // Nothing is queued for sync here; that happens when sync is first
+            // switched on (see SyncService), so installs without sync pay nothing.
+            await transaction(() async {
+              if (from >= 4 &&
+                  !await _hasColumn('plan_subscriptions', 'updated_at')) {
+                await m.addColumn(
+                    planSubscriptions, planSubscriptions.updatedAt);
+              }
+              await m.createTable(syncOutbox);
+              await m.createTable(syncState);
+              await createSyncTriggers(this);
+            });
           }
         },
         beforeOpen: (details) async {
@@ -113,6 +134,11 @@ class AppDatabase extends _$AppDatabase {
       'INSERT INTO notes_fts(note_id, title, content) '
       'SELECT id, title, content_markdown FROM notes',
     );
+  }
+
+  Future<bool> _hasColumn(String table, String column) async {
+    final cols = await customSelect('PRAGMA table_info($table)').get();
+    return cols.any((r) => r.read<String>('name') == column);
   }
 
   /// Creates `bible_annotations` on upgrade, but only if it isn't already there.

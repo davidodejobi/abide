@@ -45,6 +45,25 @@ abstract final class DailyStrings {
   static const whatHappened = 'WHAT HAPPENED';
   static const whyItMatters = 'WHY IT MATTERS';
   static const share = 'Share';
+  static const shareRoad = 'Share my road';
+  static const shareRoadTitle = 'Share your road';
+  static const shareLandmarkCard = 'Share as a card';
+  static String dayOfPlan(int n, String plan) => 'Day $n of $plan';
+  static String streakCount(int n) => '$n-day streak';
+  static String nearLandmark(String title) => 'Near $title';
+  static String roadShareText({
+    required int day,
+    required String plan,
+    required int streak,
+    String? passage,
+    String? landmark,
+  }) =>
+      [
+        dayOfPlan(day, plan),
+        if (streak > 0) streakCount(streak),
+        if (passage != null) passage,
+        if (landmark != null) nearLandmark(landmark),
+      ].join('\n');
   static String readRef(String ref) => 'Read $ref';
   static String dateLong(DateTime d) =>
       '${_weekdays[d.weekday - 1]} ${d.day} ${_months[d.month - 1]}';
@@ -90,6 +109,13 @@ abstract final class DailyStrings {
   static String chapters(int n) => n == 1 ? '1 chapter' : '$n chapters';
   static String doneCaps(String passage) => 'DONE · ${passage.toUpperCase()}';
   static String dayN(int n) => 'Day $n';
+  // World company: aggregate counts only. A null count means "a few".
+  static String peopleReadToday(int day, String? count) => count == null
+      ? 'A few people read Day $day today'
+      : '$count people read Day $day today';
+  static String youAndOthersFinished(int day, String? others) => others == null
+      ? 'You finished Day $day with a few others'
+      : 'You and $others others finished Day $day';
   static String tomorrowDay(int n) => 'Tomorrow: Day $n';
   static String dayOfTotal(int n, int total) => 'Day $n of $total';
   static String streakDays(int n) => n == 1 ? 'day' : 'days';

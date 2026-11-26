@@ -1,0 +1,462 @@
+import 'package:drift/drift.dart' hide isNull, isNotNull;
+import 'package:drift/native.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:openbaptisthymnal/core/storage/database/app_database.dart';
+import 'package:openbaptisthymnal/core/sync/in_memory_sync_remote.dart';
+import 'package:openbaptisthymnal/core/sync/supabase_sync_remote.dart';
+import 'package:supabase_flutter/supabase_flutter.dart'
+    show PostgrestException, SupabaseClient;
+import 'package:uuid/uuid.dart';
+import 'package:openbaptisthymnal/core/sync/sync_remote.dart';
+import 'package:openbaptisthymnal/core/sync/sync_service.dart';
+
+DateTime t(int minutes) =>
+    DateTime.utc(2026, 1, 1).add(Duration(minutes: minutes));
+
+class Device {
+  Device(InMemorySyncRemote remote, {bool Function()? enabled})
+      : db = AppDatabase.forTesting(NativeDatabase.memory()) {
+    service = SyncService(db: db, remote: remote, enabled: enabled);
+  }
+
+  final AppDatabase db;
+  late final SyncService service;
+
+  Future<void> writeNote(String id, String body, DateTime at,
+      {String title = 't'}) {
+    return db.notesDao.upsertNote(NotesCompanion.insert(
+      id: id,
+      title: Value(title),
+      contentMarkdown: Value(body),
+      createdAt: at,
+      updatedAt: at,
+    ));
+  }
+
+  Future<String?> body(String id) async =>
+      (await db.notesDao.getNote(id))?.contentMarkdown;
+
+  Future<int> outbox() async => (await db.select(db.syncOutbox).get()).length;
+}
+
+void main() {
+  driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
+  late InMemorySyncRemote remote;
+  late Device a, b;
+
+  setUp(() {
+    remote = InMemorySyncRemote();
+    a = Device(remote);
+    b = Device(remote);
+  });
+  tearDown(() async {
+    await a.db.close();
+    await b.db.close();
+  });
+
+  group('two devices converge', () {
+    test('reading progress, plans, notes and highlights flow both ways',
+        () async {
+      final plans = a.db.readingPlansDao;
+      await plans.markReadingComplete(
+        dateKey: '2026-01-02',
+        source: 'plan',
+        planId: 'bible-in-a-year',
+        dayIndex: 2,
+        completedAt: t(10),
+      );
+      await plans.startPlan(
+          planId: 'bible-in-a-year', startDateKey: '2026-01-01');
+      await a.writeNote('n1', 'hello', t(5));
+      await a.db.bibleAnnotationsDao.setHighlight('JHN.3.16', 'yellow');
+
+      await a.service.sync();
+      await b.service.sync();
+
+      expect(await b.db.readingPlansDao.completedDayKeys(), {'2026-01-02'});
+      expect(
+          (await b.db.readingPlansDao.activePlan())?.planId, 'bible-in-a-year');
+      expect(await b.body('n1'), 'hello');
+      expect(await b.db.select(b.db.planDayProgress).get(), hasLength(1));
+      final hl = await b.db.select(b.db.bibleAnnotations).getSingle();
+      expect(hl.verseRef, 'JHN.3.16');
+
+      // And back: B edits, A sees it.
+      await b.writeNote('n1', 'edited on b', t(50));
+      await b.service.sync();
+      await a.service.sync();
+      expect(await a.body('n1'), 'edited on b');
+    });
+
+    test('pulled rows do not echo back into the outbox', () async {
+      await a.writeNote('n1', 'x', t(1));
+      await a.service.sync();
+      await b.service.sync();
+      expect(await b.outbox(), 0);
+      expect(await a.outbox(), 0);
+    });
+
+    test('syncing twice changes nothing (idempotent)', () async {
+      await a.writeNote('n1', 'x', t(1));
+      await a.service.sync();
+      await a.service.sync();
+      await b.service.sync();
+      await b.service.sync();
+      expect(await b.db.select(b.db.notes).get(), hasLength(1));
+      expect(await b.outbox(), 0);
+    });
+  });
+
+  group('deletes propagate', () {
+    test('unmarking a reading day deletes it on the other device', () async {
+      final plans = a.db.readingPlansDao;
+      await plans.markDayComplete(
+          dateKey: '2026-01-02', source: 'plan', completedAt: t(1));
+      await a.service.sync();
+      await b.service.sync();
+      expect(await b.db.readingPlansDao.completedDayKeys(), {'2026-01-02'});
+
+      await plans.unmarkDay('2026-01-02');
+      await a.service.sync();
+      await b.service.sync();
+      expect(await b.db.readingPlansDao.completedDayKeys(), isEmpty);
+    });
+
+    test('removing a highlight and soft-deleting a note propagate', () async {
+      await a.db.bibleAnnotationsDao.setHighlight('ROM.8.28', 'green');
+      await a.writeNote('n1', 'x', t(1));
+      await a.service.sync();
+      await b.service.sync();
+
+      await a.db.bibleAnnotationsDao.removeHighlight('ROM.8.28');
+      await a.db.notesDao.softDelete('n1');
+      await a.service.sync();
+      await b.service.sync();
+
+      expect(await b.db.select(b.db.bibleAnnotations).get(), isEmpty);
+      expect((await b.db.notesDao.getNote('n1'))!.isDeleted, isTrue);
+    });
+
+    test('a later re-mark beats an earlier delete', () async {
+      final plans = a.db.readingPlansDao;
+      await plans.markDayComplete(
+          dateKey: '2026-01-02', source: 'plan', completedAt: t(1));
+      await a.service.sync();
+      await b.service.sync();
+      await b.db.readingPlansDao.unmarkDay('2026-01-02');
+      await b.service.sync();
+
+      // A re-reads the day later (completedAt after the delete moment).
+      await plans.markDayComplete(
+          dateKey: '2026-01-02',
+          source: 'plan',
+          completedAt: DateTime.now().add(const Duration(hours: 1)));
+      await a.service.sync();
+      await b.service.sync();
+      expect(await b.db.readingPlansDao.completedDayKeys(), {'2026-01-02'});
+    });
+  });
+
+  group('offline then online', () {
+    test('changes queue while offline and flush on reconnect', () async {
+      await a.service.sync(); // first run turns the outbox on
+      remote.online = false;
+      await a.writeNote('n1', 'offline note', t(1));
+      await a.db.readingPlansDao.markDayComplete(
+          dateKey: '2026-01-03', source: 'plan', completedAt: t(2));
+      expect(await a.service.sync(), isFalse);
+      expect(await a.outbox(), 2);
+      expect(remote.get('notes', 'n1'), isNull);
+
+      remote.online = true;
+      expect(await a.service.sync(), isTrue);
+      expect(await a.outbox(), 0);
+      await b.service.sync();
+      expect(await b.body('n1'), 'offline note');
+      expect(await b.db.readingPlansDao.completedDayKeys(), {'2026-01-03'});
+    });
+
+    test('several edits while offline coalesce to the latest', () async {
+      await a.service.sync();
+      remote.online = false;
+      await a.writeNote('n1', 'v1', t(1));
+      await a.writeNote('n1', 'v2', t(2));
+      await a.writeNote('n1', 'v3', t(3));
+      await a.service.sync();
+      expect(await a.outbox(), 1);
+      remote.online = true;
+      await a.service.sync();
+      await b.service.sync();
+      expect(await b.body('n1'), 'v3');
+    });
+
+    test('a failed pull leaves the cursor so nothing is skipped', () async {
+      await a.writeNote('n1', 'x', t(1));
+      await a.service.sync();
+      remote.online = false;
+      expect(await b.service.sync(), isFalse);
+      remote.online = true;
+      await b.service.sync();
+      expect(await b.body('n1'), 'x');
+    });
+  });
+
+  group('conflicts lose no data', () {
+    test('newer edit wins and the older text is kept as a conflict copy',
+        () async {
+      await a.writeNote('n1', 'base', t(1));
+      await a.service.sync();
+      await b.service.sync();
+
+      // Both edit offline; B is later.
+      await a.writeNote('n1', 'from A', t(10));
+      await b.writeNote('n1', 'from B', t(20));
+      await b.service.sync(); // B reaches the server first
+      await a.service.sync(); // A pushes stale (dropped), pulls B's
+
+      expect(await a.body('n1'), 'from B');
+      final notes = await a.db.select(a.db.notes).get();
+      final copies =
+          notes.where((n) => n.title.startsWith('Conflict copy')).toList();
+      expect(copies, hasLength(1));
+      expect(copies.single.contentMarkdown, 'from A');
+      expect(copies.single.title, startsWith('Conflict copy'));
+      expect(Uuid.isValidUUID(fromString: copies.single.id), isTrue);
+
+      // The copy is itself synced, and everything converges.
+      await a.service.sync();
+      await b.service.sync();
+      expect(await b.db.select(b.db.notes).get(), hasLength(2));
+      expect(remote.get('notes', copies.single.id), isNotNull,
+          reason: 'the copy reaches the server');
+    });
+
+    test('a newer local edit survives an older server copy', () async {
+      await b.writeNote('n1', 'old', t(1));
+      await b.service.sync();
+      await a.writeNote('n1', 'new', t(30));
+      await a.service.sync();
+      expect(await a.body('n1'), 'new');
+      await b.service.sync();
+      expect(await b.body('n1'), 'new');
+      expect(await b.db.select(b.db.notes).get(), hasLength(1));
+    });
+
+    test('unsynced local edit is not clobbered by pulling an older row',
+        () async {
+      await b.writeNote('n1', 'server old', t(1));
+      await b.service.sync();
+      remote.online = false;
+      await a.writeNote('n1', 'local newer', t(40));
+      remote.online = true;
+      await a.service.sync();
+      expect(await a.body('n1'), 'local newer');
+      expect(remote.get('notes', 'n1')!.payload['content_markdown'],
+          'local newer');
+    });
+  });
+
+  group('gating and existing data', () {
+    test('disabled service neither pushes nor pulls', () async {
+      final off = Device(remote, enabled: () => false);
+      addTearDown(off.db.close);
+      await off.writeNote('n1', 'private', t(1));
+      expect(await off.service.sync(), isFalse);
+      expect(remote.get('notes', 'n1'), isNull);
+      expect(await off.outbox(), 0, reason: 'local-only: nothing is queued');
+    });
+
+    test('data written before sync was on is queued when it first runs',
+        () async {
+      await a.writeNote('n1', 'old data', t(1));
+      expect(await a.outbox(), 0);
+      await a.service.sync();
+      await b.service.sync();
+      expect(await b.body('n1'), 'old data');
+    });
+
+    test('a different account re-queues everything and resets cursors',
+        () async {
+      await a.writeNote('n1', 'mine', t(1));
+      await a.service.sync();
+      final other = InMemorySyncRemote()..owner = 'user-2';
+      final moved = SyncService(db: a.db, remote: other);
+      await moved.sync();
+      expect(other.get('notes', 'n1'), isNotNull);
+    });
+  });
+
+  group('rejected records', () {
+    test('a permanently rejected row is dropped and does not block the rest',
+        () async {
+      await a.service.sync();
+      await a.writeNote('bad', 'x', t(1));
+      await a.writeNote('good', 'y', t(2));
+      remote.rejectIds.add('bad');
+      expect(await a.service.sync(), isTrue);
+      expect(remote.get('notes', 'good'), isNotNull);
+      expect(remote.get('notes', 'bad'), isNull);
+      expect(await a.outbox(), 0);
+    });
+
+    test('a transient failure keeps the record queued', () async {
+      await a.service.sync();
+      await a.writeNote('n1', 'x', t(1));
+      remote.online = false;
+      expect(await a.service.sync(), isFalse);
+      expect(await a.outbox(), 1);
+    });
+  });
+
+  group('local writes', () {
+    test('restoring a deleted note beats the delete on the other device',
+        () async {
+      await a.writeNote('n1', 'x', t(1));
+      await a.service.sync();
+      await b.service.sync();
+      await a.db.notesDao.softDelete('n1');
+      await a.service.sync();
+      await b.service.sync();
+      expect((await b.db.notesDao.getNote('n1'))!.isDeleted, isTrue);
+
+      await a.db.notesDao.restore('n1');
+      await a.service.sync();
+      await b.service.sync();
+      expect((await b.db.notesDao.getNote('n1'))!.isDeleted, isFalse);
+    });
+
+    test('re-highlighting a tombstoned verse brings it back', () async {
+      await a.db.into(a.db.bibleAnnotations).insert(
+            BibleAnnotationsCompanion.insert(
+              id: 'highlight:JHN.3.16',
+              verseRef: 'JHN.3.16',
+              kind: 'highlight',
+              updatedAt: t(1),
+              isDeleted: const Value(true),
+            ),
+          );
+      await a.db.bibleAnnotationsDao.setHighlight('JHN.3.16', 'blue');
+      final row = await a.db.select(a.db.bibleAnnotations).getSingle();
+      expect(row.isDeleted, isFalse);
+      expect(row.color, 'blue');
+    });
+
+    test('highlight row ids differ per account', () {
+      expect(highlightRemoteId('u1', 'JHN', 3, 16),
+          isNot(highlightRemoteId('u2', 'JHN', 3, 16)));
+      expect(highlightRemoteId('u1', 'JHN', 3, 16),
+          highlightRemoteId('u1', 'JHN', 3, 16));
+    });
+  });
+
+  group('auth loss (42501)', () {
+    const denied = PostgrestException(message: 'rls', code: '42501');
+
+    test('is not treated as a permanent rejection', () {
+      final remote =
+          SupabaseSyncRemote(SupabaseClient('http://localhost:1', 'k'));
+      expect(remote.isPermanent(denied), isFalse);
+      expect(
+          remote.isPermanent(
+              const PostgrestException(message: 'x', code: '23505')),
+          isTrue);
+    });
+
+    test('re-authenticates and retries once', () async {
+      var calls = 0, reauths = 0;
+      final r = await retryAfterAuthLoss(() async {
+        if (++calls == 1) throw denied;
+        return 'ok';
+      }, () async => reauths++);
+      expect((r, calls, reauths), ('ok', 2, 1));
+    });
+
+    test('still denied after the retry propagates (outbox is kept)', () async {
+      var calls = 0;
+      await expectLater(
+        retryAfterAuthLoss<void>(() async {
+          calls++;
+          throw denied;
+        }, () async {}),
+        throwsA(isA<PostgrestException>()),
+      );
+      expect(calls, 2);
+    });
+
+    test('413 is recognised as payload too large', () {
+      expect(
+          isPayloadTooLarge(
+              const PostgrestException(message: 'x', code: '413')),
+          isTrue);
+      expect(
+          isPayloadTooLarge(
+              const PostgrestException(message: 'x', code: '500')),
+          isFalse);
+    });
+  });
+
+  group('pausing', () {
+    test('keeps queueing while paused and resumes without a re-queue',
+        () async {
+      var on = true;
+      final d = Device(remote, enabled: () => on);
+      addTearDown(d.db.close);
+      await d.writeNote('n1', 'one', t(1));
+      await d.service.sync();
+      expect(remote.get('notes', 'n1'), isNotNull);
+
+      on = false;
+      await d.writeNote('n2', 'two', t(2));
+      expect(await d.service.sync(), isFalse);
+      expect(await d.outbox(), 1, reason: 'kept while paused');
+      expect(remote.get('notes', 'n2'), isNull);
+
+      await d.writeNote('n3', 'three', t(3));
+      expect(await d.outbox(), 2, reason: 'still queueing while paused');
+
+      on = true;
+      await d.service.sync();
+      expect(remote.get('notes', 'n2'), isNotNull);
+      expect(remote.get('notes', 'n3'), isNotNull);
+      expect(await d.outbox(), 0);
+    });
+  });
+
+  group('pull failures', () {
+    test(
+        'a constraint violation skips that row; others apply and the local '
+        'edit stays queued', () async {
+      await a.writeNote('bad', 'mine', t(1));
+      await a.service.sync();
+      remote.pushed.clear();
+      await a.writeNote('bad', 'mine v2', t(2));
+
+      // Newer server copy that violates NOT NULL on title, plus a good row.
+      await remote.push([
+        SyncRecord(entity: 'notes', rowId: 'bad', updatedAt: t(50), payload: {
+          'id': 'bad',
+          'title': null,
+          'content_markdown': 'x',
+          'created_at': 1,
+          'updated_at': 3000,
+          'is_deleted': 0,
+        }),
+        SyncRecord(entity: 'notes', rowId: 'good', updatedAt: t(51), payload: {
+          'id': 'good',
+          'title': 't',
+          'content_markdown': 'fine',
+          'created_at': 1,
+          'updated_at': 3060,
+          'is_deleted': 0,
+        }),
+      ]);
+      remote.pushed.clear();
+
+      expect(await a.service.sync(), isTrue);
+      expect(await a.body('good'), 'fine');
+      expect(await a.body('bad'), 'mine v2');
+      expect(remote.pushed, contains('bad'),
+          reason: 'the unapplied local change was still in the outbox');
+    });
+  });
+}

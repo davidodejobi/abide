@@ -122,13 +122,17 @@ class ReadingPlansDao extends DatabaseAccessor<AppDatabase>
   }) {
     return transaction(() async {
       await (update(planSubscriptions)..where((t) => t.isActive.equals(true)))
-          .write(const PlanSubscriptionsCompanion(isActive: Value(false)));
+          .write(PlanSubscriptionsCompanion(
+        isActive: const Value(false),
+        updatedAt: Value(DateTime.now()),
+      ));
 
       await into(planSubscriptions).insertOnConflictUpdate(
         PlanSubscriptionsCompanion.insert(
           planId: planId,
           startDateKey: startDateKey,
           isActive: const Value(true),
+          updatedAt: Value(DateTime.now()),
         ),
       );
     });

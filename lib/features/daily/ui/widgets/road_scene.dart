@@ -13,6 +13,7 @@ import '../../domain/road_days.dart';
 import '../../domain/road_geometry.dart';
 import '../../domain/road_landmarks.dart';
 import 'landmark_layout.dart';
+import '../../domain/world_company.dart';
 import '../daily_strings.dart';
 import 'road_art.dart';
 
@@ -51,7 +52,11 @@ class RoadScene extends StatefulWidget {
     this.onStopTap,
     this.onLandmarkTap,
     this.liftedId,
+    this.companions = const [],
   });
+
+  /// Anonymous dots walking near the traveller (not real people).
+  final List<CompanionSpot> companions;
 
   /// The scene's height; defaults to the design aspect ([heightFor]). The
   /// Today tab gives it the whole screen so the road can fill it.
@@ -559,6 +564,7 @@ class RoadSceneState extends State<RoadScene> with TickerProviderStateMixin {
           glowingLandmark(
           _landmarks, widget.currentDay ?? widget.totalDays, _layout),
       liftedId: widget.liftedId,
+      companions: widget.companions,
       showTomorrowTag: widget.showTomorrowTag && widget.currentDay != null,
       statuses: widget.statuses,
       semantics: _semantics,
@@ -874,6 +880,7 @@ class _RoadPainter extends CustomPainter {
     required this.layout,
     this.glowId,
     this.liftedId,
+    this.companions = const [],
     required this.showTomorrowTag,
     required this.statuses,
     required this.semantics,
@@ -896,6 +903,7 @@ class _RoadPainter extends CustomPainter {
   /// The one landmark that glows (nearest the day being read).
   final String? glowId;
   final String? liftedId;
+  final List<CompanionSpot> companions;
   final geo = const RoadGeometry();
   final List<CustomPainterSemantics> Function(Size, _RoadPainter) semantics;
 
@@ -962,6 +970,7 @@ class _RoadPainter extends CustomPainter {
     _road(canvas, look, dusk, cam);
     _worldSprites(canvas, sp, pos, look, cam, pulse, dusk, tint);
     _mist(canvas, dusk);
+    _companions(canvas, pos, cam, secs);
     _traveller(canvas, sp, pos, cam, moving);
     _clouds(canvas, sp, secs, cam);
     _labels(canvas, pos, cam);
@@ -1388,6 +1397,21 @@ class _RoadPainter extends CustomPainter {
   }
 
   // -------------------------------------------------------------- traveller
+  /// Soft dots near the traveller. They bob with the ambient clock, which
+  /// stops under reduced motion and while the tab is off screen (TickerMode).
+  void _companions(Canvas canvas, double pos, Offset cam, double secs) {
+    if (companions.isEmpty) return;
+    final paint = Paint()
+      ..color = (dark ? c.textOnEveningSky : c.textSecondary)
+          .withValues(alpha: .45);
+    for (final d in companions) {
+      final p = geo.at(math.max(0, pos + d.along));
+      final y = p.y + cam.dy + math.sin(secs * 2 * math.pi / 4 + d.phase) * 1.5;
+      if (y < -20 || y > ch + 20) continue;
+      canvas.drawCircle(Offset(p.x + cam.dx + d.side, y), 2.5, paint);
+    }
+  }
+
   void _traveller(
       Canvas canvas, Paint sp, double pos, Offset cam, bool moving) {
     final p = geo.at(pos);
