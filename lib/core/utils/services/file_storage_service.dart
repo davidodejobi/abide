@@ -89,6 +89,21 @@ class FileStorageService {
     }
   }
 
+  /// Writes [text] to a stored path (relative or absolute), via a temp file so
+  /// a kill mid-write never leaves half a JSON.
+  Future<void> writeText(String path, String text) async {
+    final file = File(absolutePath(path));
+    final tmp = File('${file.path}.tmp');
+    await tmp.writeAsString(text, flush: true);
+    await tmp.rename(file.path);
+  }
+
+  /// The text at a stored path, or null when it does not exist.
+  Future<String?> readText(String path) async {
+    final file = File(absolutePath(path));
+    return file.existsSync() ? file.readAsString() : null;
+  }
+
   /// The files directly inside `<documents>/<bucket>/` (empty if it does not
   /// exist yet). Used by the orphan sweep.
   Future<List<File>> listFiles(String bucket) async {

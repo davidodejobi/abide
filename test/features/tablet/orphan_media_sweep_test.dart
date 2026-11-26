@@ -96,4 +96,26 @@ void main() {
     expect(deleted, 0);
     expect(orphan.existsSync(), isTrue);
   });
+
+  test('a transcript lives and dies with its audio, never alone', () async {
+    final keptAudio = make('note_audio/kept.m4a', ageDays: 30);
+    final keptText = make('note_audio/kept.transcript.json', ageDays: 30);
+    final goneAudio = make('note_audio/gone.m4a', ageDays: 30);
+    final goneText = make('note_audio/gone.transcript.json', ageDays: 30);
+    final loneText = make('note_audio/lone.transcript.json', ageDays: 30);
+
+    final deleted = await sweepOrphanMedia(
+      now: now,
+      listFiles: list,
+      noteCount: () => 1,
+      loadReferenceTexts: () async => ['![](note_audio/kept.m4a "dur=5")'],
+    );
+
+    expect(deleted, 1);
+    expect(keptAudio.existsSync(), isTrue);
+    expect(keptText.existsSync(), isTrue);
+    expect(goneAudio.existsSync(), isFalse);
+    expect(goneText.existsSync(), isFalse);
+    expect(loneText.existsSync(), isTrue);
+  });
 }

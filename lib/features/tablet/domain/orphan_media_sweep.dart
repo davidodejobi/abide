@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:openbaptisthymnal/features/tablet/domain/transcript.dart';
 import 'package:path/path.dart' as p;
 
 const mediaBuckets = ['note_images', 'note_audio'];
@@ -15,6 +16,10 @@ final _mediaRef = RegExp(r'note_(?:images|audio)/[\w-]+\.\w+');
 /// any attachment paths. If building the reference set throws, nothing is
 /// deleted. Block removal never deletes a file: editor undo can bring the block
 /// back, so files are only reclaimed here, long after the fact.
+///
+/// A transcript (`<uuid>.transcript.json` beside its audio) is never a
+/// candidate on its own: it stays while its audio is referenced and goes only
+/// together with its audio.
 ///
 /// Returns the number of files deleted.
 Future<int> sweepOrphanMedia({
@@ -55,6 +60,8 @@ Future<int> sweepOrphanMedia({
         if (file.lastModifiedSync().isAfter(cutoff)) continue;
         await file.delete();
         deleted++;
+        final transcript = File(transcriptPathFor(file.path));
+        if (transcript.existsSync()) await transcript.delete();
       } catch (_) {
         // A file we cannot stat or remove is left for the next run.
       }

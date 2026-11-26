@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:openbaptisthymnal/core/theme/lum_theme.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/note_media.dart';
+import 'package:openbaptisthymnal/features/tablet/providers/recording_providers.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/notes_strings.dart';
 
 /// Playback speeds offered for recordings, as percentages.
@@ -160,11 +161,12 @@ class _MediaSheetState extends State<_MediaSheet> {
           label: NotesStrings.rename,
           onTap: () => _closeThen(a.onEditText),
         ),
-        // Free and on-device once it ships; shown disabled until then.
         _Row(
           icon: PhosphorIcons.article(),
-          label: NotesStrings.transcribeSoon,
-          onTap: null,
+          label: NotesStrings.transcribe,
+          onTap: openTranscribe == null
+              ? null
+              : () => _closeThen(() async => openTranscribe?.call()),
         ),
       ],
       _Row(

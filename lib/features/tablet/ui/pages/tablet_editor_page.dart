@@ -32,6 +32,7 @@ import 'package:openbaptisthymnal/features/tablet/domain/recording_note.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/scripture_autolink.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/template_to_note.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/tablet_markdown_codec.dart';
+import 'package:openbaptisthymnal/features/tablet/domain/transcript.dart';
 import 'package:openbaptisthymnal/features/tablet/providers/recording_providers.dart';
 import 'package:openbaptisthymnal/features/tablet/providers/tablets_providers.dart';
 import 'package:openbaptisthymnal/features/tablet/providers/templates_providers.dart';
@@ -43,6 +44,7 @@ import 'package:openbaptisthymnal/features/tablet/ui/widgets/note_media_block.da
 import 'package:openbaptisthymnal/features/tablet/ui/widgets/note_media_sheet.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/widgets/note_player_bar.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/widgets/template_sheets.dart';
+import 'package:openbaptisthymnal/features/tablet/ui/widgets/transcript_view.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/widgets/wikilink_spans.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/widgets/tablet_links_sheet.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/widgets/tag_picker_sheet.dart';
@@ -176,7 +178,8 @@ class _NoteEditorView extends HookConsumerWidget {
     // re-loads its clip on the next tap.
     final playback = ref.read(notePlaybackProvider.notifier);
     final markerSeconds = useState<List<int>>(const []);
-    final firstAudio = useState<({String path, int ms, int speed})?>(null);
+    final firstAudio =
+        useState<({String path, int ms, int speed, String name})?>(null);
     final loadedPaths = useRef(<String>{});
 
     void loadAudio(Node audio) {
@@ -200,6 +203,7 @@ class _NoteEditorView extends HookConsumerWidget {
                 path: audio.attributes[mediaUrlKey] as String? ?? '',
                 ms: audio.attributes[audioDurationKey] as int? ?? 0,
                 speed: audio.attributes[audioSpeedKey] as int? ?? 100,
+                name: audio.attributes[mediaTextKey] as String? ?? '',
               );
         if (next != null) loadedPaths.value.add(next.path); // bar may load it
         final prev = firstAudio.value;
@@ -242,6 +246,30 @@ class _NoteEditorView extends HookConsumerWidget {
           .listen((_) => linker.onTransaction());
       return sub.cancel;
     }, [editorState]);
+
+    // Note | Transcript tab for a note with a recording.
+    final transcriptTab = useState(false);
+    final followAlong = useState(true);
+    final audio = firstAudio.value;
+    useEffect(() {
+      openTranscribe = () {
+        final a = firstAudio.value;
+        if (a == null || !context.mounted) return;
+        transcriptTab.value = true;
+        showTranscribeSheet(context, ref, (path: a.path, durationMs: a.ms));
+      };
+      return () => openTranscribe = null;
+    }, const []);
+    if (audio == null && transcriptTab.value) transcriptTab.value = false;
+
+    void copyTranscript(List<TranscriptSegment> segs) {
+      final root = editorState.document.root;
+      editorState.apply(editorState.transaction
+        ..insertNodes([root.children.length], transcriptNodes(segs)));
+      transcriptTab.value = false;
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text(NotesStrings.transcriptCopied)));
+    }
 
     Future<void> navigateToLink(ParsedLink link) async {
       switch (link.type) {
@@ -790,18 +818,48 @@ class _NoteEditorView extends HookConsumerWidget {
                         speed: a.speed,
                         markerSeconds: markerSeconds.value,
                       ),
+                    if (audio != null)
+                      _TabRow(
+                        transcript: transcriptTab.value,
+                        onChanged: (v) => transcriptTab.value = v,
+                        followAlong: followAlong.value,
+                        onFollowAlong: (v) => followAlong.value = v,
+                      ),
                     Expanded(
-                      child: AppFlowyEditor(
-                        editorState: editorState,
-                        editorStyle: editorStyle,
-                        autoFocus: noteId == null && template == null,
-                        header: titleField,
-                        blockComponentBuilders: {
-                          ...standardBlockComponentBuilderMap,
-                          ...templateBuilders,
-                          ImageBlockKeys.type: mediaBuilder,
-                          audioNodeType: mediaBuilder,
-                        },
+                      // The editor stays mounted under the Transcript tab so
+                      // the caret and undo history survive switching.
+                      child: IndexedStack(
+                        index: audio != null && transcriptTab.value ? 1 : 0,
+                        children: [
+                          AppFlowyEditor(
+                            editorState: editorState,
+                            editorStyle: editorStyle,
+                            autoFocus: noteId == null && template == null,
+                            header: titleField,
+                            blockComponentBuilders: {
+                              ...standardBlockComponentBuilderMap,
+                              ...templateBuilders,
+                              ImageBlockKeys.type: mediaBuilder,
+                              audioNodeType: mediaBuilder,
+                            },
+                          ),
+                          if (audio != null && transcriptTab.value)
+                            TranscriptView(
+                              audioKey: (
+                                path: audio.path,
+                                durationMs: audio.ms
+                              ),
+                              audioPath: audio.path,
+                              speed: audio.speed,
+                              recordingName: audio.name,
+                              manifest: manifestRef.value,
+                              followAlong: followAlong.value,
+                              onCopyToNote: copyTranscript,
+                              onShowNote: () => transcriptTab.value = false,
+                            )
+                          else
+                            const SizedBox.shrink(),
+                        ],
                       ),
                     ),
                   ]),
@@ -822,6 +880,69 @@ class _NoteEditorView extends HookConsumerWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Note | Transcript switch with the Follow along toggle (recording_3a/4a).
+class _TabRow extends StatelessWidget {
+  const _TabRow({
+    required this.transcript,
+    required this.onChanged,
+    required this.followAlong,
+    required this.onFollowAlong,
+  });
+  final bool transcript;
+  final ValueChanged<bool> onChanged;
+  final bool followAlong;
+  final ValueChanged<bool> onFollowAlong;
+
+  @override
+  Widget build(BuildContext context) {
+    final lum = context.lum;
+    Widget tab(String label, bool on, bool value) => Expanded(
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () => onChanged(value),
+            child: Container(
+              height: 40,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: on ? lum.bgGroupedCell : null,
+                borderRadius: BorderRadius.circular(LumRadius.full),
+              ),
+              child: Text(label,
+                  style:
+                      (on ? LumText.subheadlineEmphasized : LumText.subheadline)
+                          .copyWith(
+                              color: on ? lum.textPrimary : lum.textSecondary)),
+            ),
+          ),
+        );
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+      child: Row(children: [
+        Container(
+          width: 190,
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: lum.bgSurfaceSunken,
+            borderRadius: BorderRadius.circular(LumRadius.full),
+          ),
+          child: Row(children: [
+            tab(NotesStrings.noteTab, !transcript, false),
+            tab(NotesStrings.transcriptTab, transcript, true),
+          ]),
+        ),
+        const Spacer(),
+        if (transcript) ...[
+          Text(NotesStrings.followAlong,
+              style:
+                  LumText.footnoteEmphasized.copyWith(color: lum.textPrimary)),
+          const SizedBox(width: 8),
+          Switch(value: followAlong, onChanged: onFollowAlong),
+        ],
+      ]),
     );
   }
 }
