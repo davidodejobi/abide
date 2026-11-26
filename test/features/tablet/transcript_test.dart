@@ -184,6 +184,7 @@ void main() {
         'I come just as I am to the Lord.',
         'God is so good to us every morning.',
         'Day by day we grow.',
+        'Let us pray. Search me, O God, and know my heart.',
       ]) {
         expect(linked(t), isEmpty, reason: t);
       }
@@ -333,6 +334,8 @@ void main() {
     await Future<void>.delayed(const Duration(milliseconds: 50));
     expect(c.read(transcriptProvider(second)).phase, TranscriptPhase.queued);
     b.cancel();
+    // Lets go at once, not after the other run.
+    expect(c.read(transcriptProvider(second)).phase, TranscriptPhase.idle);
     gate.complete();
     await Future.wait([runA, runB]);
     expect(calls, ['note_audio/one.m4a']);

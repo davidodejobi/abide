@@ -164,7 +164,7 @@ class HymnTitle {
 
 /// Finds hymn titles in text: case-insensitive, whole phrase, punctuation
 /// between words ignored, titles of 3 words or more only, and only with a hymn
-/// cue (hymn, sang, sing, song, chorus, "let us") within [cueWords] words
+/// cue (hymn, sang, sing, song, chorus) within [cueWords] words
 /// before or after. Without a cue, "Take up your cross" or "Day by day" is
 /// ordinary speech or a Bible quote. Longest titles win. One combined regex
 /// serves every title.
@@ -191,7 +191,7 @@ class HymnTitleMatcher {
 
   static const cueWords = 8;
   static final _cue = RegExp(
-      r'\b(?:hymns?|sang|sing|sings|singing|sung|songs?|chorus|let us)\b',
+      r'\b(?:hymns?|sang|sing|sings|singing|sung|songs?|chorus)\b',
       caseSensitive: false);
   static final _word = RegExp(r"[\p{L}\p{N}']+", unicode: true);
 

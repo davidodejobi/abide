@@ -112,6 +112,7 @@ class _LanguageSheet extends HookWidget {
         confirming.value = true;
         return;
       }
+      if (!context.mounted) return;
       onStart(wifiOnly.value);
       if (context.mounted) Navigator.of(context).pop();
     }

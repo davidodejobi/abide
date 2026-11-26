@@ -49,6 +49,8 @@ class LumwayWhisperPlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
   }
 
   override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
+    // Cheap system check: answer now, never queued behind a running chunk.
+    if (call.method == "supported") { result.success(supported()); return }
     worker.execute {
       try {
         val out: Any? = when (call.method) {

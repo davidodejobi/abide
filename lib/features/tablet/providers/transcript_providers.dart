@@ -83,6 +83,8 @@ final transcriptProvider = NotifierProvider.family<TranscriptNotifier,
 class TranscriptNotifier extends FamilyNotifier<TranscriptState, TranscriptKey> {
   bool _cancel = false;
   bool _busy = false;
+  // Bumped when a queued run is abandoned, so its late job does nothing.
+  int _run = 0;
   String _language = 'en';
   Transcript? _final; // complete, on disk
   Transcript? _part; // a run in progress or stopped, on disk
@@ -124,6 +126,14 @@ class TranscriptNotifier extends FamilyNotifier<TranscriptState, TranscriptKey> 
   /// Stops after the chunk in progress (or the download), keeping what is saved.
   void cancel() {
     if (!_busy) return;
+    if (state.phase == TranscriptPhase.queued) {
+      // Not started yet: let go now instead of waiting for the other run.
+      _run++;
+      _busy = false;
+      state = TranscriptState(TranscriptPhase.idle,
+          transcript: state.transcript, progress: state.progress);
+      return;
+    }
     _cancel = true;
     // Only this note's own download: another note may be downloading.
     if (state.phase == TranscriptPhase.downloading) cancelModelDownload();
@@ -144,6 +154,7 @@ class TranscriptNotifier extends FamilyNotifier<TranscriptState, TranscriptKey> 
     if (_final != null && !replace) return;
     _busy = true;
     _cancel = false;
+    final run = ++_run;
     _language = language;
     final wifiPref = ref.read(transcriptWifiOnlyProvider);
     final useWifiOnly = wifiOnly ?? wifiPref;
@@ -163,7 +174,9 @@ class TranscriptNotifier extends FamilyNotifier<TranscriptState, TranscriptKey> 
     try {
       await runSerially(() async {
         try {
-          if (_cancel) throw const TranscribeException(TranscribeFailure.cancelled);
+          if (_cancel || run != _run) {
+            throw const TranscribeException(TranscribeFailure.cancelled);
+          }
           state = TranscriptState(TranscriptPhase.running,
               transcript: shown, progress: _progress(_part));
           if (transcribeNeedsModel && !await transcribeSupported()) {
@@ -183,6 +196,9 @@ class TranscriptNotifier extends FamilyNotifier<TranscriptState, TranscriptKey> 
           if (transcribeNeedsModel && !await whisperModelReady()) {
             if (useWifiOnly && !await onWifi()) {
               throw const TranscribeException(TranscribeFailure.waitingForWifi);
+            }
+            if (_cancel) {
+              throw const TranscribeException(TranscribeFailure.cancelled);
             }
             state = TranscriptState(TranscriptPhase.downloading,
                 transcript: shown, stopping: _cancel);
@@ -233,13 +249,15 @@ class TranscriptNotifier extends FamilyNotifier<TranscriptState, TranscriptKey> 
         }
       });
     } on TranscribeException catch (e) {
+      if (run != _run) return;
       state = e.failure == TranscribeFailure.cancelled
           ? idle()
           : idle(e.failure);
     } catch (_) {
+      if (run != _run) return;
       state = idle(TranscribeFailure.failed);
     } finally {
-      _busy = false;
+      if (run == _run) _busy = false;
     }
   }
 
