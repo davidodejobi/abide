@@ -7,6 +7,7 @@ import 'package:openbaptisthymnal/features/tablet/domain/tablet_markdown_codec.d
 import 'package:openbaptisthymnal/features/tablet/domain/tablet_preview.dart';
 
 void main() {
+  audioPlacementTests();
   test('default recording title', () {
     expect(defaultRecordingName(DateTime(2026, 11, 26, 9, 5)),
         'Recording, 26 Nov, 09:05');
@@ -58,5 +59,29 @@ void main() {
     expect(parseLinks(out), isEmpty);
     expect(notePreviewText(out), contains('14:02 Grace'));
     expect(notePreviewText(out), isNot(contains('t:842')));
+  });
+}
+
+void audioPlacementTests() {
+  const two = '![A](note_audio/a.m4a)\n\n[00:05](t:5) one\n\nmiddle\n\n'
+      '![B](note_audio/b.m4a)\n\n[00:09](t:9) two\n\ntail';
+
+  test('a t: link seeks the nearest audio block above it, else the first', () {
+    final doc = noteMarkdownToDocument(two);
+    String name(Node? n) => n!.attributes[mediaTextKey] as String;
+    expect(name(audioNodeAbove(doc, [1])), 'A');
+    expect(name(audioNodeAbove(doc, [5])), 'B');
+    final lead = noteMarkdownToDocument('[00:01](t:1) x\n\n![A](a.m4a)');
+    expect(name(audioNodeAbove(lead, [0])), 'A');
+    expect(audioNodeAbove(noteMarkdownToDocument('plain'), [0]), isNull);
+  });
+
+  test('a new take goes after the last take and its markers', () {
+    expect(recordingInsertIndex(noteMarkdownToDocument('plain')), 0);
+    final doc = noteMarkdownToDocument(two);
+    expect(doc.root.children[recordingInsertIndex(doc) - 1].delta!.toPlainText(),
+        '00:09 two');
+    expect(doc.root.children[recordingInsertIndex(doc)].delta!.toPlainText(),
+        'tail');
   });
 }

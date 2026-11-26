@@ -32,6 +32,7 @@ VoidCallback? stopPinnedAudio;
 
 class NotePlayback {
   const NotePlayback({
+    this.path,
     this.loaded = false,
     this.playing = false,
     this.positionMs = 0,
@@ -39,6 +40,7 @@ class NotePlayback {
     this.speed = 100,
   });
 
+  final String? path; // the clip this state belongs to
   final bool loaded;
   final bool playing;
   final int positionMs;
@@ -79,12 +81,22 @@ class NotePlaybackNotifier extends Notifier<NotePlayback> {
   }
 
   /// Points the player at [path]; the native player is only created on the
-  /// first play or seek.
+  /// first play or seek. A no-op when [path] is already the loaded clip.
   void load(String path, {int durationMs = 0, int speed = 100}) {
     if (_path == path) return;
     release();
     _path = path;
-    state = NotePlayback(durationMs: durationMs, speed: speed, loaded: true);
+    state = NotePlayback(
+        path: path, durationMs: durationMs, speed: speed, loaded: true);
+  }
+
+  /// Releases only when [path] is the clip this editor loaded, so one note
+  /// closing never kills the player another note is using.
+  void releaseIf(String? path) {
+    if (path != null && _path == path) {
+      release();
+      state = const NotePlayback();
+    }
   }
 
   Future<PlayerController?> _ready() async {
@@ -110,7 +122,11 @@ class NotePlaybackNotifier extends Notifier<NotePlayback> {
     return p;
   }
 
+  bool _busy = false;
+
   Future<void> toggle() async {
+    if (_busy) return;
+    _busy = true;
     try {
       final p = await _ready();
       if (p == null) return;
@@ -127,6 +143,8 @@ class NotePlaybackNotifier extends Notifier<NotePlayback> {
       state = state.copyWith(playing: true);
     } catch (_) {
       // Unplayable file: stay at rest.
+    } finally {
+      _busy = false;
     }
   }
 
@@ -161,6 +179,8 @@ class NotePlaybackNotifier extends Notifier<NotePlayback> {
     if (state.playing) await _player?.setRate(percent / 100);
   }
 
+  /// Stops and forgets the loaded clip. Does not touch [state] (it is also the
+  /// provider's dispose hook); [releaseIf] resets it.
   void release() {
     for (final s in _subs) {
       s.cancel();

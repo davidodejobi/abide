@@ -84,3 +84,43 @@ Node? firstAudioNode(Document document) {
 
   return find(document.root);
 }
+
+/// Every top-level audio block, in document order.
+List<Node> audioNodes(Document document) =>
+    [for (final n in document.root.children) if (n.type == audioNodeType) n];
+
+/// The audio block a `t:` link at [linkPath] refers to: the nearest one above
+/// it, else the first in the note.
+Node? audioNodeAbove(Document document, List<int> linkPath) {
+  final audios = audioNodes(document);
+  if (audios.isEmpty) return null;
+  Node? best;
+  for (final a in audios) {
+    if (a.path.first < linkPath.first) best = a;
+  }
+  return best ?? audios.first;
+}
+
+bool _isMarkerParagraph(Node n) {
+  final ops = n.delta?.toList();
+  if (n.type != ParagraphBlockKeys.type || ops == null || ops.isEmpty) {
+    return false;
+  }
+  final first = ops.first;
+  return first is TextInsert &&
+      timeLinkSeconds(first.attributes?[AppFlowyRichTextKeys.href] as String?) !=
+          null;
+}
+
+/// Where a new take goes: the top of a note with no recording, else right
+/// after the last recording and its marker paragraphs.
+int recordingInsertIndex(Document document) {
+  final kids = document.root.children.toList();
+  final last = kids.lastIndexWhere((n) => n.type == audioNodeType);
+  if (last < 0) return 0;
+  var i = last + 1;
+  while (i < kids.length && _isMarkerParagraph(kids[i])) {
+    i++;
+  }
+  return i;
+}

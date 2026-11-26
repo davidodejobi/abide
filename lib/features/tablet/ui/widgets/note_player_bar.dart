@@ -11,7 +11,20 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 /// Compact (about 68 pt) player pinned above a note that has a recording:
 /// back 15 s, play / pause, scrubber with a tick per marker, speed.
 class NotePlayerBar extends ConsumerWidget {
-  const NotePlayerBar({super.key, required this.markerSeconds});
+  const NotePlayerBar({
+    super.key,
+    required this.path,
+    required this.durationMs,
+    required this.speed,
+    required this.markerSeconds,
+  });
+
+  /// The note's first recording. The shared player may be on another clip
+  /// (another note, or a `t:` link into a later take): then the bar rests and
+  /// the first action loads this one.
+  final String path;
+  final int durationMs;
+  final int speed;
 
   /// Seconds of every `t:` link in the note, drawn as ticks on the scrubber.
   final List<int> markerSeconds;
@@ -19,8 +32,13 @@ class NotePlayerBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final lum = context.lum;
-    final s = ref.watch(notePlaybackProvider);
+    final shared = ref.watch(notePlaybackProvider);
+    final s = shared.path == path
+        ? shared
+        : NotePlayback(durationMs: durationMs, speed: speed);
     final notifier = ref.read(notePlaybackProvider.notifier);
+    NotePlaybackNotifier loaded() => notifier
+      ..load(path, durationMs: durationMs, speed: speed);
     final total = s.durationMs;
     final value = total > 0 ? (s.positionMs / total).clamp(0.0, 1.0) : 0.0;
     final mono = LumText.footnote.copyWith(
@@ -41,12 +59,12 @@ class NotePlayerBar extends ConsumerWidget {
       child: Row(children: [
         IconButton(
           tooltip: NotesStrings.playerBack15,
-          onPressed: () => notifier.skip(-15000),
+          onPressed: () => loaded().skip(-15000),
           icon: Icon(PhosphorIcons.clockCounterClockwise(), color: lum.textPrimary),
         ),
         IconButton(
           tooltip: s.playing ? NotesStrings.pause : NotesStrings.play,
-          onPressed: notifier.toggle,
+          onPressed: () => loaded().toggle(),
           icon: Container(
             width: 40,
             height: 40,
@@ -95,7 +113,7 @@ class NotePlayerBar extends ConsumerWidget {
                   child: Slider(
                     value: value,
                     onChanged: total > 0
-                        ? (v) => notifier.seekTo((v * total).round())
+                        ? (v) => loaded().seekTo((v * total).round())
                         : null,
                   ),
                 ),
@@ -110,7 +128,7 @@ class NotePlayerBar extends ConsumerWidget {
         const SizedBox(width: 4),
         GestureDetector(
           behavior: HitTestBehavior.opaque,
-          onTap: () => notifier.setSpeed(
+          onTap: () => loaded().setSpeed(
               audioSpeeds[(audioSpeeds.indexOf(s.speed) + 1) % audioSpeeds.length]),
           child: Semantics(
             button: true,

@@ -4,6 +4,7 @@ import 'package:appflowy_editor/appflowy_editor.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -169,31 +170,54 @@ class _NoteEditorView extends HookConsumerWidget {
       };
     }, [editorState]);
 
-    // The note's recording drives the pinned player and `t:` links.
+    // The note's recording drives the pinned player and `t:` links. Nothing
+    // here touches the shared player until the user acts, so opening a note
+    // never mutates a provider while building, and coming back to a note
+    // re-loads its clip on the next tap.
     final playback = ref.read(notePlaybackProvider.notifier);
     final markerSeconds = useState<List<int>>(const []);
-    final hasRecording = useState(false);
+    final firstAudio = useState<({String path, int ms, int speed})?>(null);
+    final loadedPaths = useRef(<String>{});
+
+    void loadAudio(Node audio) {
+      final path = audio.attributes[mediaUrlKey] as String? ?? '';
+      loadedPaths.value.add(path);
+      playback.load(
+        path,
+        durationMs: audio.attributes[audioDurationKey] as int? ?? 0,
+        speed: audio.attributes[audioSpeedKey] as int? ?? 100,
+      );
+    }
+
     useEffect(() {
+      var disposed = false;
       void sync() {
+        if (disposed) return;
         final audio = firstAudioNode(editorState.document);
-        hasRecording.value = audio != null;
-        if (audio != null) {
-          playback.load(
-            audio.attributes[mediaUrlKey] as String? ?? '',
-            durationMs: audio.attributes[audioDurationKey] as int? ?? 0,
-            speed: audio.attributes[audioSpeedKey] as int? ?? 100,
-          );
-        }
-        markerSeconds.value = timeLinkSecondsIn(editorState.document);
+        final next = audio == null
+            ? null
+            : (
+                path: audio.attributes[mediaUrlKey] as String? ?? '',
+                ms: audio.attributes[audioDurationKey] as int? ?? 0,
+                speed: audio.attributes[audioSpeedKey] as int? ?? 100,
+              );
+        final prev = firstAudio.value;
+        if (prev != null && next == null) playback.releaseIf(prev.path);
+        firstAudio.value = next;
+        final marks = timeLinkSecondsIn(editorState.document);
+        if (!listEquals(marks, markerSeconds.value)) markerSeconds.value = marks;
       }
 
-      sync();
+      WidgetsBinding.instance.addPostFrameCallback((_) => sync());
       final sub = editorState.transactionStream
           .where((e) => e.$1 == TransactionTime.after)
           .listen((_) => sync());
       return () {
+        disposed = true;
         sub.cancel();
-        playback.release();
+        for (final path in loadedPaths.value) {
+          playback.releaseIf(path);
+        }
       };
     }, [editorState]);
 
@@ -440,12 +464,33 @@ class _NoteEditorView extends HookConsumerWidget {
     }
 
     Future<void> insertAudio() async {
+      final storage = ref.read(fileStorageServiceProvider);
+      final repo = ref.read(tabletsRepositoryProvider);
+      final messenger = ScaffoldMessenger.of(context);
       final result = await openRecorder(context);
       if (result == null) return;
-      final nodes = await persistRecording(ref, result);
-      if (titleController.text.trim().isEmpty) titleController.text = result.name;
-      // The recording heads the note, its markers right under it.
-      await editorState.apply(editorState.transaction..insertNodes([0], nodes));
+      try {
+        final nodes = await persistRecording(storage, result);
+        if (!context.mounted) {
+          // The note closed while recording: keep the take in a new note.
+          await repo.createNote(
+            title: result.name,
+            contentMarkdown: noteDocumentToMarkdown(
+                Document(root: pageNode(children: nodes))),
+          );
+          return;
+        }
+        if (titleController.text.trim().isEmpty) {
+          titleController.text = result.name;
+        }
+        // The first take heads the note; later ones follow the last take and
+        // its markers.
+        await editorState.apply(editorState.transaction
+          ..insertNodes([recordingInsertIndex(editorState.document)], nodes));
+      } catch (_) {
+        messenger.showSnackBar(
+            const SnackBar(content: Text(NotesStrings.saveFailed)));
+      }
     }
 
     Future<void> openInsertSheet() async {
@@ -484,6 +529,7 @@ class _NoteEditorView extends HookConsumerWidget {
       final seconds =
           timeLinkSeconds(text.attributes?[AppFlowyRichTextKeys.href] as String?);
       if (seconds != null) {
+        final audio = audioNodeAbove(editorState.document, node.path);
         // `[05:12](t:312)`: seeks the note's recording, never opens a URL.
         return TextSpan(
           text: raw,
@@ -493,7 +539,11 @@ class _NoteEditorView extends HookConsumerWidget {
             decorationColor: lum.textAccent,
           ),
           recognizer: TapGestureRecognizer()
-            ..onTap = () => playback.seekAndPlay(seconds),
+            ..onTap = () {
+              if (audio == null) return;
+              loadAudio(audio);
+              playback.seekAndPlay(seconds);
+            },
         );
       }
       if (!raw.contains('[[')) return before;
@@ -732,8 +782,13 @@ class _NoteEditorView extends HookConsumerWidget {
               child: Stack(
                 children: [
                   Column(children: [
-                    if (hasRecording.value)
-                      NotePlayerBar(markerSeconds: markerSeconds.value),
+                    if (firstAudio.value case final a?)
+                      NotePlayerBar(
+                        path: a.path,
+                        durationMs: a.ms,
+                        speed: a.speed,
+                        markerSeconds: markerSeconds.value,
+                      ),
                     Expanded(
                       child: AppFlowyEditor(
                         editorState: editorState,
