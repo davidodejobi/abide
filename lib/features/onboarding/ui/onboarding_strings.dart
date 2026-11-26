@@ -31,6 +31,18 @@ abstract final class OnboardingStrings {
   static const yourGoalCaps = 'YOUR GOAL';
   static const finishLineCaps = 'FINISH LINE';
 
+  // Road download
+  static const roadTitle = 'Set up your road';
+  static const roadBody =
+      'Lumway will download the 3D landmarks for your reading road, so the '
+      'journey looks its best.';
+  static const roadSizeUnknown = 'It is a small download. Wi-Fi is a good idea.';
+  static const downloadNow = 'Download now';
+  static const later = 'Later';
+
+  static String roadSize(String size) =>
+      'It is about $size, so Wi-Fi is a good idea.';
+
   // Name
   static const nameTitle = 'What should we call you?';
   static const nameLabelCaps = 'FIRST NAME';

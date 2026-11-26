@@ -22,7 +22,13 @@ class OnboardingFrame extends StatelessWidget {
     this.step,
     this.totalSteps = 0,
     this.onBack,
+    this.secondaryLabel,
+    this.onSecondary,
   });
+
+  /// An optional quiet button under the primary one.
+  final String? secondaryLabel;
+  final VoidCallback? onSecondary;
 
   final int? step;
   final int totalSteps;
@@ -83,6 +89,8 @@ class OnboardingFrame extends StatelessWidget {
                     child: _Panel(
                       primaryLabel: primaryLabel,
                       onPrimary: onPrimary,
+                      secondaryLabel: secondaryLabel,
+                      onSecondary: onSecondary,
                       child: child,
                     ),
                   ),
@@ -121,11 +129,15 @@ class _Panel extends StatelessWidget {
     required this.child,
     required this.primaryLabel,
     required this.onPrimary,
+    this.secondaryLabel,
+    this.onSecondary,
   });
 
   final Widget child;
   final String primaryLabel;
   final VoidCallback? onPrimary;
+  final String? secondaryLabel;
+  final VoidCallback? onSecondary;
 
   @override
   Widget build(BuildContext context) {
@@ -158,7 +170,19 @@ class _Panel extends StatelessWidget {
                 LumSpace.xl, 0, LumSpace.xl, bottom + LumSpace.lg),
             child: SizedBox(
               width: double.infinity,
-              child: LumButton(label: primaryLabel, onPressed: onPrimary),
+              child: Column(
+                children: [
+                  LumButton(label: primaryLabel, onPressed: onPrimary),
+                  if (secondaryLabel != null) ...[
+                    const SizedBox(height: LumSpace.md),
+                    LumButton(
+                      label: secondaryLabel!,
+                      onPressed: onSecondary,
+                      kind: LumButtonKind.secondary,
+                    ),
+                  ],
+                ],
+              ),
             ),
           ),
         ],
