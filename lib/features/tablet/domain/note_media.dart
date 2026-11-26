@@ -67,7 +67,11 @@ Node audioMediaNode({
 /// Quantises [samples] (any magnitude) to [peakBars] one-byte bars as hex.
 String encodePeaks(List<double> samples) {
   if (samples.isEmpty) return '';
-  final mags = samples.map((s) => s.abs()).toList();
+  final mags = [
+    for (final s in samples)
+      if (s.isFinite) s.abs(),
+  ];
+  if (mags.isEmpty) return '';
   final maxMag = mags.reduce((a, b) => a > b ? a : b);
   if (maxMag == 0) return '';
   final out = StringBuffer();
@@ -97,32 +101,36 @@ List<double> decodePeaks(String hex) {
   return out;
 }
 
-/// Escapes unbalanced `[`/`]` and backslashes so the text is a valid image
-/// description. Balanced pairs (such as `[[bible:JHN.1.1]]`) stay literal so
+final _wikiSpan = RegExp(r'\[\[[^\[\]]*\]\]');
+// Also the bits that trigger GFM autolinks (`://`, `www.`, `@`).
+final _mdActive = RegExp(r'[\\`*_\[\]()<>!&~#|@]|:(?=//)|(?<=www)\.');
+final _leadingMarker = RegExp(r'^(?:(\d+)\.|[+-])');
+
+/// Makes [text] safe as an image description: every markdown-active character
+/// is backslash-escaped (so `*`, backticks, `<`, `&`, `~`, `![x](y)` and
+/// friends stay literal text; commas, colons and periods are left alone so
+/// stored names stay readable), except inside `[[...]]` spans, which stay verbatim so
 /// caption links reach the link graph and the tappable renderer.
 String escapeCaption(String text) {
   final flat = text.replaceAll(RegExp(r'\s*\n\s*'), ' ');
-  final open = <int>[];
-  final unbalanced = <int>{};
-  for (var i = 0; i < flat.length; i++) {
-    final c = flat[i];
-    if (c == '[') {
-      open.add(i);
-    } else if (c == ']') {
-      if (open.isEmpty) {
-        unbalanced.add(i);
-      } else {
-        open.removeLast();
-      }
-    }
-  }
-  unbalanced.addAll(open);
   final b = StringBuffer();
-  for (var i = 0; i < flat.length; i++) {
-    final c = flat[i];
-    if (c == r'\' || unbalanced.contains(i)) b.write(r'\');
-    b.write(c);
+  var cursor = 0;
+  String esc(String t, {bool start = false}) {
+    final out = t.replaceAllMapped(_mdActive, (m) => '\\${m[0]}');
+    if (!start) return out;
+    // A leading list marker (`- `, `+ `, `1.`) would otherwise be markdown.
+    return out.replaceFirstMapped(
+      _leadingMarker,
+      (m) => m[1] != null ? '${m[1]}\\.' : '\\${m[0]}',
+    );
   }
+
+  for (final m in _wikiSpan.allMatches(flat)) {
+    b.write(esc(flat.substring(cursor, m.start), start: cursor == 0));
+    b.write(m[0]);
+    cursor = m.end;
+  }
+  b.write(esc(flat.substring(cursor), start: cursor == 0));
   return b.toString();
 }
 

@@ -20,24 +20,37 @@ final _mediaRef = RegExp(r'note_(?:images|audio)/[\w-]+\.\w+');
 Future<int> sweepOrphanMedia({
   required Future<Iterable<String>> Function() loadReferenceTexts,
   required Future<List<File>> Function(String bucket) listFiles,
+
+  /// How many notes (trashed included) were read. Zero while media files exist
+  /// means the database looks empty or unreadable, so nothing is deleted.
+  required int Function() noteCount,
   DateTime? now,
 }) async {
   final Set<String> referenced;
+  final Map<String, List<File>> files = {};
   try {
     referenced = {
       for (final text in await loadReferenceTexts())
         for (final m in _mediaRef.allMatches(text)) m[0]!,
     };
+    for (final bucket in mediaBuckets) {
+      files[bucket] = await listFiles(bucket);
+    }
+    if (noteCount() == 0 && files.values.any((f) => f.isNotEmpty)) return 0;
   } catch (_) {
     return 0;
   }
 
   final cutoff = (now ?? DateTime.now()).subtract(orphanGrace);
   var deleted = 0;
-  for (final bucket in mediaBuckets) {
-    for (final file in await listFiles(bucket)) {
+  for (final entry in files.entries) {
+    for (final file in entry.value) {
       try {
-        final ref = '$bucket/${p.basename(file.path)}';
+        final ref = '${entry.key}/${p.basename(file.path)}';
+        // Only files the app named itself (uuid.ext) are ever candidates.
+        if (!_mediaRef.hasMatch(ref) || _mediaRef.firstMatch(ref)![0] != ref) {
+          continue;
+        }
         if (referenced.contains(ref)) continue;
         if (file.lastModifiedSync().isAfter(cutoff)) continue;
         await file.delete();

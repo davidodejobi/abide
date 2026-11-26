@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -55,17 +56,24 @@ class AbideApp extends HookConsumerWidget {
       );
       // Reclaim note media nobody references any more, a few seconds after
       // launch so it never competes with the first frames.
-      final timer = Timer(const Duration(seconds: 5), () {
-        final db = ref.read(appDatabaseProvider);
-        sweepOrphanMedia(
-          listFiles: ref.read(fileStorageServiceProvider).listFiles,
-          loadReferenceTexts: () async => [
-            // Every note, trashed included: trash keeps its files.
-            for (final n in await db.select(db.notes).get()) n.contentMarkdown,
-            for (final a in await db.select(db.attachments).get())
-              a.relativePath,
-          ],
-        );
+      final timer = Timer(const Duration(seconds: 5), () async {
+        if (kIsWeb) return; // no local media files on web
+        try {
+          final db = ref.read(appDatabaseProvider);
+          final notes = await db.select(db.notes).get();
+          await sweepOrphanMedia(
+            listFiles: ref.read(fileStorageServiceProvider).listFiles,
+            noteCount: () => notes.length,
+            loadReferenceTexts: () async => [
+              // Every note, trashed included: trash keeps its files.
+              for (final n in notes) n.contentMarkdown,
+              for (final a in await db.select(db.attachments).get())
+                a.relativePath,
+            ],
+          );
+        } catch (_) {
+          // Housekeeping only: never surface or crash on a failed sweep.
+        }
       });
       return timer.cancel;
     }, const []);
