@@ -74,6 +74,15 @@ class FileStorageService {
     }
   }
 
+  /// The files directly inside `<documents>/<bucket>/` (empty if it does not
+  /// exist yet). Used by the orphan sweep.
+  Future<List<File>> listFiles(String bucket) async {
+    final docs = await getApplicationDocumentsDirectory();
+    final dir = Directory(p.join(docs.path, bucket));
+    if (!dir.existsSync()) return const [];
+    return dir.listSync().whereType<File>().toList();
+  }
+
   /// Resolves a stored relative path to an absolute one for the current
   /// install. Already-absolute paths are returned unchanged.
   static String absolutePath(String path) {

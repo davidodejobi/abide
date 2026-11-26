@@ -5,7 +5,7 @@ import 'package:openbaptisthymnal/features/tablet/domain/tablet_media.dart';
 /// Tablets list shows readable text and thumbnails instead of leaking syntax
 /// like `**bold**`, `[[hymn:hymn_0003]]`, or `![](note_images/x.png)`.
 
-final _image = RegExp(r'!\[[^\]]*\]\(([^)]+)\)');
+final _image = RegExp(r'!\[.*?\]\((\S+?)(?: "[^"]*")?\)');
 final _wikilink = RegExp(r'\[\[([^\[\]]*)\]\]');
 final _mdLink = RegExp(r'\[([^\]]*)\]\(([^)]+)\)');
 final _heading = RegExp(r'^\s{0,3}#{1,6}\s+', multiLine: true);

@@ -1,8 +1,14 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:openbaptisthymnal/features/app_update/ui/app_update_overlay.dart';
 import 'package:openbaptisthymnal/features/onboarding/domain/seed_welcome_note.dart';
+import 'package:openbaptisthymnal/core/providers/service_providers.dart';
+import 'package:openbaptisthymnal/core/storage/database/database_provider.dart';
+import 'package:openbaptisthymnal/features/tablet/domain/orphan_media_sweep.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/seed_release_notes.dart';
 import 'package:openbaptisthymnal/features/tablet/providers/tablets_providers.dart';
 import 'package:toastification/toastification.dart';
@@ -48,7 +54,28 @@ class AbideApp extends HookConsumerWidget {
         storage: storage,
         createNote: repo.createNote,
       );
-      return null;
+      // Reclaim note media nobody references any more, a few seconds after
+      // launch so it never competes with the first frames.
+      final timer = Timer(const Duration(seconds: 5), () async {
+        if (kIsWeb) return; // no local media files on web
+        try {
+          final db = ref.read(appDatabaseProvider);
+          final notes = await db.select(db.notes).get();
+          await sweepOrphanMedia(
+            listFiles: ref.read(fileStorageServiceProvider).listFiles,
+            noteCount: () => notes.length,
+            loadReferenceTexts: () async => [
+              // Every note, trashed included: trash keeps its files.
+              for (final n in notes) n.contentMarkdown,
+              for (final a in await db.select(db.attachments).get())
+                a.relativePath,
+            ],
+          );
+        } catch (_) {
+          // Housekeeping only: never surface or crash on a failed sweep.
+        }
+      });
+      return timer.cancel;
     }, const []);
 
     return ToastificationWrapper(

@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:openbaptisthymnal/core/audio/audio_quality.dart';
+import 'package:openbaptisthymnal/features/tablet/domain/note_media.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
@@ -17,9 +18,22 @@ String _format(Duration d) {
   return '$m:$s';
 }
 
+/// A finished take: the **temporary file path** (the caller persists it via
+/// `FileStorageService`), its length, and the waveform bars captured while
+/// recording so the note block never has to decode the file to draw it.
+class RecordedClip {
+  const RecordedClip({
+    required this.path,
+    required this.durationMs,
+    required this.peaks,
+  });
+  final String path;
+  final int durationMs;
+  final String peaks;
+}
+
 /// Bottom sheet that records a voice note. Recording starts as soon as the
-/// sheet opens; tapping the stop button pops the **temporary file path** of the
-/// recording, which the caller persists via `FileStorageService`. Cancelling
+/// sheet opens; tapping the stop button pops a [RecordedClip]. Cancelling
 /// (or dismissing) discards the take and pops `null`.
 class AudioRecorderSheet extends HookWidget {
   const AudioRecorderSheet({super.key, this.quality = AudioQuality.medium});
@@ -71,10 +85,27 @@ class AudioRecorderSheet extends HookWidget {
       return () => active = false;
     }, const []);
 
+    final elapsed = useRef(Duration.zero);
+    useEffect(() {
+      final sub = controller.onCurrentDuration.listen((d) => elapsed.value = d);
+      return sub.cancel;
+    }, [controller]);
+
     Future<void> stopAndSave() async {
+      // The wave data is cleared by stop(), so take it first.
+      final peaks = encodePeaks(List<double>.of(controller.waveData));
       final recorded = await controller.stop();
+      final filePath = recorded ?? path.value;
       if (!context.mounted) return;
-      Navigator.of(context).pop(recorded ?? path.value);
+      Navigator.of(context).pop(
+        filePath == null
+            ? null
+            : RecordedClip(
+                path: filePath,
+                durationMs: elapsed.value.inMilliseconds,
+                peaks: peaks,
+              ),
+      );
     }
 
     Future<void> cancel() async {

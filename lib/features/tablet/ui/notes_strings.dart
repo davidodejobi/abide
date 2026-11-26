@@ -58,6 +58,50 @@ abstract final class NotesStrings {
   static const formatStatus = 'Status';
   static const formatSquare = 'Square';
 
+  // Media blocks
+  static const mediaMore = 'More options';
+  static const mediaDragHandle = 'Drag to move';
+  static const mediaDropHere = 'Drop here';
+  static const imageTitle = 'Image';
+  static const audioTitle = 'Recording';
+  static const moveLabel = 'Move';
+  static const moveUp = 'Move up';
+  static const moveDown = 'Move down';
+  static const sizeLabel = 'Size';
+  static const sizeSmall = 'Small';
+  static const sizeMedium = 'Medium';
+  static const sizeFull = 'Full';
+  static const alignLabel = 'Align';
+  static const alignLeft = 'Left';
+  static const alignCenter = 'Center';
+  static const editCaption = 'Edit caption';
+  static const addCaption = 'Add a caption';
+  static const captionHint = 'Caption';
+  static const rename = 'Rename';
+  static const recordingName = 'Name';
+  static const replaceImage = 'Replace image';
+  static const shareFile = 'Share';
+  static const deleteMedia = 'Delete';
+  static const mediaDeleted = 'Removed from this note';
+  static const speedLabel = 'Playback speed';
+  static const transcribeSoon = 'Transcribe (coming soon)';
+  static const fileMissing = 'This file is missing';
+  static const remove = 'Remove';
+  static const save = 'Save';
+  static const cancel = 'Cancel';
+  static const insert = 'Insert';
+  static const insertCamera = 'Camera';
+  static const insertPhotos = 'Photo library';
+  static const insertRecord = 'Record audio';
+  static const insertChecklist = 'Checklist';
+  static const cameraDenied =
+      'Camera access is off. Turn it on in Settings to take a photo.';
+  static const noCamera = 'No camera is available on this device.';
+  static const photosDenied =
+      'Photos access is off. Turn it on in Settings to add an image.';
+  static const play = 'Play';
+  static const pause = 'Pause';
+
   static String count(int n) => n == 1 ? '1 note' : '$n notes';
   static String noMatches(String q) => 'No notes match “$q”';
   static String loadError(Object e) => 'Could not load notes: $e';
