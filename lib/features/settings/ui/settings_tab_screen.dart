@@ -13,6 +13,7 @@ import 'package:openbaptisthymnal/core/theme/theme_provider.dart';
 import 'package:openbaptisthymnal/core/widgets/lum_chip.dart';
 import 'package:openbaptisthymnal/features/bible/model/bible_edition.dart';
 import 'package:openbaptisthymnal/features/bible/providers/bible_providers.dart';
+import 'package:openbaptisthymnal/features/daily/providers/landmark_download_provider.dart';
 import 'package:openbaptisthymnal/features/settings/ui/widgets/font_size_control.dart';
 import 'package:openbaptisthymnal/features/settings/ui/widgets/you_rows.dart';
 import 'package:openbaptisthymnal/features/settings/ui/you_strings.dart';
@@ -129,6 +130,10 @@ class _SettingsTabScreenState extends ConsumerState<SettingsTabScreen>
                 ),
               ),
             ]),
+            if (ref.read(landmarkDownloadProvider.notifier).supported) ...[
+              const YouSectionLabel(YouStrings.road),
+              const YouGroup(children: [RoadLandmarksRow()]),
+            ],
             const YouSectionLabel(YouStrings.about),
             YouGroup(children: [
               YouRow(icon: PhosphorIcons.info(), title: version),
@@ -237,6 +242,64 @@ class _HymnLinkRow extends ConsumerWidget {
         await ref
             .read(linkingPreferencesProvider.notifier)
             .setDefaultHymnEdition(picked.id);
+      },
+    );
+  }
+}
+
+/// Status of the 3D road landmarks with a sheet to download or remove them.
+class RoadLandmarksRow extends ConsumerStatefulWidget {
+  const RoadLandmarksRow({super.key});
+
+  @override
+  ConsumerState<RoadLandmarksRow> createState() => _RoadLandmarksRowState();
+}
+
+class _RoadLandmarksRowState extends ConsumerState<RoadLandmarksRow> {
+  static const _download = 'download', _remove = 'remove';
+
+  @override
+  void initState() {
+    super.initState();
+    Future(() => ref.read(landmarkDownloadProvider.notifier).refresh());
+  }
+
+  String _status(LandmarkDownloadState s) {
+    final size = landmarkSizeLabel(s.totalBytes);
+    if (s.totalFiles == 0) return YouStrings.roadNone;
+    final base = switch (s.status) {
+      LandmarkDownloadStatus.done => YouStrings.roadDownloaded,
+      _ when s.doneFiles == 0 => YouStrings.roadNone,
+      _ => YouStrings.roadPartial(s.doneFiles, s.totalFiles),
+    };
+    return YouStrings.roadSizeNote(base, size);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final s = ref.watch(landmarkDownloadProvider);
+    final notifier = ref.read(landmarkDownloadProvider.notifier);
+    return YouRow(
+      icon: PhosphorIcons.mountains(),
+      title: YouStrings.roadLandmarks,
+      subtitle: _status(s),
+      onTap: () async {
+        final picked = await showYouPicker(
+          context,
+          title: YouStrings.roadLandmarks,
+          selected: null,
+          options: [
+            if (s.status != LandmarkDownloadStatus.done)
+              const YouChoice(id: _download, label: YouStrings.roadDownload),
+            if (s.doneFiles > 0)
+              const YouChoice(id: _remove, label: YouStrings.roadRemove),
+          ],
+        );
+        if (picked?.id == _download) {
+          notifier.start();
+        } else if (picked?.id == _remove) {
+          await notifier.remove();
+        }
       },
     );
   }

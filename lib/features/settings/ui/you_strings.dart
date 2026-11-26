@@ -24,6 +24,15 @@ abstract final class YouStrings {
   static const qualityNote =
       'Higher quality sounds clearer but uses more storage.';
 
+  static const road = 'Reading road';
+  static const roadLandmarks = 'Road landmarks';
+  static const roadDownload = 'Download all';
+  static const roadRemove = 'Remove downloaded files';
+  static const roadDownloaded = 'Downloaded';
+  static const roadNone = 'Not downloaded';
+  static String roadPartial(int done, int total) => '$done of $total';
+  static String roadSizeNote(String status, String size) => '$status, $size';
+
   static const about = 'About';
   static const version = 'Version';
   static const versionLoading = 'Loading';
