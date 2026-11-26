@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:appflowy_editor/appflowy_editor.dart';
 import 'package:auto_route/auto_route.dart';
+import 'package:audio_session/audio_session.dart';
 import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -198,6 +199,22 @@ class RecordingPage extends HookConsumerWidget {
       }
     });
 
+    // A call or Siri ends AVAudioRecorder's take on iOS (audio_waveforms has no
+    // observer), so pause ourselves and let the user resume. Android only
+    // reports this once an audio session holds focus, so it is best effort there.
+    useEffect(() {
+      final sub = Stream.fromFuture(AudioSession.instance)
+          .asyncExpand((s) => s.interruptionEventStream).listen((e) async {
+        if (!e.begin || phase.value != _Phase.recording) return;
+        phase.value = _Phase.interrupted;
+        clock.stop();
+        try {
+          await controller.pause();
+        } catch (_) {}
+      });
+      return sub.cancel;
+    }, [controller]);
+
     Future<void> pauseOrResume() async {
       try {
         if (phase.value == _Phase.recording) {
@@ -273,7 +290,8 @@ class RecordingPage extends HookConsumerWidget {
             phase.value == _Phase.error);
 
     Future<void> close() async {
-      if (busy.value) return;
+      // Starting counts as busy: leaving now could strand the mic.
+      if (busy.value || phase.value == _Phase.starting) return;
       if (!live) return Navigator.of(context).pop();
       final choice = await showDialog<String>(
         context: context,
@@ -358,7 +376,7 @@ class RecordingPage extends HookConsumerWidget {
     }
 
     return PopScope(
-      canPop: !live && !busy.value,
+      canPop: !live && !busy.value && phase.value != _Phase.starting,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) close();
       },
