@@ -153,6 +153,30 @@ void main() {
     });
   });
 
+  group('Given Save as template from an untouched template note', () {
+    test('Then the original hints and section types come back', () {
+      final doc = noteMarkdownToDocument(
+          templateToMarkdown(sermonTemplate, now: now));
+      final sections = restoreTemplateHints(
+          documentToSections(doc), sermonTemplate);
+      final application =
+          sections.firstWhere((s) => s.label == 'Application');
+      expect(application.type, TemplateSectionType.text);
+      expect(application.hint, 'What will you do this week?');
+      final points = sections.firstWhere((s) => s.label == 'Main points');
+      expect(points.type, TemplateSectionType.bullet);
+      expect(points.hint, 'The first big idea, in your own words');
+    });
+
+    test('Then text the user typed is kept as the hint', () {
+      final restored = restoreTemplateHints(const [
+        TemplateSection(TemplateSectionType.text, 'Application',
+            hint: 'My own words'),
+      ], sermonTemplate);
+      expect(restored.single.hint, 'My own words');
+    });
+  });
+
   group('Given stored sections', () {
     test('Then JSON round-trips and a bad row decodes to nothing', () {
       final json = encodeSections(sermonTemplate.sections);

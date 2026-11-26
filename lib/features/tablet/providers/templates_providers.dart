@@ -58,11 +58,15 @@ class PinnedTemplatesNotifier extends Notifier<List<String>> {
 
   Future<void> toggle(String id) => isPinned(id) ? unpin(id) : pin(id);
 
-  /// [newIndex] is the final position (`ReorderableListView.onReorderItem`).
-  Future<void> reorder(int oldIndex, int newIndex) {
-    final next = [...state];
+  /// Reorders the pins as shown ([visibleIds], which leaves out ids of
+  /// deleted templates). [newIndex] is the final position
+  /// (`ReorderableListView.onReorderItem`). Hidden ids stay, at the end, so a
+  /// reorder never loses a pin that comes back with an undo.
+  Future<void> reorderVisible(
+      List<String> visibleIds, int oldIndex, int newIndex) {
+    final next = [...visibleIds];
     next.insert(newIndex, next.removeAt(oldIndex));
-    return _set(next);
+    return _set([...next, ...state.where((id) => !visibleIds.contains(id))]);
   }
 }
 

@@ -168,3 +168,30 @@ List<TemplateSection> documentToSections(Document document) {
   }
   return out;
 }
+
+/// "Save as template" from a note that began as [template]: empty blocks lose
+/// their hint in markdown, so give each section back the original type and
+/// hint when its label still matches.
+List<TemplateSection> restoreTemplateHints(
+  List<TemplateSection> sections,
+  NoteTemplate template,
+) {
+  const bodied = {
+    TemplateSectionType.text,
+    TemplateSectionType.bullet,
+    TemplateSectionType.checklist,
+  };
+  final originals = {
+    for (final s in template.sections)
+      if (bodied.contains(s.type)) s.label.trim(): s,
+  };
+  return [
+    for (final s in sections)
+      if (originals[s.label.trim()] case final o?
+          when s.hint.isEmpty &&
+              (s.type == TemplateSectionType.heading || bodied.contains(s.type)))
+        o
+      else
+        s,
+  ];
+}

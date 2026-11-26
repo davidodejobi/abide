@@ -82,7 +82,7 @@ class ManageTemplatesPage extends ConsumerWidget {
                     buildDefaultDragHandles: false,
                     onReorderItem: (a, b) => ref
                         .read(pinnedTemplateIdsProvider.notifier)
-                        .reorder(a, b),
+                        .reorderVisible([for (final t in pinned) t.id], a, b),
                     children: [
                       for (final (i, t) in pinned.indexed)
                         _PinnedRow(key: ValueKey(t.id), index: i, template: t),

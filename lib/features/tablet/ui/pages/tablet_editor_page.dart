@@ -258,7 +258,10 @@ class _NoteEditorView extends HookConsumerWidget {
     }
 
     Future<void> saveAsTemplate() async {
-      final sections = documentToSections(editorState.document);
+      var sections = documentToSections(editorState.document);
+      if (template != null) {
+        sections = restoreTemplateHints(sections, template!);
+      }
       if (sections.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text(NotesStrings.noSectionsToSave)));

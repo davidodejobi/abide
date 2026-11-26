@@ -26,12 +26,23 @@ void main() {
     await pins.pin('a'); // already pinned: no duplicate
     expect(c.read(pinnedTemplateIdsProvider), ['a', 'b', 'c']);
 
-    await pins.reorder(0, 2); // a moves to the end
+    await pins.reorderVisible(['a', 'b', 'c'], 0, 2); // a moves to the end
     expect(c.read(pinnedTemplateIdsProvider), ['b', 'c', 'a']);
 
     await pins.toggle('c');
     expect(c.read(pinnedTemplateIdsProvider), ['b', 'a']);
     expect(prefs.getStringList('note_template_pins'), ['b', 'a']);
+  });
+
+  test('Given a hidden pin, reordering keeps it at the end', () async {
+    final (c, _) = await _make({
+      'note_template_pins': ['a', 'gone', 'b', 'c'],
+    });
+    // "gone" is a deleted template: not shown, so not in the visible list.
+    await c
+        .read(pinnedTemplateIdsProvider.notifier)
+        .reorderVisible(['a', 'b', 'c'], 2, 0);
+    expect(c.read(pinnedTemplateIdsProvider), ['c', 'a', 'b', 'gone']);
   });
 
   test('Given saved pins, a new container reads them back', () async {

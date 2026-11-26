@@ -57,7 +57,7 @@ void main() {
     test('Then it becomes a range over the chapter', () {
       expect(keys('Psalm 23'), ['PSA.23.1-6']);
       expect(keys('Psalms 117'), ['PSA.117.1-2']);
-      expect(keys('Ps 23'), ['PSA.23.1-6']);
+      expect(keys('Ps 23:1'), ['PSA.23.1']);
     });
 
     test('Then a chapter range spans chapters', () {
@@ -93,13 +93,76 @@ void main() {
 
     test('Then a stray digit before an unnumbered book is not swallowed', () {
       expect(keys('see 2 Psalm 23'), ['PSA.23.1-6']);
-      // 2 John has only one chapter, so this can only be John 3:16.
-      expect(keys('2 John 3:16'), ['JHN.3.16']);
+      // A numbered book never falls back to the unnumbered one.
+      expect(keys('2 John 3:16'), isEmpty);
     });
 
     test('Then several references in one line are all found', () {
       expect(keys('See John 3:16, 1 John 1:9 and Psalm 23.'),
           ['JHN.3.16', '1JN.1.9', 'PSA.23.1-6']);
+    });
+  });
+
+  group('Given numbered-book edge cases', () {
+    test('Then a failed numbered reading is plain, never the other book', () {
+      expect(keys('1 John 6:1'), isEmpty);
+      expect(keys('3 John 3:16'), isEmpty);
+      expect(keys('4 John 3:16'), ['JHN.3.16']); // 4 is not a prefix
+    });
+
+    test('Then roman and spelled-out prefixes work', () {
+      expect(keys('I John 3:16'), ['1JN.3.16']);
+      expect(keys('II John 1:5'), ['2JN.1.5']);
+      expect(keys('III John 1:4'), ['3JN.1.4']);
+      expect(keys('1st John 3:16'), ['1JN.3.16']);
+      expect(keys('2nd Peter 1:3'), ['2PE.1.3']);
+      expect(keys('First Corinthians 13:4'), ['1CO.13.4']);
+      expect(keys('third john 1:4'), ['3JN.1.4']);
+      expect(keys('i john 3:16'), isEmpty);
+    });
+
+    test('Then a digit that belongs to something else is not eaten', () {
+      final r = findScriptureReferences('v1.2.3 John 3', manifest).single;
+      expect(r.text, 'John 3');
+      expect(r.targetKey, 'JHN.3.1-36');
+      expect(keys('ver2 John 3:16'), ['JHN.3.16']);
+    });
+  });
+
+  group('Given dot notation and URLs', () {
+    test('Then John 3.16 links', () {
+      expect(keys('John 3.16 '), ['JHN.3.16']);
+      expect(keys('Gen 1.1 '), ['GEN.1.1']);
+      expect(keys('John 3.16.'), ['JHN.3.16']);
+      expect(keys('John 3.16.4'), isEmpty);
+    });
+
+    test('Then URLs and ids are left alone', () {
+      expect(keys('https://www.bible.com/bible/111/JHN.3.16 '), isEmpty);
+      expect(keys('https://example.com/John 3:16'), isEmpty);
+      expect(keys('www.x.com/John.3.16'), isEmpty);
+      expect(keys('a/John 3:16'), isEmpty);
+      expect(keys('id=John 3:16'), isEmpty);
+      expect(keys('user@John 3:16'), isEmpty);
+    });
+  });
+
+  group('Given the bare-chapter form', () {
+    test('Then only full names may use it', () {
+      for (final t in ['PS 2', 'Ps 2', 'Ex 2', 'Col 3', 'Tit 2', 'Song 5',
+        'Songs 5', 'Phm 3']) {
+        expect(keys(t), isEmpty, reason: t);
+      }
+      expect(keys('Colossians 3'), ['COL.3.1-25']);
+      expect(keys('Song of Solomon 5'), ['SNG.5.1-16']);
+      expect(keys('Song 5:1'), ['SNG.5.1']);
+    });
+
+    test('Then it is not linked when a lowercase word follows', () {
+      expect(keys('Job 3 is due'), isEmpty);
+      expect(keys('Mark 5 stars'), isEmpty);
+      expect(keys('Psalm 23, then'), ['PSA.23.1-6']);
+      expect(keys('Psalm 23 and 1 John 1:9'), ['1JN.1.9']);
     });
   });
 
@@ -125,6 +188,8 @@ void main() {
     test('Then only one ending exactly there is returned', () {
       expect(scriptureReferenceAtEnd('See John 3:16', manifest)?.targetKey,
           'JHN.3.16');
+      expect(scriptureReferenceAtEnd('x ' * 80 + 'John 3:16', manifest)
+          ?.targetKey, 'JHN.3.16');
       expect(scriptureReferenceAtEnd('See John 3:16 and', manifest), isNull);
       expect(scriptureReferenceAtEnd('John 3:16 and Psalm 23', manifest)
           ?.targetKey, 'PSA.23.1-6');
