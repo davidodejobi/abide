@@ -98,10 +98,10 @@ class BibleScreen extends ConsumerWidget {
   /// the last saved catalog; before it has ever loaded, a fixed list is used.
   static String _downloadNote(WidgetRef ref) {
     final cached = ref.read(bibleCatalogSourceProvider).cached();
-    final names = <String>[
+    final names = <String>{
       for (final e in cached?.editions ?? [])
         if (e.languageCode != 'en' && e.languageName.isNotEmpty) e.languageName,
-    ].toSet().toList();
+    }.toList();
     return OnboardingStrings.downloadNote(
         names.isEmpty ? OnboardingStrings.defaultDownloadLanguages : names);
   }
