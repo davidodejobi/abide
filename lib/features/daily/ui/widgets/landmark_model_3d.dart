@@ -6,9 +6,8 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_scene/scene.dart' hide Animation;
 import 'package:vector_math/vector_math.dart' as vm;
 
-import '../../data/glb_cache.dart';
+import '../../data/landmark_loader.dart';
 import '../../domain/landmark_3d.dart';
-import '../../domain/landmark_glb_loader.dart';
 import 'road_art.dart';
 
 /// A landmark glb standing on a 3D podium (static; only the model turns), turned by [turns] (the showcase's
@@ -54,14 +53,7 @@ class _LandmarkModel3dState extends State<LandmarkModel3d> {
   static const _dir = 'assets/images/road/models';
   static const _manifest = 'assets/images/road/landmarks.json';
 
-  /// Cache, bundle, then CDN (see [LandmarkGlbLoader]); one for the app.
-  static final _loader = LandmarkGlbLoader(
-    cache: createGlbCache(),
-    loadBundled: (art) async => (await rootBundle.load('$_dir/$art.glb'))
-        .buffer
-        .asUint8List(),
-    fetch: fetchGlb,
-  );
+  static final _loader = sharedLandmarkLoader;
   static Map<String, LandmarkFraming>? _framings;
 
   static bool _logged = false;

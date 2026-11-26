@@ -11,6 +11,10 @@ class _MemCache implements GlbCache {
   Future<Uint8List?> read(String name) async => files[name];
   @override
   Future<void> write(String name, Uint8List bytes) async => files[name] = bytes;
+  @override
+  Future<bool> has(String name) async => files.containsKey(name);
+  @override
+  Future<void> delete(String name) async => files.remove(name);
 }
 
 void main() {

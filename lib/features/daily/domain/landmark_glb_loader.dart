@@ -11,6 +11,10 @@ abstract class GlbCache {
 
   /// Must be atomic: a reader never sees half a file.
   Future<void> write(String name, Uint8List bytes);
+
+  Future<bool> has(String name);
+
+  Future<void> delete(String name);
 }
 
 /// Fetches [url]; null on any failure (offline, 404, timeout).
@@ -32,7 +36,10 @@ class LandmarkGlbLoader {
     this.cache,
     required this.loadBundled,
     required this.fetch,
-    this.cdnBase = const String.fromEnvironment('LANDMARK_CDN_BASE'),
+    this.cdnBase = const String.fromEnvironment(
+      'LANDMARK_CDN_BASE',
+      defaultValue: 'https://lumway-assets.pages.dev',
+    ),
   });
 
   final GlbCache? cache;

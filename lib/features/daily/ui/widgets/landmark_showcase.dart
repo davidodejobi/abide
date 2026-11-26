@@ -109,6 +109,11 @@ class _LandmarkShowcaseState extends State<LandmarkShowcase>
   /// True once the first 3D frame is up; the static sprite stands in until
   /// then, and for good if 3D is unavailable.
   bool _shown3d = false, _failed3d = false;
+
+  /// Set a moment after the sheet opens, so a model that is still on its way
+  /// (downloading) shows a small progress ring over the sprite; one that is
+  /// ready at once never flashes it.
+  bool _waiting = false;
   List<Color> _palette = const [];
   bool _landed = false;
   bool _init = false, _reduce = false, _flying = false, _started = false;
@@ -116,7 +121,7 @@ class _LandmarkShowcaseState extends State<LandmarkShowcase>
   Rect _lastSlot = Rect.zero;
   LandmarkFraming? _framing;
   OverlayEntry? _entry;
-  Timer? _watchdog;
+  Timer? _watchdog, _waitTimer;
   Animation<double>? _route;
 
   @override
@@ -133,6 +138,9 @@ class _LandmarkShowcaseState extends State<LandmarkShowcase>
     });
     scheduleMicrotask(() {
       if (mounted) _loadPalette();
+    });
+    _waitTimer = Timer(const Duration(milliseconds: 500), () {
+      if (mounted) setState(() => _waiting = true);
     });
   }
 
@@ -169,6 +177,7 @@ class _LandmarkShowcaseState extends State<LandmarkShowcase>
   @override
   void dispose() {
     _watchdog?.cancel();
+    _waitTimer?.cancel();
     _route?.removeStatusListener(_routeStatus);
     _entry?.remove();
     _entry = null;
@@ -389,6 +398,18 @@ class _LandmarkShowcaseState extends State<LandmarkShowcase>
                               ],
                             ),
                           ),
+                          if (_waiting && !_shown3d && !_failed3d)
+                            Positioned(
+                              right: 12,
+                              top: 12,
+                              child: SizedBox(
+                                key: const ValueKey('showcase-loading'),
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2, color: colors.first),
+                              ),
+                            ),
                           // The 3D view is wider and taller than the slot so
                           // the whole podium fits; its podium centre lands
                           // on the stage's spotlight (see podiumAnchorY).

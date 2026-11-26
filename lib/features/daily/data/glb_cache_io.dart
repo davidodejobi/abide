@@ -28,6 +28,16 @@ class _DiskGlbCache implements GlbCache {
     await tmp.writeAsBytes(bytes, flush: true);
     await tmp.rename(p.join(dir, name));
   }
+
+  @override
+  Future<bool> has(String name) async =>
+      File(p.join((await _dir()).path, name)).exists();
+
+  @override
+  Future<void> delete(String name) async {
+    final f = File(p.join((await _dir()).path, name));
+    if (await f.exists()) await f.delete();
+  }
 }
 
 /// GET [url]; the body, or null on any failure. Models are small (< 60 KB),

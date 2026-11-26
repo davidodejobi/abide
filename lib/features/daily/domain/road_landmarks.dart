@@ -56,12 +56,16 @@ class LandmarkModelInfo {
     required this.title,
     required this.sha256,
     required this.bundled,
+    this.bytes = 0,
   });
 
   final String art;
   final String title;
   final String sha256;
   final bool bundled;
+
+  /// Size of the glb in bytes, from the manifest.
+  final int bytes;
 
   String get id => 'lm_$art';
 
@@ -139,21 +143,27 @@ class LandmarkCatalog {
   }
 }
 
+/// The models of the bundled `landmarks.json`, by art key.
+Map<String, LandmarkModelInfo> parseLandmarkModels(String modelsJson) {
+  final lm = (jsonDecode(modelsJson) as Map)['landmarks'] as Map;
+  return {
+    for (final e in lm.entries)
+      e.key as String: LandmarkModelInfo(
+        art: e.key as String,
+        title: (e.value as Map)['title'] as String,
+        sha256: (e.value as Map)['sha256'] as String,
+        bundled: (e.value as Map)['bundled'] as bool,
+        bytes: ((e.value as Map)['bytes'] as num?)?.toInt() ?? 0,
+      ),
+  };
+}
+
 /// Parses the bundled `landmarks.json` (models) and `landmark_days.json`.
 LandmarkCatalog parseLandmarkCatalog(String modelsJson, String daysJson) {
-  final lm = (jsonDecode(modelsJson) as Map)['landmarks'] as Map;
   final d = jsonDecode(daysJson) as Map<String, dynamic>;
   return LandmarkCatalog(
     plan: d['plan'] as String,
-    models: {
-      for (final e in lm.entries)
-        e.key as String: LandmarkModelInfo(
-          art: e.key as String,
-          title: (e.value as Map)['title'] as String,
-          sha256: (e.value as Map)['sha256'] as String,
-          bundled: (e.value as Map)['bundled'] as bool,
-        ),
-    },
+    models: parseLandmarkModels(modelsJson),
     days: [
       for (final r in d['days'] as List)
         CatalogDay(
