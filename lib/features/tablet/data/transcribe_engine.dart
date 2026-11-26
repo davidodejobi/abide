@@ -16,6 +16,7 @@ enum TranscribeFailure {
   failed,
   cancelled,
   waitingForWifi,
+  deviceUnsupported,
 }
 
 class TranscribeException implements Exception {
@@ -106,6 +107,17 @@ Future<List<TranscriptSegment>> transcribeChunkWhisper(
   }
   return _invokeChunk(path, startMs, endMs, language,
       {'modelPath': (await _modelFile()).path});
+}
+
+/// Whether this phone can transcribe on-device: always on iOS (the system
+/// engine); on Android a 64-bit processor and at least 3 GB of memory.
+Future<bool> transcribeSupported() async {
+  if (!Platform.isAndroid) return true;
+  try {
+    return await _channel.invokeMethod<bool>('supported') ?? false;
+  } catch (_) {
+    return false;
+  }
 }
 
 /// Frees what the engine holds (the Android model) once a run ends.

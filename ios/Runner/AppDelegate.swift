@@ -55,6 +55,8 @@ enum TranscribePlugin {
               let end = a?["endMs"] as? Int, let language = a?["language"] as? String
             else { throw TranscribeError.failed }
             reply = try await transcribe(path: path, startMs: start, endMs: end, language: language)
+          case "supported":
+            reply = true  // the system engine runs on every supported iPhone
           case "release":
             reply = NSNull()
           default:

@@ -299,5 +299,13 @@ abstract final class NotesStrings {
   static const readSaved = 'Read what was saved';
   static String stoppedAt(String at, String total) =>
       'The transcript stopped at $at of $total.';
+  static const transcriptUnavailablePhone =
+      'Transcript not available on this phone yet';
+  static const transcriptUnavailablePhoneBody =
+      'This phone needs a 64-bit processor and at least 3 GB of memory. '
+      'Your recording is safe.';
+  static const waitingForAnother = 'Waiting for another transcript';
+  static const waitingForAnotherBody =
+      'It starts as soon as the one in progress finishes.';
   static const englishRowBodyFree = 'Free, on this phone.';
 }

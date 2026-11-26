@@ -46,7 +46,7 @@ class TranscriptRequestNotifier extends Notifier<TranscriptKey?> {
   void clear() => state = null;
 }
 
-enum TranscriptPhase { loading, idle, downloading, running }
+enum TranscriptPhase { loading, idle, queued, downloading, running }
 
 class TranscriptState {
   const TranscriptState(this.phase,
@@ -125,7 +125,8 @@ class TranscriptNotifier extends FamilyNotifier<TranscriptState, TranscriptKey> 
   void cancel() {
     if (!_busy) return;
     _cancel = true;
-    cancelModelDownload();
+    // Only this note's own download: another note may be downloading.
+    if (state.phase == TranscriptPhase.downloading) cancelModelDownload();
     state = TranscriptState(state.phase,
         transcript: state.transcript, progress: state.progress, stopping: true);
   }
@@ -156,12 +157,18 @@ class TranscriptNotifier extends FamilyNotifier<TranscriptState, TranscriptKey> 
             progress: _progress(t ?? _final ?? _part),
             failure: f);
 
-    state = TranscriptState(TranscriptPhase.running,
+    // Waits here while another transcript is running.
+    state = TranscriptState(TranscriptPhase.queued,
         transcript: shown, progress: _progress(_part));
     try {
       await runSerially(() async {
         try {
           if (_cancel) throw const TranscribeException(TranscribeFailure.cancelled);
+          state = TranscriptState(TranscriptPhase.running,
+              transcript: shown, progress: _progress(_part));
+          if (transcribeNeedsModel && !await transcribeSupported()) {
+            throw const TranscribeException(TranscribeFailure.deviceUnsupported);
+          }
           var duration = 0;
           try {
             duration = await ref.read(durationProbeProvider)(arg.path);
