@@ -15,8 +15,10 @@ class Landmark {
     required this.short,
     required this.ref,
     required this.art,
+    this.opening,
   });
 
+  /// One placement on the road, also the key of its story (`d001-garden`).
   final String id;
 
   /// USFM book code, e.g. `GEN`.
@@ -26,96 +28,186 @@ class Landmark {
   final String title;
   final String short;
 
-  /// A reference line only ("Genesis 1:1"), never quoted text.
+  /// A reference line only ("Genesis 1:1 to 4:26"), never quoted text.
   final String ref;
 
   /// Sprite key, or null while that landmark has no art yet (it is then drawn
   /// as a small marker sign, so it can still be tapped).
   final String? art;
 
-  /// The verse the reader opens at, as a link key (`GEN.1.1`), read off the
-  /// last `chapter:verse` of [ref]; the first chapter, verse 1 if [ref] has none.
+  /// The verse the reader opens at, as a link key (`GEN.1.1`); read off the
+  /// last `chapter:verse` of [ref] when absent.
+  final String? opening;
+
   String get openingKey {
+    if (opening != null) return opening!;
     final m = RegExp(r'(\d+):(\d+)\s*$').firstMatch(ref);
     return m == null
         ? '$book.$fromChapter.1'
         : '$book.${m.group(1)}.${m.group(2)}';
   }
-
-  factory Landmark.fromJson(Map<String, dynamic> j) => Landmark(
-        id: j['id'] as String,
-        book: j['book'] as String,
-        fromChapter: j['from'] as int,
-        toChapter: j['to'] as int,
-        title: j['title'] as String,
-        short: j['short'] as String,
-        ref: j['ref'] as String,
-        art: j['art'] as String?,
-      );
 }
 
-List<Landmark> parseLandmarks(String json) => [
-      for (final m in jsonDecode(json) as List)
-        Landmark.fromJson(m as Map<String, dynamic>),
-    ];
+/// One of the 127 models: its sprite is `lm_<art>.webp`, its glb is
+/// identified by [sha256] and is bundled with the app only when [bundled].
+class LandmarkModelInfo {
+  const LandmarkModelInfo({
+    required this.art,
+    required this.title,
+    required this.sha256,
+    required this.bundled,
+    this.bytes = 0,
+  });
 
-/// Which landmarks stand at which plan day (1-based day index), at most
-/// [perDay] per day (they stand either side of the stop).
+  final String art;
+  final String title;
+  final String sha256;
+  final bool bundled;
+
+  /// Size of the glb in bytes, from the manifest.
+  final int bytes;
+
+  String get id => 'lm_$art';
+
+  /// Name of the file on the CDN: `<id>-<first 8 of the hash>.glb`.
+  String get remoteName => '$id-${sha256.substring(0, 8)}.glb';
+}
+
+/// One day of the catalog: which landmark(s) stand at it and the passages it
+/// covers, as (book, first chapter, last chapter).
+class CatalogDay {
+  const CatalogDay({
+    required this.day,
+    required this.art,
+    required this.story,
+    required this.title,
+    required this.ref,
+    required this.spans,
+    this.also,
+    this.alsoStory,
+  });
+
+  final int day;
+  final String art, story, title, ref;
+  final String? also, alsoStory;
+  final List<(String, int, int)> spans;
+
+  bool covers(String book, int chapter) =>
+      spans.any((s) => s.$1 == book && s.$2 <= chapter && chapter <= s.$3);
+}
+
+class LandmarkCatalog {
+  const LandmarkCatalog(
+      {required this.plan, required this.models, required this.days});
+
+  /// The plan id the catalog's day numbers belong to.
+  final String plan;
+  final Map<String, LandmarkModelInfo> models;
+  final List<CatalogDay> days;
+
+  /// The catalog day that stands for [day] of [forPlan]: the same day number
+  /// for the catalog's own plan, otherwise the catalog day whose passages hold
+  /// the first chapter of the day's reading.
+  CatalogDay? dayFor(ReadingPlan forPlan, PlanDay day) {
+    if (forPlan.id == plan) {
+      return day.dayIndex >= 1 && day.dayIndex <= days.length
+          ? days[day.dayIndex - 1]
+          : null;
+    }
+    if (day.passages.isEmpty) return null;
+    final s = day.passages.first.start;
+    for (final d in days) {
+      if (d.covers(s.book, s.chapter)) return d;
+    }
+    return null;
+  }
+
+  List<Landmark> _landmarks(CatalogDay d) {
+    final (book, from, to) = d.spans.first;
+    Landmark make(String id, String art, String title) => Landmark(
+          id: id,
+          book: book,
+          fromChapter: from,
+          toChapter: to,
+          title: title,
+          short: models[art]?.title ?? title,
+          ref: d.ref,
+          art: art,
+          opening: '$book.$from.1',
+        );
+    return [
+      make(d.story, d.art, d.title),
+      if (d.also != null)
+        make(d.alsoStory!, d.also!, models[d.also]?.title ?? d.title),
+    ];
+  }
+}
+
+/// The models of the bundled `landmarks.json`, by art key.
+Map<String, LandmarkModelInfo> parseLandmarkModels(String modelsJson) {
+  final lm = (jsonDecode(modelsJson) as Map)['landmarks'] as Map;
+  return {
+    for (final e in lm.entries)
+      e.key as String: LandmarkModelInfo(
+        art: e.key as String,
+        title: (e.value as Map)['title'] as String,
+        sha256: (e.value as Map)['sha256'] as String,
+        bundled: (e.value as Map)['bundled'] as bool,
+        bytes: ((e.value as Map)['bytes'] as num?)?.toInt() ?? 0,
+      ),
+  };
+}
+
+/// Parses the bundled `landmarks.json` (models) and `landmark_days.json`.
+LandmarkCatalog parseLandmarkCatalog(String modelsJson, String daysJson) {
+  final d = jsonDecode(daysJson) as Map<String, dynamic>;
+  return LandmarkCatalog(
+    plan: d['plan'] as String,
+    models: parseLandmarkModels(modelsJson),
+    days: [
+      for (final r in d['days'] as List)
+        CatalogDay(
+          day: r['day'] as int,
+          art: r['landmark'] as String,
+          story: r['story'] as String,
+          title: r['title'] as String,
+          ref: r['ref'] as String,
+          spans: [
+            for (final s in r['spans'] as List)
+              (s[0] as String, s[1] as int, s[2] as int),
+          ],
+          also: r['also'] as String?,
+          alsoStory: r['also_story'] as String?,
+        ),
+    ],
+  );
+}
+
+/// Which landmarks stand at which plan day (1-based day index): the catalog's
+/// landmark and optional second one for that day, at most two per day (they
+/// stand either side of the stop).
 ///
-/// A landmark is placed at the first day whose passages touch its chapters, so
-/// it arrives the moment the reader reaches that part of the Bible. A day's own
-/// matches always win its slots. A landmark that does not fit moves to the next
-/// day only if that day has a slot left after its own matches, and never
-/// further. A landmark whose art was used within the last [artGapDays] days is
-/// dropped so the road does not repeat itself. Landmarks without art are never
-/// placed unless [placeArtless] is set (the road draws them as marker signs,
-/// each its own "picture" for the repeat rule). Own matches come first in each
-/// day's list, then any carried over from the day before.
-Map<int, List<Landmark>> landmarksByDay(ReadingPlan plan, List<Landmark> all,
-    {int artGapDays = 4, bool placeArtless = false, int perDay = 2}) {
-  final placed = <String>{};
+/// A landmark is used on many days, so one whose art stood within the last
+/// [artGapDays] days is skipped: the road never shows a landmark beside a copy
+/// of itself. A skipped lead lets the day's second landmark take its slot. A
+/// catalog day is shown once, so a short plan that covers several days of
+/// reading in one stop does not repeat it. Pure and in day order.
+Map<int, List<Landmark>> landmarksByDay(ReadingPlan plan, LandmarkCatalog cat,
+    {int artGapDays = 4}) {
   final lastArtDay = <String, int>{};
+  final shown = <String>{};
   final out = <int, List<Landmark>>{};
-  var displaced = <Landmark>[];
   for (final day in plan.days) {
-    bool touches(Landmark lm) => day.passages.any((p) =>
-        p.start.book == lm.book &&
-        p.start.chapter <= lm.toChapter &&
-        p.end.chapter >= lm.fromChapter);
-    final own = [
-      for (final lm in all)
-        if ((placeArtless || lm.art != null) &&
-            !placed.contains(lm.id) &&
-            touches(lm))
-          lm,
-    ];
-    final carried = [
-      for (final lm in displaced)
-        if (!placed.contains(lm.id) && !own.contains(lm)) lm,
-    ];
-    displaced = [];
+    final cd = cat.dayFor(plan, day);
+    if (cd == null || !shown.add(cd.story)) continue;
     final today = <Landmark>[];
-    void place(Landmark lm, bool canCarry) {
-      final key = lm.art ?? lm.id;
-      final last = lastArtDay[key];
-      if (last != null && day.dayIndex - last < artGapDays) {
-        placed.add(lm.id); // same picture as a recent stop: drop, don't retry
-        return;
-      }
-      if (today.length >= perDay) {
-        if (canCarry) displaced.add(lm);
-        return;
-      }
+    for (final lm in cat._landmarks(cd)) {
+      final last = lastArtDay[lm.art];
+      if (last != null && day.dayIndex - last < artGapDays) continue;
       today.add(lm);
-      placed.add(lm.id);
-      lastArtDay[key] = day.dayIndex;
     }
-
-    for (final lm in own) {
-      place(lm, true);
-    }
-    for (final lm in carried) {
-      place(lm, false);
+    for (final lm in today) {
+      lastArtDay[lm.art!] = day.dayIndex;
     }
     if (today.isNotEmpty) out[day.dayIndex] = today;
   }

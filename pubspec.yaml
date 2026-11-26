@@ -15,6 +15,7 @@ dependencies:
   freezed_annotation: ^3.1.0
   json_annotation: ^4.9.0
   path_provider: ^2.1.2
+  crypto: ^3.0.3
   logging: ^1.2.0
   toastification: ^3.0.3
   vector_graphics: ^1.1.19

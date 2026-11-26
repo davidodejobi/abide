@@ -32,7 +32,15 @@ void main() {
       double text = 1}) async {
     art = (await t.runAsync(RoadArt.load))!;
     await t.runAsync(() => art.ensureLandmarks(['garden']));
-    lm = art.landmarks.firstWhere((l) => l.art == 'garden');
+    lm = const Landmark(
+        id: 'd001-garden',
+        book: 'GEN',
+        fromChapter: 1,
+        toChapter: 4,
+        title: 'Light and the first garden',
+        short: 'In the beginning',
+        ref: 'Genesis 1:1',
+        art: 'garden');
     sprite = art['lm_garden']!;
     t.view.physicalSize = size * 3;
     t.view.devicePixelRatio = 3;
@@ -87,6 +95,12 @@ void main() {
     await _pumpFor(t, 400);
     expect(t.takeException(), isNull);
     expect(find.byKey(_staticKey), findsOneWidget);
+    // The flat 2D podium stays when there is no 3D one to replace it.
+    expect(
+        t.widgetList<CustomPaint>(find.byType(CustomPaint)).any((p) =>
+            p.painter.runtimeType.toString() == '_StagePainter' &&
+            (p.painter as dynamic).contact == false),
+        isTrue);
     expect(t.widget<AnimatedOpacity>(find.ancestor(of: hero, matching: find.byType(AnimatedOpacity)).first).opacity, 1);
     expect(find.byKey(_threeDKey), findsNothing,
         reason: 'the failed 3D view removes itself');

@@ -17,6 +17,13 @@ final _plan = ReadingPlan(id: 'p', title: 'Plan', description: '', days: [
     PlanDay(dayIndex: i, passages: [VerseRange.tryParse('GEN.$i.1-31')!]),
 ]);
 
+// The same days under the catalog's own plan id, so landmarks map by day.
+final _yearPlan = ReadingPlan(
+    id: 'bible-in-a-year',
+    title: 'Plan',
+    description: '',
+    days: _plan.days);
+
 Widget _app(Widget child, {bool reduce = false, double scale = 1}) =>
     MaterialApp(
       theme: AppTheme.lightTheme,
@@ -44,7 +51,7 @@ Widget _road({
       mood: RoadMood.day,
       currentDay: day,
       totalDays: total,
-      plan: noPlan ? null : (plan ?? _plan),
+      plan: noPlan ? null : (plan ?? _yearPlan),
       onStopTap: onStop,
       onLandmarkTap: onLandmark,
     );
@@ -187,9 +194,9 @@ void main() {
     await artArrives(t);
     await t.pump(const Duration(milliseconds: 100));
     final tap = _state(t).debugLandmarkTap(12);
-    expect(tap, isNotNull, reason: 'day 12 touches Abram and the stars');
+    expect(tap, isNotNull, reason: 'day 12 has the camp where Jacob meets Esau');
     await t.tapAt(tap!);
-    expect(taps, [('gen-abram-stars', 12)]);
+    expect(taps, [('d012-tent_camp', 12)]);
   });
 
   testWidgets(
@@ -203,7 +210,7 @@ void main() {
     expect(find.semantics.byLabel('Day 12, today'), findsOneWidget);
     expect(find.semantics.byLabel('Day 13, coming up'), findsOneWidget);
     expect(find.semantics.byLabel('Day 11, read'), findsOneWidget);
-    expect(find.semantics.byLabel('Abram and the stars, Genesis 15:5'),
+    expect(find.semantics.byLabel('Jacob and Esau reconciled, Genesis 33:1 to 35:29'),
         findsOneWidget);
     sem.dispose();
   });

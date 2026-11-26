@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:openbaptisthymnal/features/app_update/ui/app_update_overlay.dart';
+import 'package:openbaptisthymnal/features/daily/providers/landmark_download_provider.dart';
 import 'package:openbaptisthymnal/features/onboarding/domain/seed_welcome_note.dart';
 import 'package:openbaptisthymnal/core/providers/service_providers.dart';
 import 'package:openbaptisthymnal/core/storage/database/database_provider.dart';
@@ -50,6 +51,8 @@ class AbideApp extends HookConsumerWidget {
         createNote: repo.createNote,
         userName: storage.getUserName(),
       );
+      // Finish a landmark download that a closed app left half done.
+      ref.read(landmarkDownloadProvider.notifier).resumeIfChosen();
       seedReleaseNotesIfNeeded(
         storage: storage,
         createNote: repo.createNote,
