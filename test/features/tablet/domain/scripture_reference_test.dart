@@ -137,6 +137,16 @@ void main() {
       expect(keys('John 3.16.4'), isEmpty);
     });
 
+    test('Then the dot needs a capital; the colon does not', () {
+      for (final t in ['the numbers 2.5 and 3', 'rev 1.2 of the doc',
+        'mark 2.5 percent', 'gen 2.3']) {
+        expect(keys(t), isEmpty, reason: t);
+      }
+      expect(keys('John 3.16'), ['JHN.3.16']);
+      expect(keys('Gen 1.1'), ['GEN.1.1']);
+      expect(keys('mark 2:5'), ['MRK.2.5']);
+    });
+
     test('Then URLs and ids are left alone', () {
       expect(keys('https://www.bible.com/bible/111/JHN.3.16 '), isEmpty);
       expect(keys('https://example.com/John 3:16'), isEmpty);

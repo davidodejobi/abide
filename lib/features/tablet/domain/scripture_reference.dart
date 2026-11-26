@@ -287,6 +287,13 @@ ScriptureReference? _resolve(
           : '${book.code}.$chapter.1-$endChapter.$endVerse';
     }
   } else {
+    // "John 3.16" is dot notation only for a capitalised name; "gen 2.3" or
+    // "mark 2.5 percent" in prose is not a reference. A colon works in any case.
+    final nameStart = m.start + (m.group(1)?.length ?? 0);
+    if (RegExp(r'^\D*\d{1,3}\.\d').hasMatch(text.substring(nameStart, m.end))) {
+      final ch = text[nameStart];
+      if (ch == ch.toLowerCase()) return null;
+    }
     if (chapter < 1 || chapter > counts.length) return null;
     final verse = int.parse(verseStr);
     if (verse < 1 || verse > counts[chapter - 1]) return null;
