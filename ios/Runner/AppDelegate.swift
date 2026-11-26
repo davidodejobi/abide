@@ -14,8 +14,9 @@ import UIKit
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
-    let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "TranscribePlugin")
-    TranscribePlugin.register(messenger: registrar.messenger())
+    if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "TranscribePlugin") {
+      TranscribePlugin.register(messenger: registrar.messenger())
+    }
   }
 }
 
@@ -176,7 +177,7 @@ enum TranscribePlugin {
     let request = SFSpeechURLRecognitionRequest(url: url)
     request.requiresOnDeviceRecognition = true
     request.shouldReportPartialResults = false
-    request.addsPunctuation = true
+    if #available(iOS 16, *) { request.addsPunctuation = true }
     return try await withCheckedThrowingContinuation { c in
       var finished = false
       // The closure keeps the recognizer alive until the task finishes.

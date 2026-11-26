@@ -207,7 +207,7 @@ void main() {
     test('a saved part resumes where it stopped and the finished file swaps in',
         () async {
       final files = {
-        partPath: jsonEncode(Transcript(
+        partPath: jsonEncode(const Transcript(
             language: 'en',
             doneMs: 60000,
             durationMs: 150000,
