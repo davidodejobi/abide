@@ -35,7 +35,12 @@ class HymnalRepositoryImpl implements HymnalRepository {
   Future<LanguagePack> getLanguagePack(String languageCode) async {
     final data = await _jsonLoader
         .loadJson('assets/hymnal/languages/$languageCode.json');
-    return LanguagePack.fromJson(data);
+    final pack = LanguagePack.fromJson(data);
+    // The map key is the stable id (favourites, note links, pairs). The
+    // printed number can differ from it, so never derive one from the other.
+    return pack.copyWith(hymns: {
+      for (final e in pack.hymns.entries) e.key: e.value.copyWith(id: e.key),
+    });
   }
 
   @override

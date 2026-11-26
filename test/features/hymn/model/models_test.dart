@@ -69,8 +69,10 @@ void main() {
 
       final hymn1 = pack.hymns['hymn_0001'];
       expect(hymn1, isNotNull);
-      expect(hymn1?.number, 1);
-      expect(hymn1?.title, isNotEmpty);
+      // Printed number follows the 1991 Baptist Hymnal: id hymn_0001 is #2.
+      expect(hymn1?.number, 2);
+      expect(hymn1?.title, 'Holy, Holy, Holy');
+      expect(pack.hymns['hymn_0655']?.number, 656);
     });
   });
 }
