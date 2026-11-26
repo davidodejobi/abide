@@ -1,10 +1,12 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/rendering.dart' show ScrollDirection;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:openbaptisthymnal/core/providers/bottom_nav_provider.dart';
+import 'package:openbaptisthymnal/core/router/app_router.dart';
 import 'package:openbaptisthymnal/core/storage/database/app_database.dart';
 import 'package:openbaptisthymnal/core/storage/database/daos/note_links_dao.dart';
 import 'package:openbaptisthymnal/core/theme/font_scale_provider.dart';
@@ -76,6 +78,7 @@ class BibleTabScreen extends HookConsumerWidget {
     final textScale = ref.watch(fontScaleProvider).scale;
     final c = context.lum;
     final editions = ref.watch(bibleEditionsProvider);
+    final missingEdition = ref.watch(missingSavedEditionProvider);
     final split = useState(BibleSplitState.initial);
     final isPushed = !controlsAppNav;
 
@@ -278,8 +281,14 @@ class BibleTabScreen extends HookConsumerWidget {
 
         Future<void> pickEdition() async {
           final id = await showEditionSheet(context,
-              editions: editions, currentId: position.editionId);
-          if (id != null) notifier.setEdition(id);
+              editions: editions,
+              currentId: position.editionId,
+              canGetMore: !kIsWeb);
+          if (id == kGetMoreBibles) {
+            if (context.mounted) context.router.push(const MoreBiblesRoute());
+          } else if (id != null) {
+            notifier.setEdition(id);
+          }
         }
 
         // "Chapter 1 of 3" for the plan day, when this chapter is part of it.
@@ -495,6 +504,12 @@ class BibleTabScreen extends HookConsumerWidget {
                         title: BibleStrings.textSizeTitle),
                     onEdition: pickEdition,
                   ),
+                if (missingEdition != null)
+                  _MissingEditionBanner(
+                    onGet: kIsWeb
+                        ? null
+                        : () => context.router.push(const MoreBiblesRoute()),
+                  ),
                 Expanded(child: content),
               ],
             ),
@@ -651,6 +666,45 @@ class _ErrorView extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Gentle nudge shown when the saved edition is not on this phone and the
+/// reader has fallen back to the KJV.
+class _MissingEditionBanner extends StatelessWidget {
+  const _MissingEditionBanner({required this.onGet});
+
+  final VoidCallback? onGet;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.lum;
+    return Container(
+      margin: const EdgeInsets.fromLTRB(
+          LumSize.screenGutter, LumSpace.xs, LumSize.screenGutter, 0),
+      padding: const EdgeInsets.symmetric(
+          horizontal: LumSpace.lg, vertical: LumSpace.sm),
+      decoration: BoxDecoration(
+        color: c.bgSurface,
+        borderRadius: BorderRadius.circular(LumRadius.xl),
+        border: Border.all(color: c.borderSubtle),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(BibleStrings.missingEditionNotice,
+                style: LumText.footnote.copyWith(color: c.textSecondary)),
+          ),
+          if (onGet != null)
+            TextButton(
+              onPressed: onGet,
+              child: Text(BibleStrings.getIt,
+                  style: LumText.footnoteEmphasized
+                      .copyWith(color: c.textPrimary)),
+            ),
+        ],
       ),
     );
   }

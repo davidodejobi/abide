@@ -1,18 +1,20 @@
 import 'package:auto_route/auto_route.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
-import 'package:openbaptisthymnal/features/bible/model/bible_edition.dart';
+import 'package:openbaptisthymnal/features/bible/providers/bible_providers.dart';
 
-/// Lists every bundled Bible edition with its source + license credit. This is
+/// Lists every Bible edition on the phone, bundled or downloaded, with its source + license credit. This is
 /// how the app satisfies the CC BY-SA 4.0 attribution requirement for the
 /// Biblica (Hausa/Igbo/Yorùbá) translations; public-domain editions are noted
 /// too for transparency.
 @RoutePage()
-class BibleCreditsPage extends StatelessWidget {
+class BibleCreditsPage extends ConsumerWidget {
   const BibleCreditsPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final editions = ref.watch(bibleEditionsProvider);
     final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(title: const Text('Bible translations')),
@@ -20,14 +22,15 @@ class BibleCreditsPage extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
         children: [
           Text(
-            'Lumway bundles these Bible translations. Public-domain texts are '
+            'These are the Bible translations on this phone, bundled or downloaded. '
+            'Public-domain texts are '
             'free to use; the Biblica translations are used under the Creative '
             'Commons Attribution-ShareAlike 4.0 International License '
             '(CC BY-SA 4.0).',
             style: theme.textTheme.bodyMedium?.copyWith(color: theme.hintColor),
           ),
           const SizedBox(height: 16),
-          for (final e in kBibleEditions) ...[
+          for (final e in editions) ...[
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: Icon(PhosphorIcons.bookOpenText()),

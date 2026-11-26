@@ -3,17 +3,20 @@ import 'package:openbaptisthymnal/features/bible/model/bible_chapter.dart';
 import 'package:openbaptisthymnal/features/bible/model/bible_edition.dart';
 import 'package:openbaptisthymnal/features/bible/model/bible_manifest.dart';
 
-/// Read-only access to bundled Bible text, keyed by edition. The verse text is
+/// Read-only access to Bible text, keyed by edition. The verse text is
 /// immutable; highlights and verse notes live in the DB (added later).
+/// [editionsOf] is the live bundled + downloaded list.
 class BibleRepository {
-  BibleRepository(this._local);
+  BibleRepository(this._local, {List<BibleEdition> Function()? editionsOf})
+      : _editionsOf = editionsOf ?? (() => kBibleEditions);
 
   final BibleLocalSource _local;
+  final List<BibleEdition> Function() _editionsOf;
 
-  List<BibleEdition> editions() => kBibleEditions;
+  List<BibleEdition> editions() => _editionsOf();
 
   BibleEdition? editionById(String id) {
-    for (final e in kBibleEditions) {
+    for (final e in _editionsOf()) {
       if (e.id == id) return e;
     }
     return null;

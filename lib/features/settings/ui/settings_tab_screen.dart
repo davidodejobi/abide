@@ -180,6 +180,13 @@ class _SettingsTabScreenState extends ConsumerState<SettingsTabScreen>
             const YouSectionLabel(YouStrings.about),
             YouGroup(children: [
               YouRow(icon: PhosphorIcons.info(), title: version),
+              if (!kIsWeb)
+                YouRow(
+                  icon: PhosphorIcons.downloadSimple(),
+                  title: YouStrings.getMoreBibles,
+                  subtitle: YouStrings.getMoreBiblesHint,
+                  onTap: () => context.router.push(const MoreBiblesRoute()),
+                ),
               YouRow(
                 icon: PhosphorIcons.bookOpenText(),
                 title: YouStrings.bibleTranslations,
