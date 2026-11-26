@@ -9,6 +9,7 @@ import 'package:sqlite3/sqlite3.dart';
 import 'daos/bible_annotations_dao.dart';
 import 'daos/folders_dao.dart';
 import 'daos/note_links_dao.dart';
+import 'daos/note_templates_dao.dart';
 import 'daos/notes_dao.dart';
 import 'daos/reading_plans_dao.dart';
 import 'daos/tags_dao.dart';
@@ -20,6 +21,7 @@ part 'app_database.g.dart';
 @DriftDatabase(
   tables: [
     Notes,
+    NoteTemplates,
     Folders,
     Tags,
     NoteTags,
@@ -35,6 +37,7 @@ part 'app_database.g.dart';
   daos: [
     NotesDao,
     NoteLinksDao,
+    NoteTemplatesDao,
     FoldersDao,
     TagsDao,
     BibleAnnotationsDao,
@@ -53,7 +56,7 @@ class AppDatabase extends _$AppDatabase {
   // `tables:` but never reaches `onUpgrade` exists on fresh installs (via
   // createAll) and is silently missing for everyone who upgrades.
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -95,6 +98,11 @@ class AppDatabase extends _$AppDatabase {
               await m.createTable(syncState);
               await createSyncTriggers(this);
             });
+          }
+          if (from < 6) {
+            // Note templates: a new, local-only table. Nothing existing is
+            // touched and nothing is queued for sync.
+            await m.createTable(noteTemplates);
           }
         },
         beforeOpen: (details) async {

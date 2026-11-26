@@ -11,6 +11,7 @@ import '../../../drift_schemas/schema_v1.dart' as v1;
 import '../../../drift_schemas/schema_v3.dart' as v3;
 import '../../../drift_schemas/schema_v4.dart' as v4;
 import '../../../drift_schemas/schema_v5.dart' as v5;
+import '../../../drift_schemas/schema_v6.dart' as v6;
 
 /// Migration tests for [AppDatabase].
 ///
@@ -72,9 +73,9 @@ void main() {
 
         await verifier.testWithDataIntegrity(
           oldVersion: 1,
-          newVersion: 5,
+          newVersion: 6,
           createOld: v1.DatabaseAtV1.new,
-          createNew: v5.DatabaseAtV5.new,
+          createNew: v6.DatabaseAtV6.new,
           openTestedDatabase: AppDatabase.forTesting,
           createItems: (batch, db) {
             batch.insert(
@@ -103,7 +104,7 @@ void main() {
             expect(note.id, 'note-1');
             expect(note.title, 'Psalm 23');
             expect(note.contentMarkdown, 'The Lord is my shepherd');
-            // The v5 snapshot helpers expose DateTime columns as raw epoch seconds.
+            // The v6 snapshot helpers expose DateTime columns as raw epoch seconds.
             expect(note.createdAt, createdAt.millisecondsSinceEpoch ~/ 1000);
 
             final annotation = await db.select(db.bibleAnnotations).getSingle();
@@ -145,9 +146,9 @@ void main() {
 
         await verifier.testWithDataIntegrity(
           oldVersion: 3,
-          newVersion: 5,
+          newVersion: 6,
           createOld: v3.DatabaseAtV3.new,
-          createNew: v5.DatabaseAtV5.new,
+          createNew: v6.DatabaseAtV6.new,
           openTestedDatabase: AppDatabase.forTesting,
           createItems: (batch, db) {
             batch.insert(
@@ -186,20 +187,20 @@ void main() {
             // against a snapshot generated from that same wrong shape -- only
             // actually writing a row proves it is usable.
             await db.into(db.readingDays).insert(
-                  v5.ReadingDaysCompanion.insert(
+                  v6.ReadingDaysCompanion.insert(
                     dateKey: '2026-01-15',
                     source: 'plan',
                     completedAt: createdAt.millisecondsSinceEpoch ~/ 1000,
                   ),
                 );
             await db.into(db.planSubscriptions).insert(
-                  v5.PlanSubscriptionsCompanion.insert(
+                  v6.PlanSubscriptionsCompanion.insert(
                     planId: 'bible-in-a-year',
                     startDateKey: '2026-01-15',
                   ),
                 );
             await db.into(db.planDayProgress).insert(
-                  v5.PlanDayProgressCompanion.insert(
+                  v6.PlanDayProgressCompanion.insert(
                     id: 'bible-in-a-year:1',
                     planId: 'bible-in-a-year',
                     dayIndex: 1,
@@ -223,9 +224,9 @@ void main() {
 
       await verifier.testWithDataIntegrity(
         oldVersion: 4,
-        newVersion: 5,
+        newVersion: 6,
         createOld: v4.DatabaseAtV4.new,
-        createNew: v5.DatabaseAtV5.new,
+        createNew: v6.DatabaseAtV6.new,
         openTestedDatabase: AppDatabase.forTesting,
         createItems: (batch, db) {
           batch.insert(
@@ -275,7 +276,7 @@ void main() {
           await db.customStatement(
               "INSERT INTO sync_state(key, value) VALUES ('sync_enabled', '1')");
           await db.into(db.planDayProgress).insertOnConflictUpdate(
-              v5.PlanDayProgressCompanion.insert(
+              v6.PlanDayProgressCompanion.insert(
                   id: 'bible-in-a-year:1',
                   planId: 'bible-in-a-year',
                   dayIndex: 1,
@@ -296,7 +297,48 @@ void main() {
           'ALTER TABLE plan_subscriptions ADD COLUMN updated_at INTEGER NOT NULL DEFAULT 0');
       final db = AppDatabase.forTesting(schema.newConnection());
       addTearDown(db.close);
-      await verifier.migrateAndValidate(db, 5);
+      await verifier.migrateAndValidate(db, 6);
+    });
+  });
+
+  group('Given a v5 database with notes', () {
+    test('Then v6 keeps the notes and adds a usable note_templates table',
+        () async {
+      final at = DateTime.utc(2026, 1, 15, 9, 30);
+
+      await verifier.testWithDataIntegrity(
+        oldVersion: 5,
+        newVersion: 6,
+        createOld: v5.DatabaseAtV5.new,
+        createNew: v6.DatabaseAtV6.new,
+        openTestedDatabase: AppDatabase.forTesting,
+        createItems: (batch, db) {
+          batch.insert(
+            db.notes,
+            v5.NotesCompanion.insert(
+              id: 'n1',
+              title: const Value('Grace'),
+              contentMarkdown: const Value('body'),
+              createdAt: at.millisecondsSinceEpoch ~/ 1000,
+              updatedAt: at.millisecondsSinceEpoch ~/ 1000,
+            ),
+          );
+        },
+        validateItems: (db) async {
+          expect((await db.select(db.notes).getSingle()).title, 'Grace');
+          await db.into(db.noteTemplates).insert(
+                v6.NoteTemplatesCompanion.insert(
+                  id: 't1',
+                  name: 'Sunday sermon',
+                  icon: 'church',
+                  sectionsJson: '[]',
+                  createdAt: at.millisecondsSinceEpoch ~/ 1000,
+                  updatedAt: at.millisecondsSinceEpoch ~/ 1000,
+                ),
+              );
+          expect(await db.select(db.noteTemplates).get(), hasLength(1));
+        },
+      );
     });
   });
 

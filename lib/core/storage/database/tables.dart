@@ -15,6 +15,22 @@ class Notes extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// User-made note templates ("Mine"). [sectionsJson] is a JSON list of
+/// `{type, label, hint}`. Local-only in v1: deliberately absent from
+/// `syncedEntities`, there is no remote table for it yet.
+class NoteTemplates extends Table {
+  TextColumn get id => text()();
+  TextColumn get name => text()();
+  TextColumn get icon => text()();
+  TextColumn get sectionsJson => text()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 /// Optional single-level buckets (e.g. "Sermons"). No deep nesting is used,
 /// but [parentId] keeps the door open without a future migration.
 class Folders extends Table {
