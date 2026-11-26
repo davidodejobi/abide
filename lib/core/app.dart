@@ -1,8 +1,13 @@
+import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:openbaptisthymnal/features/app_update/ui/app_update_overlay.dart';
 import 'package:openbaptisthymnal/features/onboarding/domain/seed_welcome_note.dart';
+import 'package:openbaptisthymnal/core/providers/service_providers.dart';
+import 'package:openbaptisthymnal/core/storage/database/database_provider.dart';
+import 'package:openbaptisthymnal/features/tablet/domain/orphan_media_sweep.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/seed_release_notes.dart';
 import 'package:openbaptisthymnal/features/tablet/providers/tablets_providers.dart';
 import 'package:toastification/toastification.dart';
@@ -48,7 +53,21 @@ class AbideApp extends HookConsumerWidget {
         storage: storage,
         createNote: repo.createNote,
       );
-      return null;
+      // Reclaim note media nobody references any more, a few seconds after
+      // launch so it never competes with the first frames.
+      final timer = Timer(const Duration(seconds: 5), () {
+        final db = ref.read(appDatabaseProvider);
+        sweepOrphanMedia(
+          listFiles: ref.read(fileStorageServiceProvider).listFiles,
+          loadReferenceTexts: () async => [
+            // Every note, trashed included: trash keeps its files.
+            for (final n in await db.select(db.notes).get()) n.contentMarkdown,
+            for (final a in await db.select(db.attachments).get())
+              a.relativePath,
+          ],
+        );
+      });
+      return timer.cancel;
     }, const []);
 
     return ToastificationWrapper(
