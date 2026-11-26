@@ -102,23 +102,35 @@ List<double> decodePeaks(String hex) {
 }
 
 final _wikiSpan = RegExp(r'\[\[[^\[\]]*\]\]');
-final _asciiPunct = RegExp(r'[!-/:-@\[-`{-~]');
+// Also the bits that trigger GFM autolinks (`://`, `www.`, `@`).
+final _mdActive = RegExp(r'[\\`*_\[\]()<>!&~#|@]|:(?=//)|(?<=www)\.');
+final _leadingMarker = RegExp(r'^(?:(\d+)\.|[+-])');
 
-/// Makes [text] safe as an image description: every ASCII punctuation mark is
-/// backslash-escaped (so `*`, backticks, `<`, `&`, `~`, `![x](y)` and friends
-/// stay literal text), except inside `[[...]]` spans, which stay verbatim so
+/// Makes [text] safe as an image description: every markdown-active character
+/// is backslash-escaped (so `*`, backticks, `<`, `&`, `~`, `![x](y)` and
+/// friends stay literal text; commas, colons and periods are left alone so
+/// stored names stay readable), except inside `[[...]]` spans, which stay verbatim so
 /// caption links reach the link graph and the tappable renderer.
 String escapeCaption(String text) {
   final flat = text.replaceAll(RegExp(r'\s*\n\s*'), ' ');
   final b = StringBuffer();
   var cursor = 0;
-  String esc(String t) => t.replaceAllMapped(_asciiPunct, (m) => '\\${m[0]}');
+  String esc(String t, {bool start = false}) {
+    final out = t.replaceAllMapped(_mdActive, (m) => '\\${m[0]}');
+    if (!start) return out;
+    // A leading list marker (`- `, `+ `, `1.`) would otherwise be markdown.
+    return out.replaceFirstMapped(
+      _leadingMarker,
+      (m) => m[1] != null ? '${m[1]}\\.' : '\\${m[0]}',
+    );
+  }
+
   for (final m in _wikiSpan.allMatches(flat)) {
-    b.write(esc(flat.substring(cursor, m.start)));
+    b.write(esc(flat.substring(cursor, m.start), start: cursor == 0));
     b.write(m[0]);
     cursor = m.end;
   }
-  b.write(esc(flat.substring(cursor)));
+  b.write(esc(flat.substring(cursor), start: cursor == 0));
   return b.toString();
 }
 

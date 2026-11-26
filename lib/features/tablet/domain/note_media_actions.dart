@@ -47,7 +47,7 @@ class NoteMediaActions {
   /// Removes [node] and returns what [restore] needs. The file is never
   /// deleted here: the orphan sweep reclaims it later, so undo always works.
   Future<RemovedMedia> remove(Node node) async {
-    final removed = RemovedMedia(node.deepCopy(), node.path);
+    final removed = RemovedMedia(node.deepCopy(), node.path, node.parent?.id);
     final transaction = editorState.transaction..deleteNode(node);
     if ((node.parent?.children.length ?? 0) <= 1) {
       transaction.insertNode(node.path, paragraphNode());
@@ -59,22 +59,23 @@ class NoteMediaActions {
   /// Puts a removed block back, clamped to the document as it is now. Typing
   /// done in between is untouched because only an insert is applied.
   Future<void> restore(RemovedMedia removed) async {
+    final root = editorState.document.root;
     final parentPath = removed.path.sublist(0, removed.path.length - 1);
-    final parent = parentPath.isEmpty
-        ? editorState.document.root
-        : (editorState.getNodeAtPath(parentPath) ?? editorState.document.root);
+    var parent =
+        parentPath.isEmpty ? root : editorState.getNodeAtPath(parentPath);
+    // The path may now point at a different node: only trust it if it is the
+    // same parent as before, else fall back to the document root.
+    if (parent == null || parent.id != removed.parentId) parent = root;
     final index = removed.path.last.clamp(0, parent.children.length);
-    final path = [
-      ...(parent == editorState.document.root ? <int>[] : parentPath),
-      index
-    ];
+    final path = [...(identical(parent, root) ? <int>[] : parentPath), index];
     await editorState
         .apply(editorState.transaction..insertNode(path, removed.node));
   }
 }
 
 class RemovedMedia {
-  const RemovedMedia(this.node, this.path);
+  const RemovedMedia(this.node, this.path, this.parentId);
+  final String? parentId;
   final Node node;
   final Path path;
 }

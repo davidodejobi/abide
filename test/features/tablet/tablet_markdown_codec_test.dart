@@ -103,10 +103,10 @@ void main() {
       '![](note_images/x.png "size=m")',
       '![](note_images/x.png "size=s align=left")',
       '![A caption](note_images/x.png "align=left")',
-      '![Recording\\, 26 Nov](note_audio/x.m4a "dur=135000 speed=150 peaks=$peaks")',
+      '![Recording, 26 Nov](note_audio/x.m4a "dur=135000 speed=150 peaks=$peaks")',
       '![](note_audio/x.m4a "dur=1000")',
       r'![a \[ lone bracket and \\ slash](note_images/x.png)',
-      r'![a \) paren and \" quote](note_images/x.png "size=m")',
+      r'![a \) paren and " quote](note_images/x.png "size=m")',
     ];
     for (final s in samples) {
       test(s, () => expect(roundTrip(s), s));
@@ -124,6 +124,10 @@ void main() {
         '![nested](x.png)',
         'Abide [[bible:JHN.3.16]] and [[hymn:hymn_0062:yo]]',
         'Recording, 26 Nov, 10:42',
+        '- not a list',
+        '1. not a list',
+        '# not a heading',
+        'see https://a.b/c and www.x.org or me@x.org',
       ];
       for (final c in captions) {
         final doc = noteDocumentToDoc(c);
@@ -144,6 +148,18 @@ void main() {
       // [[...]] stays verbatim in the stored line.
       final doc = noteDocumentToDoc('Abide [[bible:JHN.3.16]]');
       expect(noteDocumentToMarkdown(doc), contains('[[bible:JHN.3.16]]'));
+    });
+
+    test('plain names stay readable in the stored line', () {
+      final doc = Document.blank()
+        ..insert([
+          0
+        ], [
+          audioMediaNode(
+              url: 'note_audio/a.m4a', name: 'Recording, 26 Nov, 10:42'),
+        ]);
+      expect(noteDocumentToMarkdown(doc),
+          '![Recording, 26 Nov, 10:42](note_audio/a.m4a)');
     });
 
     test('encodePeaks ignores NaN and infinity', () {
@@ -183,7 +199,7 @@ void main() {
 
   test('links around and inside media survive and stay parseable', () {
     const md = 'Read [[bible:JHN.15.1-8]] and [[hymn:hymn_0062:yo]].\n\n'
-        '![Abide\\, see [[bible:JHN.15.4]]](note_images/x.png "size=m")\n\n'
+        '![Abide, see [[bible:JHN.15.4]]](note_images/x.png "size=m")\n\n'
         '![Sermon](note_audio/x.m4a "dur=10")\n\n'
         'Then [[Grace]].';
     final out = roundTrip(md);

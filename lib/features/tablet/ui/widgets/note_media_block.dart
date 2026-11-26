@@ -270,13 +270,10 @@ class _NoteMediaBlockState extends State<NoteMediaBlockWidget>
 
   void _refreshDrag() {
     // The block follows the finger plus however far the list has scrolled.
-    final dy = _fingerDy + (_scrollNow - _scrollAtStart);
+    _dragDy = _fingerDy + (_scrollNow - _scrollAtStart);
     final target = _targetIndex();
     if (target != _dropIndex) HapticFeedback.selectionClick();
-    setState(() {
-      _dragDy = dy;
-      _dropIndex = target;
-    });
+    setState(() => _dropIndex = target);
     _dropLine?.markNeedsBuild();
     widget.editorState.autoScroller?.startAutoScrollIfNecessary(
       Rect.fromLTWH(_fingerGlobal.dx, _fingerGlobal.dy, 1, 1),
@@ -328,7 +325,7 @@ class _NoteMediaBlockState extends State<NoteMediaBlockWidget>
             listEquals(selection.end.path, node.path);
         final dragging = _dropLine != null;
         final controls = _Controls(
-          selected: selected,
+          selected: selected || _dropLine != null,
           onMore: _openSheet,
           onDragStart: _dragStart,
           onDragUpdate: _dragUpdate,
