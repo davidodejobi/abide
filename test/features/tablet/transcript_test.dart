@@ -150,9 +150,19 @@ void main() {
       HymnTitle('hymn_0010', 'Abide With Me', 'en'),
       HymnTitle('hymn_0020', 'Amen', 'en'),
       HymnTitle('hymn_0030', 'Rock of Ages', 'en'),
+      HymnTitle('hymn_0040', 'Take Up Your Cross', 'en'),
+      HymnTitle('hymn_0041', 'Search Me, O God', 'en'),
+      HymnTitle('hymn_0042', 'Just As I Am', 'en'),
+      HymnTitle('hymn_0043', 'God Is So Good', 'en'),
+      HymnTitle('hymn_0044', 'Day by Day', 'en'),
     ]);
 
-    test('exact titles of three words or more link, any case', () {
+    List<String> linked(String t) => splitTranscriptText(t, manifest, matcher)
+        .where((p) => p.hymn != null)
+        .map((p) => p.hymn!.id)
+        .toList();
+
+    test('exact titles with a cue link, any case', () {
       final pieces = splitTranscriptText(
           'We sang abide with me, then holy holy holy.', manifest, matcher);
       expect(pieces.where((p) => p.hymn != null).map((p) => p.hymn!.id),
@@ -161,13 +171,42 @@ void main() {
           'We sang abide with me, then holy holy holy.');
     });
 
+    test('a cue before or after links; "let us sing Just As I Am" links', () {
+      expect(linked('Let us sing Just As I Am'), ['hymn_0042']);
+      expect(linked('Rock of Ages was the closing hymn'), ['hymn_0030']);
+      expect(linked('The chorus goes day by day'), ['hymn_0044']);
+    });
+
+    test('Bible quotes and everyday speech without a cue stay plain', () {
+      for (final t in [
+        'Jesus said, take up your cross and follow me.',
+        'Search me, O God, and know my heart.',
+        'I come just as I am to the Lord.',
+        'God is so good to us every morning.',
+        'Day by day we grow.',
+        'Let us pray. Search me, O God, and know my heart.',
+      ]) {
+        expect(linked(t), isEmpty, reason: t);
+      }
+    });
+
+    test('a cue too far away does not count', () {
+      expect(
+          linked('We sang earlier. Then he spoke for a long while about many '
+              'things and said take up your cross daily.'),
+          isEmpty);
+    });
+
     test('short titles and partial phrases stay plain', () {
-      final pieces = splitTranscriptText(
-          'Amen. Abide with you. Rock of Agesx. The rock of ages',
-          manifest,
-          matcher);
-      expect(pieces.where((p) => p.hymn != null).map((p) => p.hymn!.id),
-          ['hymn_0030']); // only the whole-phrase "rock of ages"
+      expect(linked('We sang Amen. Abide with you. Rock of Agesx.'), isEmpty);
+    });
+
+    test('copy to note keeps hymn links as a list', () {
+      final nodes = transcriptNodes(const [
+        TranscriptSegment(0, 4000, 'Let us sing Just As I Am.'),
+      ], manifest, matcher);
+      expect(nodes.last.delta!.toPlainText(), '[[hymn:hymn_0042:en]]');
+      expect(nodes[nodes.length - 2].delta!.toPlainText(), 'Hymns mentioned');
     });
   });
 
@@ -266,6 +305,42 @@ void main() {
       expect(c.read(transcriptProvider(key)).failure, TranscribeFailure.failed);
       expect(c.read(transcriptProvider(key)).transcript!.complete, isTrue);
     });
+  });
+
+  test(
+      'a note waiting behind another shows queued, and cancelling it runs nothing',
+      () async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    final gate = Completer<void>();
+    final calls = <String>[];
+    final c = ProviderContainer(overrides: [
+      fileStorageServiceProvider.overrideWithValue(_MemFiles({})),
+      sharedPreferencesProvider.overrideWithValue(prefs),
+      durationProbeProvider.overrideWithValue((_) async => 30000),
+      chunkTranscriberProvider.overrideWithValue((path, s, e, l) async {
+        calls.add(path);
+        await gate.future;
+        return [TranscriptSegment(s, e, 'x')];
+      }),
+    ]);
+    const first = (path: 'note_audio/one.m4a', durationMs: 30000);
+    const second = (path: 'note_audio/two.m4a', durationMs: 30000);
+    final a = c.read(transcriptProvider(first).notifier);
+    final b = c.read(transcriptProvider(second).notifier);
+    await Future<void>.delayed(const Duration(milliseconds: 30));
+    final runA = a.start('en');
+    final runB = b.start('en');
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+    expect(c.read(transcriptProvider(second)).phase, TranscriptPhase.queued);
+    b.cancel();
+    // Lets go at once, not after the other run.
+    expect(c.read(transcriptProvider(second)).phase, TranscriptPhase.idle);
+    gate.complete();
+    await Future.wait([runA, runB]);
+    expect(calls, ['note_audio/one.m4a']);
+    expect(c.read(transcriptProvider(first)).transcript!.complete, isTrue);
+    expect(c.read(transcriptProvider(second)).phase, TranscriptPhase.idle);
   });
 
   test('runs are serialised: the second waits for the first', () async {

@@ -287,11 +287,20 @@ class _NoteEditorView extends HookConsumerWidget {
     final shown = shownAudio();
     if (audio == null && transcriptTab.value) transcriptTab.value = false;
 
-    void copyTranscript(List<TranscriptSegment> segs) {
+    Future<void> copyTranscript(List<TranscriptSegment> segs) async {
+      HymnTitleMatcher? hymns;
+      try {
+        hymns = await ref.read(hymnMatcherProvider.future);
+      } catch (_) {
+        // Without the hymn list the copy just has no hymn links.
+      }
+      if (!context.mounted) return;
       final root = editorState.document.root;
-      editorState.apply(editorState.transaction
-        ..insertNodes([root.children.length], transcriptNodes(segs, manifestRef.value)));
+      await editorState.apply(editorState.transaction
+        ..insertNodes([root.children.length],
+            transcriptNodes(segs, manifestRef.value, hymns)));
       transcriptTab.value = false;
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text(NotesStrings.transcriptCopied)));
     }

@@ -34,8 +34,10 @@ class LumwayWhisperPlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
   private var lib: WhisperLib? = null
   private var ctx = 0L
   private var ctxPath: String? = null
+  private var appContext: android.content.Context? = null
 
   override fun onAttachedToEngine(b: FlutterPlugin.FlutterPluginBinding) {
+    appContext = b.applicationContext
     channel = MethodChannel(b.binaryMessenger, "lumway/transcribe").also {
       it.setMethodCallHandler(this)
     }
@@ -47,9 +49,12 @@ class LumwayWhisperPlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
   }
 
   override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
+    // Cheap system check: answer now, never queued behind a running chunk.
+    if (call.method == "supported") { result.success(supported()); return }
     worker.execute {
       try {
         val out: Any? = when (call.method) {
+          "supported" -> supported()
           "duration" -> durationMs(call.argument<String>("path")!!)
           "transcribe" -> transcribe(
             call.argument<String>("path")!!,
@@ -69,6 +74,16 @@ class LumwayWhisperPlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
         main.post { result.error("failed", e.message, null) }
       }
     }
+  }
+
+  /** 64-bit processor and at least 2.5 GiB of RAM (a 3 GB phone reports a little less): small whisper needs both. */
+  private fun supported(): Boolean {
+    if (android.os.Build.SUPPORTED_64_BIT_ABIS.isEmpty()) return false
+    val am = appContext?.getSystemService(android.content.Context.ACTIVITY_SERVICE)
+      as? android.app.ActivityManager ?: return false
+    val info = android.app.ActivityManager.MemoryInfo()
+    am.getMemoryInfo(info)
+    return info.totalMem >= 2_684_354_560L
   }
 
   private fun free() {
@@ -203,15 +218,17 @@ class LumwayWhisperPlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
 
   private fun resample(src: FloatArray, n: Int, rate: Int): FloatArray {
     if (rate == 16000) return src.copyOf(n)
+    // Average each output sample's span of input samples (a box low-pass) so
+    // speech above 8 kHz does not fold back into the band whisper reads.
     val outN = (n.toLong() * 16000 / rate).toInt()
     val out = FloatArray(outN)
     val step = rate / 16000.0
     for (i in 0 until outN) {
-      val p = i * step
-      val a = p.toInt()
-      val b = minOf(a + 1, n - 1)
-      val f = (p - a).toFloat()
-      out[i] = src[a] * (1 - f) + src[b] * f
+      val from = (i * step).toInt()
+      val to = minOf(n - 1, maxOf(from, ((i + 1) * step - 1e-9).toInt()))
+      var sum = 0f
+      for (k in from..to) sum += src[k]
+      out[i] = sum / (to - from + 1)
     }
     return out
   }

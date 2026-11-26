@@ -32,8 +32,8 @@ final hymnMatcherProvider = FutureProvider<HymnTitleMatcher>((ref) async {
 /// (recording_14). Only English can start; the others say so and stay put.
 /// On Android, English first asks to download the speech model (no design for
 /// that step: same sheet style).
-Future<void> showTranscribeSheet(
-    BuildContext context, ProviderContainer container, TranscriptKey key) async {
+Future<void> showTranscribeSheet(BuildContext context,
+    ProviderContainer container, TranscriptKey key) async {
   final notifier = container.read(transcriptProvider(key).notifier);
   // The saved files are read asynchronously on first use.
   for (var i = 0;
@@ -99,13 +99,20 @@ class _LanguageSheet extends HookWidget {
   Widget build(BuildContext context) {
     final lum = context.lum;
     final confirming = useState(false);
+    final unsupported = useState(false);
     final wifiOnly = useState(wifiOnlyInitial);
 
     Future<void> pick() async {
+      // Never offer a download this phone cannot use.
+      if (transcribeNeedsModel && !await transcribeSupported()) {
+        unsupported.value = true;
+        return;
+      }
       if (transcribeNeedsModel && !await whisperModelReady()) {
         confirming.value = true;
         return;
       }
+      if (!context.mounted) return;
       onStart(wifiOnly.value);
       if (context.mounted) Navigator.of(context).pop();
     }
@@ -161,51 +168,70 @@ class _LanguageSheet extends HookWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: confirming.value
+          children: unsupported.value
               ? [
-                  Text(NotesStrings.modelDownloadTitle,
+                  Text(NotesStrings.transcriptUnavailablePhone,
                       style: LumText.title2.copyWith(color: lum.textPrimary)),
                   const SizedBox(height: 8),
-                  Text(
-                      NotesStrings.modelDownloadBody(
-                          (whisperModelBytes / 1000000).round()),
+                  Text(NotesStrings.transcriptUnavailablePhoneBody,
                       style: LumText.subheadline
                           .copyWith(color: lum.textSecondary)),
-                  SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text(NotesStrings.wifiOnly),
-                    value: wifiOnly.value,
-                    onChanged: (v) => wifiOnly.value = v,
-                  ),
-                  FilledButton(
-                    onPressed: () {
-                      onStart(wifiOnly.value);
-                      Navigator.of(context).pop();
-                    },
-                    child: const Text(NotesStrings.downloadAndStart),
-                  ),
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    child: const Text(NotesStrings.notNow),
+                    child: const Text(NotesStrings.close),
                   ),
                 ]
-              : [
-                  Text(NotesStrings.languageTitle,
-                      style: LumText.title2.copyWith(color: lum.textPrimary)),
-                  const SizedBox(height: 16),
-                  row(PhosphorIcons.headphones(), transcriptLanguages['en']!,
-                      englishMatches
-                          ? NotesStrings.englishRowBody
-                          : NotesStrings.englishRowBodyFree,
-                      onTap: pick),
-                  row(PhosphorIcons.textAa(), transcriptLanguages['yo']!,
-                      NotesStrings.yorubaRowBody),
-                  row(PhosphorIcons.sparkle(), NotesStrings.otherLanguagesRow,
-                      NotesStrings.unavailableRowBody),
-                  Text(NotesStrings.mixedLanguages,
-                      style:
-                          LumText.footnote.copyWith(color: lum.textSecondary)),
-                ],
+              : confirming.value
+                  ? [
+                      Text(NotesStrings.modelDownloadTitle,
+                          style:
+                              LumText.title2.copyWith(color: lum.textPrimary)),
+                      const SizedBox(height: 8),
+                      Text(
+                          NotesStrings.modelDownloadBody(
+                              (whisperModelBytes / 1000000).round()),
+                          style: LumText.subheadline
+                              .copyWith(color: lum.textSecondary)),
+                      SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: const Text(NotesStrings.wifiOnly),
+                        value: wifiOnly.value,
+                        onChanged: (v) => wifiOnly.value = v,
+                      ),
+                      FilledButton(
+                        onPressed: () {
+                          onStart(wifiOnly.value);
+                          Navigator.of(context).pop();
+                        },
+                        child: const Text(NotesStrings.downloadAndStart),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: const Text(NotesStrings.notNow),
+                      ),
+                    ]
+                  : [
+                      Text(NotesStrings.languageTitle,
+                          style:
+                              LumText.title2.copyWith(color: lum.textPrimary)),
+                      const SizedBox(height: 16),
+                      row(
+                          PhosphorIcons.headphones(),
+                          transcriptLanguages['en']!,
+                          englishMatches
+                              ? NotesStrings.englishRowBody
+                              : NotesStrings.englishRowBodyFree,
+                          onTap: pick),
+                      row(PhosphorIcons.textAa(), transcriptLanguages['yo']!,
+                          NotesStrings.yorubaRowBody),
+                      row(
+                          PhosphorIcons.sparkle(),
+                          NotesStrings.otherLanguagesRow,
+                          NotesStrings.unavailableRowBody),
+                      Text(NotesStrings.mixedLanguages,
+                          style: LumText.footnote
+                              .copyWith(color: lum.textSecondary)),
+                    ],
         ),
       ),
     );
@@ -244,7 +270,8 @@ class TranscriptView extends HookConsumerWidget {
     final lum = context.lum;
 
     final container = ProviderScope.containerOf(context);
-    Future<void> openSheet() => showTranscribeSheet(context, container, audioKey);
+    Future<void> openSheet() =>
+        showTranscribeSheet(context, container, audioKey);
     final hymns = ref.watch(hymnMatcherProvider).valueOrNull;
     final hasSaved = t != null && t.segments.isNotEmpty;
     // After a failure the saved part (or the finished transcript a replacement
@@ -256,6 +283,16 @@ class TranscriptView extends HookConsumerWidget {
     switch (s.phase) {
       case TranscriptPhase.loading:
         return const Center(child: CircularProgressIndicator());
+      case TranscriptPhase.queued:
+        return _Progress(
+          title: s.stopping
+              ? NotesStrings.stopping
+              : NotesStrings.waitingForAnother,
+          subtitle: NotesStrings.waitingForAnotherBody,
+          progress: 0,
+          showSteps: false,
+          onCancel: s.stopping ? null : notifier.cancel,
+        );
       case TranscriptPhase.downloading:
       case TranscriptPhase.running:
         final downloading = s.phase == TranscriptPhase.downloading;
@@ -334,8 +371,11 @@ class TranscriptView extends HookConsumerWidget {
               PhosphorIcons.headphones(),
               NotesStrings.whatHappened,
               t != null && t.doneMs > 0
-                  ? NotesStrings.stoppedAt(formatClock(t.doneMs),
-                      formatClock(t.durationMs > 0 ? t.durationMs : audioKey.durationMs))
+                  ? NotesStrings.stoppedAt(
+                      formatClock(t.doneMs),
+                      formatClock(t.durationMs > 0
+                          ? t.durationMs
+                          : audioKey.durationMs))
                   : NotesStrings.transcribeFailedBody
             ),
             (
@@ -355,9 +395,17 @@ class TranscriptView extends HookConsumerWidget {
           title: NotesStrings.waitingForWifiTitle,
           subtitle: NotesStrings.waitingForWifiBody,
           primary: NotesStrings.useMobileData,
-          onPrimary: () =>
-              notifier.start(t?.language ?? 'en', wifiOnly: false, replace: t?.complete ?? false),
+          onPrimary: () => notifier.start(t?.language ?? 'en',
+              wifiOnly: false, replace: t?.complete ?? false),
           secondary: NotesStrings.notNow,
+          onSecondary: onShowNote,
+        );
+      case TranscribeFailure.deviceUnsupported:
+        return _Status(
+          icon: PhosphorIcons.info(),
+          title: NotesStrings.transcriptUnavailablePhone,
+          subtitle: NotesStrings.transcriptUnavailablePhoneBody,
+          secondary: NotesStrings.keepRecordingOnly,
           onSecondary: onShowNote,
         );
       case TranscribeFailure.cancelled:
@@ -632,6 +680,7 @@ class _Rows extends HookConsumerWidget {
     final lastUserScroll = useRef(DateTime.fromMillisecondsSinceEpoch(0));
     final keys = useMemoized(() => <int, GlobalKey>{}, [segments.length]);
     final groups = useMemoized(() => groupSegments(segments), [segments]);
+    final allPieces = transcriptPieces(segments, manifest, hymns);
     final playback = ref.read(notePlaybackProvider.notifier);
 
     // The segment playing now, only while this note's clip is playing.
@@ -769,8 +818,7 @@ class _Rows extends HookConsumerWidget {
                   active: active,
                   currentHit: currentSegment,
                   query: q,
-                  manifest: manifest,
-                  hymns: hymns,
+                  pieces: allPieces,
                   keyFor: (i) => keys.putIfAbsent(i, GlobalKey.new),
                   onSeek: seek,
                   onOpenRef: (key) =>
@@ -802,8 +850,7 @@ class _Group extends StatelessWidget {
     required this.active,
     required this.currentHit,
     required this.query,
-    required this.manifest,
-    required this.hymns,
+    required this.pieces,
     required this.keyFor,
     required this.onSeek,
     required this.onOpenRef,
@@ -814,8 +861,7 @@ class _Group extends StatelessWidget {
   final int active;
   final int currentHit;
   final String query;
-  final BibleManifest? manifest;
-  final HymnTitleMatcher? hymns;
+  final List<List<TranscriptPiece>> pieces;
   final GlobalKey Function(int) keyFor;
   final Future<void> Function(int ms) onSeek;
   final void Function(String targetKey) onOpenRef;
@@ -872,9 +918,7 @@ class _Group extends StatelessWidget {
                         )
                       : null,
                   child: SegmentText(
-                    text: segments[i].text,
-                    manifest: manifest,
-                    hymns: hymns,
+                    pieces: pieces[i],
                     query: query,
                     strongHit: i == currentHit,
                     onOpenRef: onOpenRef,
@@ -893,17 +937,13 @@ class _Group extends StatelessWidget {
 class SegmentText extends HookWidget {
   const SegmentText({
     super.key,
-    required this.text,
-    required this.manifest,
-    required this.hymns,
+    required this.pieces,
     required this.query,
     required this.strongHit,
     required this.onOpenRef,
     required this.onOpenHymn,
   });
-  final String text;
-  final BibleManifest? manifest;
-  final HymnTitleMatcher? hymns;
+  final List<TranscriptPiece> pieces;
   final String query;
   final bool strongHit;
   final void Function(String targetKey) onOpenRef;
@@ -912,9 +952,6 @@ class SegmentText extends HookWidget {
   @override
   Widget build(BuildContext context) {
     final lum = context.lum;
-    final pieces = useMemoized(
-        () => splitTranscriptText(text, manifest, hymns),
-        [text, manifest, hymns]);
     final recognizers = useMemoized(
         () => [
               for (final p in pieces)
