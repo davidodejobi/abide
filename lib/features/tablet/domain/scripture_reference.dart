@@ -389,3 +389,169 @@ String linkScriptureReferences(String text, BibleManifest manifest) {
   }
   return (buf..write(text.substring(cursor))).toString();
 }
+
+// ---- spoken forms ----------------------------------------------------------
+
+const _units = {
+  'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5, 'six': 6,
+  'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10, 'eleven': 11, 'twelve': 12,
+  'thirteen': 13, 'fourteen': 14, 'fifteen': 15, 'sixteen': 16,
+  'seventeen': 17, 'eighteen': 18, 'nineteen': 19, //
+};
+const _tens = {
+  'twenty': 20, 'thirty': 30, 'forty': 40, 'fifty': 50, 'sixty': 60,
+  'seventy': 70, 'eighty': 80, 'ninety': 90, //
+};
+
+/// The number spoken in [w] starting at [i] ("one hundred and seventy six"),
+/// as (value, words used), or null. Handles 1 to 199.
+(int, int)? _spokenNumber(List<String> w, int i) {
+  var j = i;
+  var value = 0;
+  if (j < w.length && _units.containsKey(w[j]) && _units[w[j]]! < 10) {
+    if (j + 1 < w.length && w[j + 1] == 'hundred') {
+      value = _units[w[j]]! * 100;
+      j += 2;
+      if (j < w.length && w[j] == 'and') j++;
+    }
+  }
+  final start = j;
+  if (j < w.length && _tens.containsKey(w[j])) {
+    value += _tens[w[j]]!;
+    j++;
+    if (j < w.length && _units.containsKey(w[j]) && _units[w[j]]! < 10) {
+      value += _units[w[j]]!;
+      j++;
+    }
+  } else if (j < w.length && _units.containsKey(w[j])) {
+    value += _units[w[j]]!;
+    j++;
+  }
+  if (j == start && value == 0) return null;
+  // "one hundred" alone is a number, "hundred and" without a tail is too.
+  return (value, j - i);
+}
+
+final _wordToken = RegExp(r'[\p{L}\p{N}]+', unicode: true);
+final Set<String> _bookWords = {
+  for (final k in _aliasToCode.keys) ...k.split('|')[1].split(' '),
+};
+
+/// Like [findScriptureReferences] but also reads references as they are
+/// spoken: "John chapter 15 verse 5", "John 15 verse 5", "John chapter fifteen
+/// verse five", "verses 5 to 7", "Romans 8 28" (chapter then verse) and number
+/// words up to 176. Offsets point into the original [text]. Reusable for any
+/// text that came from speech.
+List<ScriptureReference> findSpokenScriptureReferences(
+  String text,
+  BibleManifest manifest,
+) {
+  final tokens = _wordToken.allMatches(text).toList();
+  final words = [for (final t in tokens) t[0]!.toLowerCase()];
+
+  // Normalised text, built from pieces that remember where they came from.
+  final norm = StringBuffer();
+  final pieces = <(int normStart, int origStart, int origEnd)>[];
+  void emit(String s, int a, int b) {
+    pieces.add((norm.length, a, b));
+    norm.write(s);
+  }
+
+  var inRef = false; // right after a book name, or inside its numbers
+  var lastWasNumber = false;
+  var afterColon = false;
+  var cursor = 0;
+  var i = 0;
+  while (i < tokens.length) {
+    final t = tokens[i];
+    if (t.start > cursor) emit(text.substring(cursor, t.start), cursor, t.start);
+    final w = words[i];
+    var consumed = 1;
+    if (_bookWords.contains(w)) {
+      emit(t[0]!, t.start, t.end);
+      inRef = true;
+      lastWasNumber = false;
+      afterColon = false;
+    } else if (inRef && w == 'chapter') {
+      emit('', t.start, t.end);
+      lastWasNumber = false;
+      afterColon = false;
+    } else if (inRef && (w == 'verse' || w == 'verses')) {
+      emit(':', t.start, t.end);
+      lastWasNumber = false;
+      afterColon = true;
+    } else if (inRef &&
+        lastWasNumber &&
+        (w == 'to' || w == 'through' || w == 'thru') &&
+        i + 1 < tokens.length &&
+        (RegExp(r'^\d+$').hasMatch(words[i + 1]) ||
+            _spokenNumber(words, i + 1) != null)) {
+      emit('-', t.start, t.end);
+      lastWasNumber = false;
+    } else if (RegExp(r'^\d{1,3}$').hasMatch(w)) {
+      // "Romans 8 28": a second bare number straight after the chapter is the
+      // verse.
+      final needVerseMark = inRef &&
+          lastWasNumber &&
+          !afterColon &&
+          norm.toString().trimRight().contains(RegExp(r'\d$'));
+      if (needVerseMark && _onlySpaces(text, tokens[i - 1].end, t.start)) {
+        emit(':', tokens[i - 1].end, t.start);
+        afterColon = true;
+      }
+      emit(t[0]!, t.start, t.end);
+      lastWasNumber = inRef;
+    } else if (inRef) {
+      final n = _spokenNumber(words, i);
+      if (n != null && n.$1 <= 176) {
+        consumed = n.$2;
+        final needVerseMark = lastWasNumber && !afterColon;
+        if (needVerseMark && _onlySpaces(text, tokens[i - 1].end, t.start)) {
+          emit(':', tokens[i - 1].end, t.start);
+          afterColon = true;
+        }
+        emit('${n.$1}', t.start, tokens[i + consumed - 1].end);
+        lastWasNumber = true;
+      } else {
+        emit(t[0]!, t.start, t.end);
+        inRef = false;
+        lastWasNumber = false;
+      }
+    } else {
+      emit(t[0]!, t.start, t.end);
+    }
+    cursor = tokens[i + consumed - 1].end;
+    i += consumed;
+  }
+  if (cursor < text.length) emit(text.substring(cursor), cursor, text.length);
+
+  int origStart(int n) {
+    for (var k = pieces.length - 1; k >= 0; k--) {
+      if (pieces[k].$1 <= n) return pieces[k].$2;
+    }
+    return 0;
+  }
+
+  int origEnd(int n) {
+    // The piece holding the last character of the match.
+    for (var k = pieces.length - 1; k >= 0; k--) {
+      if (pieces[k].$1 <= n - 1) return pieces[k].$3;
+    }
+    return 0;
+  }
+
+  return [
+    for (final r in findScriptureReferences(norm.toString(), manifest))
+      ScriptureReference(
+        start: origStart(r.start),
+        end: origEnd(r.end),
+        text: text.substring(origStart(r.start), origEnd(r.end)),
+        targetKey: r.targetKey,
+        bare: r.bare,
+        timeLike: r.timeLike,
+      ),
+  ];
+}
+
+bool _onlySpaces(String text, int a, int b) =>
+    a <= b && text.substring(a, b).trim().isEmpty;

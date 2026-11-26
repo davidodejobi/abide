@@ -28,6 +28,7 @@ class NoteMediaSheetActions {
     required this.onShare,
     required this.onDelete,
     this.onReplace,
+    this.onTranscribe,
   });
 
   final bool isAudio;
@@ -43,6 +44,9 @@ class NoteMediaSheetActions {
   final Future<void> Function() onShare;
   final Future<void> Function() onDelete;
   final Future<void> Function()? onReplace;
+
+  /// Starts a transcript of this recording (audio blocks only).
+  final Future<void> Function()? onTranscribe;
 }
 
 /// One sheet style for image and audio: grabber, grouped 48 pt rows, delete
@@ -160,11 +164,12 @@ class _MediaSheetState extends State<_MediaSheet> {
           label: NotesStrings.rename,
           onTap: () => _closeThen(a.onEditText),
         ),
-        // Free and on-device once it ships; shown disabled until then.
         _Row(
           icon: PhosphorIcons.article(),
-          label: NotesStrings.transcribeSoon,
-          onTap: null,
+          label: NotesStrings.transcribe,
+          onTap: a.onTranscribe == null
+              ? null
+              : () => _closeThen(a.onTranscribe!),
         ),
       ],
       _Row(

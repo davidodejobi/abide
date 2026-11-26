@@ -53,27 +53,19 @@ List<Node> recordingNodes({
         markerParagraph(m),
     ];
 
-/// Seconds of the `t:` links that belong to the note's first recording (for
-/// the pinned player's ticks): everything before a second audio block.
+/// Seconds of the marker paragraphs directly under the note's first recording
+/// (for the pinned player's ticks). `t:` links elsewhere, such as copied
+/// transcript lines, are not markers.
 List<int> timeLinkSecondsIn(Document document) {
+  final kids = document.root.children.toList();
+  final i = kids.indexWhere((n) => n.type == audioNodeType);
   final out = <int>[];
-  var audioSeen = 0;
-  void walk(Node n) {
-    if (n.type == audioNodeType && ++audioSeen > 1) return;
-    for (final op in n.delta ?? const <TextOperation>[]) {
-      if (op is TextInsert) {
-        final s = timeLinkSeconds(
-            op.attributes?[AppFlowyRichTextKeys.href] as String?);
-        if (s != null) out.add(s);
-      }
-    }
-    for (final c in n.children) {
-      if (audioSeen > 1) return;
-      walk(c);
-    }
+  if (i < 0) return out;
+  for (var k = i + 1; k < kids.length && _isMarkerParagraph(kids[k]); k++) {
+    final first = kids[k].delta!.first as TextInsert;
+    out.add(timeLinkSeconds(
+        first.attributes?[AppFlowyRichTextKeys.href] as String?)!);
   }
-
-  walk(document.root);
   return out;
 }
 

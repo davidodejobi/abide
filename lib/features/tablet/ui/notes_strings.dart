@@ -86,7 +86,6 @@ abstract final class NotesStrings {
   static const deleteMedia = 'Delete';
   static const mediaDeleted = 'Removed from this note';
   static const speedLabel = 'Playback speed';
-  static const transcribeSoon = 'Transcribe (coming soon)';
   static const fileMissing = 'This file is missing';
   static const remove = 'Remove';
   static const save = 'Save';
@@ -223,4 +222,82 @@ abstract final class NotesStrings {
   static const consentStart = 'I understand, start recording';
   static const notNow = 'Not now';
   static const playerBack15 = 'Back 15 seconds';
+
+  // Transcript
+  static const transcribe = 'Transcribe';
+  static const noteTab = 'Note';
+  static const transcriptTab = 'Transcript';
+  static const transcribeBody =
+      'Free, and done on your phone. The audio is not uploaded.';
+  static const transcriptUnavailable =
+      'Transcript not available for this language yet';
+  static const transcriptEmptyTitle = 'No transcript yet';
+  static const transcriptResume = 'Resume';
+  static const searchTranscript = 'Search transcript';
+  static const copyToNote = 'Copy to note';
+  static const transcriptCopied = 'Transcript added to your note';
+  static const noSpeechFound = 'No speech found in this recording';
+  static const speechDeniedTitle = 'Speech recognition is off';
+  static const speechDeniedBody =
+      'Allow speech recognition in Settings to transcribe on this phone.';
+  static const transcribeFailedBody =
+      'Something went wrong. What was done so far is saved.';
+  static const modelDownloadTitle = 'Download the speech model';
+  static String modelDownloadBody(int mb) =>
+      'To transcribe on this phone, Lumway needs a one-time download of '
+      'about $mb MB. It is kept on this phone and used for every transcript.';
+  static const wifiOnly = 'Wi-Fi only';
+  static const downloadAndStart = 'Download and transcribe';
+  static const modelFailedTitle = 'Model download failed';
+  static const modelFailedBody =
+      'Check your connection (or turn off Wi-Fi only) and try again.';
+  static const transcribingOnPhone = 'Transcribing on this phone';
+  static const stepAudioPrepared = 'Audio prepared';
+  static const stepWriting = 'Writing the transcript';
+  static const stepReady = 'Ready to read';
+  static const cancelTranscription = 'Cancel transcription';
+  static const followAlong = 'Follow along';
+  static const transcriptPrivacy = 'Made on this phone. May contain mistakes.';
+  static const didNotFinish = 'The transcript did not finish';
+  static const didNotFinishBody =
+      'Your recording is safe on this phone. Nothing was lost.';
+  static const whatHappened = 'What happened';
+  static const whatYouCanDo = 'What you can do';
+  static const tryAgainHint =
+      'Try again, or close other apps first. Longer messages can take a '
+      'while on older phones.';
+  static const tryAgain = 'Try again';
+  static const keepRecordingOnly = 'Keep the recording only';
+  static const languageTitle = 'Language of the message';
+  static const englishRowBody =
+      'Matches your reading language. Free, on this phone.';
+  static const yorubaRowBody =
+      'Transcript not available for this language yet. Your recording and '
+      'markers are saved.';
+  static const otherLanguagesRow = 'Igbo, Hausa';
+  static const unavailableRowBody =
+      'Transcript not available for this language yet.';
+  static const mixedLanguages =
+      'Mixed languages? The transcript will be English only.';
+  static const step1OpenSettings = '1. Open Settings';
+  static const speechSettingsHint =
+      'Find Lumway in the list, then turn on Speech Recognition.';
+  static const notesAreSafe = 'Your notes are safe';
+  static const notesAreSafeBody =
+      'Writing, reading and playback still work without a transcript.';
+  static const downloadingModelTitle = 'Downloading the speech model';
+  static const replaceTitle = 'Replace transcript?';
+  static const replaceBody =
+      'The current transcript stays until the new one is finished.';
+  static const replace = 'Replace';
+  static const waitingForWifiTitle = 'Waiting for Wi-Fi';
+  static const waitingForWifiBody =
+      'The speech model is a one-time download. It waits for Wi-Fi unless you '
+      'choose mobile data.';
+  static const useMobileData = 'Use mobile data';
+  static const stopping = 'Stopping...';
+  static const readSaved = 'Read what was saved';
+  static String stoppedAt(String at, String total) =>
+      'The transcript stopped at $at of $total.';
+  static const englishRowBodyFree = 'Free, on this phone.';
 }

@@ -46,6 +46,10 @@ dependencies:
   flutter_scene: ^0.24.6
   vector_math: ^2.1.4
   markdown: ^7.3.1
+  lumway_whisper:
+    path: packages/lumway_whisper
+  connectivity_plus: ^7.3.1
+  crypto: ^3.0.8
 
 dev_dependencies:
   flutter_test:
