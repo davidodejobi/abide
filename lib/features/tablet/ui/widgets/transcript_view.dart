@@ -1,10 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:openbaptisthymnal/core/theme/lum_theme.dart';
 import 'package:openbaptisthymnal/features/bible/model/bible_manifest.dart';
+import 'package:openbaptisthymnal/features/bible/providers/bible_providers.dart';
 import 'package:openbaptisthymnal/features/bible/ui/open_bible_link.dart';
+import 'package:openbaptisthymnal/features/hymn/providers/hymnal_provider.dart';
+import 'package:openbaptisthymnal/features/hymn/ui/open_hymn_link.dart';
 import 'package:openbaptisthymnal/features/tablet/data/transcribe_engine.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/recording_note.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/transcript.dart';
@@ -14,40 +19,94 @@ import 'package:openbaptisthymnal/features/tablet/ui/notes_strings.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-/// "Language of the message" sheet (recording_14). Only English can start;
-/// the others say so and stay put. On Android, English first asks to download
-/// the speech model (no design for that step: same sheet style).
+/// Hymn titles of the English pack, for linking hymns named in a transcript.
+final hymnMatcherProvider = FutureProvider<HymnTitleMatcher>((ref) async {
+  final pack = await ref.read(hymnalRepositoryProvider).getLanguagePack('en');
+  return HymnTitleMatcher([
+    for (final e in pack.hymns.entries) HymnTitle(e.key, e.value.title, 'en'),
+  ]);
+});
+
+/// Starts a transcript of [key]: asks "Replace transcript?" first when a
+/// finished one exists, then shows the "Language of the message" sheet
+/// (recording_14). Only English can start; the others say so and stay put.
+/// On Android, English first asks to download the speech model (no design for
+/// that step: same sheet style).
 Future<void> showTranscribeSheet(
-    BuildContext context, WidgetRef ref, TranscriptKey key) {
-  return showModalBottomSheet<void>(
+    BuildContext context, ProviderContainer container, TranscriptKey key) async {
+  final notifier = container.read(transcriptProvider(key).notifier);
+  // The saved files are read asynchronously on first use.
+  for (var i = 0;
+      i < 40 &&
+          container.read(transcriptProvider(key)).phase ==
+              TranscriptPhase.loading;
+      i++) {
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+  }
+  if (!context.mounted) return;
+  final replace =
+      container.read(transcriptProvider(key)).transcript?.complete ?? false;
+  if (replace) {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text(NotesStrings.replaceTitle),
+        content: const Text(NotesStrings.replaceBody),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: const Text(NotesStrings.cancel)),
+          TextButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: const Text(NotesStrings.replace)),
+        ],
+      ),
+    );
+    if (ok != true || !context.mounted) return;
+  }
+  final wifiPref = container.read(transcriptWifiOnlyProvider);
+  final englishMatches =
+      container.read(bibleReadingPositionProvider).editionId.startsWith('en');
+  if (!context.mounted) return;
+  await showModalBottomSheet<void>(
     context: context,
     showDragHandle: true,
     isScrollControlled: true,
     backgroundColor: context.lum.bgElevated,
     builder: (_) => _LanguageSheet(
-      onStart: (wifiOnly) => ref
-          .read(transcriptProvider(key).notifier)
-          .start('en', wifiOnly: wifiOnly),
+      englishMatches: englishMatches,
+      wifiOnlyInitial: wifiPref,
+      onStart: (wifiOnly) {
+        container.read(transcriptWifiOnlyProvider.notifier).set(wifiOnly);
+        container.read(transcriptRequestProvider.notifier).request(key);
+        notifier.start('en', wifiOnly: wifiOnly, replace: replace);
+      },
     ),
   );
 }
 
 class _LanguageSheet extends HookWidget {
-  const _LanguageSheet({required this.onStart});
+  const _LanguageSheet({
+    required this.onStart,
+    required this.englishMatches,
+    required this.wifiOnlyInitial,
+  });
   final void Function(bool wifiOnly) onStart;
+  final bool englishMatches;
+  final bool wifiOnlyInitial;
 
   @override
   Widget build(BuildContext context) {
     final lum = context.lum;
     final confirming = useState(false);
-    final wifiOnly = useState(true);
+    final wifiOnly = useState(wifiOnlyInitial);
 
     Future<void> pick() async {
       if (transcribeNeedsModel && !await whisperModelReady()) {
         confirming.value = true;
         return;
       }
-      onStart(true);
+      onStart(wifiOnly.value);
       if (context.mounted) Navigator.of(context).pop();
     }
 
@@ -135,7 +194,9 @@ class _LanguageSheet extends HookWidget {
                       style: LumText.title2.copyWith(color: lum.textPrimary)),
                   const SizedBox(height: 16),
                   row(PhosphorIcons.headphones(), transcriptLanguages['en']!,
-                      NotesStrings.englishRowBody,
+                      englishMatches
+                          ? NotesStrings.englishRowBody
+                          : NotesStrings.englishRowBodyFree,
                       onTap: pick),
                   row(PhosphorIcons.textAa(), transcriptLanguages['yo']!,
                       NotesStrings.yorubaRowBody),
@@ -182,7 +243,15 @@ class TranscriptView extends HookConsumerWidget {
     final t = s.transcript;
     final lum = context.lum;
 
-    Future<void> openSheet() => showTranscribeSheet(context, ref, audioKey);
+    final container = ProviderScope.containerOf(context);
+    Future<void> openSheet() => showTranscribeSheet(context, container, audioKey);
+    final hymns = ref.watch(hymnMatcherProvider).valueOrNull;
+    final hasSaved = t != null && t.segments.isNotEmpty;
+    // After a failure the saved part (or the finished transcript a replacement
+    // run did not touch) can still be read.
+    final keepLabel =
+        hasSaved ? NotesStrings.readSaved : NotesStrings.keepRecordingOnly;
+    final keep = hasSaved ? notifier.dismissFailure : onShowNote;
 
     switch (s.phase) {
       case TranscriptPhase.loading:
@@ -191,13 +260,15 @@ class TranscriptView extends HookConsumerWidget {
       case TranscriptPhase.running:
         final downloading = s.phase == TranscriptPhase.downloading;
         return _Progress(
-          title: downloading
-              ? NotesStrings.downloadingModelTitle
-              : NotesStrings.transcribingOnPhone,
+          title: s.stopping
+              ? NotesStrings.stopping
+              : downloading
+                  ? NotesStrings.downloadingModelTitle
+                  : NotesStrings.transcribingOnPhone,
           subtitle: '$recordingName · ${formatClock(audioKey.durationMs)}',
           progress: s.progress,
           showSteps: !downloading,
-          onCancel: notifier.cancel,
+          onCancel: s.stopping ? null : notifier.cancel,
         );
       case TranscriptPhase.idle:
         break;
@@ -250,8 +321,8 @@ class TranscriptView extends HookConsumerWidget {
           ],
           primary: NotesStrings.tryAgain,
           onPrimary: notifier.retry,
-          secondary: NotesStrings.keepRecordingOnly,
-          onSecondary: onShowNote,
+          secondary: keepLabel,
+          onSecondary: keep,
         );
       case TranscribeFailure.failed:
         return _Status(
@@ -262,7 +333,10 @@ class TranscriptView extends HookConsumerWidget {
             (
               PhosphorIcons.headphones(),
               NotesStrings.whatHappened,
-              NotesStrings.transcribeFailedBody
+              t != null && t.doneMs > 0
+                  ? NotesStrings.stoppedAt(formatClock(t.doneMs),
+                      formatClock(t.durationMs > 0 ? t.durationMs : audioKey.durationMs))
+                  : NotesStrings.transcribeFailedBody
             ),
             (
               PhosphorIcons.sparkle(),
@@ -272,9 +346,21 @@ class TranscriptView extends HookConsumerWidget {
           ],
           primary: NotesStrings.tryAgain,
           onPrimary: notifier.retry,
-          secondary: NotesStrings.keepRecordingOnly,
+          secondary: keepLabel,
+          onSecondary: keep,
+        );
+      case TranscribeFailure.waitingForWifi:
+        return _Status(
+          icon: PhosphorIcons.info(),
+          title: NotesStrings.waitingForWifiTitle,
+          subtitle: NotesStrings.waitingForWifiBody,
+          primary: NotesStrings.useMobileData,
+          onPrimary: () =>
+              notifier.start(t?.language ?? 'en', wifiOnly: false, replace: t?.complete ?? false),
+          secondary: NotesStrings.notNow,
           onSecondary: onShowNote,
         );
+      case TranscribeFailure.cancelled:
       case null:
         break;
     }
@@ -304,6 +390,7 @@ class TranscriptView extends HookConsumerWidget {
       durationMs: audioKey.durationMs,
       speed: speed,
       manifest: manifest,
+      hymns: hymns,
       followAlong: followAlong,
       partial: !t.complete,
       onResume: () => notifier.start(t.language),
@@ -327,7 +414,7 @@ class _Progress extends StatelessWidget {
   final String subtitle;
   final double progress;
   final bool showSteps;
-  final VoidCallback onCancel;
+  final VoidCallback? onCancel;
 
   @override
   Widget build(BuildContext context) {
@@ -516,6 +603,7 @@ class _Rows extends HookConsumerWidget {
     required this.durationMs,
     required this.speed,
     required this.manifest,
+    required this.hymns,
     required this.followAlong,
     required this.partial,
     required this.onResume,
@@ -528,6 +616,7 @@ class _Rows extends HookConsumerWidget {
   final int durationMs;
   final int speed;
   final BibleManifest? manifest;
+  final HymnTitleMatcher? hymns;
   final bool followAlong;
   final bool partial;
   final VoidCallback onResume;
@@ -538,6 +627,7 @@ class _Rows extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final lum = context.lum;
     final query = useState('');
+    final rawQuery = useState('');
     final current = useState(0); // which match, 0-based
     final lastUserScroll = useRef(DateTime.fromMillisecondsSinceEpoch(0));
     final keys = useMemoized(() => <int, GlobalKey>{}, [segments.length]);
@@ -565,6 +655,15 @@ class _Rows extends HookConsumerWidget {
                     i,
             ],
         [segments, q]);
+
+    // Search runs 150 ms after the last keystroke.
+    useEffect(() {
+      final timer = Timer(const Duration(milliseconds: 150), () {
+        query.value = rawQuery.value;
+        current.value = 0;
+      });
+      return timer.cancel;
+    }, [rawQuery.value]);
 
     void reveal(int index) {
       final ctx = keys[index]?.currentContext;
@@ -619,10 +718,7 @@ class _Rows extends HookConsumerWidget {
             const SizedBox(width: 8),
             Expanded(
               child: TextField(
-                onChanged: (v) {
-                  query.value = v;
-                  current.value = 0;
-                },
+                onChanged: (v) => rawQuery.value = v,
                 decoration: const InputDecoration(
                   border: InputBorder.none,
                   hintText: NotesStrings.searchTranscript,
@@ -674,10 +770,13 @@ class _Rows extends HookConsumerWidget {
                   currentHit: currentSegment,
                   query: q,
                   manifest: manifest,
+                  hymns: hymns,
                   keyFor: (i) => keys.putIfAbsent(i, GlobalKey.new),
                   onSeek: seek,
                   onOpenRef: (key) =>
                       openBibleLink(context, ref, targetKey: key),
+                  onOpenHymn: (h) => openHymnLink(context, ref,
+                      targetKey: h.id, editionPin: h.pack),
                 ),
               Row(children: [
                 TextButton(
@@ -704,9 +803,11 @@ class _Group extends StatelessWidget {
     required this.currentHit,
     required this.query,
     required this.manifest,
+    required this.hymns,
     required this.keyFor,
     required this.onSeek,
     required this.onOpenRef,
+    required this.onOpenHymn,
   });
   final List<int> indexes;
   final List<TranscriptSegment> segments;
@@ -714,9 +815,11 @@ class _Group extends StatelessWidget {
   final int currentHit;
   final String query;
   final BibleManifest? manifest;
+  final HymnTitleMatcher? hymns;
   final GlobalKey Function(int) keyFor;
   final Future<void> Function(int ms) onSeek;
   final void Function(String targetKey) onOpenRef;
+  final void Function(HymnTitle hymn) onOpenHymn;
 
   @override
   Widget build(BuildContext context) {
@@ -771,9 +874,11 @@ class _Group extends StatelessWidget {
                   child: SegmentText(
                     text: segments[i].text,
                     manifest: manifest,
+                    hymns: hymns,
                     query: query,
                     strongHit: i == currentHit,
                     onOpenRef: onOpenRef,
+                    onOpenHymn: onOpenHymn,
                   ),
                 ),
               ),
@@ -790,28 +895,36 @@ class SegmentText extends HookWidget {
     super.key,
     required this.text,
     required this.manifest,
+    required this.hymns,
     required this.query,
     required this.strongHit,
     required this.onOpenRef,
+    required this.onOpenHymn,
   });
   final String text;
   final BibleManifest? manifest;
+  final HymnTitleMatcher? hymns;
   final String query;
   final bool strongHit;
   final void Function(String targetKey) onOpenRef;
+  final void Function(HymnTitle hymn) onOpenHymn;
 
   @override
   Widget build(BuildContext context) {
     final lum = context.lum;
     final pieces = useMemoized(
-        () => splitTranscriptText(text, manifest), [text, manifest]);
+        () => splitTranscriptText(text, manifest, hymns),
+        [text, manifest, hymns]);
     final recognizers = useMemoized(
         () => [
               for (final p in pieces)
-                p.targetKey == null
-                    ? null
-                    : (TapGestureRecognizer()
-                      ..onTap = () => onOpenRef(p.targetKey!)),
+                p.targetKey != null
+                    ? (TapGestureRecognizer()
+                      ..onTap = () => onOpenRef(p.targetKey!))
+                    : p.hymn != null
+                        ? (TapGestureRecognizer()
+                          ..onTap = () => onOpenHymn(p.hymn!))
+                        : null,
             ],
         [pieces]);
     useEffect(
@@ -859,7 +972,7 @@ class SegmentText extends HookWidget {
       for (var i = 0; i < pieces.length; i++)
         ...hits(
           pieces[i].text,
-          pieces[i].targetKey == null
+          pieces[i].targetKey == null && pieces[i].hymn == null
               ? base
               : base.copyWith(
                   color: lum.textAccent,

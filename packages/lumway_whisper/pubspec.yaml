@@ -1,0 +1,19 @@
+name: lumway_whisper
+description: On-device whisper.cpp transcription for Lumway on Android. No iOS, no web.
+version: 0.0.1
+publish_to: none
+
+environment:
+  sdk: ^3.5.0
+  flutter: ">=3.3.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: com.lumway.whisper
+        pluginClass: LumwayWhisperPlugin

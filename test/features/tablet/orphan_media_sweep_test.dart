@@ -103,6 +103,8 @@ void main() {
     final goneAudio = make('note_audio/gone.m4a', ageDays: 30);
     final goneText = make('note_audio/gone.transcript.json', ageDays: 30);
     final loneText = make('note_audio/lone.transcript.json', ageDays: 30);
+    final gonePart = make('note_audio/gone.transcript.part.json', ageDays: 30);
+    final keptPart = make('note_audio/kept.transcript.part.json', ageDays: 30);
 
     final deleted = await sweepOrphanMedia(
       now: now,
@@ -117,5 +119,7 @@ void main() {
     expect(goneAudio.existsSync(), isFalse);
     expect(goneText.existsSync(), isFalse);
     expect(loneText.existsSync(), isTrue);
+    expect(gonePart.existsSync(), isFalse);
+    expect(keptPart.existsSync(), isTrue);
   });
 }

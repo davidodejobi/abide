@@ -3,7 +3,6 @@ import 'package:material_ui/material_ui.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:openbaptisthymnal/core/theme/lum_theme.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/note_media.dart';
-import 'package:openbaptisthymnal/features/tablet/providers/recording_providers.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/notes_strings.dart';
 
 /// Playback speeds offered for recordings, as percentages.
@@ -29,6 +28,7 @@ class NoteMediaSheetActions {
     required this.onShare,
     required this.onDelete,
     this.onReplace,
+    this.onTranscribe,
   });
 
   final bool isAudio;
@@ -44,6 +44,9 @@ class NoteMediaSheetActions {
   final Future<void> Function() onShare;
   final Future<void> Function() onDelete;
   final Future<void> Function()? onReplace;
+
+  /// Starts a transcript of this recording (audio blocks only).
+  final Future<void> Function()? onTranscribe;
 }
 
 /// One sheet style for image and audio: grabber, grouped 48 pt rows, delete
@@ -164,9 +167,9 @@ class _MediaSheetState extends State<_MediaSheet> {
         _Row(
           icon: PhosphorIcons.article(),
           label: NotesStrings.transcribe,
-          onTap: openTranscribe == null
+          onTap: a.onTranscribe == null
               ? null
-              : () => _closeThen(() async => openTranscribe?.call()),
+              : () => _closeThen(a.onTranscribe!),
         ),
       ],
       _Row(

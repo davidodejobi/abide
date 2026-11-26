@@ -313,7 +313,7 @@ packages:
     source: hosted
     version: "0.3.5+5"
   crypto:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: crypto
       sha256: e3626ae6270383c9e3a549f34c9e4cd26c09ae6a9adaab2bf4737a00340efdc4
@@ -440,22 +440,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.2.0"
-  ffmpeg_kit_flutter_new_min:
-    dependency: "direct main"
-    description:
-      name: ffmpeg_kit_flutter_new_min
-      sha256: "1fce79b73ebbcf34e1063ed84cacc4920adfbb8631877e585302e68157b0ace3"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.1.0"
-  ffmpeg_kit_flutter_platform_interface:
-    dependency: transitive
-    description:
-      name: ffmpeg_kit_flutter_platform_interface
-      sha256: addf046ae44e190ad0101b2fde2ad909a3cd08a2a109f6106d2f7048b7abedee
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.2.1"
   file:
     dependency: transitive
     description:
@@ -921,6 +905,13 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.8.2"
+  lumway_whisper:
+    dependency: "direct main"
+    description:
+      path: "packages/lumway_whisper"
+      relative: true
+    source: path
+    version: "0.0.1"
   markdown:
     dependency: "direct main"
     description:
@@ -1717,14 +1708,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.3"
-  whisper_ggml:
-    dependency: "direct main"
-    description:
-      name: whisper_ggml
-      sha256: "3b9bab1300b0985ac8fbba2d14106d57a1daa2ee05f0e30f01455f695ba4b354"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.10.0"
   win32:
     dependency: transitive
     description:

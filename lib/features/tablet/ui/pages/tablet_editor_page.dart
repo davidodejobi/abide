@@ -35,6 +35,7 @@ import 'package:openbaptisthymnal/features/tablet/domain/tablet_markdown_codec.d
 import 'package:openbaptisthymnal/features/tablet/domain/transcript.dart';
 import 'package:openbaptisthymnal/features/tablet/providers/recording_providers.dart';
 import 'package:openbaptisthymnal/features/tablet/providers/tablets_providers.dart';
+import 'package:openbaptisthymnal/features/tablet/providers/transcript_providers.dart';
 import 'package:openbaptisthymnal/features/tablet/providers/templates_providers.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/notes_strings.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/pages/recording_page.dart';
@@ -251,21 +252,45 @@ class _NoteEditorView extends HookConsumerWidget {
     final transcriptTab = useState(false);
     final followAlong = useState(true);
     final audio = firstAudio.value;
-    useEffect(() {
-      openTranscribe = () {
-        final a = firstAudio.value;
-        if (a == null || !context.mounted) return;
-        transcriptTab.value = true;
-        showTranscribeSheet(context, ref, (path: a.path, durationMs: a.ms));
-      };
-      return () => openTranscribe = null;
-    }, const []);
+    // The recording the Transcript tab shows: the first one unless another
+    // block asked for its own.
+    final transcriptFor = useState<TranscriptKey?>(null);
+    ref.listen(transcriptRequestProvider, (_, key) {
+      if (key == null) return;
+      transcriptFor.value = key;
+      transcriptTab.value = true;
+      ref.read(transcriptRequestProvider.notifier).clear();
+    });
+    ({TranscriptKey key, int speed, String name})? shownAudio() {
+      final want = transcriptFor.value;
+      if (want != null) {
+        for (final n in audioNodes(editorState.document)) {
+          if (n.attributes[mediaUrlKey] == want.path) {
+            return (
+              key: want,
+              speed: n.attributes[audioSpeedKey] as int? ?? 100,
+              name: n.attributes[mediaTextKey] as String? ?? '',
+            );
+          }
+        }
+      }
+      final a = audio;
+      return a == null
+          ? null
+          : (
+              key: (path: a.path, durationMs: a.ms),
+              speed: a.speed,
+              name: a.name,
+            );
+    }
+
+    final shown = shownAudio();
     if (audio == null && transcriptTab.value) transcriptTab.value = false;
 
     void copyTranscript(List<TranscriptSegment> segs) {
       final root = editorState.document.root;
       editorState.apply(editorState.transaction
-        ..insertNodes([root.children.length], transcriptNodes(segs)));
+        ..insertNodes([root.children.length], transcriptNodes(segs, manifestRef.value)));
       transcriptTab.value = false;
       ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text(NotesStrings.transcriptCopied)));
@@ -516,6 +541,16 @@ class _NoteEditorView extends HookConsumerWidget {
         // its markers.
         await editorState.apply(editorState.transaction
           ..insertNodes([recordingInsertIndex(editorState.document)], nodes));
+        // recording_14: offer the transcript right after the take is saved.
+        if (context.mounted) {
+          unawaited(showTranscribeSheet(
+              context,
+              ProviderScope.containerOf(context),
+              (
+                path: nodes.first.attributes[mediaUrlKey] as String,
+                durationMs: result.durationMs,
+              )));
+        }
       } catch (_) {
         messenger.showSnackBar(
             const SnackBar(content: Text(NotesStrings.saveFailed)));
@@ -843,15 +878,12 @@ class _NoteEditorView extends HookConsumerWidget {
                               audioNodeType: mediaBuilder,
                             },
                           ),
-                          if (audio != null && transcriptTab.value)
+                          if (shown != null && transcriptTab.value)
                             TranscriptView(
-                              audioKey: (
-                                path: audio.path,
-                                durationMs: audio.ms
-                              ),
-                              audioPath: audio.path,
-                              speed: audio.speed,
-                              recordingName: audio.name,
+                              audioKey: shown.key,
+                              audioPath: shown.key.path,
+                              speed: shown.speed,
+                              recordingName: shown.name,
                               manifest: manifestRef.value,
                               followAlong: followAlong.value,
                               onCopyToNote: copyTranscript,

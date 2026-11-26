@@ -6,6 +6,7 @@ import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart' show ProviderScope;
 import 'package:material_ui/material_ui.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:share_plus/share_plus.dart';
@@ -17,6 +18,7 @@ import 'package:openbaptisthymnal/features/tablet/domain/parse_links.dart';
 import 'package:openbaptisthymnal/features/tablet/providers/recording_providers.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/notes_strings.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/widgets/note_media_sheet.dart';
+import 'package:openbaptisthymnal/features/tablet/ui/widgets/transcript_view.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/widgets/wikilink_spans.dart';
 
 /// Renders the `image` and `audio` nodes of a note. Register one instance under
@@ -172,6 +174,11 @@ class _NoteMediaBlockState extends State<NoteMediaBlockWidget>
         .setAttrs(node, {mediaUrlKey: FileStorageService.absolutePath(rel)});
   }
 
+  Future<void> _transcribe() => showTranscribeSheet(
+      context,
+      ProviderScope.containerOf(context),
+      (path: _url, durationMs: node.attributes[audioDurationKey] as int? ?? 0));
+
   Future<void> _share() async {
     final box = _renderBox;
     final origin =
@@ -197,6 +204,7 @@ class _NoteMediaBlockState extends State<NoteMediaBlockWidget>
         onShare: _share,
         onDelete: _remove,
         onReplace: _isAudio ? null : _replace,
+        onTranscribe: _isAudio ? _transcribe : null,
       ),
     );
   }

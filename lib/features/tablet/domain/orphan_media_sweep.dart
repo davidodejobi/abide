@@ -17,7 +17,8 @@ final _mediaRef = RegExp(r'note_(?:images|audio)/[\w-]+\.\w+');
 /// deleted. Block removal never deletes a file: editor undo can bring the block
 /// back, so files are only reclaimed here, long after the fact.
 ///
-/// A transcript (`<uuid>.transcript.json` beside its audio) is never a
+/// A transcript (`<uuid>.transcript.json`, or `.transcript.part.json` while a
+/// run is unfinished, beside its audio) is never a
 /// candidate on its own: it stays while its audio is referenced and goes only
 /// together with its audio.
 ///
@@ -60,8 +61,13 @@ Future<int> sweepOrphanMedia({
         if (file.lastModifiedSync().isAfter(cutoff)) continue;
         await file.delete();
         deleted++;
-        final transcript = File(transcriptPathFor(file.path));
-        if (transcript.existsSync()) await transcript.delete();
+        for (final side in [
+          transcriptPathFor(file.path),
+          transcriptPartPathFor(file.path),
+        ]) {
+          final sidecar = File(side);
+          if (sidecar.existsSync()) await sidecar.delete();
+        }
       } catch (_) {
         // A file we cannot stat or remove is left for the next run.
       }

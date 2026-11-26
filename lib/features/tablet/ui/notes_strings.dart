@@ -286,4 +286,18 @@ abstract final class NotesStrings {
   static const notesAreSafeBody =
       'Writing, reading and playback still work without a transcript.';
   static const downloadingModelTitle = 'Downloading the speech model';
+  static const replaceTitle = 'Replace transcript?';
+  static const replaceBody =
+      'The current transcript stays until the new one is finished.';
+  static const replace = 'Replace';
+  static const waitingForWifiTitle = 'Waiting for Wi-Fi';
+  static const waitingForWifiBody =
+      'The speech model is a one-time download. It waits for Wi-Fi unless you '
+      'choose mobile data.';
+  static const useMobileData = 'Use mobile data';
+  static const stopping = 'Stopping...';
+  static const readSaved = 'Read what was saved';
+  static String stoppedAt(String at, String total) =>
+      'The transcript stopped at $at of $total.';
+  static const englishRowBodyFree = 'Free, on this phone.';
 }

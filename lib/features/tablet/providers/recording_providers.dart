@@ -30,9 +30,6 @@ class RecordingConsentNotifier extends Notifier<bool> {
 VoidCallback? stopBlockAudio;
 VoidCallback? stopPinnedAudio;
 
-/// Set by the open note's editor: starts a transcript of its recording.
-VoidCallback? openTranscribe;
-
 class NotePlayback {
   const NotePlayback({
     this.path,
