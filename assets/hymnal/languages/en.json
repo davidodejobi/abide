@@ -2869,8 +2869,21 @@
       "number": 204,
       "title": "Jesus Is the Sweetest Name I Know",
       "lyrics": {
-        "stanzas": [],
-        "chorus": null
+        "stanzas": [
+          {
+            "index": 1,
+            "text": "There have been names that I have loved to hear,\nBut never has there been a name so dear\nTo this heart of mine, as the name divine,\nThe precious, precious name of Jesus."
+          },
+          {
+            "index": 2,
+            "text": "There is no name in earth or Heav'n above,\nThat we should give such honor and such love\nAs the blessed name, let us all acclaim,\nThat wondrous, glorious name of Jesus."
+          },
+          {
+            "index": 3,
+            "text": "And some day I shall see Him face to face\nTo thank and praise Him for His wondrous grace,\nWhich He gave to me, when He made me free,\nThe blessed Son of God called Jesus."
+          }
+        ],
+        "chorus": "Jesus is the sweetest name I know,\nAnd He's just the same as His lovely name,\nAnd that's the reason why I love Him so;\nOh, Jesus is the sweetest name I know."
       }
     },
     "hymn_0205": {
@@ -3327,7 +3340,12 @@
       "number": 251,
       "title": "Glory Be to the Father",
       "lyrics": {
-        "stanzas": [],
+        "stanzas": [
+          {
+            "index": 1,
+            "text": "Glory be to the Father, and to the Son,\nand to the Holy Ghost;\nAs it was in the beginning,\nis now, and ever shall be,\nworld without end. Amen, Amen."
+          }
+        ],
         "chorus": null
       }
     },
@@ -3335,7 +3353,12 @@
       "number": 252,
       "title": "Praise God, from Whom All Blessings Flow",
       "lyrics": {
-        "stanzas": [],
+        "stanzas": [
+          {
+            "index": 1,
+            "text": "Praise God, from whom all blessings flow;\nPraise Him, all creatures here below;\nPraise Him above, ye heav'nly host;\nPraise Father, Son, and Holy Ghost.\nAmen."
+          }
+        ],
         "chorus": null
       }
     },
@@ -5372,7 +5395,12 @@
       "number": 432,
       "title": "Rejoice in the Lord Always",
       "lyrics": {
-        "stanzas": [],
+        "stanzas": [
+          {
+            "index": 1,
+            "text": "Rejoice in the Lord always: Again I say, Rejoice. (repeat)\nRejoice, rejoice, And again I say, Rejoice. (repeat)\nRejoice in the Lord always: Again I say, Rejoice. (repeat)"
+          }
+        ],
         "chorus": null
       }
     },
@@ -7726,7 +7754,12 @@
       "number": 646,
       "title": "Christ, We Do All Adore Thee",
       "lyrics": {
-        "stanzas": [],
+        "stanzas": [
+          {
+            "index": 1,
+            "text": "Christ, we do all adore Thee,\nAnd we do praise Thee forever;\nChrist, we do all adore Thee,\nAnd we do praise Thee forever,\nFor on the holy cross Thou hast\nThe world from sin redeemed.\nChrist, we do all adore Thee,\nAnd we do praise Thee forever.\nChrist, we do all adore Thee."
+          }
+        ],
         "chorus": null
       }
     },
@@ -7734,7 +7767,12 @@
       "number": 649,
       "title": "Amen",
       "lyrics": {
-        "stanzas": [],
+        "stanzas": [
+          {
+            "index": 1,
+            "text": "Amen, Amen, A-men."
+          }
+        ],
         "chorus": null
       }
     },
@@ -7742,7 +7780,12 @@
       "number": 650,
       "title": "Amen",
       "lyrics": {
-        "stanzas": [],
+        "stanzas": [
+          {
+            "index": 1,
+            "text": "Amen, Amen."
+          }
+        ],
         "chorus": null
       }
     },
@@ -7750,7 +7793,12 @@
       "number": 651,
       "title": "Amen",
       "lyrics": {
-        "stanzas": [],
+        "stanzas": [
+          {
+            "index": 1,
+            "text": "Amen, Amen, Amen."
+          }
+        ],
         "chorus": null
       }
     },
@@ -7758,7 +7806,12 @@
       "number": 655,
       "title": "Almighty Father, Hear Our Prayer",
       "lyrics": {
-        "stanzas": [],
+        "stanzas": [
+          {
+            "index": 1,
+            "text": "Almighty Father, hear our prayer,\nAnd bless all souls that wait before Thee.\nAmen."
+          }
+        ],
         "chorus": null
       }
     },
@@ -7766,7 +7819,12 @@
       "number": 657,
       "title": "Hear Our Prayer, O Lord",
       "lyrics": {
-        "stanzas": [],
+        "stanzas": [
+          {
+            "index": 1,
+            "text": "Hear our prayer, O Lord,\nHear our prayer, O Lord;\nIncline Thine ear to us,\nAnd grant us Thy peace."
+          }
+        ],
         "chorus": null
       }
     },
@@ -7774,7 +7832,12 @@
       "number": 661,
       "title": "The Lord Bless You and Keep You",
       "lyrics": {
-        "stanzas": [],
+        "stanzas": [
+          {
+            "index": 1,
+            "text": "The Lord bless you and keep you;\nThe Lord lift His countenance upon you,\nAnd give you peace, and give you peace,\nThe Lord make His face to shine upon you,\nAnd be gracious unto you, be gracious,\nThe Lord be gracious, gracious unto you.\nAmen!"
+          }
+        ],
         "chorus": null
       }
     },
@@ -7782,7 +7845,12 @@
       "number": 665,
       "title": "Holy Is the Lord",
       "lyrics": {
-        "stanzas": [],
+        "stanzas": [
+          {
+            "index": 1,
+            "text": "Holy, holy, holy, holy is the Lord.\nHoly, holy, holy, holy is the Lord.\nHoly is the Father, holy is the Son,\nHoly is the Spirit; blessed Three in One."
+          }
+        ],
         "chorus": null
       }
     }
