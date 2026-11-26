@@ -46,20 +46,24 @@ class RecordingResult {
 }
 
 /// Opens the full-screen recorder. Null when cancelled or discarded.
-Future<RecordingResult?> openRecorder(BuildContext context) =>
-    Navigator.of(context, rootNavigator: true).push<RecordingResult>(
-      MaterialPageRoute(
-        fullscreenDialog: true,
-        builder: (_) => const RecordingPage(),
-      ),
-    );
+Future<RecordingResult?> openRecorder(BuildContext context) {
+  // The mic must not fight playback.
+  stopPinnedAudio?.call();
+  stopBlockAudio?.call();
+  return Navigator.of(context, rootNavigator: true).push<RecordingResult>(
+    MaterialPageRoute(
+      fullscreenDialog: true,
+      builder: (_) => const RecordingPage(),
+    ),
+  );
+}
 
 /// Moves the take into storage and returns the note blocks for it: the audio
 /// block, then one paragraph per marker.
-Future<List<Node>> persistRecording(WidgetRef ref, RecordingResult r) async {
-  final relative = await ref
-      .read(fileStorageServiceProvider)
-      .persistFile(r.path, bucket: 'note_audio', move: true);
+Future<List<Node>> persistRecording(
+    FileStorageService storage, RecordingResult r) async {
+  final relative =
+      await storage.persistFile(r.path, bucket: 'note_audio', move: true);
   return recordingNodes(
     url: FileStorageService.absolutePath(relative),
     name: r.name,
@@ -69,25 +73,42 @@ Future<List<Node>> persistRecording(WidgetRef ref, RecordingResult r) async {
   );
 }
 
-/// Notes tab entry: record, then open a new note titled after the take.
+/// Notes tab entry: record, then open a new note titled after the take. The
+/// finished take is saved even if the tab is gone by then.
 Future<void> recordMessageNote(BuildContext context, WidgetRef ref) async {
+  final storage = ref.read(fileStorageServiceProvider);
+  final repo = ref.read(tabletsRepositoryProvider);
+  final messenger = ScaffoldMessenger.of(context);
+  final router = context.router;
   final result = await openRecorder(context);
-  if (result == null || !context.mounted) return;
-  final nodes = await persistRecording(ref, result);
-  final id = await ref.read(tabletsRepositoryProvider).createNote(
-        title: result.name,
-        contentMarkdown: noteDocumentToMarkdown(
-            Document(root: pageNode(children: nodes))),
-      );
-  if (!context.mounted) return;
-  await context.router.push(TabletEditorRoute(noteId: id));
+  if (result == null) return;
+  try {
+    final nodes = await persistRecording(storage, result);
+    final id = await repo.createNote(
+      title: result.name,
+      contentMarkdown:
+          noteDocumentToMarkdown(Document(root: pageNode(children: nodes))),
+    );
+    if (context.mounted) await router.push(TabletEditorRoute(noteId: id));
+  } catch (_) {
+    messenger.showSnackBar(const SnackBar(content: Text(NotesStrings.saveFailed)));
+  }
 }
 
-enum _Phase { consent, starting, recording, paused, interrupted, denied, error }
+enum _Phase {
+  consent,
+  starting,
+  recording,
+  paused,
+  interrupted,
+  saving,
+  denied,
+  error,
+}
 
 /// Record a message (recording_1): 44 pt timer, 72 pt Pause, live waveform,
-/// markers. Foreground only: the screen is kept awake and the take pauses if
-/// the app leaves the foreground.
+/// markers. The screen is kept awake. iOS keeps recording when locked
+/// (UIBackgroundModes audio); Android pauses when the app is backgrounded.
 class RecordingPage extends HookConsumerWidget {
   const RecordingPage({super.key});
 
@@ -114,13 +135,11 @@ class RecordingPage extends HookConsumerWidget {
     final labelling = useState<int?>(null); // index of the marker being named
     final labelController = useTextEditingController();
     final path = useRef<String?>(null);
-    final elapsed = useRef(Duration.zero);
+    // Runs only while the recorder does, so markers and the saved length
+    // ignore time spent paused.
+    final clock = useMemoized(Stopwatch.new);
+    final busy = useRef(false); // synchronous in-flight guard
     final startedAt = useMemoized(DateTime.now);
-
-    useEffect(() {
-      final sub = controller.onCurrentDuration.listen((d) => elapsed.value = d);
-      return sub.cancel;
-    }, [controller]);
 
     // Screen stays on for the whole take.
     useEffect(() {
@@ -134,7 +153,7 @@ class RecordingPage extends HookConsumerWidget {
       phase.value = _Phase.starting;
       try {
         if (!await controller.checkPermission()) {
-          phase.value = _Phase.denied;
+          if (context.mounted) phase.value = _Phase.denied;
           return;
         }
         // ponytail: no free-space check, dart:io has no API for it and a
@@ -144,9 +163,17 @@ class RecordingPage extends HookConsumerWidget {
         final filePath = p.join(dir.path, '${const Uuid().v4()}.m4a');
         await controller.record(path: filePath);
         path.value = filePath;
+        if (!context.mounted) {
+          // Closed while the mic was starting: never leave it on.
+          await controller.stop();
+          final f = File(filePath);
+          if (f.existsSync()) await f.delete();
+          return;
+        }
+        clock.start();
         phase.value = _Phase.recording;
       } catch (_) {
-        phase.value = _Phase.error;
+        if (context.mounted) phase.value = _Phase.error;
       }
     }
 
@@ -155,13 +182,16 @@ class RecordingPage extends HookConsumerWidget {
       return null;
     }, const []);
 
-    // No interruption hook in audio_waveforms: a call, Siri or leaving the app
-    // all move the app out of `resumed`, so pause there.
+    // audio_waveforms has no interruption hook. iOS keeps recording through
+    // lock, Control Center and calls (background audio), so nothing to do
+    // there. On Android, pause once the app is really backgrounded; never on
+    // `inactive`, which also fires for the notification shade.
     useOnAppLifecycleStateChange((_, state) async {
-      if (phase.value != _Phase.recording) return;
+      if (!Platform.isAndroid || phase.value != _Phase.recording) return;
       if (state == AppLifecycleState.paused ||
-          state == AppLifecycleState.inactive) {
+          state == AppLifecycleState.hidden) {
         phase.value = _Phase.interrupted;
+        clock.stop();
         try {
           await controller.pause();
         } catch (_) {}
@@ -172,17 +202,23 @@ class RecordingPage extends HookConsumerWidget {
       try {
         if (phase.value == _Phase.recording) {
           await controller.pause();
+          clock.stop();
           phase.value = _Phase.paused;
         } else {
           await controller.record();
+          clock.start();
           phase.value = _Phase.recording;
         }
       } catch (_) {
-        phase.value = _Phase.error;
+        clock.stop();
+        phase.value = _Phase.error; // keeps the take when path is set
       }
     }
 
     Future<void> discard() async {
+      if (busy.value) return;
+      busy.value = true;
+      phase.value = _Phase.saving;
       try {
         await controller.stop();
       } catch (_) {}
@@ -191,10 +227,29 @@ class RecordingPage extends HookConsumerWidget {
       if (context.mounted) Navigator.of(context).pop();
     }
 
+    void commitLabel({required bool keep}) {
+      final i = labelling.value;
+      if (i != null && keep) {
+        final next = [...markers.value];
+        next[i] = next[i].withLabel(labelController.text);
+        markers.value = next;
+      }
+      labelling.value = null;
+    }
+
     Future<void> finish() async {
+      if (busy.value) return;
+      busy.value = true;
+      commitLabel(keep: true);
+      final heard = clock.elapsedMilliseconds;
+      final marks = markers.value;
+      phase.value = _Phase.saving;
       final peaks = encodePeaks(List<double>.of(controller.waveData));
-      final ms = elapsed.value.inMilliseconds;
-      final stopped = await controller.stop();
+      String? stopped;
+      try {
+        stopped = await controller.stop();
+      } catch (_) {}
+      final native = controller.recordedDuration.inMilliseconds;
       final f = stopped ?? path.value;
       if (!context.mounted) return;
       Navigator.of(context).pop(
@@ -202,18 +257,23 @@ class RecordingPage extends HookConsumerWidget {
             ? null
             : RecordingResult(
                 path: f,
-                durationMs: ms,
+                durationMs: native > 0 ? native : heard,
                 peaks: peaks,
-                markers: markers.value,
+                markers: marks,
                 name: defaultRecordingName(startedAt),
               ),
       );
     }
 
+    final hasTake = path.value != null;
+    final live = hasTake &&
+        (phase.value == _Phase.recording ||
+            phase.value == _Phase.paused ||
+            phase.value == _Phase.interrupted ||
+            phase.value == _Phase.error);
+
     Future<void> close() async {
-      final live = phase.value == _Phase.recording ||
-          phase.value == _Phase.paused ||
-          phase.value == _Phase.interrupted;
+      if (busy.value) return;
       if (!live) return Navigator.of(context).pop();
       final choice = await showDialog<String>(
         context: context,
@@ -241,25 +301,16 @@ class RecordingPage extends HookConsumerWidget {
     }
 
     void addMarker() {
+      commitLabel(keep: true);
       markers.value = [
         ...markers.value,
-        RecordingMarker(elapsed.value.inMilliseconds),
+        RecordingMarker(clock.elapsedMilliseconds),
       ];
       labelController.clear();
       labelling.value = markers.value.length - 1;
     }
 
-    void commitLabel({required bool keep}) {
-      final i = labelling.value;
-      if (i != null && keep) {
-        final next = [...markers.value];
-        next[i] = next[i].withLabel(labelController.text);
-        markers.value = next;
-      }
-      labelling.value = null;
-    }
-
-    final live = phase.value == _Phase.recording ||
+    final canAct = phase.value == _Phase.recording ||
         phase.value == _Phase.paused ||
         phase.value == _Phase.interrupted;
 
@@ -282,6 +333,14 @@ class RecordingPage extends HookConsumerWidget {
           // the text. A settings package is not worth it for one button.
           onAction: () => launchUrl(Uri.parse('app-settings:')),
         );
+      case _Phase.error when hasTake:
+        // Pause or resume failed: the take so far can still be saved.
+        body = _Notice(
+          title: NotesStrings.micError,
+          body: NotesStrings.saveRecordingBody,
+          action: NotesStrings.save,
+          onAction: finish,
+        );
       case _Phase.error:
         body = const _Notice(title: NotesStrings.micError, body: '');
       default:
@@ -292,14 +351,14 @@ class RecordingPage extends HookConsumerWidget {
           labelling: labelling.value,
           labelController: labelController,
           onPause: pauseOrResume,
-          onMarker: live ? addMarker : null,
-          onFinish: live ? finish : null,
+          onMarker: canAct ? addMarker : null,
+          onFinish: canAct ? finish : null,
           onLabel: commitLabel,
         );
     }
 
     return PopScope(
-      canPop: !live,
+      canPop: !live && !busy.value,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) close();
       },
@@ -478,7 +537,8 @@ class _Recorder extends StatelessWidget {
         ),
         const SizedBox(height: LumSpace.lg),
         Text(
-          '${NotesStrings.keepOpen} ${NotesStrings.screenStaysOn}',
+          '${Platform.isIOS ? NotesStrings.lockOk : NotesStrings.keepOpen} '
+          '${NotesStrings.screenStaysOn}',
           textAlign: TextAlign.center,
           style: LumText.footnote.copyWith(color: lum.textSecondary),
         ),

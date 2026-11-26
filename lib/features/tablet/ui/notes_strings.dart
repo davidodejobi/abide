@@ -196,12 +196,14 @@ abstract final class NotesStrings {
   static const markerLabelHint = 'Add a label (optional)';
   static const skip = 'Skip';
   static const saveLabel = 'Save label';
+  static const lockOk = 'You can lock your phone, recording continues.';
   static const keepOpen = 'Keep Lumway open while recording.';
   static const screenStaysOn =
       'Your screen stays on while you record. Plug in for long messages, '
       'and keep your phone near the speaker.';
   static const saveRecordingTitle = 'Save this recording?';
   static const saveRecordingBody = 'Your message is not saved yet.';
+  static const saveFailed = 'Could not save the recording. Try again.';
   static const keepRecording = 'Keep recording';
   static const discard = 'Discard';
   static const micOffTitle = 'Microphone access is off';
