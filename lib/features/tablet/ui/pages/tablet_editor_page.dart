@@ -17,21 +17,28 @@ import 'package:openbaptisthymnal/core/widgets/lum_circle_button.dart';
 import 'package:openbaptisthymnal/core/widgets/lum_glass_bar.dart';
 import 'package:openbaptisthymnal/core/widgets/lum_page_background.dart';
 import 'package:openbaptisthymnal/features/bible/ui/open_bible_link.dart';
+import 'package:openbaptisthymnal/features/bible/model/bible_manifest.dart';
+import 'package:openbaptisthymnal/features/bible/providers/bible_providers.dart';
 import 'package:openbaptisthymnal/features/hymn/ui/open_hymn_link.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/insert_media_node.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/note_media.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/link_autocomplete.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/note_date_label.dart';
+import 'package:openbaptisthymnal/features/tablet/domain/note_template.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/parse_links.dart';
+import 'package:openbaptisthymnal/features/tablet/domain/scripture_autolink.dart';
+import 'package:openbaptisthymnal/features/tablet/domain/template_to_note.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/tablet_markdown_codec.dart';
 import 'package:openbaptisthymnal/features/tablet/providers/tablets_providers.dart';
+import 'package:openbaptisthymnal/features/tablet/providers/templates_providers.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/notes_strings.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/widgets/audio_recorder_sheet.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/widgets/folder_picker_sheet.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/widgets/link_suggestions.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/widgets/note_media_block.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/widgets/note_media_sheet.dart';
+import 'package:openbaptisthymnal/features/tablet/ui/widgets/template_sheets.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/widgets/wikilink_spans.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/widgets/tablet_links_sheet.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/widgets/tag_picker_sheet.dart';
@@ -46,7 +53,8 @@ import 'package:openbaptisthymnal/features/tablet/ui/widgets/tag_picker_sheet.da
 /// [EditorState]'s document is final and must be seeded once, up front.
 @RoutePage()
 class TabletEditorPage extends HookConsumerWidget {
-  const TabletEditorPage({super.key, this.noteId, this.initialMarkdown});
+  const TabletEditorPage(
+      {super.key, this.noteId, this.initialMarkdown, this.templateId});
 
   final String? noteId;
 
@@ -54,14 +62,27 @@ class TabletEditorPage extends HookConsumerWidget {
   /// from the Bible reader's "Add note"). Ignored when [noteId] is non-null.
   final String? initialMarkdown;
 
+  /// Start the new note from this template (built-in or mine). Ignored when
+  /// [noteId] is non-null: notes are snapshots, they never re-read a template.
+  final String? templateId;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (noteId == null) {
+      final id = templateId;
+      final template = id == null ? null : ref.watch(templateByIdProvider(id));
+      // "Mine" arrives from a stream; wait for it rather than open blank.
+      if (id != null &&
+          template == null &&
+          ref.watch(myTemplatesProvider).isLoading) {
+        return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      }
       return _NoteEditorView(
         noteId: null,
         initialTitle: '',
         initialMarkdown: initialMarkdown ?? '',
         initialCreatedAt: null,
+        template: template,
       );
     }
 
@@ -95,6 +116,7 @@ class _NoteEditorView extends HookConsumerWidget {
     required this.initialTitle,
     required this.initialMarkdown,
     required this.initialCreatedAt,
+    this.template,
     super.key,
   });
 
@@ -102,6 +124,9 @@ class _NoteEditorView extends HookConsumerWidget {
   final String initialTitle;
   final String initialMarkdown;
   final DateTime? initialCreatedAt;
+
+  /// Seeds a new note's body; null for blank notes and existing ones.
+  final NoteTemplate? template;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -114,10 +139,24 @@ class _NoteEditorView extends HookConsumerWidget {
     final linkQuery = useState<String?>(null);
 
     // Seed the document once; the EditorState owns it for the page's lifetime.
-    final editorState = useMemoized(
-      () => EditorState(document: noteMarkdownToDocument(initialMarkdown)),
-      const [],
-    );
+    final seeded = useMemoized(() {
+      final t = template;
+      if (t == null) {
+        return (
+          editor: EditorState(document: noteMarkdownToDocument(initialMarkdown)),
+          untouched: null as String?,
+        );
+      }
+      final editor = EditorState(
+        document: templateToDocument(
+          t,
+          now: DateTime.now(),
+          lastSpeaker: ref.read(lastSpeakerProvider),
+        ),
+      );
+      return (editor: editor, untouched: noteDocumentToMarkdown(editor.document));
+    }, const []);
+    final editorState = seeded.editor;
     // The delete-undo snackbar must not outlive the editor: its Undo would act
     // on a disposed document.
     final messenger = ScaffoldMessenger.of(context);
@@ -126,6 +165,27 @@ class _NoteEditorView extends HookConsumerWidget {
         messenger.hideCurrentSnackBar();
         editorState.dispose();
       };
+    }, [editorState]);
+
+    // Land the caret in the title of a template note, not the first field.
+    final titleFocus = useFocusNode();
+    useEffect(() {
+      if (template != null) {
+        WidgetsBinding.instance
+            .addPostFrameCallback((_) => titleFocus.requestFocus());
+      }
+      return null;
+    }, const []);
+
+    // Auto-link "John 3:16" typed in the body once the Bible index is loaded.
+    final manifestRef = useRef<BibleManifest?>(null);
+    manifestRef.value = ref.watch(bibleManifestProvider('en-kjv')).valueOrNull;
+    useEffect(() {
+      final linker = ScriptureAutoLinker(editorState, () => manifestRef.value);
+      final sub = editorState.transactionStream
+          .where((e) => e.$1 == TransactionTime.after)
+          .listen((_) => linker.onTransaction());
+      return sub.cancel;
     }, [editorState]);
 
     Future<void> navigateToLink(ParsedLink link) async {
@@ -166,6 +226,12 @@ class _NoteEditorView extends HookConsumerWidget {
       final title = titleController.text.trim();
       final body = noteDocumentToMarkdown(editorState.document);
       if (title.isEmpty && body.trim().isEmpty) return;
+      // A template note the user has not touched yet is not worth saving.
+      if (currentId.value == null &&
+          title.isEmpty &&
+          body == seeded.untouched) {
+        return;
+      }
 
       final repo = ref.read(tabletsRepositoryProvider);
       final id = currentId.value;
@@ -174,6 +240,7 @@ class _NoteEditorView extends HookConsumerWidget {
           title: title,
           contentMarkdown: body,
         );
+        unawaited(ref.read(templateHintSeenProvider.notifier).dismiss());
       } else {
         await repo.updateNote(
           id: id,
@@ -182,6 +249,50 @@ class _NoteEditorView extends HookConsumerWidget {
           createdAt: createdAt.value ?? DateTime.now(),
         );
       }
+      if (template != null) {
+        final speaker = lastSpeakerFrom(body);
+        if (speaker != null) {
+          unawaited(ref.read(lastSpeakerProvider.notifier).remember(speaker));
+        }
+      }
+    }
+
+    Future<void> saveAsTemplate() async {
+      var sections = documentToSections(editorState.document);
+      if (template != null) {
+        sections = restoreTemplateHints(sections, template!);
+      }
+      if (sections.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text(NotesStrings.noSectionsToSave)));
+        return;
+      }
+      context.router.push(TemplateEditorRoute(
+        initialName: titleController.text.trim(),
+        initialIcon: template?.icon ?? 'book',
+        initialSections: sections,
+      ));
+    }
+
+    Future<void> openNoteMenu() async {
+      final choice = await showModalBottomSheet<bool>(
+        context: context,
+        showDragHandle: true,
+        builder: (sheetContext) => SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SheetRow(
+                icon: PhosphorIcons.copy(),
+                title: NotesStrings.saveAsTemplate,
+                onTap: () => Navigator.of(sheetContext).pop(true),
+              ),
+              const SizedBox(height: LumSpace.sm),
+            ],
+          ),
+        ),
+      );
+      if (choice == true) await saveAsTemplate();
     }
 
     // Debounced autosave: persist ~800ms after the user stops typing so we
@@ -409,6 +520,7 @@ class _NoteEditorView extends HookConsumerWidget {
             label: NotesStrings.titleHint,
             child: TextField(
               controller: titleController,
+              focusNode: titleFocus,
               textCapitalization: TextCapitalization.sentences,
               maxLines: null,
               style: titleStyle,
@@ -452,6 +564,30 @@ class _NoteEditorView extends HookConsumerWidget {
       onLink: navigateToLink,
     );
 
+    // A template's hints are placeholders on the empty blocks, never text:
+    // nothing here reaches the markdown, the search index or sync.
+    final hints = template == null ? const <String, String>{} : templateHints(template!);
+    final templateBuilders = <String, BlockComponentBuilder>{
+      if (hints.isNotEmpty) ...{
+        ParagraphBlockKeys.type: ParagraphBlockComponentBuilder(
+          configuration: standardBlockComponentConfiguration.copyWith(
+            placeholderText: (n) => hintFor(n, hints),
+          ),
+          showPlaceholder: (_, n) => hintFor(n, hints).isNotEmpty,
+        ),
+        BulletedListBlockKeys.type: BulletedListBlockComponentBuilder(
+          configuration: standardBlockComponentConfiguration.copyWith(
+            placeholderText: (n) => hintFor(n, hints),
+          ),
+        ),
+        TodoListBlockKeys.type: TodoListBlockComponentBuilder(
+          configuration: standardBlockComponentConfiguration.copyWith(
+            placeholderText: (n) => hintFor(n, hints),
+          ),
+        ),
+      },
+    };
+
     return PopScope(
       onPopInvokedWithResult: (didPop, _) {
         if (didPop) save();
@@ -473,7 +609,23 @@ class _NoteEditorView extends HookConsumerWidget {
                       label: NotesStrings.back,
                       onPressed: () => context.router.maybePop(),
                     ),
-                    const Spacer(),
+                    if (template != null)
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: LumSpace.sm),
+                          child: Text(
+                            template!.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                            style: LumText.footnote
+                                .copyWith(color: lum.textSecondary),
+                          ),
+                        ),
+                      )
+                    else
+                      const Spacer(),
                     LumGlassBar(
                       height: LumSize.touchTarget,
                       child: Row(
@@ -528,6 +680,12 @@ class _NoteEditorView extends HookConsumerWidget {
                               );
                             },
                           ),
+                          LumCircleButton(
+                            plain: true,
+                            icon: PhosphorIcons.dotsThree(),
+                            label: NotesStrings.noteOptions,
+                            onPressed: openNoteMenu,
+                          ),
                         ],
                       ),
                     ),
@@ -551,10 +709,11 @@ class _NoteEditorView extends HookConsumerWidget {
                   AppFlowyEditor(
                     editorState: editorState,
                     editorStyle: editorStyle,
-                    autoFocus: noteId == null,
+                    autoFocus: noteId == null && template == null,
                     header: titleField,
                     blockComponentBuilders: {
                       ...standardBlockComponentBuilderMap,
+                      ...templateBuilders,
                       ImageBlockKeys.type: mediaBuilder,
                       audioNodeType: mediaBuilder,
                     },

@@ -622,6 +622,393 @@ class NotesCompanion extends UpdateCompanion<Note> {
   }
 }
 
+class $NoteTemplatesTable extends NoteTemplates
+    with TableInfo<$NoteTemplatesTable, NoteTemplateRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $NoteTemplatesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+      'name', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _iconMeta = const VerificationMeta('icon');
+  @override
+  late final GeneratedColumn<String> icon = GeneratedColumn<String>(
+      'icon', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _sectionsJsonMeta =
+      const VerificationMeta('sectionsJson');
+  @override
+  late final GeneratedColumn<String> sectionsJson = GeneratedColumn<String>(
+      'sections_json', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _isDeletedMeta =
+      const VerificationMeta('isDeleted');
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+      'is_deleted', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_deleted" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  @override
+  List<GeneratedColumn> get $columns =>
+      [id, name, icon, sectionsJson, createdAt, updatedAt, isDeleted];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'note_templates';
+  @override
+  VerificationContext validateIntegrity(Insertable<NoteTemplateRow> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('icon')) {
+      context.handle(
+          _iconMeta, icon.isAcceptableOrUnknown(data['icon']!, _iconMeta));
+    } else if (isInserting) {
+      context.missing(_iconMeta);
+    }
+    if (data.containsKey('sections_json')) {
+      context.handle(
+          _sectionsJsonMeta,
+          sectionsJson.isAcceptableOrUnknown(
+              data['sections_json']!, _sectionsJsonMeta));
+    } else if (isInserting) {
+      context.missing(_sectionsJsonMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(_isDeletedMeta,
+          isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  NoteTemplateRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return NoteTemplateRow(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      icon: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}icon'])!,
+      sectionsJson: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}sections_json'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+      isDeleted: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_deleted'])!,
+    );
+  }
+
+  @override
+  $NoteTemplatesTable createAlias(String alias) {
+    return $NoteTemplatesTable(attachedDatabase, alias);
+  }
+}
+
+class NoteTemplateRow extends DataClass implements Insertable<NoteTemplateRow> {
+  final String id;
+  final String name;
+  final String icon;
+  final String sectionsJson;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final bool isDeleted;
+  const NoteTemplateRow(
+      {required this.id,
+      required this.name,
+      required this.icon,
+      required this.sectionsJson,
+      required this.createdAt,
+      required this.updatedAt,
+      required this.isDeleted});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['name'] = Variable<String>(name);
+    map['icon'] = Variable<String>(icon);
+    map['sections_json'] = Variable<String>(sectionsJson);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    return map;
+  }
+
+  NoteTemplatesCompanion toCompanion(bool nullToAbsent) {
+    return NoteTemplatesCompanion(
+      id: Value(id),
+      name: Value(name),
+      icon: Value(icon),
+      sectionsJson: Value(sectionsJson),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      isDeleted: Value(isDeleted),
+    );
+  }
+
+  factory NoteTemplateRow.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return NoteTemplateRow(
+      id: serializer.fromJson<String>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      icon: serializer.fromJson<String>(json['icon']),
+      sectionsJson: serializer.fromJson<String>(json['sectionsJson']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'name': serializer.toJson<String>(name),
+      'icon': serializer.toJson<String>(icon),
+      'sectionsJson': serializer.toJson<String>(sectionsJson),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+    };
+  }
+
+  NoteTemplateRow copyWith(
+          {String? id,
+          String? name,
+          String? icon,
+          String? sectionsJson,
+          DateTime? createdAt,
+          DateTime? updatedAt,
+          bool? isDeleted}) =>
+      NoteTemplateRow(
+        id: id ?? this.id,
+        name: name ?? this.name,
+        icon: icon ?? this.icon,
+        sectionsJson: sectionsJson ?? this.sectionsJson,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+        isDeleted: isDeleted ?? this.isDeleted,
+      );
+  NoteTemplateRow copyWithCompanion(NoteTemplatesCompanion data) {
+    return NoteTemplateRow(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      icon: data.icon.present ? data.icon.value : this.icon,
+      sectionsJson: data.sectionsJson.present
+          ? data.sectionsJson.value
+          : this.sectionsJson,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('NoteTemplateRow(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('icon: $icon, ')
+          ..write('sectionsJson: $sectionsJson, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      id, name, icon, sectionsJson, createdAt, updatedAt, isDeleted);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is NoteTemplateRow &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.icon == this.icon &&
+          other.sectionsJson == this.sectionsJson &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.isDeleted == this.isDeleted);
+}
+
+class NoteTemplatesCompanion extends UpdateCompanion<NoteTemplateRow> {
+  final Value<String> id;
+  final Value<String> name;
+  final Value<String> icon;
+  final Value<String> sectionsJson;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<bool> isDeleted;
+  final Value<int> rowid;
+  const NoteTemplatesCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.icon = const Value.absent(),
+    this.sectionsJson = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  NoteTemplatesCompanion.insert({
+    required String id,
+    required String name,
+    required String icon,
+    required String sectionsJson,
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.isDeleted = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        name = Value(name),
+        icon = Value(icon),
+        sectionsJson = Value(sectionsJson),
+        createdAt = Value(createdAt),
+        updatedAt = Value(updatedAt);
+  static Insertable<NoteTemplateRow> custom({
+    Expression<String>? id,
+    Expression<String>? name,
+    Expression<String>? icon,
+    Expression<String>? sectionsJson,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<bool>? isDeleted,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (icon != null) 'icon': icon,
+      if (sectionsJson != null) 'sections_json': sectionsJson,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  NoteTemplatesCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? name,
+      Value<String>? icon,
+      Value<String>? sectionsJson,
+      Value<DateTime>? createdAt,
+      Value<DateTime>? updatedAt,
+      Value<bool>? isDeleted,
+      Value<int>? rowid}) {
+    return NoteTemplatesCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      icon: icon ?? this.icon,
+      sectionsJson: sectionsJson ?? this.sectionsJson,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      isDeleted: isDeleted ?? this.isDeleted,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (icon.present) {
+      map['icon'] = Variable<String>(icon.value);
+    }
+    if (sectionsJson.present) {
+      map['sections_json'] = Variable<String>(sectionsJson.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('NoteTemplatesCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('icon: $icon, ')
+          ..write('sectionsJson: $sectionsJson, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $TagsTable extends Tags with TableInfo<$TagsTable, Tag> {
   @override
   final GeneratedDatabase attachedDatabase;
@@ -3507,6 +3894,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $FoldersTable folders = $FoldersTable(this);
   late final $NotesTable notes = $NotesTable(this);
+  late final $NoteTemplatesTable noteTemplates = $NoteTemplatesTable(this);
   late final $TagsTable tags = $TagsTable(this);
   late final $NoteTagsTable noteTags = $NoteTagsTable(this);
   late final $NoteLinksTable noteLinks = $NoteLinksTable(this);
@@ -3522,6 +3910,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $SyncStateTable syncState = $SyncStateTable(this);
   late final NotesDao notesDao = NotesDao(this as AppDatabase);
   late final NoteLinksDao noteLinksDao = NoteLinksDao(this as AppDatabase);
+  late final NoteTemplatesDao noteTemplatesDao =
+      NoteTemplatesDao(this as AppDatabase);
   late final FoldersDao foldersDao = FoldersDao(this as AppDatabase);
   late final TagsDao tagsDao = TagsDao(this as AppDatabase);
   late final BibleAnnotationsDao bibleAnnotationsDao =
@@ -3535,6 +3925,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   List<DatabaseSchemaEntity> get allSchemaEntities => [
         folders,
         notes,
+        noteTemplates,
         tags,
         noteTags,
         noteLinks,
@@ -4363,6 +4754,214 @@ typedef $$NotesTableProcessedTableManager = ProcessedTableManager<
         bool noteLinksRefs,
         bool attachmentsRefs,
         bool bibleAnnotationsRefs})>;
+typedef $$NoteTemplatesTableCreateCompanionBuilder = NoteTemplatesCompanion
+    Function({
+  required String id,
+  required String name,
+  required String icon,
+  required String sectionsJson,
+  required DateTime createdAt,
+  required DateTime updatedAt,
+  Value<bool> isDeleted,
+  Value<int> rowid,
+});
+typedef $$NoteTemplatesTableUpdateCompanionBuilder = NoteTemplatesCompanion
+    Function({
+  Value<String> id,
+  Value<String> name,
+  Value<String> icon,
+  Value<String> sectionsJson,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<bool> isDeleted,
+  Value<int> rowid,
+});
+
+class $$NoteTemplatesTableFilterComposer
+    extends Composer<_$AppDatabase, $NoteTemplatesTable> {
+  $$NoteTemplatesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get icon => $composableBuilder(
+      column: $table.icon, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get sectionsJson => $composableBuilder(
+      column: $table.sectionsJson, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnFilters(column));
+}
+
+class $$NoteTemplatesTableOrderingComposer
+    extends Composer<_$AppDatabase, $NoteTemplatesTable> {
+  $$NoteTemplatesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get icon => $composableBuilder(
+      column: $table.icon, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get sectionsJson => $composableBuilder(
+      column: $table.sectionsJson,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnOrderings(column));
+}
+
+class $$NoteTemplatesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $NoteTemplatesTable> {
+  $$NoteTemplatesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get icon =>
+      $composableBuilder(column: $table.icon, builder: (column) => column);
+
+  GeneratedColumn<String> get sectionsJson => $composableBuilder(
+      column: $table.sectionsJson, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+}
+
+class $$NoteTemplatesTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $NoteTemplatesTable,
+    NoteTemplateRow,
+    $$NoteTemplatesTableFilterComposer,
+    $$NoteTemplatesTableOrderingComposer,
+    $$NoteTemplatesTableAnnotationComposer,
+    $$NoteTemplatesTableCreateCompanionBuilder,
+    $$NoteTemplatesTableUpdateCompanionBuilder,
+    (
+      NoteTemplateRow,
+      BaseReferences<_$AppDatabase, $NoteTemplatesTable, NoteTemplateRow>
+    ),
+    NoteTemplateRow,
+    PrefetchHooks Function()> {
+  $$NoteTemplatesTableTableManager(_$AppDatabase db, $NoteTemplatesTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$NoteTemplatesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$NoteTemplatesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$NoteTemplatesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> name = const Value.absent(),
+            Value<String> icon = const Value.absent(),
+            Value<String> sectionsJson = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              NoteTemplatesCompanion(
+            id: id,
+            name: name,
+            icon: icon,
+            sectionsJson: sectionsJson,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required String name,
+            required String icon,
+            required String sectionsJson,
+            required DateTime createdAt,
+            required DateTime updatedAt,
+            Value<bool> isDeleted = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              NoteTemplatesCompanion.insert(
+            id: id,
+            name: name,
+            icon: icon,
+            sectionsJson: sectionsJson,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable<$NoteTemplatesTable, NoteTemplateRow>(table),
+                    BaseReferences<_$AppDatabase, $NoteTemplatesTable,
+                        NoteTemplateRow>(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$NoteTemplatesTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $NoteTemplatesTable,
+    NoteTemplateRow,
+    $$NoteTemplatesTableFilterComposer,
+    $$NoteTemplatesTableOrderingComposer,
+    $$NoteTemplatesTableAnnotationComposer,
+    $$NoteTemplatesTableCreateCompanionBuilder,
+    $$NoteTemplatesTableUpdateCompanionBuilder,
+    (
+      NoteTemplateRow,
+      BaseReferences<_$AppDatabase, $NoteTemplatesTable, NoteTemplateRow>
+    ),
+    NoteTemplateRow,
+    PrefetchHooks Function()>;
 typedef $$TagsTableCreateCompanionBuilder = TagsCompanion Function({
   required String id,
   required String name,
@@ -6564,6 +7163,8 @@ class $AppDatabaseManager {
       $$FoldersTableTableManager(_db, _db.folders);
   $$NotesTableTableManager get notes =>
       $$NotesTableTableManager(_db, _db.notes);
+  $$NoteTemplatesTableTableManager get noteTemplates =>
+      $$NoteTemplatesTableTableManager(_db, _db.noteTemplates);
   $$TagsTableTableManager get tags => $$TagsTableTableManager(_db, _db.tags);
   $$NoteTagsTableTableManager get noteTags =>
       $$NoteTagsTableTableManager(_db, _db.noteTags);

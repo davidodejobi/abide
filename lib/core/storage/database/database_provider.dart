@@ -4,6 +4,7 @@ import 'app_database.dart';
 import 'daos/bible_annotations_dao.dart';
 import 'daos/folders_dao.dart';
 import 'daos/note_links_dao.dart';
+import 'daos/note_templates_dao.dart';
 import 'daos/notes_dao.dart';
 import 'daos/reading_plans_dao.dart';
 import 'daos/tags_dao.dart';
@@ -38,4 +39,8 @@ final bibleAnnotationsDaoProvider = Provider<BibleAnnotationsDao>(
 
 final readingPlansDaoProvider = Provider<ReadingPlansDao>(
   (ref) => ref.watch(appDatabaseProvider).readingPlansDao,
+);
+
+final noteTemplatesDaoProvider = Provider<NoteTemplatesDao>(
+  (ref) => ref.watch(appDatabaseProvider).noteTemplatesDao,
 );
