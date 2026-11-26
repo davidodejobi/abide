@@ -48,8 +48,8 @@ void main() {
   }
 
   test('Given a typed reference, a space links it and keeps the caret', () async {
-    await type('See John 3:6 ');
-    expect(text(), 'See [[bible:JHN.3.6]] ');
+    await type('See John 3:16 ');
+    expect(text(), 'See [[bible:JHN.3.16]] ');
     expect(editor.selection!.startIndex, text().length);
   });
 
@@ -88,11 +88,11 @@ void main() {
   });
 
   test('Given a link just made, one undo restores the plain text', () async {
-    await type('John 3:6 ');
-    expect(text(), '[[bible:JHN.3.6]] ');
+    await type('John 3:16 ');
+    expect(text(), '[[bible:JHN.3.16]] ');
     editor.undoManager.undo();
     await Future<void>.delayed(Duration.zero);
-    expect(text(), 'John 3:6 ');
+    expect(text(), 'John 3:16 ');
   });
 
   test('Given a reference already inside a token, it is left alone', () async {
@@ -101,27 +101,51 @@ void main() {
   });
 
   group('Given a verse that looks like a time', () {
-    test('Then it links once the next word is not am or pm', () async {
-      await type('John 3:16 ');
-      expect(text(), 'John 3:16 '); // waiting
-      await type('s');
-      expect(text(), '[[bible:JHN.3.16]] s');
+    test('Then John 3:16 links at once on the space', () async {
+      await type('See John 3:16 ');
+      expect(text(), 'See [[bible:JHN.3.16]] ');
       expect(editor.selection!.startIndex, text().length);
     });
 
-    test('Then a word starting with a or p waits for its second letter',
+    test('Then a following pm or am reverts that link to plain text',
         () async {
-      await type('John 3:16 a');
-      expect(text(), 'John 3:16 a');
-      await type('n');
-      expect(text(), '[[bible:JHN.3.16]] an');
+      await type('Dan 5:30 pm');
+      expect(text(), 'Dan 5:30 pm');
+      expect(editor.selection!.startIndex, text().length);
+      await type('\nDan 5:30 a.m.');
+      expect(text(), contains('Dan 5:30 a.m.'));
+      expect(text(), isNot(contains('[[')));
     });
 
-    test('Then pm and am stay plain', () async {
-      await type('Dan 5:30 pm and more');
-      expect(text(), 'Dan 5:30 pm and more');
-      await type('\nDan 5:30 am ok');
-      expect(text(), contains('Dan 5:30 am ok'));
+    test('Then another word keeps the link', () async {
+      await type('Dan 5:30 ok');
+      expect(text(), '[[bible:DAN.5.30]] ok');
+    });
+
+    test('Then amen, among and past keep the link', () async {
+      await type('John 3:16 amen');
+      expect(text(), '[[bible:JHN.3.16]] amen');
+    });
+
+    test('Then undo after a revert brings the link back', () async {
+      await type('Dan 5:30 pm');
+      expect(text(), 'Dan 5:30 pm');
+      editor.undoManager.undo();
+      await Future<void>.delayed(Duration.zero);
+      expect(text(), '[[bible:DAN.5.30]] pm');
+    });
+
+    test('Then a link the user made with [[ is never reverted', () async {
+      await type('[[bible:DAN.5.30]] pm');
+      expect(text(), '[[bible:DAN.5.30]] pm');
+      final node = editor.getNodeAtPath([0])!;
+      expect(node.delta!.toPlainText(), contains('[['));
+    });
+
+    test('Then a link from an earlier run is not reverted', () async {
+      await type('Dan 5:30 ok ');
+      await type('pm');
+      expect(text(), '[[bible:DAN.5.30]] ok pm');
     });
   });
 

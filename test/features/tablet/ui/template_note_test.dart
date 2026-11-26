@@ -118,7 +118,7 @@ void main() {
     await open(t, null);
     final e = editor(t);
     e.selection = Selection.collapsed(Position(path: [0], offset: 0));
-    for (final ch in 'See John 3:6 '.split('')) {
+    for (final ch in 'See John 3:16 '.split('')) {
       final off = e.selection!.startIndex;
       await e.apply(e.transaction
         ..insertText(e.getNodeAtPath([0])!, off, ch)
@@ -128,7 +128,7 @@ void main() {
     }
     await t.pump(const Duration(seconds: 2));
     expect(e.getNodeAtPath([0])!.delta!.toPlainText(),
-        'See [[bible:JHN.3.6]] ');
-    expect(repo.created.single.body, contains('[[bible:JHN.3.6]]'));
+        'See [[bible:JHN.3.16]] ');
+    expect(repo.created.single.body, contains('[[bible:JHN.3.16]]'));
   });
 }

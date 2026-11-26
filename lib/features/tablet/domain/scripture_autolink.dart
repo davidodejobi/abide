@@ -15,10 +15,12 @@ const _bareDelimiters = {',', ';', ')', ']', '!', '?', '"', "'"};
 /// linked. The swap is one sealed history item, so a single undo brings back
 /// the plain text.
 ///
-/// Three cases wait or skip instead of linking at once:
+/// Special cases:
 /// * a bare chapter ("Psalm 23") links on punctuation or Enter, not a space;
-/// * minutes-looking verses ("Dan 5:30") wait for the next word, and stay
-///   plain if it turns out to be am or pm;
+/// * a minutes-looking verse ("Dan 5:30") links at once like any other, but if
+///   the very next word is am, pm, a.m. or p.m. the link this run just made is
+///   reverted to plain text (one undoable step). A link the user typed with
+///   `[[` or that was already in the note is never touched;
 /// * text inside inline code, URLs and existing `[[ ]]` tokens is never
 ///   linked.
 class ScriptureAutoLinker {
@@ -32,7 +34,12 @@ class ScriptureAutoLinker {
   Node? _node;
   int _length = 0;
   bool _busy = false;
-  ScriptureReference? _pending;
+
+  /// The time-like link this run just made, watched for a following am/pm.
+  ({int start, String original, String token})? _recent;
+
+  /// A link just reverted, in case the "am" turns out to be "amen".
+  ({int start, String original, String token})? _reverted;
 
   /// Call after every applied transaction.
   Future<void> onTransaction() async {
@@ -57,12 +64,11 @@ class ScriptureAutoLinker {
     final m = manifest();
     if (m == null) return;
 
-    if (_pending != null) {
-      if (typedOne) {
-        await _resolvePending(node, text);
-      } else {
-        _pending = null;
-      }
+    if (typedOne) {
+      await _watchTimeSuffix(node, text);
+    } else {
+      _recent = null;
+      _reverted = null;
     }
 
     if (split) {
@@ -83,34 +89,46 @@ class ScriptureAutoLinker {
     final ref = scriptureReferenceAtEnd(text.substring(0, caret - 1), m);
     if (ref == null || _inCode(node, ref.end - 1)) return;
     if (ref.bare && !_bareDelimiters.contains(delimiter)) return;
-    if (ref.timeLike && delimiter == ' ') {
-      _pending = ref;
-      return;
-    }
     await _link(node, ref);
+    if (ref.timeLike && delimiter == ' ') {
+      _recent = (start: ref.start, original: ref.text, token: ref.token);
+    }
   }
 
-  /// A time-like reference followed by a space: link once the next word shows
-  /// it is not "pm" / "am".
-  Future<void> _resolvePending(Node node, String text) async {
-    final ref = _pending!;
-    if (ref.end > text.length || text.substring(ref.start, ref.end) != ref.text) {
-      _pending = null;
-      return;
-    }
-    final rest = text.substring(ref.end).trimLeft();
-    if (rest.isEmpty) return; // still only spaces
-    final first = rest[0].toLowerCase();
-    if (first == 'a' || first == 'p') {
-      if (rest.length == 1) return; // wait for the next letter
-      final second = rest[1].toLowerCase();
-      if (second == 'm' || second == '.') {
-        _pending = null; // "5:30 pm"
+  /// After a time-like link on a space: revert it if the next word is am/pm,
+  /// and bring it back if that "am" was really the start of a longer word.
+  Future<void> _watchTimeSuffix(Node node, String text) async {
+    final re = _reverted;
+    if (re != null) {
+      final end = re.start + re.original.length;
+      final ok = end <= text.length &&
+          text.substring(re.start, end) == re.original;
+      final rest = ok ? text.substring(end).trimLeft().toLowerCase() : '';
+      if (ok && RegExp(r'^[ap]m[a-z]').hasMatch(rest)) {
+        _reverted = null;
+        await _replace(node, re.start, re.original.length, re.token);
         return;
       }
+      if (!ok || rest.length > 2) _reverted = null;
     }
-    _pending = null;
-    await _link(node, ref);
+
+    final r = _recent;
+    if (r == null) return;
+    final end = r.start + r.token.length;
+    if (end > text.length || text.substring(r.start, end) != r.token) {
+      _recent = null;
+      return;
+    }
+    final rest = text.substring(end).trimLeft().toLowerCase();
+    if (rest.isEmpty || rest == 'a' || rest == 'p' ||
+        rest == 'a.' || rest == 'p.') {
+      return; // still arriving
+    }
+    _recent = null;
+    if (RegExp(r'^[ap](m|\.m)').hasMatch(rest)) {
+      _reverted = r;
+      await _replace(node, r.start, r.token.length, r.original);
+    }
   }
 
   bool _inCode(Node node, int index) {
@@ -129,19 +147,29 @@ class ScriptureAutoLinker {
     Node node,
     ScriptureReference ref, {
     Selection? selection,
+  }) =>
+      _replace(node, ref.start, ref.text.length, ref.token,
+          selection: selection);
+
+  /// One sealed history item, so a single undo puts the old text back. The
+  /// caret moves by the change in length.
+  Future<void> _replace(
+    Node node,
+    int start,
+    int length,
+    String replacement, {
+    Selection? selection,
   }) async {
     _busy = true;
     try {
       final stack = editorState.undoManager.undoStack;
       if (stack.isNonEmpty) stack.last.seal();
-      final shift = ref.token.length - ref.text.length;
+      final shift = replacement.length - length;
       final current = editorState.selection;
       final Selection after;
       if (selection != null) {
         after = selection;
       } else if (current != null && current.isCollapsed) {
-        // The caret sits after the reference (and the delimiter): keep it
-        // there, moved by the length change.
         after = Selection.collapsed(Position(
           path: current.start.path,
           offset: current.startIndex + shift,
@@ -150,14 +178,12 @@ class ScriptureAutoLinker {
         after = current ?? Selection.collapsed(Position(path: node.path));
       }
       final tr = editorState.transaction
-        ..replaceText(node, ref.start, ref.text.length, ref.token)
+        ..replaceText(node, start, length, replacement)
         ..afterSelection = after;
       await editorState.apply(tr, skipHistoryDebounce: true);
-      _length = editorState.getNodeAtPath(after.start.path)?.delta
-              ?.toPlainText()
-              .length ??
-          0;
-      _node = editorState.getNodeAtPath(after.start.path);
+      final now = editorState.getNodeAtPath(after.start.path);
+      _length = now?.delta?.toPlainText().length ?? 0;
+      _node = now;
     } finally {
       _busy = false;
     }
