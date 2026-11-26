@@ -117,7 +117,7 @@ import 'package:openbaptisthymnal/features/onboarding/providers/onboarding_provi
 import 'package:openbaptisthymnal/features/tablet/data/repositories/tablets_repository.dart';
 import 'package:openbaptisthymnal/features/tablet/data/sources/local/tablets_local_source.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/bible_autocomplete.dart';
-import 'package:openbaptisthymnal/features/tablet/domain/insert_audio_node.dart';
+import 'package:openbaptisthymnal/features/tablet/domain/insert_media_node.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/link_autocomplete.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/note_date_label.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/parse_links.dart';

@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:appflowy_editor/appflowy_editor.dart';
 import 'package:auto_route/auto_route.dart';
-import 'package:flutter/gestures.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
@@ -19,17 +18,21 @@ import 'package:openbaptisthymnal/core/widgets/lum_glass_bar.dart';
 import 'package:openbaptisthymnal/core/widgets/lum_page_background.dart';
 import 'package:openbaptisthymnal/features/bible/ui/open_bible_link.dart';
 import 'package:openbaptisthymnal/features/hymn/ui/open_hymn_link.dart';
-import 'package:openbaptisthymnal/features/tablet/domain/insert_audio_node.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:openbaptisthymnal/features/tablet/domain/insert_media_node.dart';
+import 'package:openbaptisthymnal/features/tablet/domain/note_media.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/link_autocomplete.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/note_date_label.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/parse_links.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/tablet_markdown_codec.dart';
 import 'package:openbaptisthymnal/features/tablet/providers/tablets_providers.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/notes_strings.dart';
-import 'package:openbaptisthymnal/features/tablet/ui/widgets/audio_block_component.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/widgets/audio_recorder_sheet.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/widgets/folder_picker_sheet.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/widgets/link_suggestions.dart';
+import 'package:openbaptisthymnal/features/tablet/ui/widgets/note_media_block.dart';
+import 'package:openbaptisthymnal/features/tablet/ui/widgets/note_media_sheet.dart';
+import 'package:openbaptisthymnal/features/tablet/ui/widgets/wikilink_spans.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/widgets/tablet_links_sheet.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/widgets/tag_picker_sheet.dart';
 
@@ -239,19 +242,32 @@ class _NoteEditorView extends HookConsumerWidget {
       );
     }
 
-    Future<void> insertImage() async {
+    Future<void> insertImage(ImageSource source) async {
       // Capture the caret before the picker steals focus; restore it so the
       // image lands where the user was editing.
       final sel = editorState.selection;
-      final relativePath = await ref
-          .read(fileStorageServiceProvider)
-          .pickAndPersistImage(bucket: 'note_images');
+      final String? relativePath;
+      try {
+        relativePath = await ref
+            .read(fileStorageServiceProvider)
+            .pickAndPersistImage(bucket: 'note_images', source: source);
+      } on PlatformException {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(source == ImageSource.camera
+              ? NotesStrings.cameraDenied
+              : NotesStrings.photosDenied),
+        ));
+        return;
+      }
       if (relativePath == null) return;
       if (sel != null) editorState.selection = sel;
-      // Live document renders via Image.file, which needs the absolute path;
-      // the codec rewrites it back to relative on save.
-      await editorState.insertImageNode(
-        FileStorageService.absolutePath(relativePath),
+      // The live document needs the absolute path; the codec rewrites it back
+      // to relative on save.
+      await insertMediaNode(
+        editorState,
+        imageMediaNode(url: FileStorageService.absolutePath(relativePath)),
+        anchorPath: _anchorPath(editorState, sel),
       );
     }
 
@@ -273,7 +289,7 @@ class _NoteEditorView extends HookConsumerWidget {
 
     Future<void> insertAudio() async {
       final sel = editorState.selection;
-      final tempPath = await showModalBottomSheet<String>(
+      final clip = await showModalBottomSheet<RecordedClip>(
         context: context,
         isScrollControlled: true,
         backgroundColor: theme.colorScheme.surface,
@@ -284,20 +300,38 @@ class _NoteEditorView extends HookConsumerWidget {
           quality: ref.read(audioQualityProvider),
         ),
       );
-      if (tempPath == null) return;
-      // Audio clips live as image nodes pointing at an audio file; the custom
-      // block builder renders them as a player (see MediaBlockComponentBuilder).
+      if (clip == null) return;
       final relativePath = await ref
           .read(fileStorageServiceProvider)
-          .persistFile(tempPath, bucket: 'note_audio');
+          .persistFile(clip.path, bucket: 'note_audio');
 
-      final anchorPath = (sel ?? editorState.selection)?.end.path ??
-          editorState.document.root.children.last.path;
-      await insertAudioNode(
+      await insertMediaNode(
         editorState,
-        absoluteUrl: FileStorageService.absolutePath(relativePath),
-        anchorPath: anchorPath,
+        audioMediaNode(
+          url: FileStorageService.absolutePath(relativePath),
+          name: defaultRecordingName(DateTime.now()),
+          durationMs: clip.durationMs,
+          peaks: clip.peaks,
+        ),
+        anchorPath: _anchorPath(editorState, sel),
       );
+    }
+
+    Future<void> openInsertSheet() async {
+      final choice = await showInsertSheet(context);
+      if (choice == null) return;
+      switch (choice) {
+        case InsertChoice.camera:
+          await insertImage(ImageSource.camera);
+        case InsertChoice.photos:
+          await insertImage(ImageSource.gallery);
+        case InsertChoice.record:
+          await insertAudio();
+        case InsertChoice.checklist:
+          if (context.mounted) {
+            todoListMobileToolbarItem.actionHandler?.call(context, editorState);
+          }
+      }
     }
 
     // Style every `[[...]]` token gold + underlined and make it tappable.
@@ -314,36 +348,8 @@ class _NoteEditorView extends HookConsumerWidget {
       final raw = before.text ?? text.text;
       final baseStyle = before.style;
       if (!raw.contains('[[')) return before;
-      final matches = RegExp(r'\[\[[^\[\]]*\]\]').allMatches(raw).toList();
-      if (matches.isEmpty) return before;
-
-      final children = <InlineSpan>[];
-      var cursor = 0;
-      for (final m in matches) {
-        if (m.start > cursor) {
-          children.add(
-            TextSpan(text: raw.substring(cursor, m.start), style: baseStyle),
-          );
-        }
-        final token = raw.substring(m.start, m.end);
-        final parsed = parseLinks(token);
-        children.add(TextSpan(
-          text: token,
-          style: (baseStyle ?? const TextStyle()).copyWith(
-            color: context.lum.textAccent,
-            decoration: TextDecoration.underline,
-            decorationColor: context.lum.textAccent,
-          ),
-          recognizer: parsed.isEmpty
-              ? null
-              : (TapGestureRecognizer()
-                ..onTap = () => navigateToLink(parsed.first)),
-        ));
-        cursor = m.end;
-      }
-      if (cursor < raw.length) {
-        children.add(TextSpan(text: raw.substring(cursor), style: baseStyle));
-      }
+      final children = wikilinkSpans(context, raw, baseStyle, navigateToLink);
+      if (children.isEmpty) return before;
       return TextSpan(style: baseStyle, children: children);
     }
 
@@ -423,10 +429,15 @@ class _NoteEditorView extends HookConsumerWidget {
       quoteMobileToolbarItem,
       dividerMobileToolbarItem,
       actionItem(PhosphorIcons.linkSimple(), insertLinkToken),
-      actionItem(PhosphorIcons.image(), insertImage),
-      actionItem(PhosphorIcons.microphone(), insertAudio),
+      actionItem(PhosphorIcons.plusCircle(), openInsertSheet),
       actionItem(PhosphorIcons.clipboardText(), insertPasteText),
     ];
+
+    final mediaBuilder = NoteMediaBlockBuilder(
+      editorState: editorState,
+      storage: ref.read(fileStorageServiceProvider),
+      onLink: navigateToLink,
+    );
 
     return PopScope(
       onPopInvokedWithResult: (didPop, _) {
@@ -531,8 +542,8 @@ class _NoteEditorView extends HookConsumerWidget {
                     header: titleField,
                     blockComponentBuilders: {
                       ...standardBlockComponentBuilderMap,
-                      ImageBlockKeys.type:
-                          MediaBlockComponentBuilder(editorState: editorState),
+                      ImageBlockKeys.type: mediaBuilder,
+                      audioNodeType: mediaBuilder,
                     },
                   ),
                   if (linkQuery.value != null)
@@ -555,3 +566,8 @@ class _NoteEditorView extends HookConsumerWidget {
     );
   }
 }
+
+/// Where a new media block goes: the caret's block, else the last one.
+List<int> _anchorPath(EditorState editorState, Selection? sel) =>
+    (sel ?? editorState.selection)?.end.path ??
+    editorState.document.root.children.last.path;
