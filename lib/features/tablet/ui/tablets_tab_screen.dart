@@ -16,7 +16,9 @@ import 'package:openbaptisthymnal/features/hymn/ui/widgets/search_bar_widget.dar
 import 'package:openbaptisthymnal/features/tablet/domain/note_date_label.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/tablet_preview.dart';
 import 'package:openbaptisthymnal/features/tablet/providers/tablets_providers.dart';
+import 'package:openbaptisthymnal/features/tablet/providers/templates_providers.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/notes_strings.dart';
+import 'package:openbaptisthymnal/features/tablet/ui/widgets/new_note_sheet.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/widgets/tablet_filter_sheet.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
@@ -57,7 +59,7 @@ class TabletsTabScreen extends HookConsumerWidget {
     // A brand-new notebook: no notes at all, nothing typed, no filter.
     final isEmpty = total == 0 && query.isEmpty && !hasFilter;
 
-    void newNote() => context.router.push(TabletEditorRoute());
+    void newNote() => startNewNote(context);
 
     final Widget body;
     if (query.isNotEmpty) {
@@ -640,14 +642,15 @@ class _QuietEmptyBody extends StatelessWidget {
 }
 
 /// First-run empty state (Figma M4-03): the road, a promise, one clear action.
-class _EmptyNotes extends StatelessWidget {
+class _EmptyNotes extends ConsumerWidget {
   const _EmptyNotes({required this.onWrite});
 
   final VoidCallback onWrite;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final c = context.lum;
+    final hintSeen = ref.watch(templateHintSeenProvider);
     final dark = Theme.of(context).brightness == Brightness.dark;
     return SliverPadding(
       padding: const EdgeInsets.fromLTRB(
@@ -678,6 +681,34 @@ class _EmptyNotes extends StatelessWidget {
           const SizedBox(height: LumSpace.sm),
           Text(NotesStrings.emptyBody,
               style: LumText.body.copyWith(color: c.textSecondary)),
+          if (!hintSeen) ...[
+            const SizedBox(height: LumSpace.lg),
+            Container(
+              padding: const EdgeInsets.only(left: LumSpace.lg),
+              decoration: BoxDecoration(
+                color: c.bgAccentContainer,
+                borderRadius: BorderRadius.circular(LumRadius.md),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(NotesStrings.emptyTemplateHint,
+                        style: LumText.subheadline
+                            .copyWith(color: c.textOnAccentContainer)),
+                  ),
+                  IconButton(
+                    tooltip: NotesStrings.dismiss,
+                    constraints:
+                        const BoxConstraints(minWidth: 44, minHeight: 44),
+                    icon: Icon(PhosphorIcons.x(),
+                        size: 18, color: c.textOnAccentContainer),
+                    onPressed: () =>
+                        ref.read(templateHintSeenProvider.notifier).dismiss(),
+                  ),
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: LumSpace.xl),
           LumButton(
             label: NotesStrings.writeNote,

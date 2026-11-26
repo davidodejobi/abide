@@ -11,6 +11,9 @@ import 'package:openbaptisthymnal/features/dashboard/ui/dashboard_screen.dart';
 import 'package:openbaptisthymnal/features/hymn/ui/favorites_tab_screen.dart';
 import 'package:openbaptisthymnal/features/hymn/ui/home_tab_screen.dart';
 import 'package:openbaptisthymnal/features/hymn/ui/hymn_detail_page.dart';
+import 'package:openbaptisthymnal/features/tablet/domain/note_template.dart';
+import 'package:openbaptisthymnal/features/tablet/ui/pages/manage_templates_page.dart';
+import 'package:openbaptisthymnal/features/tablet/ui/pages/template_editor_page.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/tablets_tab_screen.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/pages/tablet_editor_page.dart';
 import 'package:openbaptisthymnal/features/onboarding/ui/onboarding_page.dart';
@@ -51,6 +54,8 @@ class AppRouter extends RootStackRouter {
         AutoRoute(page: PlanDaysRoute.page),
         AutoRoute(page: FavoritesTabRoute.page),
         AutoRoute(page: TabletEditorRoute.page),
+        AutoRoute(page: TemplateEditorRoute.page),
+        AutoRoute(page: ManageTemplatesRoute.page),
         AutoRoute(page: HymnDetailRoute.page),
         AutoRoute(page: ShareCardRoute.page),
         AutoRoute(page: ScriptureShareCardRoute.page),

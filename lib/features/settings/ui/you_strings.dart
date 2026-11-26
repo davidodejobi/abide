@@ -19,6 +19,9 @@ abstract final class YouStrings {
   static const english = 'English';
   static const yoruba = 'Yorùbá';
 
+  static const notes = 'Notes';
+  static const manageTemplates = 'Manage templates';
+  static const manageTemplatesHint = 'Pin, edit or add your own';
   static const voiceNotes = 'Voice notes';
   static const recordingQuality = 'Recording quality';
   static const qualityNote =

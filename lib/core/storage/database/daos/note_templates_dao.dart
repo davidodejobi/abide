@@ -11,7 +11,7 @@ class NoteTemplatesDao extends DatabaseAccessor<AppDatabase>
   NoteTemplatesDao(super.db);
 
   /// Live, non-deleted templates, oldest first so the list order is stable.
-  Stream<List<NoteTemplate>> watchTemplates() {
+  Stream<List<NoteTemplateRow>> watchTemplates() {
     return (select(noteTemplates)
           ..where((t) => t.isDeleted.equals(false))
           ..orderBy([(t) => OrderingTerm(expression: t.createdAt)]))
@@ -20,6 +20,9 @@ class NoteTemplatesDao extends DatabaseAccessor<AppDatabase>
 
   Future<void> upsertTemplate(NoteTemplatesCompanion template) =>
       into(noteTemplates).insertOnConflictUpdate(template);
+
+  Future<void> updateTemplate(String id, NoteTemplatesCompanion changes) =>
+      (update(noteTemplates)..where((t) => t.id.equals(id))).write(changes);
 
   /// Soft delete, so the undo snackbar can bring the template back.
   Future<void> setDeleted(String id, bool deleted) {

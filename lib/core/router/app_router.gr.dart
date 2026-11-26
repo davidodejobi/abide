@@ -261,6 +261,22 @@ class HymnDetailRouteArgs {
 }
 
 /// generated route for
+/// [ManageTemplatesPage]
+class ManageTemplatesRoute extends PageRouteInfo<void> {
+  const ManageTemplatesRoute({List<PageRouteInfo>? children})
+      : super(ManageTemplatesRoute.name, initialChildren: children);
+
+  static const String name = 'ManageTemplatesRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const ManageTemplatesPage();
+    },
+  );
+}
+
+/// generated route for
 /// [OnboardingPage]
 class OnboardingRoute extends PageRouteInfo<void> {
   const OnboardingRoute({List<PageRouteInfo>? children})
@@ -658,6 +674,7 @@ class TabletEditorRoute extends PageRouteInfo<TabletEditorRouteArgs> {
     Key? key,
     String? noteId,
     String? initialMarkdown,
+    String? templateId,
     List<PageRouteInfo>? children,
   }) : super(
           TabletEditorRoute.name,
@@ -665,6 +682,7 @@ class TabletEditorRoute extends PageRouteInfo<TabletEditorRouteArgs> {
             key: key,
             noteId: noteId,
             initialMarkdown: initialMarkdown,
+            templateId: templateId,
           ),
           initialChildren: children,
         );
@@ -681,13 +699,19 @@ class TabletEditorRoute extends PageRouteInfo<TabletEditorRouteArgs> {
         key: args.key,
         noteId: args.noteId,
         initialMarkdown: args.initialMarkdown,
+        templateId: args.templateId,
       );
     },
   );
 }
 
 class TabletEditorRouteArgs {
-  const TabletEditorRouteArgs({this.key, this.noteId, this.initialMarkdown});
+  const TabletEditorRouteArgs({
+    this.key,
+    this.noteId,
+    this.initialMarkdown,
+    this.templateId,
+  });
 
   final Key? key;
 
@@ -695,9 +719,11 @@ class TabletEditorRouteArgs {
 
   final String? initialMarkdown;
 
+  final String? templateId;
+
   @override
   String toString() {
-    return 'TabletEditorRouteArgs{key: $key, noteId: $noteId, initialMarkdown: $initialMarkdown}';
+    return 'TabletEditorRouteArgs{key: $key, noteId: $noteId, initialMarkdown: $initialMarkdown, templateId: $templateId}';
   }
 
   @override
@@ -706,11 +732,16 @@ class TabletEditorRouteArgs {
     if (other is! TabletEditorRouteArgs) return false;
     return key == other.key &&
         noteId == other.noteId &&
-        initialMarkdown == other.initialMarkdown;
+        initialMarkdown == other.initialMarkdown &&
+        templateId == other.templateId;
   }
 
   @override
-  int get hashCode => key.hashCode ^ noteId.hashCode ^ initialMarkdown.hashCode;
+  int get hashCode =>
+      key.hashCode ^
+      noteId.hashCode ^
+      initialMarkdown.hashCode ^
+      templateId.hashCode;
 }
 
 /// generated route for
@@ -727,6 +758,94 @@ class TabletsTabRoute extends PageRouteInfo<void> {
       return const TabletsTabScreen();
     },
   );
+}
+
+/// generated route for
+/// [TemplateEditorPage]
+class TemplateEditorRoute extends PageRouteInfo<TemplateEditorRouteArgs> {
+  TemplateEditorRoute({
+    Key? key,
+    String? templateId,
+    String initialName = '',
+    String initialIcon = 'church',
+    List<TemplateSection> initialSections = const [],
+    List<PageRouteInfo>? children,
+  }) : super(
+          TemplateEditorRoute.name,
+          args: TemplateEditorRouteArgs(
+            key: key,
+            templateId: templateId,
+            initialName: initialName,
+            initialIcon: initialIcon,
+            initialSections: initialSections,
+          ),
+          initialChildren: children,
+        );
+
+  static const String name = 'TemplateEditorRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      final args = data.argsAs<TemplateEditorRouteArgs>(
+        orElse: () => const TemplateEditorRouteArgs(),
+      );
+      return TemplateEditorPage(
+        key: args.key,
+        templateId: args.templateId,
+        initialName: args.initialName,
+        initialIcon: args.initialIcon,
+        initialSections: args.initialSections,
+      );
+    },
+  );
+}
+
+class TemplateEditorRouteArgs {
+  const TemplateEditorRouteArgs({
+    this.key,
+    this.templateId,
+    this.initialName = '',
+    this.initialIcon = 'church',
+    this.initialSections = const [],
+  });
+
+  final Key? key;
+
+  final String? templateId;
+
+  final String initialName;
+
+  final String initialIcon;
+
+  final List<TemplateSection> initialSections;
+
+  @override
+  String toString() {
+    return 'TemplateEditorRouteArgs{key: $key, templateId: $templateId, initialName: $initialName, initialIcon: $initialIcon, initialSections: $initialSections}';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! TemplateEditorRouteArgs) return false;
+    return key == other.key &&
+        templateId == other.templateId &&
+        initialName == other.initialName &&
+        initialIcon == other.initialIcon &&
+        const ListEquality<TemplateSection>().equals(
+          initialSections,
+          other.initialSections,
+        );
+  }
+
+  @override
+  int get hashCode =>
+      key.hashCode ^
+      templateId.hashCode ^
+      initialName.hashCode ^
+      initialIcon.hashCode ^
+      const ListEquality<TemplateSection>().hash(initialSections);
 }
 
 /// generated route for

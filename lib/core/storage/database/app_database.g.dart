@@ -623,7 +623,7 @@ class NotesCompanion extends UpdateCompanion<Note> {
 }
 
 class $NoteTemplatesTable extends NoteTemplates
-    with TableInfo<$NoteTemplatesTable, NoteTemplate> {
+    with TableInfo<$NoteTemplatesTable, NoteTemplateRow> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -680,7 +680,7 @@ class $NoteTemplatesTable extends NoteTemplates
   String get actualTableName => $name;
   static const String $name = 'note_templates';
   @override
-  VerificationContext validateIntegrity(Insertable<NoteTemplate> instance,
+  VerificationContext validateIntegrity(Insertable<NoteTemplateRow> instance,
       {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
@@ -731,9 +731,9 @@ class $NoteTemplatesTable extends NoteTemplates
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  NoteTemplate map(Map<String, dynamic> data, {String? tablePrefix}) {
+  NoteTemplateRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return NoteTemplate(
+    return NoteTemplateRow(
       id: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
       name: attachedDatabase.typeMapping
@@ -757,7 +757,7 @@ class $NoteTemplatesTable extends NoteTemplates
   }
 }
 
-class NoteTemplate extends DataClass implements Insertable<NoteTemplate> {
+class NoteTemplateRow extends DataClass implements Insertable<NoteTemplateRow> {
   final String id;
   final String name;
   final String icon;
@@ -765,7 +765,7 @@ class NoteTemplate extends DataClass implements Insertable<NoteTemplate> {
   final DateTime createdAt;
   final DateTime updatedAt;
   final bool isDeleted;
-  const NoteTemplate(
+  const NoteTemplateRow(
       {required this.id,
       required this.name,
       required this.icon,
@@ -798,10 +798,10 @@ class NoteTemplate extends DataClass implements Insertable<NoteTemplate> {
     );
   }
 
-  factory NoteTemplate.fromJson(Map<String, dynamic> json,
+  factory NoteTemplateRow.fromJson(Map<String, dynamic> json,
       {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return NoteTemplate(
+    return NoteTemplateRow(
       id: serializer.fromJson<String>(json['id']),
       name: serializer.fromJson<String>(json['name']),
       icon: serializer.fromJson<String>(json['icon']),
@@ -825,7 +825,7 @@ class NoteTemplate extends DataClass implements Insertable<NoteTemplate> {
     };
   }
 
-  NoteTemplate copyWith(
+  NoteTemplateRow copyWith(
           {String? id,
           String? name,
           String? icon,
@@ -833,7 +833,7 @@ class NoteTemplate extends DataClass implements Insertable<NoteTemplate> {
           DateTime? createdAt,
           DateTime? updatedAt,
           bool? isDeleted}) =>
-      NoteTemplate(
+      NoteTemplateRow(
         id: id ?? this.id,
         name: name ?? this.name,
         icon: icon ?? this.icon,
@@ -842,8 +842,8 @@ class NoteTemplate extends DataClass implements Insertable<NoteTemplate> {
         updatedAt: updatedAt ?? this.updatedAt,
         isDeleted: isDeleted ?? this.isDeleted,
       );
-  NoteTemplate copyWithCompanion(NoteTemplatesCompanion data) {
-    return NoteTemplate(
+  NoteTemplateRow copyWithCompanion(NoteTemplatesCompanion data) {
+    return NoteTemplateRow(
       id: data.id.present ? data.id.value : this.id,
       name: data.name.present ? data.name.value : this.name,
       icon: data.icon.present ? data.icon.value : this.icon,
@@ -858,7 +858,7 @@ class NoteTemplate extends DataClass implements Insertable<NoteTemplate> {
 
   @override
   String toString() {
-    return (StringBuffer('NoteTemplate(')
+    return (StringBuffer('NoteTemplateRow(')
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('icon: $icon, ')
@@ -876,7 +876,7 @@ class NoteTemplate extends DataClass implements Insertable<NoteTemplate> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is NoteTemplate &&
+      (other is NoteTemplateRow &&
           other.id == this.id &&
           other.name == this.name &&
           other.icon == this.icon &&
@@ -886,7 +886,7 @@ class NoteTemplate extends DataClass implements Insertable<NoteTemplate> {
           other.isDeleted == this.isDeleted);
 }
 
-class NoteTemplatesCompanion extends UpdateCompanion<NoteTemplate> {
+class NoteTemplatesCompanion extends UpdateCompanion<NoteTemplateRow> {
   final Value<String> id;
   final Value<String> name;
   final Value<String> icon;
@@ -920,7 +920,7 @@ class NoteTemplatesCompanion extends UpdateCompanion<NoteTemplate> {
         sectionsJson = Value(sectionsJson),
         createdAt = Value(createdAt),
         updatedAt = Value(updatedAt);
-  static Insertable<NoteTemplate> custom({
+  static Insertable<NoteTemplateRow> custom({
     Expression<String>? id,
     Expression<String>? name,
     Expression<String>? icon,
@@ -4874,17 +4874,17 @@ class $$NoteTemplatesTableAnnotationComposer
 class $$NoteTemplatesTableTableManager extends RootTableManager<
     _$AppDatabase,
     $NoteTemplatesTable,
-    NoteTemplate,
+    NoteTemplateRow,
     $$NoteTemplatesTableFilterComposer,
     $$NoteTemplatesTableOrderingComposer,
     $$NoteTemplatesTableAnnotationComposer,
     $$NoteTemplatesTableCreateCompanionBuilder,
     $$NoteTemplatesTableUpdateCompanionBuilder,
     (
-      NoteTemplate,
-      BaseReferences<_$AppDatabase, $NoteTemplatesTable, NoteTemplate>
+      NoteTemplateRow,
+      BaseReferences<_$AppDatabase, $NoteTemplatesTable, NoteTemplateRow>
     ),
-    NoteTemplate,
+    NoteTemplateRow,
     PrefetchHooks Function()> {
   $$NoteTemplatesTableTableManager(_$AppDatabase db, $NoteTemplatesTable table)
       : super(TableManagerState(
@@ -4938,9 +4938,9 @@ class $$NoteTemplatesTableTableManager extends RootTableManager<
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (
-                    e.readTable<$NoteTemplatesTable, NoteTemplate>(table),
+                    e.readTable<$NoteTemplatesTable, NoteTemplateRow>(table),
                     BaseReferences<_$AppDatabase, $NoteTemplatesTable,
-                        NoteTemplate>(db, table, e)
+                        NoteTemplateRow>(db, table, e)
                   ))
               .toList(),
           prefetchHooksCallback: null,
@@ -4950,17 +4950,17 @@ class $$NoteTemplatesTableTableManager extends RootTableManager<
 typedef $$NoteTemplatesTableProcessedTableManager = ProcessedTableManager<
     _$AppDatabase,
     $NoteTemplatesTable,
-    NoteTemplate,
+    NoteTemplateRow,
     $$NoteTemplatesTableFilterComposer,
     $$NoteTemplatesTableOrderingComposer,
     $$NoteTemplatesTableAnnotationComposer,
     $$NoteTemplatesTableCreateCompanionBuilder,
     $$NoteTemplatesTableUpdateCompanionBuilder,
     (
-      NoteTemplate,
-      BaseReferences<_$AppDatabase, $NoteTemplatesTable, NoteTemplate>
+      NoteTemplateRow,
+      BaseReferences<_$AppDatabase, $NoteTemplatesTable, NoteTemplateRow>
     ),
-    NoteTemplate,
+    NoteTemplateRow,
     PrefetchHooks Function()>;
 typedef $$TagsTableCreateCompanionBuilder = TagsCompanion Function({
   required String id,

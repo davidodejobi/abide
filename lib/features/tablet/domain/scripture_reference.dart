@@ -134,12 +134,10 @@ final RegExp _pattern = () {
   // 1 prefix, 2 name, 3 chapter, 4 verse, 5 end chapter (of a verse range),
   // 6 end verse, 7 end chapter (of a chapter range, "John 3-4").
   return RegExp(
-    r'(?<![\p{L}\p{N}])([123]\s?)?(' +
-        alt +
-        r')\.?\s*(\d{1,3})'
-            r'(?:\s*:\s*(\d{1,3})(?:\s*[-–]\s*(?:(\d{1,3})\s*:\s*)?(\d{1,3}))?'
-            r'|\s*[-–]\s*(\d{1,3}))?'
-            r'(?![\p{L}\p{N}])(?!\s*:\s*\d)',
+    '(?<![\\p{L}\\p{N}])([123]\\s?)?($alt)\\.?\\s*(\\d{1,3})'
+    r'(?:\s*:\s*(\d{1,3})(?:\s*[-–]\s*(?:(\d{1,3})\s*:\s*)?(\d{1,3}))?'
+    r'|\s*[-–]\s*(\d{1,3}))?'
+    r'(?![\p{L}\p{N}])(?!\s*:\s*\d)',
     caseSensitive: false,
     unicode: true,
   );

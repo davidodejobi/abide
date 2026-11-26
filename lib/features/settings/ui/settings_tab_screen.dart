@@ -147,6 +147,15 @@ class _SettingsTabScreenState extends ConsumerState<SettingsTabScreen>
               _BibleLinkRow(),
               _HymnLinkRow(),
             ]),
+            const YouSectionLabel(YouStrings.notes),
+            YouGroup(children: [
+              YouRow(
+                icon: PhosphorIcons.notebook(),
+                title: YouStrings.manageTemplates,
+                subtitle: YouStrings.manageTemplatesHint,
+                onTap: () => context.router.push(const ManageTemplatesRoute()),
+              ),
+            ]),
             const YouSectionLabel(YouStrings.voiceNotes),
             YouGroup(children: [
               YouControlRow(

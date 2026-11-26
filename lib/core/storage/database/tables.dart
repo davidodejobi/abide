@@ -18,6 +18,7 @@ class Notes extends Table {
 /// User-made note templates ("Mine"). [sectionsJson] is a JSON list of
 /// `{type, label, hint}`. Local-only in v1: deliberately absent from
 /// `syncedEntities`, there is no remote table for it yet.
+@DataClassName('NoteTemplateRow')
 class NoteTemplates extends Table {
   TextColumn get id => text()();
   TextColumn get name => text()();

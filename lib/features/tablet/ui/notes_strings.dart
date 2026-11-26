@@ -1,3 +1,5 @@
+import 'package:openbaptisthymnal/features/tablet/domain/note_template.dart';
+
 /// Every user-facing string on the Notes screens, in one place until the ARB
 /// move (DAO-131). Plain English, denomination-neutral.
 abstract final class NotesStrings {
@@ -100,6 +102,80 @@ abstract final class NotesStrings {
       'Photos access is off. Turn it on in Settings to add an image.';
   static const play = 'Play';
   static const pause = 'Pause';
+
+  // Templates
+  static const blankNote = 'Blank note';
+  static const blankNoteHint = 'Just an empty page';
+  static const pinned = 'Pinned';
+  static const pinnedPickerHint = 'Hold a card to pin or unpin';
+  static const mine = 'Mine';
+  static const builtIn = 'Built-in';
+  static const createTemplate = 'Create template';
+  static const close = 'Close';
+  static const pin = 'Pin';
+  static const unpin = 'Unpin';
+  static const duplicate = 'Duplicate';
+  static const previewSections = 'Preview sections';
+  static const addedToMine = 'Added to Mine';
+  static String copyName(String name) => '$name copy';
+  static const templates = 'Templates';
+  static const manageTemplates = 'Manage templates';
+  static const manageTemplatesHint = 'Pin, edit or add your own';
+  static const pinnedManageHeader = 'Pinned (shown first in New note)';
+  static const builtInFootnote =
+      'Built-in templates can be duplicated, but not changed or deleted.';
+  static const noOwnTemplates = 'Templates you create or save show up here.';
+  static const edit = 'Edit';
+  static const delete = 'Delete';
+  static const dragToReorder = 'Drag to reorder';
+  static String templateDeleted(String name) => '$name deleted';
+  static const newTemplate = 'New template';
+  static const editTemplate = 'Edit template';
+  static const templateName = 'Name';
+  static const templateNameHint = 'Name your template to save it';
+  static const iconLabel = 'Icon';
+  static const sectionsLabel = 'Sections';
+  static String sectionCount(int n) => n == 1 ? '1 section' : '$n sections';
+  static const addSection = 'Add section';
+  static const sectionName = 'Section name';
+  static const renameSection = 'Rename section';
+  static const removeSection = 'Remove section';
+  static const saveTemplate = 'Save template';
+  static const preview = 'Preview';
+  static const saveAsTemplate = 'Save as template';
+  static const noSectionsToSave = 'Nothing here to save as a template yet';
+  static const noteOptions = 'Note options';
+  static const emptyTemplateHint =
+      'Start from a template so you are never starting from scratch';
+  static const dismiss = 'Dismiss';
+  static const chooseTemplate = 'Choose a template';
+
+  static String iconName(String key) => switch (key) {
+        'church' => 'Church',
+        'book' => 'Book',
+        'pray' => 'Prayer',
+        'group' => 'Group',
+        'sunrise' => 'Sunrise',
+        _ => 'Heart',
+      };
+
+  static String sectionType(TemplateSectionType t) => switch (t) {
+        TemplateSectionType.heading => 'Heading',
+        TemplateSectionType.text => 'Text',
+        TemplateSectionType.bullet => 'Bullet list',
+        TemplateSectionType.checklist => 'Checklist',
+        TemplateSectionType.scripture => 'Scripture',
+        TemplateSectionType.field => 'Field',
+      };
+
+  static String sectionTypeHint(TemplateSectionType t) => switch (t) {
+        TemplateSectionType.heading => 'A title that divides the note',
+        TemplateSectionType.text => 'A title with a paragraph under it',
+        TemplateSectionType.bullet => 'A title with a list under it',
+        TemplateSectionType.checklist => 'A title with tick boxes',
+        TemplateSectionType.scripture => 'A line for a passage to link',
+        TemplateSectionType.field => 'A label with a value, like Speaker',
+      };
 
   static String count(int n) => n == 1 ? '1 note' : '$n notes';
   static String noMatches(String q) => 'No notes match “$q”';

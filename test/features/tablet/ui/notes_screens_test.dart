@@ -5,6 +5,8 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:openbaptisthymnal/core/storage/database/app_database.dart';
+import 'package:openbaptisthymnal/core/storage/storage_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:openbaptisthymnal/core/theme/app_theme.dart';
 import 'package:openbaptisthymnal/core/storage/database/daos/folders_dao.dart';
 import 'package:openbaptisthymnal/core/storage/database/daos/note_links_dao.dart';
@@ -18,6 +20,8 @@ import 'package:openbaptisthymnal/features/tablet/ui/tablets_tab_screen.dart';
 
 import '../../../support/reader_harness.dart' show appFor, setView, settle;
 
+late SharedPreferences _prefs;
+
 Note _note(String id, String title, String body) => Note(
       id: id,
       title: title,
@@ -28,6 +32,7 @@ Note _note(String id, String title, String body) => Note(
     );
 
 List<Override> _overrides(List<Note> notes) => [
+      sharedPreferencesProvider.overrideWithValue(_prefs),
       tabletsListProvider.overrideWith((ref) => Stream.value(notes)),
       tagsProvider.overrideWith((ref) => Stream.value(const [])),
       foldersProvider.overrideWith((ref) => Stream.value(const [])),
@@ -54,6 +59,11 @@ class _FakeRepo extends TabletsRepository {
 }
 
 void main() {
+  setUp(() async {
+    SharedPreferences.setMockInitialValues({});
+    _prefs = await SharedPreferences.getInstance();
+  });
+
   const sizes = [
     ('390x844', Size(390, 844), 1.0),
     ('320 wide at 2x text', Size(320, 700), 2.0),
@@ -103,6 +113,24 @@ void main() {
       expect(t.takeException(), isNull);
     });
   }
+
+  testWidgets('empty notes show the template hint once, with one action',
+      (t) async {
+    setView(t, const Size(390, 844));
+    await t.pumpWidget(appFor(_overrides(const []), screen));
+    await settle(t);
+    await t.dragUntilVisible(find.text(NotesStrings.emptyTemplateHint),
+        find.byType(CustomScrollView), const Offset(0, -100));
+    expect(find.text(NotesStrings.emptyTemplateHint), findsOneWidget);
+    // One call to action: the hint has none of its own.
+    expect(find.text(NotesStrings.writeNote), findsOneWidget);
+
+    await t.tap(find.byTooltip(NotesStrings.dismiss));
+    await settle(t);
+    expect(find.text(NotesStrings.emptyTemplateHint), findsNothing);
+    expect(_prefs.getBool('notes_template_hint_seen'), isTrue);
+    expect(find.text(NotesStrings.writeNote), findsOneWidget);
+  });
 
   testWidgets('new note button is labelled for screen readers', (t) async {
     setView(t, const Size(390, 844));
