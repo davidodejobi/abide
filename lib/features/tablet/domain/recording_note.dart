@@ -53,10 +53,13 @@ List<Node> recordingNodes({
         markerParagraph(m),
     ];
 
-/// Every `t:` link in [document], as seconds (for the player's marker ticks).
+/// Seconds of the `t:` links that belong to the note's first recording (for
+/// the pinned player's ticks): everything before a second audio block.
 List<int> timeLinkSecondsIn(Document document) {
   final out = <int>[];
+  var audioSeen = 0;
   void walk(Node n) {
+    if (n.type == audioNodeType && ++audioSeen > 1) return;
     for (final op in n.delta ?? const <TextOperation>[]) {
       if (op is TextInsert) {
         final s = timeLinkSeconds(
@@ -64,7 +67,10 @@ List<int> timeLinkSecondsIn(Document document) {
         if (s != null) out.add(s);
       }
     }
-    n.children.forEach(walk);
+    for (final c in n.children) {
+      if (audioSeen > 1) return;
+      walk(c);
+    }
   }
 
   walk(document.root);

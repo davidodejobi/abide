@@ -8,6 +8,7 @@ import 'package:openbaptisthymnal/features/tablet/domain/tablet_preview.dart';
 
 void main() {
   audioPlacementTests();
+  tickTests();
   test('default recording title', () {
     expect(defaultRecordingName(DateTime(2026, 11, 26, 9, 5)),
         'Recording, 26 Nov, 09:05');
@@ -83,5 +84,13 @@ void audioPlacementTests() {
         '00:09 two');
     expect(doc.root.children[recordingInsertIndex(doc)].delta!.toPlainText(),
         'tail');
+  });
+}
+
+void tickTests() {
+  test('ticks only count t: links of the first take', () {
+    final doc = noteMarkdownToDocument(
+        '![A](a.m4a)\n\n[00:05](t:5) one\n\n![B](b.m4a)\n\n[00:09](t:9) two');
+    expect(timeLinkSecondsIn(doc), [5]);
   });
 }

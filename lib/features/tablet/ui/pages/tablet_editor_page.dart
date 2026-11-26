@@ -201,6 +201,7 @@ class _NoteEditorView extends HookConsumerWidget {
                 ms: audio.attributes[audioDurationKey] as int? ?? 0,
                 speed: audio.attributes[audioSpeedKey] as int? ?? 100,
               );
+        if (next != null) loadedPaths.value.add(next.path); // bar may load it
         final prev = firstAudio.value;
         if (prev != null && next == null) playback.releaseIf(prev.path);
         firstAudio.value = next;
@@ -529,7 +530,6 @@ class _NoteEditorView extends HookConsumerWidget {
       final seconds =
           timeLinkSeconds(text.attributes?[AppFlowyRichTextKeys.href] as String?);
       if (seconds != null) {
-        final audio = audioNodeAbove(editorState.document, node.path);
         // `[05:12](t:312)`: seeks the note's recording, never opens a URL.
         return TextSpan(
           text: raw,
@@ -540,6 +540,7 @@ class _NoteEditorView extends HookConsumerWidget {
           ),
           recognizer: TapGestureRecognizer()
             ..onTap = () {
+              final audio = audioNodeAbove(editorState.document, node.path);
               if (audio == null) return;
               loadAudio(audio);
               playback.seekAndPlay(seconds);

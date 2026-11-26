@@ -1,4 +1,5 @@
-import 'dart:ui' show Size;
+
+import 'package:flutter/widgets.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:openbaptisthymnal/core/storage/database/app_database.dart';
@@ -29,18 +30,33 @@ void main() {
     final repo = TabletsRepository(TabletsLocalSource(
         NotesDao(db), NoteLinksDao(db), FoldersDao(db), TagsDao(db)));
     setView(t, const Size(390, 844));
+    final show = ValueNotifier(true);
     await t.pumpWidget(appFor([
       sharedPreferencesProvider.overrideWithValue(prefs),
       tabletsRepositoryProvider.overrideWithValue(repo),
       myTemplatesProvider.overrideWith((ref) => Stream.value(const [])),
       bibleManifestProvider.overrideWith((ref, id) async => johnManifest()),
     ],
-        const TabletEditorPage(
-          initialMarkdown: '![Rec](note_audio/x.m4a "dur=60000")\n\n'
-              '[00:05](t:5) Intro',
+        ValueListenableBuilder<bool>(
+          valueListenable: show,
+          builder: (_, on, __) => on
+              ? const TabletEditorPage(
+                  initialMarkdown: '![Rec](note_audio/x.m4a "dur=60000")\n\n'
+                      '[00:05](t:5) Intro',
+                )
+              : const SizedBox(),
         )));
     await settle(t);
     expect(t.takeException(), isNull);
     expect(find.byType(NotePlayerBar), findsOneWidget);
+
+    // Play from the pinned bar, then leave the note: disposing the editor must
+    // not write provider state mid-teardown.
+    await t.tap(find.byTooltip('Play').first);
+    await t.pump();
+    show.value = false;
+    await t.pump();
+    await t.pump(const Duration(milliseconds: 50));
+    expect(t.takeException(), isNull);
   });
 }

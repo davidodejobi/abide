@@ -76,7 +76,10 @@ class NotePlaybackNotifier extends Notifier<NotePlayback> {
 
   @override
   NotePlayback build() {
-    ref.onDispose(release);
+    ref.onDispose(() {
+      _disposed = true;
+      release();
+    });
     return const NotePlayback();
   }
 
@@ -94,8 +97,11 @@ class NotePlaybackNotifier extends Notifier<NotePlayback> {
   /// closing never kills the player another note is using.
   void releaseIf(String? path) {
     if (path != null && _path == path) {
-      release();
-      state = const NotePlayback();
+      release(); // stops the player synchronously
+      // Callers run in widget dispose, where provider writes are forbidden.
+      Future.microtask(() {
+        if (!_disposed && _path == null) state = const NotePlayback();
+      });
     }
   }
 
@@ -123,6 +129,7 @@ class NotePlaybackNotifier extends Notifier<NotePlayback> {
   }
 
   bool _busy = false;
+  bool _disposed = false;
 
   Future<void> toggle() async {
     if (_busy) return;
