@@ -21,6 +21,14 @@ class StorageService {
   static const String _appConfigCacheKey = 'app_config_cache';
   static const String _dismissedUpdateKey = 'dismissed_update_version';
   static const String _planRemindersKey = 'plan_reminders';
+  static const String _landmarkDownloadKey = 'landmark_download_choice';
+
+  /// 'accepted', 'declined' or null (not asked yet).
+  String? getLandmarkDownloadChoice() => _prefs.getString(_landmarkDownloadKey);
+
+  Future<void> saveLandmarkDownloadChoice(String choice) async {
+    await _prefs.setString(_landmarkDownloadKey, choice);
+  }
 
   /// Plan ids the user asked to be reminded about when they open.
   Set<String> getPlanReminders() =>

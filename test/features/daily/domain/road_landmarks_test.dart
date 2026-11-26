@@ -3,168 +3,163 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:openbaptisthymnal/features/bible/domain/verse_ref.dart';
+import 'package:openbaptisthymnal/features/daily/domain/reading_plan.dart';
 import 'package:openbaptisthymnal/features/daily/domain/road_geometry.dart';
 import 'package:openbaptisthymnal/features/daily/domain/road_landmarks.dart';
-import 'package:openbaptisthymnal/features/daily/domain/reading_plan.dart';
 
-PlanDay _day(int i, List<String> refs) => PlanDay(
-      dayIndex: i,
-      passages: [for (final r in refs) VerseRange.tryParse(r)!],
+ReadingPlan _plan(String id) => ReadingPlan.fromJson(
+    jsonDecode(File('assets/plans/$id.json').readAsStringSync())
+        as Map<String, dynamic>);
+
+CatalogDay _day(int n, String art, String chapters, {String? also}) => CatalogDay(
+      day: n,
+      art: art,
+      story: 'd$n-$art',
+      title: art,
+      ref: 'Genesis $n',
+      spans: [
+        ('GEN', int.parse(chapters.split('-')[0]), int.parse(chapters.split('-')[1]))
+      ],
+      also: also,
+      alsoStory: also == null ? null : 'd$n-$also',
     );
 
-Landmark _lm(String id, String book, int from, int to,
-        {bool hasArt = true, String? art}) =>
-    Landmark(
-      id: id,
-      book: book,
-      fromChapter: from,
-      toChapter: to,
-      title: id,
-      short: id,
-      ref: id,
-      art: hasArt ? (art ?? id) : null,
-    );
+LandmarkCatalog _catalog(List<CatalogDay> days, {String plan = 'p'}) =>
+    LandmarkCatalog(plan: plan, models: const {}, days: days);
+
+ReadingPlan _simplePlan(int days, {String id = 'p'}) => ReadingPlan(
+    id: id,
+    title: '',
+    description: '',
+    days: [
+      for (var i = 1; i <= days; i++)
+        PlanDay(
+            dayIndex: i, passages: [VerseRange.tryParse('GEN.$i.1-$i.5')!]),
+    ]);
 
 void main() {
-  final plan = ReadingPlan(id: 'p', title: '', description: '', days: [
-    _day(1, ['GEN.1.1-3.24']),
-    _day(2, ['GEN.4.1-5.32']),
-    _day(3, ['GEN.6.1-9.29']),
-    _day(4, ['MAL.4.1-6', 'MAT.1.1-25']),
-  ]);
+  final real = parseLandmarkCatalog(
+      File('assets/images/road/landmarks.json').readAsStringSync(),
+      File('assets/images/road/landmark_days.json').readAsStringSync());
 
-  test('a landmark lands on the first day that touches its chapters', () {
-    final m = landmarksByDay(plan, [
-      _lm('garden', 'GEN', 1, 2),
-      _lm('ark', 'GEN', 6, 9),
-      _lm('manger', 'MAT', 1, 1),
-    ]);
-    expect(m.map((d, l) => MapEntry(d, l.single.id)),
-        {1: 'garden', 3: 'ark', 4: 'manger'});
-  });
+  group('the bundled catalog', () {
+    test('127 models, each with a sprite; 365 days that all resolve', () {
+      expect(real.models.length, 127);
+      for (final m in real.models.values) {
+        expect(File('assets/images/road/living/lm_${m.art}.webp').existsSync(),
+            isTrue,
+            reason: m.art);
+        expect(m.sha256.length, 64);
+        // Only bundled models may rely on a glb in the app.
+        expect(File('assets/images/road/models/${m.art}.glb').existsSync(),
+            m.bundled,
+            reason: m.art);
+      }
+      expect(real.days.length, 365);
+      for (final d in real.days) {
+        expect(real.models.containsKey(d.art), isTrue, reason: 'day ${d.day}');
+        if (d.also != null) {
+          expect(real.models.containsKey(d.also), isTrue, reason: 'day ${d.day}');
+        }
+      }
+    });
 
-  test('landmarks without art are not placed, and one landmark never repeats',
-      () {
-    final m = landmarksByDay(plan, [
-      _lm('noart', 'GEN', 1, 1, hasArt: false),
-      _lm('garden', 'GEN', 1, 5),
-    ]);
-    expect(m.length, 1);
-    expect(m[1]!.single.id, 'garden');
-  });
+    test('bible-in-a-year: every day has a landmark and it is the day mapped',
+        () {
+      final plan = _plan('bible-in-a-year');
+      final m = landmarksByDay(plan, real);
+      // The first day is the garden, day 271 (moved) is the potter, and the
+      // map never holds a day outside the plan or more than two landmarks.
+      expect(m[1]!.first.art, 'garden');
+      expect(m[271]!.first.art, 'potter');
+      expect(m[270]!.map((l) => l.art), containsAll(['lampstand']));
+      expect(m.keys.every((d) => d >= 1 && d <= 365), isTrue);
+      expect(m.values.every((l) => l.length <= 2), isTrue);
+      // Reused landmarks thin out a few days, but most days keep theirs.
+      expect(m.length, greaterThan(330));
+    });
 
-  test('two landmarks can share a day, own matches first', () {
-    final m = landmarksByDay(plan, [
-      _lm('a', 'GEN', 1, 1),
-      _lm('b', 'GEN', 1, 1),
-    ]);
-    expect(m[1]!.map((l) => l.id), ['a', 'b']);
-  });
+    test('bible-in-a-year: the same art never stands within 4 days of itself',
+        () {
+      final m = landmarksByDay(_plan('bible-in-a-year'), real);
+      final last = <String, int>{};
+      for (final day in (m.keys.toList()..sort())) {
+        for (final l in m[day]!) {
+          final prev = last[l.art];
+          expect(prev == null || day - prev >= 4, isTrue,
+              reason: '${l.art} on $day and $prev');
+          last[l.art!] = day;
+        }
+      }
+    });
 
-  test("a day's own match beats a displaced one, which never cascades", () {
-    // Day 1 has three own matches (c is displaced); day 2 has two own, so c
-    // finds no slot and is dropped, not pushed on to day 3.
-    final m = landmarksByDay(plan, [
-      _lm('a', 'GEN', 1, 1),
-      _lm('b', 'GEN', 1, 1),
-      _lm('c', 'GEN', 1, 1),
-      _lm('d', 'GEN', 4, 5),
-      _lm('e', 'GEN', 4, 5),
-    ]);
-    expect(m[1]!.map((l) => l.id), ['a', 'b']);
-    expect(m[2]!.map((l) => l.id), ['d', 'e']);
-    expect(m.containsKey(3), isFalse);
-  });
-
-  test('a displaced landmark takes the next day when it has a free slot', () {
-    final m = landmarksByDay(plan, [
-      _lm('a', 'GEN', 1, 1),
-      _lm('b', 'GEN', 1, 1),
-      _lm('c', 'GEN', 1, 1),
-      _lm('d', 'GEN', 4, 5),
-    ]);
-    expect(m[2]!.map((l) => l.id), ['d', 'c']);
-  });
-
-  group('the bundled plans with the real landmarks', () {
-    final all = parseLandmarks(
-        File('assets/images/road/landmarks.json').readAsStringSync());
-    for (final id in ['nt-90', 'bible-in-a-year', 'psalms-30']) {
-      test('$id: every landmark stands on its own day or the one after', () {
-        final plan = ReadingPlan.fromJson(
-            jsonDecode(File('assets/plans/$id.json').readAsStringSync())
-                as Map<String, dynamic>);
-        final m = landmarksByDay(plan, all, placeArtless: true);
-        bool touches(Landmark lm, int day) =>
-            plan.dayAt(day)!.passages.any((p) =>
-                p.start.book == lm.book &&
-                p.start.chapter <= lm.toChapter &&
-                p.end.chapter >= lm.fromChapter);
-        final seen = <String>{};
+    for (final id in ['nt-90', 'psalms-30']) {
+      test('$id: landmarks come from the catalog day that holds the chapters',
+          () {
+        final plan = _plan(id);
+        final m = landmarksByDay(plan, real);
+        expect(m, isNotEmpty);
         m.forEach((day, lms) {
-          expect(lms.length, lessThanOrEqualTo(2));
-          var carried = false;
-          for (final lm in lms) {
-            expect(seen.add(lm.id), isTrue, reason: '${lm.id} placed twice');
-            final own = touches(lm, day);
-            // Own matches come first; a carried one touches the day before
-            // and never follows another carried one.
-            if (!own) {
-              expect(day > 1 && touches(lm, day - 1), isTrue,
-                  reason: '${lm.id} drifted onto day $day');
-              expect(carried, isFalse);
-              carried = true;
-            } else {
-              expect(carried, isFalse, reason: 'own after carried on $day');
-            }
-          }
+          final s = plan.dayAt(day)!.passages.first.start;
+          final cd = real.dayFor(plan, plan.dayAt(day)!)!;
+          expect(cd.covers(s.book, s.chapter), isTrue);
+          expect(lms.first.id, anyOf(cd.story, cd.alsoStory));
         });
+        // A catalog day is shown once even if several plan days sit in it.
+        final ids = m.values.expand((l) => l).map((l) => l.id).toList();
+        expect(ids.toSet().length, ids.length);
       });
     }
 
-    test('the last day shows both Revelation endings, and nt-90 keeps the nets',
+    test('every landmark opens at a reference the Bible link parser accepts',
         () {
-      ReadingPlan load(String id) => ReadingPlan.fromJson(
-          jsonDecode(File('assets/plans/$id.json').readAsStringSync())
-              as Map<String, dynamic>);
-      Iterable<String> ids(ReadingPlan p) =>
-          landmarksByDay(p, all, placeArtless: true)
-              .values
-              .expand((l) => l)
-              .map((l) => l.id);
-      expect(ids(load('bible-in-a-year')),
-          containsAll(['rev-new-jerusalem', 'rev-river-tree']));
-      expect(ids(load('nt-90')), contains('mat-nets'));
-    });
-
-    test('nt-90: the Sermon on the Mount stands on the day that reads it', () {
-      final plan = ReadingPlan.fromJson(
-          jsonDecode(File('assets/plans/nt-90.json').readAsStringSync())
-              as Map<String, dynamic>);
-      final m = landmarksByDay(plan, all, placeArtless: true);
-      final day = plan.days
-          .firstWhere((d) => d.passages.any((p) =>
-              p.start.book == 'MAT' &&
-              p.start.chapter <= 5 &&
-              p.end.chapter >= 5))
-          .dayIndex;
-      expect(m[day]!.map((l) => l.id), contains('mat-sermon'));
+      for (final l in landmarksByDay(_plan('bible-in-a-year'), real)
+          .values
+          .expand((l) => l)) {
+        expect(VerseRange.tryParse(l.openingKey), isNotNull, reason: l.id);
+      }
     });
   });
 
-  test('the same art is not repeated within a few days', () {
-    final m = landmarksByDay(plan, [
-      _lm('sinai', 'GEN', 1, 1, art: 'sinai'),
-      _lm('tablets', 'GEN', 4, 4, art: 'sinai'),
-    ]);
-    expect(m.values.expand((l) => l).map((l) => l.id), ['sinai']);
-  });
+  group('day mapping and the repeat rule', () {
+    test('the catalog plan maps by day number, other plans by chapter', () {
+      final cat = _catalog([
+        _day(1, 'garden', '1-1'),
+        _day(2, 'ark', '2-3', also: 'rainbow'),
+      ], plan: 'q');
+      final same = landmarksByDay(_simplePlan(2, id: 'q'), cat);
+      expect(same[2]!.map((l) => l.art), ['ark', 'rainbow']);
+      // A different plan: its day 3 starts at Genesis 3, which catalog day 2 holds.
+      final other = landmarksByDay(_simplePlan(3), cat);
+      expect(other[1]!.single.art, 'garden');
+      expect(other[2]!.map((l) => l.art), ['ark', 'rainbow']);
+      expect(other.containsKey(3), isFalse, reason: 'catalog day 2 shown once');
+    });
 
-  test('parseLandmarks reads the bundled compact format', () {
-    final l = parseLandmarks(
-        '[{"id":"g","book":"GEN","from":1,"to":2,"title":"T","short":"S","ref":"Genesis 1:1","art":"garden"}]');
-    expect(l.single.art, 'garden');
-    expect(l.single.toChapter, 2);
+    test('a landmark never stands next to a copy of itself', () {
+      final cat = _catalog([
+        _day(1, 'inn', '1-1'),
+        _day(2, 'inn', '2-2'),
+        _day(3, 'house', '3-3'),
+        _day(4, 'inn', '4-4'),
+        _day(5, 'inn', '5-5'),
+      ]);
+      final m = landmarksByDay(_simplePlan(5), cat);
+      expect(m.map((d, l) => MapEntry(d, l.map((x) => x.art).toList())), {
+        1: ['inn'],
+        3: ['house'],
+        5: ['inn'],
+      });
+    });
+
+    test('when the lead is a repeat, the second landmark takes its place', () {
+      final cat = _catalog([
+        _day(1, 'inn', '1-1'),
+        _day(2, 'inn', '2-2', also: 'well'),
+      ]);
+      final m = landmarksByDay(_simplePlan(2), cat);
+      expect(m[2]!.map((l) => l.art), ['well']);
+    });
   });
 
   group('RoadGeometry', () {

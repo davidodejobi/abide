@@ -12,6 +12,7 @@ import '../../domain/reading_plan.dart';
 import '../../domain/road_days.dart';
 import '../../domain/road_geometry.dart';
 import '../../domain/road_landmarks.dart';
+import 'landmark_layout.dart';
 import '../../domain/world_company.dart';
 import '../daily_strings.dart';
 import 'road_art.dart';
@@ -139,6 +140,7 @@ class RoadSceneState extends State<RoadScene> with TickerProviderStateMixin {
 
   RoadArt? _art;
   Map<int, List<Landmark>> _landmarks = const {};
+  Map<String, Rect> _layout = const {};
   int? _windowAt; // stop the loaded landmark sprites are centred on
   String? _landmarkPlan;
 
@@ -173,9 +175,11 @@ class RoadSceneState extends State<RoadScene> with TickerProviderStateMixin {
     final plan = widget.plan;
     if (_art == null || plan == null) {
       _landmarks = const {};
+      _layout = const {};
       _landmarkPlan = null;
     } else if (_landmarkPlan != plan.id) {
-      _landmarks = landmarksByDay(plan, _art!.landmarks, placeArtless: true);
+      _landmarks = landmarksByDay(plan, _art!.catalog);
+      _layout = layoutLandmarks(_landmarks);
       _landmarkPlan = plan.id;
       _windowAt = null;
       _syncWindow(_lookNow());
@@ -221,7 +225,8 @@ class RoadSceneState extends State<RoadScene> with TickerProviderStateMixin {
   Offset? debugLandmarkTap(int day, [int slot = 0]) {
     final list = _landmarks[day];
     if (list == null || slot >= list.length) return null;
-    final r = _RoadPainter.landmarkRect(day, _cameraAt(_lookNow()), slot);
+    if (!_layout.containsKey(list[slot].id)) return null;
+    final r = _landmarkRect(_layout, list[slot].id, _cameraAt(_lookNow()));
     return r.center.translate(0, 8) * (widget.width / RoadScene.designWidth);
   }
 
@@ -457,15 +462,17 @@ class RoadSceneState extends State<RoadScene> with TickerProviderStateMixin {
   void _tapLandmark(Landmark lm, int n) {
     final cb = widget.onLandmarkTap;
     if (cb == null) return;
-    final slot = math.max(0, (_landmarks[n] ?? const <Landmark>[]).indexOf(lm));
-    final r = _RoadPainter.landmarkRect(n, _cameraAt(_lookNow()), slot);
+    final r = _landmarkRect(_layout, lm.id, _cameraAt(_lookNow()));
     final k = widget.width / RoadScene.designWidth;
     final box = context.findRenderObject();
     final origin = box is RenderBox && box.attached
         ? box.localToGlobal(Offset.zero)
         : Offset.zero;
-    cb(lm, n, Rect.fromLTWH(r.left * k, r.top * k, r.width * k, r.height * k)
-        .shift(origin));
+    cb(
+        lm,
+        n,
+        Rect.fromLTWH(r.left * k, r.top * k, r.width * k, r.height * k)
+            .shift(origin));
   }
 
   void _onTap(TapUpDetails d) {
@@ -552,6 +559,10 @@ class RoadSceneState extends State<RoadScene> with TickerProviderStateMixin {
       total: widget.totalDays,
       finished: widget.currentDay == null,
       landmarks: _landmarks,
+      layout: _layout,
+      glowId:
+          glowingLandmark(
+          _landmarks, widget.currentDay ?? widget.totalDays, _layout),
       liftedId: widget.liftedId,
       companions: widget.companions,
       showTomorrowTag: widget.showTomorrowTag && widget.currentDay != null,
@@ -601,8 +612,8 @@ class RoadSceneState extends State<RoadScene> with TickerProviderStateMixin {
             child: _PanelRider(
               panelTop: widget.visibleBottom,
               fallback: 392 * _k,
-              builder: (hidden) => _BackPill(
-                  visible: _showBack && !hidden, onTap: backToToday),
+              builder: (hidden) =>
+                  _BackPill(visible: _showBack && !hidden, onTap: backToToday),
               hide: widget.hideBack,
             ),
           ),
@@ -660,7 +671,8 @@ class RoadSceneState extends State<RoadScene> with TickerProviderStateMixin {
       final lms = _landmarks[n] ?? const <Landmark>[];
       for (var i = 0; i < lms.length; i++) {
         final lm = lms[i];
-        final r = _RoadPainter.landmarkRect(n, cam, i);
+        if (!_layout.containsKey(lm.id)) continue; // not on the road
+        final r = _landmarkRect(_layout, lm.id, cam);
         out.add(CustomPainterSemantics(
           rect: Rect.fromLTRB(r.left * k, r.top * k, r.right * k, r.bottom * k),
           properties: SemanticsProperties(
@@ -784,6 +796,7 @@ class _Hit {
 /// Things that outlive a painter instance: shaders, paints, text layouts.
 class _Cache {
   final hits = <_Hit>[];
+
   /// Ids of the landmark sprites drawn in the last paint, for tests.
   final drawn = <String>{};
   final text = <String, TextPainter>{};
@@ -837,7 +850,16 @@ const _propKinds = [
   'prop_tree',
   'prop_bush',
 ];
-const _landmarkScale = .5;
+
+/// Where landmark [id] stands for camera [cam] (see [layoutLandmarks]).
+Rect _landmarkRect(Map<String, Rect> layout, String id, Offset cam) =>
+    (layout[id] ?? Rect.zero).shift(Offset(0, cam.dy));
+
+/// [r] grown to at least [landmarkMinHit] each way, about its centre.
+Rect _minHit(Rect r) => Rect.fromCenter(
+    center: r.center,
+    width: math.max(r.width, landmarkMinHit),
+    height: math.max(r.height, landmarkMinHit));
 
 class _RoadPainter extends CustomPainter {
   _RoadPainter({
@@ -855,6 +877,8 @@ class _RoadPainter extends CustomPainter {
     required this.total,
     required this.finished,
     required this.landmarks,
+    required this.layout,
+    this.glowId,
     this.liftedId,
     this.companions = const [],
     required this.showTomorrowTag,
@@ -874,6 +898,10 @@ class _RoadPainter extends CustomPainter {
   final bool finished, showTomorrowTag;
   final PlanDayStatuses? statuses;
   final Map<int, List<Landmark>> landmarks;
+  final Map<String, Rect> layout;
+
+  /// The one landmark that glows (nearest the day being read).
+  final String? glowId;
   final String? liftedId;
   final List<CompanionSpot> companions;
   final geo = const RoadGeometry();
@@ -902,20 +930,6 @@ class _RoadPainter extends CustomPainter {
   Offset _stopAt(int n, Offset cam) {
     final s = geo.stop(n);
     return Offset(s.x + cam.dx, s.y + cam.dy);
-  }
-
-  /// Where landmark [n] stands, in design pixels: outboard of its own stop so
-  /// it never sits on the road.
-  /// Slot 0 stands outboard of its stop; slot 1 across the road from it.
-  static Rect landmarkRect(int n, Offset cam, [int slot = 0]) {
-    const geo = RoadGeometry();
-    final st = geo.stop(n);
-    final side = (st.x > 0 ? 1.0 : -1.0) * (slot == 0 ? 1 : -1);
-    const w = 672 * _s * _landmarkScale, h = 576 * _s * _landmarkScale;
-    // Locked camera x: pull an outboard sprite in so all of it stays on screen.
-    final cx = (st.x + cam.dx + side * 78).clamp(w / 2 + 4, 390 - w / 2 - 4),
-        bottom = st.y + cam.dy + 18;
-    return Rect.fromLTWH(cx - w / 2, bottom - h * .86, w, h);
   }
 
   @override
@@ -1020,28 +1034,32 @@ class _RoadPainter extends CustomPainter {
       final landLow = _l(c.sceneMeadowBottom, c.sceneDuskLand, dusk);
       final clear = land.withValues(alpha: 0);
       cache.groundPaint = Paint()
-        ..shader = ui.Gradient.linear(
-            const Offset(0, 120),
-            Offset(0, ch),
-            [
-              clear,
-              land.withValues(alpha: .25),
-              land.withValues(alpha: .7),
-              land,
-              landLow
-            ],
-            const [0, .07, .15, .27, 1]);
+        ..shader = ui.Gradient.linear(const Offset(0, 120), Offset(0, ch), [
+          clear,
+          land.withValues(alpha: .25),
+          land.withValues(alpha: .7),
+          land,
+          landLow
+        ], const [
+          0,
+          .07,
+          .15,
+          .27,
+          1
+        ]);
       cache.mistPaint = Paint()
-        ..shader = ui.Gradient.linear(
-            const Offset(0, 30),
-            const Offset(0, 240),
-            [
-              hor.withValues(alpha: .98),
-              hor.withValues(alpha: .7),
-              hor.withValues(alpha: .28),
-              hor.withValues(alpha: 0),
-            ],
-            const [0, .4, .75, 1]);
+        ..shader =
+            ui.Gradient.linear(const Offset(0, 30), const Offset(0, 240), [
+          hor.withValues(alpha: .98),
+          hor.withValues(alpha: .7),
+          hor.withValues(alpha: .28),
+          hor.withValues(alpha: 0),
+        ], const [
+          0,
+          .4,
+          .75,
+          1
+        ]);
       cache.dusk = settled ? dusk : null;
       cache.dark = dark;
       cache.ch = ch;
@@ -1150,21 +1168,21 @@ class _RoadPainter extends CustomPainter {
   void _worldSprites(Canvas canvas, Paint sp, double pos, double look,
       Offset cam, double pulse, double dusk, Color tint) {
     final v =
-        geo.visibleStops(look, top: 20, bottom: ch + 40, focus: focusOf());
+        geo.visibleStops(look, top: -250, bottom: ch + 250, focus: focusOf());
     for (var n = v.last; n >= v.first; n--) {
       final lms = landmarks[n];
       // Two landmarks take both sides of the stop: no prop to crowd them.
       final y = _stopAt(n, cam).dy;
       // Above the haze nothing shows: skip it, and its hit target with it.
-      if (y < 24) continue;
-      if (lms == null || lms.length < 2) _props(canvas, sp, n, cam);
+      final seen = y >= 24 && y <= ch + 80;
+      if (seen && (lms == null || lms.length < 2)) _props(canvas, sp, n, cam);
       if (n < 1 || n > total) continue;
       if (lms != null) {
         for (var i = 0; i < lms.length; i++) {
-          _landmark(canvas, sp, n, lms[i], i, pos, cam, pulse, tint);
+          _landmark(canvas, sp, n, lms[i], pos, cam, pulse, tint);
         }
       }
-      _stop(canvas, sp, n, pos, cam, pulse, dusk);
+      if (seen) _stop(canvas, sp, n, pos, cam, pulse, dusk);
     }
   }
 
@@ -1283,7 +1301,7 @@ class _RoadPainter extends CustomPainter {
 
   /// A signpost for a landmark whose picture is not drawn yet, so the place
   /// can still be found and tapped.
-  void _marker(Canvas canvas, Rect rect, double r, double pulse) {
+  void _marker(Canvas canvas, Rect rect, double r, double pulse, bool glows) {
     final base = Offset(rect.center.dx, rect.bottom - rect.height * .14);
     final a = .55 + .45 * r;
     final post = cache.stroke
@@ -1295,7 +1313,7 @@ class _RoadPainter extends CustomPainter {
         const Radius.circular(7));
     final glow = cache.fill
       ..color = c.sceneGlow.withValues(alpha: (.25 + .35 * pulse) * r);
-    canvas.drawRRect(sign.inflate(4), glow);
+    if (glows) canvas.drawRRect(sign.inflate(4), glow);
     canvas.drawRRect(
         sign, cache.fill..color = c.scenePanel.withValues(alpha: a));
     canvas.drawRRect(
@@ -1315,15 +1333,17 @@ class _RoadPainter extends CustomPainter {
         cache.fill..color = c.sceneGlow.withValues(alpha: a));
   }
 
-  void _landmark(Canvas canvas, Paint sp, int n, Landmark lm, int slot,
-      double pos, Offset cam, double pulse, Color tint) {
+  void _landmark(Canvas canvas, Paint sp, int n, Landmark lm, double pos,
+      Offset cam, double pulse, Color tint) {
+    if (!layout.containsKey(lm.id)) return; // no room on the road
     final artKey = lm.art;
     // No sprite (none drawn, failed, or not decoded yet): a signpost stands in.
     final img = artKey == null ? null : art?['lm_$artKey'];
     // Reveal as the walker closes in on the stop: it rises, warms and glows.
     final r =
         Curves.easeOut.transform(((pos - (n - .55)) / .55).clamp(0.0, 1.0));
-    final rect = landmarkRect(n, cam, slot);
+    final rect = _landmarkRect(layout, lm.id, cam);
+    final glows = lm.id == glowId;
     if (rect.bottom < 40 || rect.top > ch + 40) return;
     if (img == null) {
       // Generous tap target: the sign itself is small.
@@ -1332,14 +1352,14 @@ class _RoadPainter extends CustomPainter {
               center: rect.center.translate(0, 8), width: 56, height: 64),
           lm,
           n));
-      _marker(canvas, rect, r, pulse);
+      _marker(canvas, rect, r, pulse, glows);
       return;
     }
     final shifted = rect.shift(Offset(0, (1 - r) * 14));
-    cache.hits.add(_Hit(rect, lm, n));
+    cache.hits.add(_Hit(_minHit(rect), lm, n));
     if (lm.id == liftedId) return; // it is up in the sheet
     cache.drawn.add(lm.id);
-    if (r > .02) {
+    if (glows && r > .02) {
       final burst = math.sin(math.pi * ((pos - (n - .3)) / .9).clamp(0.0, 1.0));
       final a = (r * (.5 + .25 * pulse) + burst * .3).clamp(0.0, 1.0);
       final col = c.sceneGlow;

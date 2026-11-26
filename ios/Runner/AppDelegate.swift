@@ -142,17 +142,26 @@ enum TranscribePlugin {
     }
     let analyzer = SpeechAnalyzer(modules: [transcriber])
     let collector = Task { () -> [[String: Any]] in
-      var out = [[String: Any]]()
+      var words = [Word]()
       for try await r in transcriber.results {
-        let text = String(r.text.characters).trimmingCharacters(in: .whitespacesAndNewlines)
-        if text.isEmpty { continue }
-        out.append([
-          "startMs": Int(r.range.start.seconds * 1000),
-          "endMs": Int(r.range.end.seconds * 1000),
-          "text": text,
-        ])
+        // One word per run that carries a time range; a run without one
+        // joins the previous word.
+        let before = words.count
+        for run in r.text.runs {
+          let t = String(r.text[run.range].characters)
+          guard let range = run.audioTimeRange else {
+            if !words.isEmpty { words[words.count - 1].text += t }
+            continue
+          }
+          words.append(Word(text: t, start: range.start.seconds, end: range.end.seconds))
+        }
+        if words.count == before {  // no per-run ranges: keep the whole result
+          words.append(Word(
+            text: String(r.text.characters), start: r.range.start.seconds,
+            end: r.range.end.seconds))
+        }
       }
-      return out
+      return groupWords(words)
     }
     do {
       let file = try AVAudioFile(forReading: url)
@@ -167,6 +176,39 @@ enum TranscribePlugin {
       await analyzer.cancelAndFinishNow()
       throw error
     }
+  }
+
+  private struct Word {
+    var text: String
+    var start: Double
+    var end: Double
+  }
+
+  /// Words to rows of about 6-10 s: end at sentence punctuation once a row is
+  /// 6 s long, force a break at 10 s, and break on a pause over 1.5 s.
+  private static func groupWords(_ words: [Word]) -> [[String: Any]] {
+    var out = [[String: Any]]()
+    var row = [Word]()
+    func flush() {
+      guard let first = row.first, let last = row.last else { return }
+      let text = row.map { $0.text }.joined(separator: " ")
+        .trimmingCharacters(in: .whitespacesAndNewlines)
+      row = []
+      if text.isEmpty { return }
+      out.append(["startMs": Int(first.start * 1000), "endMs": Int(last.end * 1000), "text": text])
+    }
+    for w in words {
+      let trimmed = w.text.trimmingCharacters(in: .whitespacesAndNewlines)
+      if trimmed.isEmpty { continue }
+      if let last = row.last, w.start - last.end > 1.5 { flush() }
+      var w = w
+      w.text = trimmed
+      row.append(w)
+      let len = w.end - row[0].start
+      if len >= 10 || (len >= 6 && ".?!".contains(trimmed.last!)) { flush() }
+    }
+    flush()
+    return out
   }
 
   private static func legacy(_ url: URL, _ locale: Locale) async throws -> [[String: Any]] {
@@ -194,28 +236,10 @@ enum TranscribePlugin {
         }
         guard let result = result, result.isFinal else { return }
         finished = true
-        // Words to sentence-sized rows: break on a pause or a long line.
-        var out = [[String: Any]]()
-        var words = [String]()
-        var rowStart = 0.0
-        var lastEnd = 0.0
-        func flush() {
-          guard !words.isEmpty else { return }
-          out.append([
-            "startMs": Int(rowStart * 1000), "endMs": Int(lastEnd * 1000),
-            "text": words.joined(separator: " "),
-          ])
-          words = []
+        let words = result.bestTranscription.segments.map {
+          Word(text: $0.substring, start: $0.timestamp, end: $0.timestamp + $0.duration)
         }
-        for s in result.bestTranscription.segments {
-          if !words.isEmpty && (s.timestamp - lastEnd > 0.8 || words.joined(separator: " ").count > 160) {
-            flush()
-          }
-          if words.isEmpty { rowStart = s.timestamp }
-          words.append(s.substring)
-          lastEnd = s.timestamp + s.duration
-        }
-        flush()
+        let out = groupWords(words)
         c.resume(returning: out)
       }
     }

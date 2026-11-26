@@ -195,8 +195,13 @@ class SecondaryBiblePane extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final c = context.lum;
-    final editionId = state.secondaryEditionId;
-    if (editionId == null) return const SizedBox.shrink();
+    final savedId = state.secondaryEditionId;
+    if (savedId == null) return const SizedBox.shrink();
+    // A companion edition that was removed while open reads as the fallback.
+    final editionId =
+        ref.watch(bibleEditionsProvider).any((e) => e.id == savedId)
+            ? savedId
+            : kFallbackEditionId;
 
     if (!state.hasSecondaryChapter) {
       return BiblePickerInline(

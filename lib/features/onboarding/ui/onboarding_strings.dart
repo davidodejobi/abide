@@ -3,6 +3,17 @@ import 'package:openbaptisthymnal/features/bible/model/bible_edition.dart';
 /// Every user-facing string in onboarding, in one place until the ARB move
 /// (DAO-131). Plain English, denomination-neutral.
 abstract final class OnboardingStrings {
+  static const defaultDownloadLanguages = ['Yorùbá', 'Hausa', 'Igbo'];
+
+  /// "Reading in Yorùbá, Hausa or Igbo? ..." under the English editions.
+  static String downloadNote(List<String> languages) {
+    final list = languages.length < 2
+        ? languages.join()
+        : '${languages.sublist(0, languages.length - 1).join(', ')} or ${languages.last}';
+    return 'Reading in $list? Pick English for now and download your Bible '
+        'in the app under Get more Bibles.';
+  }
+
   static const back = 'Back';
 
   // Welcome
@@ -30,6 +41,18 @@ abstract final class OnboardingStrings {
   static const retry = 'Try again';
   static const yourGoalCaps = 'YOUR GOAL';
   static const finishLineCaps = 'FINISH LINE';
+
+  // Road download
+  static const roadTitle = 'Set up your road';
+  static const roadBody =
+      'Lumway will download the 3D landmarks for your reading road, so the '
+      'journey looks its best.';
+  static const roadSizeUnknown = 'It is a small download. Wi-Fi is a good idea.';
+  static const downloadNow = 'Download now';
+  static const later = 'Later';
+
+  static String roadSize(String size) =>
+      'It is about $size, so Wi-Fi is a good idea.';
 
   // Name
   static const nameTitle = 'What should we call you?';

@@ -17,6 +17,7 @@ import 'package:openbaptisthymnal/core/theme/theme_provider.dart';
 import 'package:openbaptisthymnal/core/widgets/lum_chip.dart';
 import 'package:openbaptisthymnal/features/bible/model/bible_edition.dart';
 import 'package:openbaptisthymnal/features/bible/providers/bible_providers.dart';
+import 'package:openbaptisthymnal/features/daily/providers/landmark_download_provider.dart';
 import 'package:openbaptisthymnal/features/plus/plus_config.dart';
 import 'package:openbaptisthymnal/features/plus/providers/plus_providers.dart';
 import 'package:openbaptisthymnal/features/plus/ui/plus_gate.dart';
@@ -186,9 +187,20 @@ class _SettingsTabScreenState extends ConsumerState<SettingsTabScreen>
                 ),
               ),
             ]),
+            if (ref.read(landmarkDownloadProvider.notifier).supported) ...[
+              const YouSectionLabel(YouStrings.road),
+              const YouGroup(children: [RoadLandmarksRow()]),
+            ],
             const YouSectionLabel(YouStrings.about),
             YouGroup(children: [
               YouRow(icon: PhosphorIcons.info(), title: version),
+              if (!kIsWeb)
+                YouRow(
+                  icon: PhosphorIcons.downloadSimple(),
+                  title: YouStrings.getMoreBibles,
+                  subtitle: YouStrings.getMoreBiblesHint,
+                  onTap: () => context.router.push(const MoreBiblesRoute()),
+                ),
               YouRow(
                 icon: PhosphorIcons.bookOpenText(),
                 title: YouStrings.bibleTranslations,
@@ -295,6 +307,44 @@ class _HymnLinkRow extends ConsumerWidget {
             .read(linkingPreferencesProvider.notifier)
             .setDefaultHymnEdition(picked.id);
       },
+    );
+  }
+}
+
+/// Status of the 3D road landmarks; opens the "Your road ahead" page.
+class RoadLandmarksRow extends ConsumerStatefulWidget {
+  const RoadLandmarksRow({super.key});
+
+  @override
+  ConsumerState<RoadLandmarksRow> createState() => _RoadLandmarksRowState();
+}
+
+class _RoadLandmarksRowState extends ConsumerState<RoadLandmarksRow> {
+  @override
+  void initState() {
+    super.initState();
+    Future(() => ref.read(landmarkDownloadProvider.notifier).refresh());
+  }
+
+  String _status(LandmarkDownloadState s) {
+    final size = landmarkSizeLabel(s.totalBytes);
+    if (s.totalFiles == 0) return YouStrings.roadNone;
+    final base = switch (s.status) {
+      LandmarkDownloadStatus.done => YouStrings.roadDownloaded,
+      _ when s.doneFiles == 0 => YouStrings.roadNone,
+      _ => YouStrings.roadPartial(s.doneFiles, s.totalFiles),
+    };
+    return YouStrings.roadSizeNote(base, size);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final s = ref.watch(landmarkDownloadProvider);
+    return YouRow(
+      icon: PhosphorIcons.mountains(),
+      title: YouStrings.roadLandmarks,
+      subtitle: _status(s),
+      onTap: () => context.router.push(const RoadAheadRoute()),
     );
   }
 }

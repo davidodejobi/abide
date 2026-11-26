@@ -93,14 +93,13 @@ void main() {
         c,
         BibleScreen(step: 1, total: 3, onNext: () {}, onBack: () {}));
     expect(find.text('English'), findsOneWidget);
-    expect(find.text('Yorùbá'), findsOneWidget);
+    expect(
+        find.text('Reading in Yorùbá, Hausa or Igbo? Pick English for now and '
+            'download your Bible in the app under Get more Bibles.'),
+        findsOneWidget);
     await t.tap(find.text('Berean Standard Bible'));
     await t.pump();
     expect(c.read(onboardingProvider).editionId, 'en-bsb');
-    await t.tap(find.text('Yorùbá'));
-    await t.pump();
-    expect(c.read(onboardingProvider).languageCode, 'yo');
-    expect(c.read(onboardingProvider).editionId, 'yo-bmy');
     await t.flushTimers();
   });
 

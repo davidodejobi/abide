@@ -55,6 +55,7 @@ class NotePlayback {
     int? speed,
   }) =>
       NotePlayback(
+        path: path,
         loaded: loaded ?? this.loaded,
         playing: playing ?? this.playing,
         positionMs: positionMs ?? this.positionMs,

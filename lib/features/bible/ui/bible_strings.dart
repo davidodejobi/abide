@@ -39,6 +39,33 @@ abstract final class BibleStrings {
   static const newTestament = 'NEW TESTAMENT';
   static const pickChapter = 'Pick a chapter';
   static const edition = 'EDITION';
+
+  // Get more Bibles
+  static const getMoreBibles = 'Get more Bibles';
+  static const getMoreBiblesHint = 'Download more translations';
+  static const included = 'Included';
+  static const download = 'Download';
+  static const remove = 'Remove';
+  static const cancel = 'Cancel';
+  static const bibleDownloadsIntro =
+      'Downloaded Bibles stay on this phone and work offline. '
+      'You can remove them any time.';
+  static const catalogError =
+      'We could not load the list of Bibles. Check your connection and try again.';
+  static const catalogOffline =
+      'You are offline. Showing the last list we saved.';
+  static const downloadFailed = 'Download failed. Tap to try again.';
+  static const downloadCorrupt =
+      'That download did not check out. Tap to try again.';
+  static const missingEditionNotice =
+      'Your saved Bible is not on this phone, so you are reading the KJV.';
+  static const getIt = 'Get it';
+  static String removeTitle(String name) => 'Remove $name?';
+  static const removeBody =
+      'You can download it again later. Your notes and highlights stay.';
+  static String downloading(int pct) => 'Downloading $pct%';
+  static String sizeMb(int bytes) =>
+      '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
   static const chooseBookAndChapter = 'Choose book and chapter';
 
   static String selected(int n) =>

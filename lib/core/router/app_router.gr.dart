@@ -277,6 +277,22 @@ class ManageTemplatesRoute extends PageRouteInfo<void> {
 }
 
 /// generated route for
+/// [MoreBiblesPage]
+class MoreBiblesRoute extends PageRouteInfo<void> {
+  const MoreBiblesRoute({List<PageRouteInfo>? children})
+      : super(MoreBiblesRoute.name, initialChildren: children);
+
+  static const String name = 'MoreBiblesRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const MoreBiblesPage();
+    },
+  );
+}
+
+/// generated route for
 /// [OnboardingPage]
 class OnboardingRoute extends PageRouteInfo<void> {
   const OnboardingRoute({List<PageRouteInfo>? children})
@@ -351,6 +367,22 @@ class PlusRoute extends PageRouteInfo<void> {
     name,
     builder: (data) {
       return const PlusPage();
+    },
+  );
+}
+
+/// generated route for
+/// [RoadAheadPage]
+class RoadAheadRoute extends PageRouteInfo<void> {
+  const RoadAheadRoute({List<PageRouteInfo>? children})
+      : super(RoadAheadRoute.name, initialChildren: children);
+
+  static const String name = 'RoadAheadRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const RoadAheadPage();
     },
   );
 }

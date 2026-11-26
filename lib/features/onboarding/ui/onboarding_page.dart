@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openbaptisthymnal/core/router/app_router.dart';
 import 'package:openbaptisthymnal/core/theme/lum_theme.dart';
+import 'package:openbaptisthymnal/features/daily/providers/landmark_download_provider.dart';
 
 import 'package:openbaptisthymnal/features/plus/domain/plus_rules.dart';
 import 'package:openbaptisthymnal/features/plus/providers/plus_providers.dart';
@@ -11,11 +12,13 @@ import '../providers/onboarding_provider.dart';
 import 'screens/bible_screen.dart';
 import 'screens/name_screen.dart';
 import 'screens/plan_screen.dart';
+import 'screens/road_download_screen.dart';
 import 'screens/plus_offer_screen.dart';
 import 'screens/welcome_screen.dart';
 
-/// Hosts the first-run flow: welcome, then three steps on the road (Bible,
-/// plan, name). Steps whose data the app cannot store yet are not shown.
+/// Hosts the first-run flow: welcome, then up to four steps on the road (Bible,
+/// plan, road download, name). The download step is left out where nothing can
+/// be kept on disk (web).
 @RoutePage()
 class OnboardingPage extends ConsumerStatefulWidget {
   const OnboardingPage({super.key});
@@ -25,8 +28,13 @@ class OnboardingPage extends ConsumerStatefulWidget {
 }
 
 class _OnboardingPageState extends ConsumerState<OnboardingPage> {
-  static const _steps = 3;
   int _page = 0;
+
+  // Pages: 0 welcome, 1 bible, 2 plan, 3 road (only when supported), then name.
+  late final bool _road =
+      ref.read(landmarkDownloadProvider.notifier).supported;
+  int get _steps => _road ? 4 : 3;
+  int get _namePage => _road ? 4 : 3;
 
   void _goTo(int page) => setState(() => _page = page);
 
@@ -35,7 +43,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
   /// Onboarding is saved; offer Plus once, softly, to readers without it.
   void _afterName() => showOnboardingOffer(ref.read(plusProvider),
           enabled: ref.read(plusEnabledProvider))
-      ? _goTo(4)
+      ? _goTo(_namePage + 1)
       : _finish();
 
   Widget _buildPage() {
@@ -59,22 +67,38 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
           onBack: () => _goTo(1),
         );
       case 3:
-        return NameScreen(
-          key: const ValueKey(3),
-          step: 3,
-          total: _steps,
-          onDone: _afterName,
-          onBack: () => _goTo(2),
-        );
+        if (_road) {
+          return RoadDownloadScreen(
+            key: const ValueKey(3),
+            step: 3,
+            total: _steps,
+            onNext: () => _goTo(4),
+            onBack: () => _goTo(2),
+          );
+        }
+        return _nameScreen();
+      case 4:
+        if (_road) return _nameScreen();
+        return _plusOffer();
       default:
-        return PlusOfferScreen(
-          key: const ValueKey(4),
-          onDone: _finish,
-          onSeePlans: () => context.router
-              .replaceAll([const DashboardRoute(), const PlusRoute()]),
-        );
+        return _plusOffer();
     }
   }
+
+  Widget _nameScreen() => NameScreen(
+        key: ValueKey(_namePage),
+        step: _namePage,
+        total: _steps,
+        onDone: _afterName,
+        onBack: () => _goTo(_namePage - 1),
+      );
+
+  Widget _plusOffer() => PlusOfferScreen(
+        key: const ValueKey(99),
+        onDone: _finish,
+        onSeePlans: () => context.router
+            .replaceAll([const DashboardRoute(), const PlusRoute()]),
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -84,7 +108,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
       onPopInvokedWithResult: (didPop, _) {
         if (didPop || saving || _page == 0) return;
         // Everything is saved by the offer step, so back means skip it.
-        _page == 4 ? _finish() : _goTo(_page - 1);
+        _page == _namePage + 1 ? _finish() : _goTo(_page - 1);
       },
       child: Scaffold(
         backgroundColor: context.lum.bgPage,

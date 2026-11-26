@@ -40,6 +40,10 @@ JNIEXPORT jbyteArray JNICALL Java_com_lumway_whisper_WhisperLib_transcribe(
   p.n_threads = threads;
   p.no_context = true;
   p.suppress_nst = true;
+  // Short rows (about 6-10 s) so a tap lands near the moment.
+  p.token_timestamps = true;
+  p.max_len = 90;
+  p.split_on_word = true;
 
   jsize n = env->GetArrayLength(samples);
   jfloat *data = env->GetFloatArrayElements(samples, nullptr);

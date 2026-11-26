@@ -10,10 +10,10 @@ import '../../domain/road_landmarks.dart';
 /// plan has a stop for it ([ensureLandmarks]), so art that can never appear is
 /// never held in memory.
 class RoadArt {
-  RoadArt._(this._images, this.landmarks);
+  RoadArt._(this._images, this.catalog);
 
   final Map<String, ui.Image> _images;
-  final List<Landmark> landmarks;
+  final LandmarkCatalog catalog;
   final _loading = <String, Future<void>>{};
 
   ui.Image? operator [](String name) => _images[name];
@@ -41,8 +41,10 @@ class RoadArt {
   static Future<RoadArt> _load() async {
     final art = RoadArt._(
         <String, ui.Image>{},
-        parseLandmarks(
-            await rootBundle.loadString('assets/images/road/landmarks.json')));
+        parseLandmarkCatalog(
+            await rootBundle.loadString('assets/images/road/landmarks.json'),
+            await rootBundle
+                .loadString('assets/images/road/landmark_days.json')));
     await Future.wait([for (final n in names) art._decode(n)]);
     return art;
   }

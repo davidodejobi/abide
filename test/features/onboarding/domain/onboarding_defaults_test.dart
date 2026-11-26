@@ -1,11 +1,26 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:openbaptisthymnal/features/bible/model/bible_edition.dart';
 import 'package:openbaptisthymnal/features/daily/domain/reading_plan.dart';
 import 'package:openbaptisthymnal/features/onboarding/domain/onboarding_defaults.dart';
 
+BibleEdition _e(String id) => BibleEdition(
+    id: id,
+    languageCode: id.split('-').first,
+    versionCode: id.split('-').last,
+    displayName: id,
+    attribution: '');
+
 void main() {
+  // Only the three English Bibles are bundled; the rest are downloaded later,
+  // so the multi-language cases use a fixture list.
+  final editions = [
+    for (final id in ['en-kjv', 'en-bsb', 'yo-bmy', 'ha-biblica']) _e(id)
+  ];
+
   test('phone language is used when a Bible exists in it', () {
-    expect(defaultLanguageFor('yo'), 'yo');
-    expect(defaultLanguageFor('HA'), 'ha');
+    expect(defaultLanguageFor('yo', editions), 'yo');
+    expect(defaultLanguageFor('HA', editions), 'ha');
+    expect(defaultLanguageFor('yo'), 'en'); // not bundled
   });
 
   test('unknown phone language falls back to English', () {
@@ -14,10 +29,11 @@ void main() {
   });
 
   test('languages are listed once, in catalogue order', () {
-    final langs = onboardingLanguages();
+    final langs = onboardingLanguages(editions);
     expect(langs.first, 'en');
     expect(langs.toSet().length, langs.length);
     expect(langs, containsAll(['en', 'yo']));
+    expect(onboardingLanguages(), ['en']);
   });
 
   test('editions are filtered by language and the first one is the default',
