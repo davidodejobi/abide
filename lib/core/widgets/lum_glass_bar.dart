@@ -43,7 +43,12 @@ class LumGlassBar extends StatelessWidget {
           filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
           child: DecoratedBox(
             decoration: BoxDecoration(
-              color: lum.glassFill,
+              // Glass alone (4% in dark) let the lyrics show through the
+              // bar; back it with the opaque surface so text stays readable.
+              color: Color.alphaBlend(
+                lum.glassFill,
+                lum.glassFillOpaque.withValues(alpha: 0.88),
+              ),
               borderRadius: shape,
               border: Border.all(color: lum.glassStroke),
             ),
