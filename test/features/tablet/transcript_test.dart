@@ -211,7 +211,7 @@ void main() {
             language: 'en',
             doneMs: 60000,
             durationMs: 150000,
-            segments: const [TranscriptSegment(0, 60000, 'chunk 0')]).toJson()),
+            segments: [TranscriptSegment(0, 60000, 'chunk 0')]).toJson()),
       };
       final calls = <List<int>>[];
       final c = make(files, calls);
