@@ -33,6 +33,7 @@ void main() {
     final deleted = await sweepOrphanMedia(
       now: now,
       listFiles: list,
+      noteCount: () => 3,
       loadReferenceTexts: () async => [
         'text\n\n![cap](note_images/live.png "size=m")',
         // A trashed note's markdown is part of the reference set.
@@ -53,7 +54,44 @@ void main() {
     final deleted = await sweepOrphanMedia(
       now: now,
       listFiles: list,
+      noteCount: () => 3,
       loadReferenceTexts: () async => throw StateError('db closed'),
+    );
+    expect(deleted, 0);
+    expect(orphan.existsSync(), isTrue);
+  });
+  test('deletes nothing when no notes were read but media exists', () async {
+    final orphan = make('note_images/orphan.png', ageDays: 90);
+    final deleted = await sweepOrphanMedia(
+      now: now,
+      listFiles: list,
+      noteCount: () => 0,
+      loadReferenceTexts: () async => const [],
+    );
+    expect(deleted, 0);
+    expect(orphan.existsSync(), isTrue);
+  });
+
+  test('never touches files the app did not name', () async {
+    final stray = make('note_images/.DS_Store', ageDays: 90);
+    final odd = make('note_audio/my recording.m4a', ageDays: 90);
+    await sweepOrphanMedia(
+      now: now,
+      listFiles: list,
+      noteCount: () => 1,
+      loadReferenceTexts: () async => const [],
+    );
+    expect(stray.existsSync(), isTrue);
+    expect(odd.existsSync(), isTrue);
+  });
+
+  test('a failing listing deletes nothing', () async {
+    final orphan = make('note_images/orphan.png', ageDays: 90);
+    final deleted = await sweepOrphanMedia(
+      now: now,
+      noteCount: () => 1,
+      listFiles: (_) async => throw const FileSystemException('denied'),
+      loadReferenceTexts: () async => const [],
     );
     expect(deleted, 0);
     expect(orphan.existsSync(), isTrue);

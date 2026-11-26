@@ -5,6 +5,10 @@ import 'package:openbaptisthymnal/features/tablet/domain/note_media.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/parse_links.dart';
 
 void main() {
+  // A one-image document whose caption is [caption].
+  Document noteDocumentToDoc(String caption) => Document.blank()
+    ..insert([0], [imageMediaNode(url: 'note_images/x.png', caption: caption)]);
+
   String roundTrip(String md) =>
       noteDocumentToMarkdown(noteMarkdownToDocument(md));
 
@@ -99,14 +103,54 @@ void main() {
       '![](note_images/x.png "size=m")',
       '![](note_images/x.png "size=s align=left")',
       '![A caption](note_images/x.png "align=left")',
-      '![Recording, 26 Nov](note_audio/x.m4a "dur=135000 speed=150 peaks=$peaks")',
+      '![Recording\\, 26 Nov](note_audio/x.m4a "dur=135000 speed=150 peaks=$peaks")',
       '![](note_audio/x.m4a "dur=1000")',
       r'![a \[ lone bracket and \\ slash](note_images/x.png)',
-      '![a ) paren and " quote](note_images/x.png "size=m")',
+      r'![a \) paren and \" quote](note_images/x.png "size=m")',
     ];
     for (final s in samples) {
       test(s, () => expect(roundTrip(s), s));
     }
+
+    test('captions with markdown punctuation stay literal text', () {
+      const captions = [
+        'see `code` here',
+        'a *b* c',
+        '2*3*4',
+        'Tom &amp; Jerry',
+        '~~s~~',
+        '<http://x.y>',
+        'link [x](http://a.b)',
+        '![nested](x.png)',
+        'Abide [[bible:JHN.3.16]] and [[hymn:hymn_0062:yo]]',
+        'Recording, 26 Nov, 10:42',
+      ];
+      for (final c in captions) {
+        final doc = noteDocumentToDoc(c);
+        expect(doc.root.children, hasLength(1), reason: c);
+        final node = doc.root.children.single;
+        expect(node.type, ImageBlockKeys.type, reason: c);
+        expect(node.attributes[mediaTextKey], c, reason: c);
+        // And the same text survives a second encode.
+        final md = noteDocumentToMarkdown(doc);
+        expect(roundTrip(md), md, reason: c);
+        // Audio names use the same escaping.
+        final audio = Document.blank()
+          ..insert([0], [audioMediaNode(url: 'note_audio/a.m4a', name: c)]);
+        final back = noteMarkdownToDocument(noteDocumentToMarkdown(audio));
+        expect(back.root.children.single.attributes[mediaTextKey], c,
+            reason: c);
+      }
+      // [[...]] stays verbatim in the stored line.
+      final doc = noteDocumentToDoc('Abide [[bible:JHN.3.16]]');
+      expect(noteDocumentToMarkdown(doc), contains('[[bible:JHN.3.16]]'));
+    });
+
+    test('encodePeaks ignores NaN and infinity', () {
+      expect(() => encodePeaks([double.nan, 0.5, double.infinity, -0.2]),
+          returnsNormally);
+      expect(encodePeaks([double.nan, double.infinity]), '');
+    });
 
     test('attributes land on the nodes', () {
       final doc = noteMarkdownToDocument(
@@ -139,7 +183,7 @@ void main() {
 
   test('links around and inside media survive and stay parseable', () {
     const md = 'Read [[bible:JHN.15.1-8]] and [[hymn:hymn_0062:yo]].\n\n'
-        '![Abide, see [[bible:JHN.15.4]]](note_images/x.png "size=m")\n\n'
+        '![Abide\\, see [[bible:JHN.15.4]]](note_images/x.png "size=m")\n\n'
         '![Sermon](note_audio/x.m4a "dur=10")\n\n'
         'Then [[Grace]].';
     final out = roundTrip(md);

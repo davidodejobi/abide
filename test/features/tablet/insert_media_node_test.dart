@@ -57,4 +57,15 @@ void main() {
       expect(es.selection, Selection.collapsed(Position(path: [1])));
     });
   });
+
+  test('a caret captured before the Insert sheet wins over a cleared one', () {
+    final es = EditorState(
+      document: Document.blank()
+        ..insert([0], [paragraphNode(text: 'a'), paragraphNode(text: 'b')]),
+    );
+    final captured = Selection.collapsed(Position(path: [0], offset: 1));
+    es.selection = null; // the sheet stole focus
+    expect(mediaAnchorPath(es, captured), [0]);
+    expect(mediaAnchorPath(es, null), [1], reason: 'falls back to last block');
+  });
 }

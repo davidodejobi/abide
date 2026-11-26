@@ -39,3 +39,9 @@ Future<void> insertMediaNode(
   );
   await editorState.apply(transaction);
 }
+
+/// Where a new media block goes: the caret captured before a sheet or picker
+/// opened ([captured]), else the live caret, else the last block.
+List<int> mediaAnchorPath(EditorState editorState, Selection? captured) =>
+    (captured ?? editorState.selection)?.end.path ??
+    editorState.document.root.children.last.path;

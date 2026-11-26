@@ -96,6 +96,7 @@ abstract final class NotesStrings {
   static const insertChecklist = 'Checklist';
   static const cameraDenied =
       'Camera access is off. Turn it on in Settings to take a photo.';
+  static const noCamera = 'No camera is available on this device.';
   static const photosDenied =
       'Photos access is off. Turn it on in Settings to add an image.';
   static const play = 'Play';

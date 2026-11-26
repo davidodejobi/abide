@@ -67,7 +67,11 @@ Node audioMediaNode({
 /// Quantises [samples] (any magnitude) to [peakBars] one-byte bars as hex.
 String encodePeaks(List<double> samples) {
   if (samples.isEmpty) return '';
-  final mags = samples.map((s) => s.abs()).toList();
+  final mags = [
+    for (final s in samples)
+      if (s.isFinite) s.abs(),
+  ];
+  if (mags.isEmpty) return '';
   final maxMag = mags.reduce((a, b) => a > b ? a : b);
   if (maxMag == 0) return '';
   final out = StringBuffer();
@@ -97,32 +101,24 @@ List<double> decodePeaks(String hex) {
   return out;
 }
 
-/// Escapes unbalanced `[`/`]` and backslashes so the text is a valid image
-/// description. Balanced pairs (such as `[[bible:JHN.1.1]]`) stay literal so
+final _wikiSpan = RegExp(r'\[\[[^\[\]]*\]\]');
+final _asciiPunct = RegExp(r'[!-/:-@\[-`{-~]');
+
+/// Makes [text] safe as an image description: every ASCII punctuation mark is
+/// backslash-escaped (so `*`, backticks, `<`, `&`, `~`, `![x](y)` and friends
+/// stay literal text), except inside `[[...]]` spans, which stay verbatim so
 /// caption links reach the link graph and the tappable renderer.
 String escapeCaption(String text) {
   final flat = text.replaceAll(RegExp(r'\s*\n\s*'), ' ');
-  final open = <int>[];
-  final unbalanced = <int>{};
-  for (var i = 0; i < flat.length; i++) {
-    final c = flat[i];
-    if (c == '[') {
-      open.add(i);
-    } else if (c == ']') {
-      if (open.isEmpty) {
-        unbalanced.add(i);
-      } else {
-        open.removeLast();
-      }
-    }
-  }
-  unbalanced.addAll(open);
   final b = StringBuffer();
-  for (var i = 0; i < flat.length; i++) {
-    final c = flat[i];
-    if (c == r'\' || unbalanced.contains(i)) b.write(r'\');
-    b.write(c);
+  var cursor = 0;
+  String esc(String t) => t.replaceAllMapped(_asciiPunct, (m) => '\\${m[0]}');
+  for (final m in _wikiSpan.allMatches(flat)) {
+    b.write(esc(flat.substring(cursor, m.start)));
+    b.write(m[0]);
+    cursor = m.end;
   }
+  b.write(esc(flat.substring(cursor)));
   return b.toString();
 }
 

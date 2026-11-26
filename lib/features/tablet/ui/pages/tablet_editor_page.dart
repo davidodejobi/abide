@@ -118,7 +118,15 @@ class _NoteEditorView extends HookConsumerWidget {
       () => EditorState(document: noteMarkdownToDocument(initialMarkdown)),
       const [],
     );
-    useEffect(() => editorState.dispose, [editorState]);
+    // The delete-undo snackbar must not outlive the editor: its Undo would act
+    // on a disposed document.
+    final messenger = ScaffoldMessenger.of(context);
+    useEffect(() {
+      return () {
+        messenger.hideCurrentSnackBar();
+        editorState.dispose();
+      };
+    }, [editorState]);
 
     Future<void> navigateToLink(ParsedLink link) async {
       switch (link.type) {
@@ -242,22 +250,25 @@ class _NoteEditorView extends HookConsumerWidget {
       );
     }
 
-    Future<void> insertImage(ImageSource source) async {
-      // Capture the caret before the picker steals focus; restore it so the
-      // image lands where the user was editing.
-      final sel = editorState.selection;
+    Future<void> insertImage(ImageSource source, Selection? sel) async {
+      // `sel` is the caret captured before the Insert sheet stole focus.
       final String? relativePath;
       try {
         relativePath = await ref
             .read(fileStorageServiceProvider)
             .pickAndPersistImage(bucket: 'note_images', source: source);
-      } on PlatformException {
+      } on PlatformException catch (e) {
         if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(source == ImageSource.camera
-              ? NotesStrings.cameraDenied
-              : NotesStrings.photosDenied),
-        ));
+        final String message;
+        if (e.code == 'no_available_camera') {
+          message = NotesStrings.noCamera;
+        } else if (source == ImageSource.camera) {
+          message = NotesStrings.cameraDenied;
+        } else {
+          message = NotesStrings.photosDenied;
+        }
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(message)));
         return;
       }
       if (relativePath == null) return;
@@ -267,7 +278,7 @@ class _NoteEditorView extends HookConsumerWidget {
       await insertMediaNode(
         editorState,
         imageMediaNode(url: FileStorageService.absolutePath(relativePath)),
-        anchorPath: _anchorPath(editorState, sel),
+        anchorPath: mediaAnchorPath(editorState, sel),
       );
     }
 
@@ -287,8 +298,7 @@ class _NoteEditorView extends HookConsumerWidget {
       await editorState.insertTextAtCurrentSelection(text);
     }
 
-    Future<void> insertAudio() async {
-      final sel = editorState.selection;
+    Future<void> insertAudio(Selection? sel) async {
       final clip = await showModalBottomSheet<RecordedClip>(
         context: context,
         isScrollControlled: true,
@@ -313,21 +323,24 @@ class _NoteEditorView extends HookConsumerWidget {
           durationMs: clip.durationMs,
           peaks: clip.peaks,
         ),
-        anchorPath: _anchorPath(editorState, sel),
+        anchorPath: mediaAnchorPath(editorState, sel),
       );
     }
 
     Future<void> openInsertSheet() async {
+      // The sheet steals focus and clears the selection: keep the caret.
+      final sel = editorState.selection;
       final choice = await showInsertSheet(context);
       if (choice == null) return;
       switch (choice) {
         case InsertChoice.camera:
-          await insertImage(ImageSource.camera);
+          await insertImage(ImageSource.camera, sel);
         case InsertChoice.photos:
-          await insertImage(ImageSource.gallery);
+          await insertImage(ImageSource.gallery, sel);
         case InsertChoice.record:
-          await insertAudio();
+          await insertAudio(sel);
         case InsertChoice.checklist:
+          if (sel != null) editorState.selection = sel;
           if (context.mounted) {
             todoListMobileToolbarItem.actionHandler?.call(context, editorState);
           }
@@ -566,8 +579,3 @@ class _NoteEditorView extends HookConsumerWidget {
     );
   }
 }
-
-/// Where a new media block goes: the caret's block, else the last one.
-List<int> _anchorPath(EditorState editorState, Selection? sel) =>
-    (sel ?? editorState.selection)?.end.path ??
-    editorState.document.root.children.last.path;

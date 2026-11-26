@@ -59,9 +59,15 @@ class NoteMediaActions {
   /// Puts a removed block back, clamped to the document as it is now. Typing
   /// done in between is untouched because only an insert is applied.
   Future<void> restore(RemovedMedia removed) async {
-    final siblings = editorState.document.root.children.length;
-    final index = removed.path.last.clamp(0, siblings);
-    final path = [...removed.path.sublist(0, removed.path.length - 1), index];
+    final parentPath = removed.path.sublist(0, removed.path.length - 1);
+    final parent = parentPath.isEmpty
+        ? editorState.document.root
+        : (editorState.getNodeAtPath(parentPath) ?? editorState.document.root);
+    final index = removed.path.last.clamp(0, parent.children.length);
+    final path = [
+      ...(parent == editorState.document.root ? <int>[] : parentPath),
+      index
+    ];
     await editorState
         .apply(editorState.transaction..insertNode(path, removed.node));
   }

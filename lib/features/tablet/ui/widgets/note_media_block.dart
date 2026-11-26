@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:appflowy_editor/appflowy_editor.dart';
@@ -88,7 +89,17 @@ class _NoteMediaBlockState extends State<NoteMediaBlockWidget>
   bool get _isAudio => node.type == audioNodeType;
   String get _url => node.attributes[mediaUrlKey] as String? ?? '';
   String get _text => node.attributes[mediaTextKey] as String? ?? '';
-  bool get _missing => !isExternalUrl(_url) && !File(_url).existsSync();
+  // existsSync once per url, not on every build.
+  String? _checkedUrl;
+  bool _missingCached = false;
+  bool get _missing {
+    if (kIsWeb || isExternalUrl(_url)) return false;
+    if (_checkedUrl != _url) {
+      _checkedUrl = _url;
+      _missingCached = !File(_url).existsSync();
+    }
+    return _missingCached;
+  }
 
   // Drag-to-reorder state. The block is lifted in place and committed on drop.
   double _dragDy = 0;
@@ -97,7 +108,7 @@ class _NoteMediaBlockState extends State<NoteMediaBlockWidget>
 
   @override
   void dispose() {
-    _dropLine?.remove();
+    _endDragVisuals();
     super.dispose();
   }
 
@@ -191,69 +202,114 @@ class _NoteMediaBlockState extends State<NoteMediaBlockWidget>
 
   // ---- drag to reorder ----------------------------------------------------
 
+  double _fingerDy = 0;
+  double _scrollAtStart = 0;
+  Offset _fingerGlobal = Offset.zero;
+  Timer? _dragTimer;
+
+  double get _scrollNow => widget.editorState.scrollService?.dy ?? 0;
+
   void _dragStart(DragStartDetails d) {
     HapticFeedback.mediumImpact();
-    setState(() => _dragDy = 0);
+    _fingerDy = 0;
+    _scrollAtStart = _scrollNow;
+    _fingerGlobal = d.globalPosition;
+    setState(() {
+      _dragDy = 0;
+      _dropIndex = node.path.last;
+    });
     final overlay = Overlay.maybeOf(context, rootOverlay: true);
     _dropLine = OverlayEntry(builder: (_) => _DropLine(rect: _dropLineRect()));
     overlay?.insert(_dropLine!);
+    // Auto-scroll moves the content without any finger event, so poll.
+    _dragTimer = Timer.periodic(const Duration(milliseconds: 32), (_) {
+      if (mounted) _refreshDrag();
+    });
   }
 
-  /// Sibling indices (excluding this block) with their global rects.
-  List<Rect> _siblingRects() {
-    final siblings = node.parent?.children ?? const <Node>[];
-    return [
-      for (final s in siblings)
-        if (s != node && s.renderBox != null)
-          s.renderBox!.localToGlobal(Offset.zero) & s.renderBox!.size,
-    ];
-  }
-
-  Rect _myRect() {
-    final box = _renderBox!;
+  Rect? _rectOf(Node n) {
+    final box = n.renderBox;
+    if (box == null || !box.attached) return null;
     return box.localToGlobal(Offset.zero) & box.size;
   }
 
+  /// Where the block would land, as an index among its siblings. Counted as a
+  /// delta from the current index over rendered neighbours only.
   int _targetIndex() {
-    final mine = _myRect().translate(0, _dragDy);
-    var index = 0;
-    for (final r in _siblingRects()) {
-      if (r.center.dy < mine.center.dy) index++;
+    final siblings = node.parent?.children ?? const <Node>[];
+    final idx = node.path.last;
+    final mine = _rectOf(node);
+    if (mine == null) return idx;
+    final centerY = mine.center.dy + _dragDy;
+    var down = 0;
+    var up = 0;
+    for (var i = 0; i < siblings.length; i++) {
+      if (i == idx) continue;
+      final r = _rectOf(siblings[i]);
+      if (r == null) continue;
+      if (i > idx && r.center.dy < centerY) down++;
+      if (i < idx && r.center.dy > centerY) up++;
     }
-    return index;
+    return (idx + down - up)
+        .clamp(0, siblings.isEmpty ? 0 : siblings.length - 1);
   }
 
   Rect _dropLineRect() {
-    final rects = _siblingRects();
-    final me = _myRect();
-    if (rects.isEmpty) return Rect.fromLTWH(me.left, me.top, me.width, 0);
-    final i = (_dropIndex ?? _targetIndex()).clamp(0, rects.length);
-    final y = i >= rects.length ? rects.last.bottom : rects[i].top;
+    final me = _rectOf(node) ?? Rect.zero;
+    final siblings = node.parent?.children ?? const <Node>[];
+    final idx = node.path.last;
+    final target = _dropIndex ?? idx;
+    if (target == idx || target >= siblings.length) {
+      return Rect.fromLTWH(me.left, me.top, me.width, 0);
+    }
+    final r = _rectOf(siblings[target]);
+    if (r == null) return Rect.fromLTWH(me.left, me.top, me.width, 0);
+    final y = target > idx ? r.bottom : r.top;
     return Rect.fromLTWH(me.left, y, me.width, 0);
   }
 
-  void _dragUpdate(DragUpdateDetails d) {
+  void _refreshDrag() {
+    // The block follows the finger plus however far the list has scrolled.
+    final dy = _fingerDy + (_scrollNow - _scrollAtStart);
     final target = _targetIndex();
     if (target != _dropIndex) HapticFeedback.selectionClick();
     setState(() {
-      _dragDy += d.delta.dy;
+      _dragDy = dy;
       _dropIndex = target;
     });
     _dropLine?.markNeedsBuild();
     widget.editorState.autoScroller?.startAutoScrollIfNecessary(
-      Rect.fromLTWH(d.globalPosition.dx, d.globalPosition.dy, 1, 1),
+      Rect.fromLTWH(_fingerGlobal.dx, _fingerGlobal.dy, 1, 1),
     );
   }
 
-  Future<void> _dragEnd([DragEndDetails? _]) async {
+  void _dragUpdate(DragUpdateDetails d) {
+    _fingerDy += d.delta.dy;
+    _fingerGlobal = d.globalPosition;
+    _refreshDrag();
+  }
+
+  void _endDragVisuals() {
+    _dragTimer?.cancel();
+    _dragTimer = null;
     widget.editorState.autoScroller?.stopAutoScroll();
     _dropLine?.remove();
     _dropLine = null;
+  }
+
+  void _dragCancel() {
+    _endDragVisuals();
+    if (mounted) {
+      setState(() {
+        _dragDy = 0;
+        _dropIndex = null;
+      });
+    }
+  }
+
+  Future<void> _dragEnd([DragEndDetails? _]) async {
     final target = _dropIndex ?? node.path.last;
-    setState(() {
-      _dragDy = 0;
-      _dropIndex = null;
-    });
+    _dragCancel();
     await _actions.moveTo(node, target);
   }
 
@@ -270,13 +326,14 @@ class _NoteMediaBlockState extends State<NoteMediaBlockWidget>
         final selected = selection != null &&
             listEquals(selection.start.path, node.path) &&
             listEquals(selection.end.path, node.path);
-        final dragging = _dragDy != 0 || _dropLine != null;
+        final dragging = _dropLine != null;
         final controls = _Controls(
           selected: selected,
           onMore: _openSheet,
           onDragStart: _dragStart,
           onDragUpdate: _dragUpdate,
           onDragEnd: _dragEnd,
+          onDragCancel: _dragCancel,
         );
         final body = _missing
             ? _BrokenCard(onRemove: _remove, controls: controls)
@@ -294,7 +351,7 @@ class _NoteMediaBlockState extends State<NoteMediaBlockWidget>
                     controls: controls,
                     onLink: widget.onLink,
                     onEditCaption: _editText,
-                    onBroken: () => setState(() {}),
+                    onRemove: _remove,
                   );
         return GestureDetector(
           onLongPress: _openSheet,
@@ -394,6 +451,7 @@ class _Controls extends StatelessWidget {
     required this.onDragStart,
     required this.onDragUpdate,
     required this.onDragEnd,
+    required this.onDragCancel,
   });
 
   final bool selected;
@@ -401,6 +459,7 @@ class _Controls extends StatelessWidget {
   final GestureDragStartCallback onDragStart;
   final GestureDragUpdateCallback onDragUpdate;
   final GestureDragEndCallback onDragEnd;
+  final VoidCallback onDragCancel;
 
   @override
   Widget build(BuildContext context) {
@@ -414,6 +473,7 @@ class _Controls extends StatelessWidget {
             onVerticalDragStart: onDragStart,
             onVerticalDragUpdate: onDragUpdate,
             onVerticalDragEnd: onDragEnd,
+            onVerticalDragCancel: onDragCancel,
             child: SizedBox(
               width: 36,
               height: 44,
@@ -514,7 +574,7 @@ class _ImageBody extends StatelessWidget {
     required this.controls,
     required this.onLink,
     required this.onEditCaption,
-    required this.onBroken,
+    required this.onRemove,
   });
 
   final Node node;
@@ -522,7 +582,7 @@ class _ImageBody extends StatelessWidget {
   final Widget controls;
   final void Function(ParsedLink) onLink;
   final VoidCallback onEditCaption;
-  final VoidCallback onBroken;
+  final VoidCallback onRemove;
 
   @override
   Widget build(BuildContext context) {
@@ -543,7 +603,7 @@ class _ImageBody extends StatelessWidget {
             fit: BoxFit.fitWidth,
             errorBuilder: (_, __, ___) => SizedBox(
               width: width,
-              child: _BrokenCard(onRemove: () {}, controls: controls),
+              child: _BrokenCard(onRemove: onRemove, controls: controls),
             ),
           );
       return Align(
@@ -685,9 +745,14 @@ class _AudioBody extends StatefulWidget {
 }
 
 class _AudioBodyState extends State<_AudioBody> {
+  /// The clip that is playing right now: starting another one stops it.
+  static _AudioBodyState? _playing;
+
   PlayerController? _player;
+  StreamSubscription<void>? _completionSub;
   bool _prepared = false;
   bool _busy = false;
+  int _appliedSpeed = 100;
 
   Map<String, dynamic> get _a => widget.node.attributes;
   String get _url => _a[mediaUrlKey] as String? ?? '';
@@ -696,6 +761,8 @@ class _AudioBodyState extends State<_AudioBody> {
 
   @override
   void dispose() {
+    if (_playing == this) _playing = null;
+    _completionSub?.cancel();
     _player?.dispose();
     super.dispose();
   }
@@ -704,17 +771,49 @@ class _AudioBodyState extends State<_AudioBody> {
     final player = _player ??= PlayerController();
     await player.preparePlayer(path: _url, shouldExtractWaveform: false);
     _prepared = true;
-    // Clips recorded before peaks were stored get them once, on first play.
-    final peaks = _a[audioPeaksKey] as String? ?? '';
-    if (peaks.isEmpty || _durationMs == 0) {
-      final samples = peaks.isEmpty
-          ? await player.extractWaveformData(path: _url, noOfSamples: peakBars)
-          : const <double>[];
-      await widget.actions.setAttrsQuietly(widget.node, {
-        if (peaks.isEmpty) audioPeaksKey: encodePeaks(samples),
-        if (_durationMs == 0) audioDurationKey: player.maxDuration,
-      });
+    // One subscription for the player's life. A finished clip needs preparing
+    // again before the next play.
+    _completionSub ??= player.onCompletion.listen((_) {
+      _prepared = false;
+      if (_playing == this) _playing = null;
+      if (mounted) setState(() {});
+    });
+  }
+
+  /// Clips recorded before peaks were stored get them once, after playback has
+  /// already started. Nothing is written unless extraction succeeded.
+  /// (The write is an ordinary note edit, so it bumps the note's updatedAt and
+  /// syncs once; the repository has no way to skip that.)
+  Future<void> _backfill(PlayerController player) async {
+    try {
+      final needPeaks = (_a[audioPeaksKey] as String? ?? '').isEmpty;
+      final needDur = _durationMs == 0 && player.maxDuration > 0;
+      if (!needPeaks && !needDur) return;
+      var peaks = '';
+      if (needPeaks) {
+        final samples = await player.extractWaveformData(
+          path: _url,
+          noOfSamples: peakBars,
+        );
+        peaks = encodePeaks(samples);
+      }
+      if (!mounted || widget.node.parent == null) return;
+      final attrs = {
+        if (peaks.isNotEmpty) audioPeaksKey: peaks,
+        if (needDur) audioDurationKey: player.maxDuration,
+      };
+      if (attrs.isEmpty) return;
+      await widget.actions.setAttrsQuietly(widget.node, attrs);
+    } catch (_) {
+      // Leave the clip as it was; the next play tries again.
     }
+  }
+
+  Future<void> _stop() async {
+    try {
+      await _player?.pausePlayer();
+    } catch (_) {}
+    if (mounted) setState(() {});
   }
 
   Future<void> _toggle() async {
@@ -725,14 +824,15 @@ class _AudioBodyState extends State<_AudioBody> {
       final player = _player!;
       if (player.playerState.isPlaying) {
         await player.pausePlayer();
+        if (_playing == this) _playing = null;
       } else {
+        final other = _playing;
+        if (other != null && other != this) await other._stop();
+        _playing = this;
         await player.startPlayer();
+        _appliedSpeed = _speed;
         await player.setRate(_speed / 100);
-        // Finished clips need preparing again before the next play.
-        player.onCompletion.first.then((_) {
-          _prepared = false;
-          if (mounted) setState(() {});
-        });
+        _backfill(player); // not awaited: never delays playback
       }
     } catch (_) {
       // Unplayable file: the block simply stays at rest.
@@ -746,8 +846,17 @@ class _AudioBodyState extends State<_AudioBody> {
     final next =
         audioSpeeds[(audioSpeeds.indexOf(_speed) + 1) % audioSpeeds.length];
     await widget.actions.setAttrs(widget.node, {audioSpeedKey: next});
-    if (_prepared) await _player?.setRate(next / 100);
     if (mounted) setState(() {});
+  }
+
+  /// Speed can change from the sheet too, so apply it from the node whenever a
+  /// clip is playing.
+  void _syncRate() {
+    final player = _player;
+    if (player == null || !_prepared || _speed == _appliedSpeed) return;
+    if (!player.playerState.isPlaying) return;
+    _appliedSpeed = _speed;
+    player.setRate(_speed / 100);
   }
 
   Future<void> _seekFraction(double f) async {
@@ -759,6 +868,7 @@ class _AudioBodyState extends State<_AudioBody> {
   @override
   Widget build(BuildContext context) {
     final lum = context.lum;
+    _syncRate();
     final bars = decodePeaks(_a[audioPeaksKey] as String? ?? '');
     final name = (_a[mediaTextKey] as String? ?? '').trim();
     final total = _durationMs > 0 ? _durationMs : (_player?.maxDuration ?? 0);
