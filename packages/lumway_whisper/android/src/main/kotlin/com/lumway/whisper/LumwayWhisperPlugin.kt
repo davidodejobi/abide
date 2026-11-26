@@ -74,14 +74,14 @@ class LumwayWhisperPlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
     }
   }
 
-  /** 64-bit processor and at least 3 GB of RAM: small whisper needs both. */
+  /** 64-bit processor and at least 2.5 GiB of RAM (a 3 GB phone reports a little less): small whisper needs both. */
   private fun supported(): Boolean {
     if (android.os.Build.SUPPORTED_64_BIT_ABIS.isEmpty()) return false
     val am = appContext?.getSystemService(android.content.Context.ACTIVITY_SERVICE)
       as? android.app.ActivityManager ?: return false
     val info = android.app.ActivityManager.MemoryInfo()
     am.getMemoryInfo(info)
-    return info.totalMem >= 3L * 1024 * 1024 * 1024
+    return info.totalMem >= 2_684_354_560L
   }
 
   private fun free() {
