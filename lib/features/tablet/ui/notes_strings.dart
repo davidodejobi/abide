@@ -94,7 +94,7 @@ abstract final class NotesStrings {
   static const insert = 'Insert';
   static const insertCamera = 'Camera';
   static const insertPhotos = 'Photo library';
-  static const insertRecord = 'Record audio';
+  static const insertRecord = 'Record a message';
   static const insertChecklist = 'Checklist';
   static const cameraDenied =
       'Camera access is off. Turn it on in Settings to take a photo.';
@@ -183,4 +183,42 @@ abstract final class NotesStrings {
   static String loadError(Object e) => 'Could not load notes: $e';
   static String searchFailed(Object e) => 'Search failed: $e';
   static String hymnEyebrow(String number) => 'HYMN $number';
+
+  // Recording
+  static const recordTitle = 'Record a message';
+  static const recordingNow = 'Recording';
+  static const recordingPaused = 'Paused';
+  static const recordingInterrupted = 'Interrupted, tap to resume';
+  static const resume = 'Resume';
+  static const addMarker = 'Add marker';
+  static const finish = 'Finish';
+  static const markers = 'Markers';
+  static const markerLabelHint = 'Add a label (optional)';
+  static const skip = 'Skip';
+  static const saveLabel = 'Save label';
+  static const keepOpen = 'Keep Lumway open while recording.';
+  static const screenStaysOn =
+      'Your screen stays on while you record. Plug in for long messages, '
+      'and keep your phone near the speaker.';
+  static const saveRecordingTitle = 'Save this recording?';
+  static const saveRecordingBody = 'Your message is not saved yet.';
+  static const keepRecording = 'Keep recording';
+  static const discard = 'Discard';
+  static const micOffTitle = 'Microphone access is off';
+  static const micOffBody = 'Turn it on in Settings to record a message.';
+  static const openSettings = 'Open Settings';
+  static const micError = 'Could not start recording. Try again.';
+  static const consentTitle = 'Your recordings, your choice';
+  static const consentIntro =
+      'Here is what happens to your audio before you record for the first time.';
+  static const consentLocalTitle = 'Recordings stay on your phone';
+  static const consentLocalBody =
+      'Your audio is saved in this app on your phone and is not sent anywhere.';
+  static const consentPolicyTitle = 'Respect your church\'s policy';
+  static const consentPolicyBody =
+      'Some churches ask that messages are not recorded. If you are not sure, '
+      'ask a leader first.';
+  static const consentStart = 'I understand, start recording';
+  static const notNow = 'Not now';
+  static const playerBack15 = 'Back 15 seconds';
 }
