@@ -277,6 +277,22 @@ class ManageTemplatesRoute extends PageRouteInfo<void> {
 }
 
 /// generated route for
+/// [MoreBiblesPage]
+class MoreBiblesRoute extends PageRouteInfo<void> {
+  const MoreBiblesRoute({List<PageRouteInfo>? children})
+      : super(MoreBiblesRoute.name, initialChildren: children);
+
+  static const String name = 'MoreBiblesRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const MoreBiblesPage();
+    },
+  );
+}
+
+/// generated route for
 /// [OnboardingPage]
 class OnboardingRoute extends PageRouteInfo<void> {
   const OnboardingRoute({List<PageRouteInfo>? children})

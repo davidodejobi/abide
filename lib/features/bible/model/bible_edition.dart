@@ -1,5 +1,5 @@
-/// One available Bible edition: a (language, version) pair mapped to a bundled
-/// asset folder under `assets/bible/<id>/`. This is the Bible-local seed of the
+/// One available Bible edition: a (language, version) pair mapped to a folder
+/// of text, bundled under `assets/bible/<id>/` or downloaded. This is the Bible-local seed of the
 /// future shared "editions" abstraction that will also back Songs.
 class BibleEdition {
   const BibleEdition({
@@ -22,11 +22,27 @@ class BibleEdition {
   final String attribution;
 
   String get assetDir => 'assets/bible/$id';
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'languageCode': languageCode,
+        'versionCode': versionCode,
+        'displayName': displayName,
+        'attribution': attribution,
+      };
+
+  factory BibleEdition.fromJson(Map<String, dynamic> j) => BibleEdition(
+        id: j['id'] as String,
+        languageCode: j['languageCode'] as String,
+        versionCode: j['versionCode'] as String,
+        displayName: j['displayName'] as String,
+        attribution: j['attribution'] as String,
+      );
 }
 
-/// The editions shipped today. New translations/languages are added here (and
-/// their asset folder generated) — the reader and split picker pick them up
-/// automatically.
+/// The editions that ship inside the app. Everything else is downloaded from
+/// the catalog and lives in the app support directory (see
+/// `InstalledBibleStore`); `bibleEditionsProvider` merges both.
 const List<BibleEdition> kBibleEditions = [
   BibleEdition(
     id: 'en-kjv',
@@ -34,13 +50,6 @@ const List<BibleEdition> kBibleEditions = [
     versionCode: 'kjv',
     displayName: 'English (KJV)',
     attribution: 'King James Version (1769) · Public Domain',
-  ),
-  BibleEdition(
-    id: 'yo-bmy',
-    languageCode: 'yo',
-    versionCode: 'bmy',
-    displayName: 'Yorùbá (Bíbélì Mímọ́)',
-    attribution: 'Bíbélì Mímọ́ (1900) · Public Domain',
   ),
   BibleEdition(
     id: 'en-bsb',
@@ -55,35 +64,5 @@ const List<BibleEdition> kBibleEditions = [
     versionCode: 'asv',
     displayName: 'English (ASV)',
     attribution: 'American Standard Version (1901) · Public Domain',
-  ),
-  BibleEdition(
-    id: 'en-ylt',
-    languageCode: 'en',
-    versionCode: 'ylt',
-    displayName: 'English (YLT)',
-    attribution: "Young's Literal Translation (1898) · Public Domain",
-  ),
-  BibleEdition(
-    id: 'ha-biblica',
-    languageCode: 'ha',
-    versionCode: 'biblica',
-    displayName: 'Hausa (Biblica)',
-    attribution: 'Hausa Contemporary Bible © 2009, 2020 Biblica, Inc. · '
-        'CC BY-SA 4.0',
-  ),
-  BibleEdition(
-    id: 'ig-biblica',
-    languageCode: 'ig',
-    versionCode: 'biblica',
-    displayName: 'Igbo (Biblica)',
-    attribution: 'Igbo Contemporary Bible © 2020 Biblica, Inc. · CC BY-SA 4.0',
-  ),
-  BibleEdition(
-    id: 'yo-biblica',
-    languageCode: 'yo',
-    versionCode: 'biblica',
-    displayName: 'Yorùbá (Òde-Òní)',
-    attribution: 'Yorùbá Contemporary Bible © 2009, 2017 Biblica, Inc. · '
-        'CC BY-SA 4.0',
   ),
 ];

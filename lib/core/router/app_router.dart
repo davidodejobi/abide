@@ -2,6 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:collection/collection.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:openbaptisthymnal/features/bible/ui/bible_credits_page.dart';
+import 'package:openbaptisthymnal/features/bible/ui/more_bibles_page.dart';
 import 'package:openbaptisthymnal/features/bible/ui/bible_reader_page.dart';
 import 'package:openbaptisthymnal/features/bible/ui/bible_tab_screen.dart';
 import 'package:openbaptisthymnal/features/daily/ui/plan_days_page.dart';
@@ -63,6 +64,7 @@ class AppRouter extends RootStackRouter {
         AutoRoute(page: ScriptureShareCardRoute.page),
         AutoRoute(page: RoadShareCardRoute.page),
         AutoRoute(page: BibleCreditsRoute.page),
+        AutoRoute(page: MoreBiblesRoute.page),
         AutoRoute(page: OnboardingRoute.page),
         AutoRoute(page: PlusRoute.page),
         AutoRoute(page: SponsorRoute.page),

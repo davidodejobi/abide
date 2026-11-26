@@ -51,21 +51,14 @@ void main() {
     expect(v16.ref.toString(), 'JHN.3.16');
   });
 
-  test('Yoruba edition aligns by code with a localized book name', () async {
-    final manifest = await source.loadManifest('yo-bmy');
-    final john = manifest.books[42];
-    expect(john.code, 'JHN'); // same canonical code
-    expect(john.name, isNot('John')); // localized display name
-  });
-
   test('repository exposes editions and lookup by id', () {
-    expect(repo.editions().map((e) => e.id), containsAll(['en-kjv', 'yo-bmy']));
-    expect(repo.editionById('yo-bmy')!.languageCode, 'yo');
+    expect(repo.editions().map((e) => e.id), ['en-kjv', 'en-bsb', 'en-asv']);
+    expect(repo.editionById('en-bsb')!.languageCode, 'en');
     expect(repo.editionById('nope'), isNull);
   });
 
   test('bundled public-domain English editions load with 66 books', () async {
-    for (final id in ['en-bsb', 'en-asv', 'en-ylt']) {
+    for (final id in ['en-bsb', 'en-asv']) {
       final manifest = await source.loadManifest(id);
       expect(manifest.books.length, 66, reason: '$id should have 66 books');
       expect(manifest.books[42].code, 'JHN', reason: '$id book 43 is John');
@@ -80,10 +73,10 @@ void main() {
 
   test('the same edition reads distinct text across translations', () async {
     final kjv = await source.loadChapter('en-kjv', 'JHN', 3);
-    final ylt = await source.loadChapter('en-ylt', 'JHN', 3);
+    final ylt = await source.loadChapter('en-bsb', 'JHN', 3);
     final kjv16 = kjv.verses.firstWhere((v) => v.number == 16).text;
     final ylt16 = ylt.verses.firstWhere((v) => v.number == 16).text;
     expect(kjv16, isNot(ylt16),
-        reason: 'KJV and YLT John 3:16 wording must differ');
+        reason: 'KJV and BSB John 3:16 wording must differ');
   });
 }

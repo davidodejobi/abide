@@ -38,6 +38,8 @@ abstract final class YouStrings {
   static const version = 'Version';
   static const versionLoading = 'Loading';
   static const versionUnknown = 'Version unknown';
+  static const getMoreBibles = 'Get more Bibles';
+  static const getMoreBiblesHint = 'Download more translations';
   static const bibleTranslations = 'Bible translations';
   static const sourcesLicenses = 'Sources and licenses';
   static const privacy = 'Privacy policy';

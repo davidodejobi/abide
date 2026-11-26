@@ -1,9 +1,11 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openbaptisthymnal/core/theme/lum_theme.dart';
 import 'package:openbaptisthymnal/core/widgets/lum_chip.dart';
 import 'package:openbaptisthymnal/core/widgets/lum_group_card.dart';
 import 'package:openbaptisthymnal/features/bible/model/bible_edition.dart';
+import 'package:openbaptisthymnal/features/bible/providers/bible_downloads_provider.dart';
 
 import '../../domain/onboarding_defaults.dart';
 import '../../providers/onboarding_provider.dart';
@@ -31,6 +33,7 @@ class BibleScreen extends ConsumerWidget {
     final state = ref.watch(onboardingProvider);
     final notifier = ref.read(onboardingProvider.notifier);
     final editions = editionsForLanguage(state.languageCode);
+    final downloadNote = kIsWeb ? null : _downloadNote(ref);
 
     return OnboardingFrame(
       step: step,
@@ -81,9 +84,26 @@ class BibleScreen extends ConsumerWidget {
               ],
             ),
           ),
+          if (downloadNote != null) ...[
+            const SizedBox(height: LumSpace.md),
+            Text(downloadNote,
+                style: LumText.footnote.copyWith(color: c.textSecondary)),
+          ],
         ],
       ),
     );
+  }
+
+  /// Points readers of other languages at the in-app downloads. Names come from
+  /// the last saved catalog; before it has ever loaded, a fixed list is used.
+  static String _downloadNote(WidgetRef ref) {
+    final cached = ref.read(bibleCatalogSourceProvider).cached();
+    final names = <String>{
+      for (final e in cached?.editions ?? [])
+        if (e.languageCode != 'en' && e.languageName.isNotEmpty) e.languageName,
+    }.toList();
+    return OnboardingStrings.downloadNote(
+        names.isEmpty ? OnboardingStrings.defaultDownloadLanguages : names);
   }
 }
 

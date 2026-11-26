@@ -6,13 +6,17 @@ import 'package:openbaptisthymnal/features/bible/model/bible_edition.dart';
 import 'package:openbaptisthymnal/features/bible/ui/bible_strings.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
-/// Bible version sheet (Figma 04). Lists only the editions the app ships; they
-/// are all on the phone already, so there is no download or Plus row. Returns
-/// the chosen edition id.
+/// Returned by [showEditionSheet] when the user taps "Get more Bibles".
+const kGetMoreBibles = '__get_more_bibles__';
+
+/// Bible version sheet (Figma 04). Lists the editions on the phone (bundled and
+/// downloaded) with a "Get more Bibles" row at the end when [canGetMore].
+/// Returns the chosen edition id, or [kGetMoreBibles].
 Future<String?> showEditionSheet(
   BuildContext context, {
   required List<BibleEdition> editions,
   required String currentId,
+  bool canGetMore = false,
 }) {
   final c = context.lum;
   return showModalBottomSheet<String>(
@@ -22,16 +26,22 @@ Future<String?> showEditionSheet(
     backgroundColor: c.bgElevated,
     shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
-    builder: (_) => EditionSheet(editions: editions, currentId: currentId),
+    builder: (_) => EditionSheet(
+        editions: editions, currentId: currentId, canGetMore: canGetMore),
   );
 }
 
 class EditionSheet extends StatelessWidget {
-  const EditionSheet(
-      {super.key, required this.editions, required this.currentId});
+  const EditionSheet({
+    super.key,
+    required this.editions,
+    required this.currentId,
+    this.canGetMore = false,
+  });
 
   final List<BibleEdition> editions;
   final String currentId;
+  final bool canGetMore;
 
   @override
   Widget build(BuildContext context) {
@@ -85,6 +95,10 @@ class EditionSheet extends StatelessWidget {
                       divider: i < editions.length - 1,
                       onTap: () => Navigator.of(context).pop(editions[i].id),
                     ),
+                  if (canGetMore)
+                    _GetMoreRow(
+                        onTap: () =>
+                            Navigator.of(context).pop(kGetMoreBibles)),
                 ],
               ),
             ),
@@ -168,6 +182,48 @@ class _EditionRow extends StatelessWidget {
                   ),
                 ),
               ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _GetMoreRow extends StatelessWidget {
+  const _GetMoreRow({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.lum;
+    return Semantics(
+      button: true,
+      label: BibleStrings.getMoreBibles,
+      excludeSemantics: true,
+      onTap: onTap,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Container(
+          constraints: const BoxConstraints(minHeight: LumSize.rowMin),
+          padding: const EdgeInsets.symmetric(
+              horizontal: LumSpace.lg, vertical: LumSpace.md),
+          decoration: BoxDecoration(
+              border: Border(top: BorderSide(color: c.borderSubtle))),
+          child: Row(
+            children: [
+              Icon(PhosphorIcons.downloadSimple(),
+                  size: LumSize.iconMd, color: c.iconDefault),
+              const SizedBox(width: LumSpace.md),
+              Expanded(
+                child: Text(BibleStrings.getMoreBibles,
+                    style:
+                        LumText.bodyEmphasized.copyWith(color: c.textPrimary)),
+              ),
+              Icon(PhosphorIcons.caretRight(),
+                  size: LumSize.iconSm, color: c.iconSecondary),
             ],
           ),
         ),
