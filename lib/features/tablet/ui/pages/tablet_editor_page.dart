@@ -4,10 +4,11 @@ import 'package:appflowy_editor/appflowy_editor.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:openbaptisthymnal/core/audio/audio_quality_provider.dart';
 import 'package:openbaptisthymnal/core/providers/service_providers.dart';
 import 'package:openbaptisthymnal/core/router/app_router.dart';
 import 'package:openbaptisthymnal/core/theme/font_scale_provider.dart';
@@ -27,17 +28,20 @@ import 'package:openbaptisthymnal/features/tablet/domain/link_autocomplete.dart'
 import 'package:openbaptisthymnal/features/tablet/domain/note_date_label.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/note_template.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/parse_links.dart';
+import 'package:openbaptisthymnal/features/tablet/domain/recording_note.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/scripture_autolink.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/template_to_note.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/tablet_markdown_codec.dart';
+import 'package:openbaptisthymnal/features/tablet/providers/recording_providers.dart';
 import 'package:openbaptisthymnal/features/tablet/providers/tablets_providers.dart';
 import 'package:openbaptisthymnal/features/tablet/providers/templates_providers.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/notes_strings.dart';
-import 'package:openbaptisthymnal/features/tablet/ui/widgets/audio_recorder_sheet.dart';
+import 'package:openbaptisthymnal/features/tablet/ui/pages/recording_page.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/widgets/folder_picker_sheet.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/widgets/link_suggestions.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/widgets/note_media_block.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/widgets/note_media_sheet.dart';
+import 'package:openbaptisthymnal/features/tablet/ui/widgets/note_player_bar.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/widgets/template_sheets.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/widgets/wikilink_spans.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/widgets/tablet_links_sheet.dart';
@@ -130,7 +134,6 @@ class _NoteEditorView extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
     final lum = context.lum;
     final textScale = ref.watch(fontScaleProvider).scale;
     final titleController = useTextEditingController(text: initialTitle);
@@ -164,6 +167,58 @@ class _NoteEditorView extends HookConsumerWidget {
       return () {
         messenger.hideCurrentSnackBar();
         editorState.dispose();
+      };
+    }, [editorState]);
+
+    // The note's recording drives the pinned player and `t:` links. Nothing
+    // here touches the shared player until the user acts, so opening a note
+    // never mutates a provider while building, and coming back to a note
+    // re-loads its clip on the next tap.
+    final playback = ref.read(notePlaybackProvider.notifier);
+    final markerSeconds = useState<List<int>>(const []);
+    final firstAudio = useState<({String path, int ms, int speed})?>(null);
+    final loadedPaths = useRef(<String>{});
+
+    void loadAudio(Node audio) {
+      final path = audio.attributes[mediaUrlKey] as String? ?? '';
+      loadedPaths.value.add(path);
+      playback.load(
+        path,
+        durationMs: audio.attributes[audioDurationKey] as int? ?? 0,
+        speed: audio.attributes[audioSpeedKey] as int? ?? 100,
+      );
+    }
+
+    useEffect(() {
+      var disposed = false;
+      void sync() {
+        if (disposed) return;
+        final audio = firstAudioNode(editorState.document);
+        final next = audio == null
+            ? null
+            : (
+                path: audio.attributes[mediaUrlKey] as String? ?? '',
+                ms: audio.attributes[audioDurationKey] as int? ?? 0,
+                speed: audio.attributes[audioSpeedKey] as int? ?? 100,
+              );
+        if (next != null) loadedPaths.value.add(next.path); // bar may load it
+        final prev = firstAudio.value;
+        if (prev != null && next == null) playback.releaseIf(prev.path);
+        firstAudio.value = next;
+        final marks = timeLinkSecondsIn(editorState.document);
+        if (!listEquals(marks, markerSeconds.value)) markerSeconds.value = marks;
+      }
+
+      WidgetsBinding.instance.addPostFrameCallback((_) => sync());
+      final sub = editorState.transactionStream
+          .where((e) => e.$1 == TransactionTime.after)
+          .listen((_) => sync());
+      return () {
+        disposed = true;
+        sub.cancel();
+        for (final path in loadedPaths.value) {
+          playback.releaseIf(path);
+        }
       };
     }, [editorState]);
 
@@ -409,33 +464,34 @@ class _NoteEditorView extends HookConsumerWidget {
       await editorState.insertTextAtCurrentSelection(text);
     }
 
-    Future<void> insertAudio(Selection? sel) async {
-      final clip = await showModalBottomSheet<RecordedClip>(
-        context: context,
-        isScrollControlled: true,
-        backgroundColor: theme.colorScheme.surface,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        builder: (_) => AudioRecorderSheet(
-          quality: ref.read(audioQualityProvider),
-        ),
-      );
-      if (clip == null) return;
-      final relativePath = await ref
-          .read(fileStorageServiceProvider)
-          .persistFile(clip.path, bucket: 'note_audio');
-
-      await insertMediaNode(
-        editorState,
-        audioMediaNode(
-          url: FileStorageService.absolutePath(relativePath),
-          name: defaultRecordingName(DateTime.now()),
-          durationMs: clip.durationMs,
-          peaks: clip.peaks,
-        ),
-        anchorPath: mediaAnchorPath(editorState, sel),
-      );
+    Future<void> insertAudio() async {
+      final storage = ref.read(fileStorageServiceProvider);
+      final repo = ref.read(tabletsRepositoryProvider);
+      final messenger = ScaffoldMessenger.of(context);
+      final result = await openRecorder(context);
+      if (result == null) return;
+      try {
+        final nodes = await persistRecording(storage, result);
+        if (!context.mounted) {
+          // The note closed while recording: keep the take in a new note.
+          await repo.createNote(
+            title: result.name,
+            contentMarkdown: noteDocumentToMarkdown(
+                Document(root: pageNode(children: nodes))),
+          );
+          return;
+        }
+        if (titleController.text.trim().isEmpty) {
+          titleController.text = result.name;
+        }
+        // The first take heads the note; later ones follow the last take and
+        // its markers.
+        await editorState.apply(editorState.transaction
+          ..insertNodes([recordingInsertIndex(editorState.document)], nodes));
+      } catch (_) {
+        messenger.showSnackBar(
+            const SnackBar(content: Text(NotesStrings.saveFailed)));
+      }
     }
 
     Future<void> openInsertSheet() async {
@@ -449,7 +505,7 @@ class _NoteEditorView extends HookConsumerWidget {
         case InsertChoice.photos:
           await insertImage(ImageSource.gallery, sel);
         case InsertChoice.record:
-          await insertAudio(sel);
+          await insertAudio();
         case InsertChoice.checklist:
           if (sel != null) editorState.selection = sel;
           if (context.mounted) {
@@ -471,6 +527,26 @@ class _NoteEditorView extends HookConsumerWidget {
     ) {
       final raw = before.text ?? text.text;
       final baseStyle = before.style;
+      final seconds =
+          timeLinkSeconds(text.attributes?[AppFlowyRichTextKeys.href] as String?);
+      if (seconds != null) {
+        // `[05:12](t:312)`: seeks the note's recording, never opens a URL.
+        return TextSpan(
+          text: raw,
+          style: (baseStyle ?? const TextStyle()).copyWith(
+            color: lum.textAccent,
+            decoration: TextDecoration.underline,
+            decorationColor: lum.textAccent,
+          ),
+          recognizer: TapGestureRecognizer()
+            ..onTap = () {
+              final audio = audioNodeAbove(editorState.document, node.path);
+              if (audio == null) return;
+              loadAudio(audio);
+              playback.seekAndPlay(seconds);
+            },
+        );
+      }
       if (!raw.contains('[[')) return before;
       final children = wikilinkSpans(context, raw, baseStyle, navigateToLink);
       if (children.isEmpty) return before;
@@ -706,18 +782,29 @@ class _NoteEditorView extends HookConsumerWidget {
               itemOutlineColor: lum.borderSubtle,
               child: Stack(
                 children: [
-                  AppFlowyEditor(
-                    editorState: editorState,
-                    editorStyle: editorStyle,
-                    autoFocus: noteId == null && template == null,
-                    header: titleField,
-                    blockComponentBuilders: {
-                      ...standardBlockComponentBuilderMap,
-                      ...templateBuilders,
-                      ImageBlockKeys.type: mediaBuilder,
-                      audioNodeType: mediaBuilder,
-                    },
-                  ),
+                  Column(children: [
+                    if (firstAudio.value case final a?)
+                      NotePlayerBar(
+                        path: a.path,
+                        durationMs: a.ms,
+                        speed: a.speed,
+                        markerSeconds: markerSeconds.value,
+                      ),
+                    Expanded(
+                      child: AppFlowyEditor(
+                        editorState: editorState,
+                        editorStyle: editorStyle,
+                        autoFocus: noteId == null && template == null,
+                        header: titleField,
+                        blockComponentBuilders: {
+                          ...standardBlockComponentBuilderMap,
+                          ...templateBuilders,
+                          ImageBlockKeys.type: mediaBuilder,
+                          audioNodeType: mediaBuilder,
+                        },
+                      ),
+                    ),
+                  ]),
                   if (linkQuery.value != null)
                     Positioned(
                       left: 16,

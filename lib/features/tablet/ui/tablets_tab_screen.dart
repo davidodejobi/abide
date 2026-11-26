@@ -18,6 +18,7 @@ import 'package:openbaptisthymnal/features/tablet/domain/tablet_preview.dart';
 import 'package:openbaptisthymnal/features/tablet/providers/tablets_providers.dart';
 import 'package:openbaptisthymnal/features/tablet/providers/templates_providers.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/notes_strings.dart';
+import 'package:openbaptisthymnal/features/tablet/ui/pages/recording_page.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/widgets/new_note_sheet.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/widgets/tablet_filter_sheet.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
@@ -137,6 +138,13 @@ class TabletsTabScreen extends HookConsumerWidget {
                       ),
                     ),
                     const SizedBox(width: LumSpace.md),
+                    _NewNoteButton(
+                      icon: PhosphorIcons.microphone(),
+                      label: NotesStrings.recordTitle,
+                      light: true,
+                      onPressed: () => recordMessageNote(context, ref),
+                    ),
+                    const SizedBox(width: LumSpace.sm),
                     _NewNoteButton(onPressed: newNote),
                   ],
                 ),
@@ -162,16 +170,26 @@ class TabletsTabScreen extends HookConsumerWidget {
 
 /// The ink pencil button beside the title (Figma M4-01).
 class _NewNoteButton extends StatelessWidget {
-  const _NewNoteButton({required this.onPressed});
+  const _NewNoteButton({
+    required this.onPressed,
+    this.icon,
+    this.label = NotesStrings.newNote,
+    this.light = false,
+  });
 
   final VoidCallback onPressed;
+  final IconData? icon;
+  final String label;
+
+  /// Quiet surface instead of the ink fill (secondary action).
+  final bool light;
 
   @override
   Widget build(BuildContext context) {
     final c = context.lum;
     return Semantics(
       button: true,
-      label: NotesStrings.newNote,
+      label: label,
       excludeSemantics: true,
       onTap: onPressed,
       child: GestureDetector(
@@ -180,9 +198,14 @@ class _NewNoteButton extends StatelessWidget {
         child: Container(
           width: 56,
           height: 56,
-          decoration: BoxDecoration(color: c.bgPrimary, shape: BoxShape.circle),
-          child: Icon(PhosphorIcons.pencilSimple(),
-              size: LumSize.iconMd, color: c.textOnPrimary),
+          decoration: BoxDecoration(
+            color: light ? c.bgGroupedCell : c.bgPrimary,
+            shape: BoxShape.circle,
+            border: light ? Border.all(color: c.borderSubtle) : null,
+          ),
+          child: Icon(icon ?? PhosphorIcons.pencilSimple(),
+              size: LumSize.iconMd,
+              color: light ? c.textPrimary : c.textOnPrimary),
         ),
       ),
     );

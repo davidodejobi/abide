@@ -34,10 +34,13 @@ class FileStorageService {
   /// Copies [sourcePath] into `<documents>/<bucket>/` and returns the path
   /// *relative* to the documents dir (e.g. `note_images/uuid.png`). We copy
   /// rather than reference the original because pickers hand back paths in an
-  /// OS cache that may be purged.
+  /// OS cache that may be purged. With [move] the source is renamed instead
+  /// (long recordings are tens of MB), falling back to copy when the rename
+  /// crosses volumes.
   Future<String> persistFile(
     String sourcePath, {
     required String bucket,
+    bool move = false,
   }) async {
     final docs = await getApplicationDocumentsDirectory();
     _documentsPath ??= docs.path;
@@ -46,7 +49,19 @@ class FileStorageService {
       dir.createSync(recursive: true);
     }
     final name = '${_uuid.v4()}${p.extension(sourcePath)}';
-    await File(sourcePath).copy(p.join(dir.path, name));
+    final target = p.join(dir.path, name);
+    if (move) {
+      try {
+        await File(sourcePath).rename(target);
+        return p.join(bucket, name);
+      } on FileSystemException {
+        // Different volume: copy, then drop the source.
+        await File(sourcePath).copy(target);
+        await File(sourcePath).delete();
+        return p.join(bucket, name);
+      }
+    }
+    await File(sourcePath).copy(target);
     return p.join(bucket, name);
   }
 

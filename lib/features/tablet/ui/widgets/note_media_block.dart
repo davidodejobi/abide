@@ -14,6 +14,7 @@ import 'package:openbaptisthymnal/core/utils/services/file_storage_service.dart'
 import 'package:openbaptisthymnal/features/tablet/domain/note_media.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/note_media_actions.dart';
 import 'package:openbaptisthymnal/features/tablet/domain/parse_links.dart';
+import 'package:openbaptisthymnal/features/tablet/providers/recording_providers.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/notes_strings.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/widgets/note_media_sheet.dart';
 import 'package:openbaptisthymnal/features/tablet/ui/widgets/wikilink_spans.dart';
@@ -759,6 +760,7 @@ class _AudioBodyState extends State<_AudioBody> {
   @override
   void dispose() {
     if (_playing == this) _playing = null;
+    if (stopBlockAudio == _stop) stopBlockAudio = null;
     _completionSub?.cancel();
     _player?.dispose();
     super.dispose();
@@ -826,6 +828,9 @@ class _AudioBodyState extends State<_AudioBody> {
         final other = _playing;
         if (other != null && other != this) await other._stop();
         _playing = this;
+        stopPinnedAudio?.call();
+        stopPinnedAudio = null;
+        stopBlockAudio = _stop;
         await player.startPlayer();
         _appliedSpeed = _speed;
         await player.setRate(_speed / 100);
