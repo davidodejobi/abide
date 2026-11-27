@@ -67,12 +67,15 @@ class SignOutController extends Notifier<void> {
       await auth.ensureAnonymousSession();
       return true;
     }
-    if (!await sync.flush()) return false;
-    await sync.runExclusive(() async {
-      await auth.signOut();
+    return sync.flushThenLock(() async {
+      // The flush succeeded, so the account has everything. Whatever happens
+      // to the sign-out call, the phone must not keep this reader's data or
+      // be left without a session.
+      try {
+        await auth.signOut();
+      } catch (_) {}
       await sync.clearLocalData();
       await auth.ensureAnonymousSession();
     });
-    return true;
   }
 }

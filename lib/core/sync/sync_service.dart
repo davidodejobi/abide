@@ -50,10 +50,20 @@ class SyncService {
   bool _again = false;
   bool _locked = false;
 
-  /// Syncs and reports whether it is safe to leave this account: the run
-  /// succeeded and nothing is left in the push queue.
-  Future<bool> flush() async {
+  /// For leaving this account: syncs, takes the sync lock, re-checks that the
+  /// push queue is empty (a write may have landed meanwhile) and only then runs
+  /// [body] with sync held off. Returns false, without running [body], when the
+  /// sync failed or anything is still queued.
+  Future<bool> flushThenLock(Future<void> Function() body) async {
     if (!await sync()) return false;
+    return runExclusive(() async {
+      if (!await _outboxEmpty()) return false;
+      await body();
+      return true;
+    });
+  }
+
+  Future<bool> _outboxEmpty() async {
     final r = await _db
         .customSelect('SELECT COUNT(*) AS c FROM sync_outbox')
         .getSingle();
@@ -61,42 +71,52 @@ class SyncService {
   }
 
   /// Runs [body] with sync held off (a sync that starts meanwhile returns
-  /// false), after any running sync has finished. Used by sign-out so a
-  /// background sync can never re-queue data that is being wiped.
+  /// false), after any running sync has finished.
   Future<T> runExclusive<T>(Future<T> Function() body) async {
-    await _inFlight;
     _locked = true;
     try {
+      while (_inFlight != null) {
+        await _inFlight;
+      }
       return await body();
     } finally {
       _locked = false;
     }
   }
 
-  /// Wipes this reader's data from the phone: notes (with their folders, tags,
-  /// links, attachment rows and own templates), highlights, reading progress,
-  /// plan subscriptions, and all sync bookkeeping (queue, cursors, owner).
-  /// App preferences live elsewhere and are untouched. Sync is off afterwards
+  /// Removes what lives on the server from the phone: synced notes, plain
+  /// single-verse highlights, reading days, plan progress and subscriptions,
+  /// and all sync bookkeeping (queue, cursors, owner). Local-only data (folders,
+  /// tags, templates, verse notes) and app preferences stay. Sync is off afterwards
   /// until the next [sync] turns it back on for the next account.
   Future<void> clearLocalData() async {
+    // Notes that sync have uuid ids; anything else never left the phone.
+    const synced = "id GLOB '????????-????-????-????-????????????'";
+    const ofSynced = "SELECT id FROM notes WHERE $synced";
     await _db.transaction(() async {
-      for (final t in const [
-        'note_tags',
-        'note_links',
-        'attachments',
-        'notes',
-        'tags',
-        'folders',
-        'note_templates',
-        'bible_annotations',
-        'reading_days',
-        'plan_day_progress',
-        'plan_subscriptions',
-        // Last: the deletes above fire triggers that queue into the outbox.
-        'sync_outbox',
-        'sync_state',
+      for (final q in const [
+        // Rows that hang off the notes being removed (foreign keys are on).
+        // Folders, tags and templates themselves stay.
+        'DELETE FROM note_tags WHERE note_id IN ($ofSynced)',
+        'DELETE FROM note_links WHERE source_note_id IN ($ofSynced)',
+        'DELETE FROM attachments WHERE note_id IN ($ofSynced)',
+        'UPDATE bible_annotations SET note_id = NULL '
+            'WHERE note_id IN ($ofSynced)',
+        // Only plain single-verse highlights live on the server; verse notes,
+        // ranges and highlights carrying text or a note link stay.
+        "DELETE FROM bible_annotations WHERE kind = 'highlight' "
+            'AND inline_text IS NULL AND note_id IS NULL '
+            "AND verse_ref NOT LIKE '%-%' "
+            "AND length(verse_ref) - length(replace(verse_ref, '.', '')) = 2",
+        'DELETE FROM notes WHERE $synced',
+        'DELETE FROM reading_days',
+        'DELETE FROM plan_day_progress',
+        'DELETE FROM plan_subscriptions',
+        // Last: the writes above fire triggers that queue into the outbox.
+        'DELETE FROM sync_outbox',
+        'DELETE FROM sync_state',
       ]) {
-        await _db.customStatement('DELETE FROM $t');
+        await _db.customStatement(q);
       }
     });
     _db.notifyUpdates({
@@ -105,9 +125,6 @@ class SyncService {
         'note_tags',
         'note_links',
         'attachments',
-        'tags',
-        'folders',
-        'note_templates',
         'bible_annotations',
         'reading_days',
         'plan_day_progress',
@@ -143,7 +160,7 @@ class SyncService {
       _inFlight = run.then((v) => ok = v);
       await _inFlight;
       _inFlight = null;
-    } while (_again && ok);
+    } while (_again && ok && !_locked);
     return ok;
   }
 

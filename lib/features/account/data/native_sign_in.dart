@@ -63,23 +63,25 @@ Future<IdCredential> appleCredential() async {
   }
 }
 
+Future<void>? _googleInit;
+
 Future<IdCredential> googleCredential() async {
-  // Same scheme as Apple: Google embeds the hashed nonce in the id token and
-  // Supabase gets the raw one. The nonce is fixed at initialize, so initialize
-  // runs again for every attempt (it only stores the values on the platform).
-  final raw = _randomNonce();
-  final hashed = sha256.convert(utf8.encode(raw)).toString();
+  // The plugin requires initialize to run exactly once, and the nonce can only
+  // be set there, so a per-attempt nonce is impossible. No nonce is used: the
+  // Supabase Google provider must have "Skip nonce checks" enabled.
   final g = GoogleSignIn.instance;
   try {
-    await g.initialize(
+    await (_googleInit ??= g.initialize(
       clientId: !kIsWeb && Platform.isIOS ? googleIosClientId : null,
       serverClientId: googleWebClientId,
-      nonce: hashed,
-    );
+    ).catchError((Object e) {
+      _googleInit = null; // a failed init may be retried
+      throw e;
+    }));
     final account = await g.authenticate();
     final token = account.authentication.idToken;
     if (token == null) throw const AuthFailure(AuthFailureKind.unknown);
-    return (idToken: token, nonce: raw);
+    return (idToken: token, nonce: null);
   } on GoogleSignInException catch (e) {
     if (e.code == GoogleSignInExceptionCode.canceled) {
       throw const AuthFailure(AuthFailureKind.cancelled);

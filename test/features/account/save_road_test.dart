@@ -179,7 +179,7 @@ void main() {
     await tester.tap(find.text(AccountStrings.signOut));
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.text(AccountStrings.signOutBody), findsOneWidget);
-    expect(AccountStrings.signOutBody, contains('removes them from this phone'));
+    expect(AccountStrings.signOutBody, contains('removed from this phone'));
     await tester.tap(find.text(AccountStrings.signOut).last);
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.text(AccountStrings.saveRow), findsOneWidget);
