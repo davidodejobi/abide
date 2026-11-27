@@ -147,12 +147,12 @@ void main() {
 
     test('bad email on send', () {
       expect(
-          mapAuthError(AuthApiException('bad',
+          mapAuthError(const AuthApiException('bad',
                   statusCode: '400', code: 'email_address_invalid'))
               .kind,
           AuthFailureKind.invalidEmail);
       expect(
-          mapAuthError(AuthException('Unable to validate email address: invalid format'))
+          mapAuthError(const AuthException('Unable to validate email address: invalid format'))
               .kind,
           AuthFailureKind.invalidEmail);
     });
@@ -160,26 +160,26 @@ void main() {
     test('a rejected code on verify is wrongCode, a rate limit is not', () {
       expect(
           mapAuthError(
-                  AuthApiException('expired',
+                  const AuthApiException('expired',
                       statusCode: '403', code: 'otp_expired'),
                   verifying: true)
               .kind,
           AuthFailureKind.wrongCode);
       expect(
           mapAuthError(
-                  AuthApiException('Token has expired or is invalid',
+                  const AuthApiException('Token has expired or is invalid',
                       statusCode: '403'),
                   verifying: true)
               .kind,
           AuthFailureKind.wrongCode);
       expect(
-          mapAuthError(AuthApiException('bad', statusCode: '403', code: 'invalid_otp'),
+          mapAuthError(const AuthApiException('bad', statusCode: '403', code: 'invalid_otp'),
                   verifying: true)
               .kind,
           AuthFailureKind.wrongCode);
       // Unrelated rejections and a missing session are not a wrong code.
       expect(
-          mapAuthError(AuthApiException('bad', statusCode: '403'),
+          mapAuthError(const AuthApiException('bad', statusCode: '403'),
                   verifying: true)
               .kind,
           AuthFailureKind.unknown);
@@ -188,7 +188,7 @@ void main() {
       expect(mapAuthError(PlatformException(code: 'x')).kind,
           AuthFailureKind.unknown);
       expect(
-          mapAuthError(AuthApiException('slow down', statusCode: '429'),
+          mapAuthError(const AuthApiException('slow down', statusCode: '429'),
                   verifying: true)
               .kind,
           AuthFailureKind.unknown);
@@ -265,7 +265,7 @@ void main() {
         () async {
       final auth = _FakeAuth()
         ..updateError =
-            AuthApiException('taken', statusCode: '422', code: 'email_exists');
+            const AuthApiException('taken', statusCode: '422', code: 'email_exists');
       final repo = SupabaseAuthRepository(auth);
       await repo.sendEmailCode('a@b.co');
       await repo.verifyCode('a@b.co', '123456');
@@ -278,7 +278,7 @@ void main() {
 
     test('a wrong code maps to wrongCode', () async {
       final auth = _FakeAuth()
-        ..verifyError = AuthApiException('Token has expired or is invalid',
+        ..verifyError = const AuthApiException('Token has expired or is invalid',
             statusCode: '403');
       final repo = SupabaseAuthRepository(auth);
       await repo.sendEmailCode('a@b.co');
@@ -306,7 +306,7 @@ void main() {
 
     test('identity owned by someone else switches to that user', () async {
       final auth = _FakeAuth()
-        ..linkError = AuthApiException('exists',
+        ..linkError = const AuthApiException('exists',
             statusCode: '422', code: 'identity_already_exists');
       await SupabaseAuthRepository(auth, google: _cred).signInWithGoogle();
       expect(auth.calls, ['link google', 'signInWithIdToken google']);
