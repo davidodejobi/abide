@@ -886,6 +886,20 @@ class _NoteEditorView extends HookConsumerWidget {
                             header: titleField,
                             blockComponentBuilders: {
                               ...standardBlockComponentBuilderMap,
+                              // The editor's default headings (28-32 pt) shouted
+                              // over the note; the design uses 17 pt section
+                              // headings under a 22 pt H1.
+                              HeadingBlockKeys.type: HeadingBlockComponentBuilder(
+                                textStyleBuilder: (level) =>
+                                    (level <= 1
+                                            ? LumText.title2
+                                            : LumText.headline)
+                                        .copyWith(
+                                  fontSize: (level <= 1 ? 22 : 17) * textScale,
+                                  height: 1.3,
+                                  color: lum.textPrimary,
+                                ),
+                              ),
                               ...templateBuilders,
                               ImageBlockKeys.type: mediaBuilder,
                               audioNodeType: mediaBuilder,
