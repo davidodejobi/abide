@@ -12,7 +12,9 @@ import 'package:openbaptisthymnal/core/widgets/split_orientation_toggle.dart';
 import 'package:openbaptisthymnal/core/widgets/split_pane.dart';
 import 'package:openbaptisthymnal/features/hymn/model/language_pack.dart';
 import 'package:openbaptisthymnal/features/hymn/providers/favorites_provider.dart';
+import 'package:openbaptisthymnal/features/hymn/providers/enabled_hymn_languages_provider.dart';
 import 'package:openbaptisthymnal/features/hymn/providers/hymnal_provider.dart';
+import 'package:openbaptisthymnal/features/hymn/ui/widgets/hymn_languages_sheet.dart';
 import 'package:openbaptisthymnal/features/hymn/ui/hymn_strings.dart';
 import 'package:openbaptisthymnal/features/hymn/ui/viewmodels/hymns_viewmodel.dart';
 import 'package:openbaptisthymnal/features/hymn/ui/widgets/hymn_picker_inline.dart';
@@ -21,15 +23,10 @@ import 'package:openbaptisthymnal/features/settings/ui/widgets/text_size_sheet.d
 import 'package:openbaptisthymnal/features/share_card/ui/share_card_page.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
-/// Two-pack default: the only languages currently shipped. If the project
-/// ever grows beyond two, swap this for a lookup against `HymnalIndex.orders`.
-const List<String> _availableLanguages = ['en', 'yo'];
-
-String _otherLanguage(String current) => current == 'yo'
-    ? 'en'
-    : current == 'en'
-        ? 'yo'
-        : 'en';
+/// The language to pair with [current]: the first other one that is on, or
+/// null when only one is (the Split view button then opens the languages sheet).
+String? _otherLanguage(String current, List<String> enabled) =>
+    enabled.where((l) => l != current).firstOrNull;
 
 /// Local split state for the hymn detail page. Ephemeral: gone on navigation.
 class _HymnSplitState {
@@ -98,17 +95,23 @@ class HymnDetailPage extends HookConsumerWidget {
     );
     final textScale = ref.watch(fontScaleProvider).scale;
     final c = context.lum;
+    final enabled = ref.watch(enabledHymnLanguagesProvider);
     final split = useState(_HymnSplitState.initial);
     final isSplit = split.value.isOpen;
 
     void openSplit() {
+      final other = _otherLanguage(language, enabled);
+      if (other == null) {
+        showHymnLanguagesSheet(context);
+        return;
+      }
       // Auto-bilingual: drop the same hymn into the secondary pane in the
       // other language so the bilingual reading is one tap away.
       split.value = _HymnSplitState(
         isOpen: true,
         orientation: SplitOrientation.vertical,
         secondaryHymnId: hymnId,
-        secondaryLanguage: _otherLanguage(language),
+        secondaryLanguage: other,
         secondaryIdLanguage: language,
       );
     }
@@ -204,7 +207,9 @@ class HymnDetailPage extends HookConsumerWidget {
                           hymnId: split.value.secondaryHymnId,
                           idLanguage: split.value.secondaryIdLanguage,
                           language: split.value.secondaryLanguage ??
-                              _otherLanguage(language),
+                              _otherLanguage(language, enabled) ??
+                              language,
+                          availableLanguages: enabled,
                           textScale: textScale,
                           onShare: (tr, body) {
                             if (body.trim().isEmpty) return;
@@ -348,6 +353,7 @@ class _SecondaryHymnPane extends ConsumerWidget {
     required this.hymnId,
     required this.idLanguage,
     required this.language,
+    required this.availableLanguages,
     required this.textScale,
     required this.onShare,
     required this.onPickHymn,
@@ -358,6 +364,7 @@ class _SecondaryHymnPane extends ConsumerWidget {
   final String? hymnId;
   final String? idLanguage;
   final String language;
+  final List<String> availableLanguages;
   final double textScale;
   final void Function(HymnTranslation translation, String body) onShare;
   final void Function(String hymnId, String language) onPickHymn;
@@ -370,7 +377,7 @@ class _SecondaryHymnPane extends ConsumerWidget {
     if (hymnId == null) {
       return HymnPickerInline(
         language: language,
-        availableLanguages: _availableLanguages,
+        availableLanguages: availableLanguages,
         onLanguageChanged: onLanguageChanged,
         onSelected: onPickHymn,
       );

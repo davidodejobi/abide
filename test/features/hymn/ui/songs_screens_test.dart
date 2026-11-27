@@ -14,8 +14,10 @@ import '../../../support/hymn_harness.dart';
 import '../../../support/reader_harness.dart' show appFor, setView, settle;
 
 void main() {
-  Future<List<Override>> overrides() async {
-    SharedPreferences.setMockInitialValues({});
+  Future<List<Override>> overrides(
+      {List<String> languages = const ['en', 'yo']}) async {
+    SharedPreferences.setMockInitialValues(
+        {'hymn_languages_enabled': languages});
     final prefs = await SharedPreferences.getInstance();
     return [
       sharedPreferencesProvider.overrideWithValue(prefs),
@@ -62,6 +64,26 @@ void main() {
       });
     }
 
+    testWidgets('chips hide Yorùbá when it is off', (t) async {
+      setView(t, const Size(390, 844));
+      await t.pumpWidget(appFor(await overrides(languages: ['en']),
+          const Scaffold(body: SafeArea(child: HomeTabScreen()))));
+      await settle(t);
+      expect(find.text(HymnStrings.yoruba), findsNothing);
+      expect(find.text(HymnStrings.english), findsNothing);
+      expect(find.text(HymnStrings.addLanguage), findsOneWidget);
+      expect(find.text('HYMNAL · ENGLISH'), findsOneWidget);
+    });
+
+    testWidgets('chips show both languages when both are on', (t) async {
+      setView(t, const Size(390, 844));
+      await t.pumpWidget(appFor(await overrides(),
+          const Scaffold(body: SafeArea(child: HomeTabScreen()))));
+      await settle(t);
+      expect(find.text(HymnStrings.yoruba), findsOneWidget);
+      expect(find.text('HYMNAL · ENGLISH AND YORÙBÁ'), findsOneWidget);
+    });
+
     testWidgets('tapping the heart favourites the hymn', (t) async {
       setView(t, const Size(390, 844));
       final semantics = t.ensureSemantics();
@@ -92,6 +114,19 @@ void main() {
             find.text('${HymnStrings.stanzas(2)} · English'), findsOneWidget);
         expect(find.bySemanticsLabel(HymnStrings.splitView), findsOneWidget);
         expect(find.bySemanticsLabel(HymnStrings.share), findsOneWidget);
+        expect(t.takeException(), isNull);
+      });
+
+      testWidgets('split view with one language opens the sheet, $name',
+          (t) async {
+        setView(t, size);
+        await t.pumpWidget(appFor(await overrides(languages: ['en']),
+            const HymnDetailPage(hymnId: 'hymn_0001'),
+            scale: scale));
+        await settle(t);
+        await t.tap(find.bySemanticsLabel(HymnStrings.splitView));
+        await settle(t);
+        expect(find.text(HymnStrings.languagesTitle), findsOneWidget);
         expect(t.takeException(), isNull);
       });
 

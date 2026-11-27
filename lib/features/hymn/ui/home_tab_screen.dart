@@ -9,10 +9,12 @@ import 'package:openbaptisthymnal/core/widgets/lum_chip.dart';
 import 'package:openbaptisthymnal/core/widgets/lum_circle_button.dart';
 import 'package:openbaptisthymnal/core/widgets/lum_group_card.dart';
 import 'package:openbaptisthymnal/features/hymn/model/language_pack.dart';
+import 'package:openbaptisthymnal/features/hymn/providers/enabled_hymn_languages_provider.dart';
 import 'package:openbaptisthymnal/features/hymn/providers/favorites_provider.dart';
 import 'package:openbaptisthymnal/features/hymn/providers/hymnal_provider.dart';
 import 'package:openbaptisthymnal/features/hymn/ui/hymn_strings.dart';
 import 'package:openbaptisthymnal/features/hymn/ui/viewmodels/hymns_viewmodel.dart';
+import 'package:openbaptisthymnal/features/hymn/ui/widgets/hymn_languages_sheet.dart';
 import 'package:openbaptisthymnal/features/hymn/ui/widgets/hymn_list_tile.dart';
 import 'package:openbaptisthymnal/features/hymn/ui/widgets/language_toggle.dart';
 import 'package:openbaptisthymnal/features/hymn/ui/widgets/search_bar_widget.dart';
@@ -40,6 +42,7 @@ class HomeTabScreen extends HookConsumerWidget {
     final hymnsAsync = ref.watch(hymnsViewModelProvider);
     final currentLanguage = ref.watch(languageProvider);
     final favourites = ref.watch(favoritesProvider);
+    final enabled = ref.watch(enabledHymnLanguagesProvider);
     final c = context.lum;
 
     // ScrollMetricsNotification can arrive *during* layout, so defer the state
@@ -91,7 +94,7 @@ class HomeTabScreen extends HookConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(HymnStrings.eyebrow,
+                        Text(HymnStrings.eyebrow(enabled),
                             style: LumText.roadLabelCaps11
                                 .copyWith(color: c.textSecondary)),
                         const SizedBox(height: LumSpace.sm),
@@ -118,11 +121,30 @@ class HomeTabScreen extends HookConsumerWidget {
                           onLanguageChanged: (language) => ref
                               .read(hymnsViewModelProvider.notifier)
                               .changeLanguage(language),
-                          trailing: LumChip(
-                            label: HymnStrings.favourites,
-                            icon: PhosphorIcons.heart(),
-                            onTap: () =>
-                                context.router.push(const FavoritesTabRoute()),
+                          // One language on: no chip to switch between.
+                          languages: enabled.length > 1
+                              ? [
+                                  for (final code in enabled)
+                                    LanguageOption(
+                                        code: code,
+                                        label: HymnStrings.languageName(code)),
+                                ]
+                              : const [],
+                          trailing: Wrap(
+                            spacing: 10,
+                            runSpacing: 10,
+                            children: [
+                              LumChip(
+                                label: HymnStrings.favourites,
+                                icon: PhosphorIcons.heart(),
+                                onTap: () => context.router
+                                    .push(const FavoritesTabRoute()),
+                              ),
+                              LumChip(
+                                label: HymnStrings.addLanguage,
+                                onTap: () => showHymnLanguagesSheet(context),
+                              ),
+                            ],
                           ),
                         ),
                       ],
