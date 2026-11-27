@@ -26,7 +26,7 @@ const sermonTemplate = NoteTemplate(
     TemplateSection(_text, 'Main point 2', hint: 'The second idea'),
     TemplateSection(_text, 'Main point 3', hint: 'The third idea'),
     TemplateSection(_text, 'Scriptures referenced',
-        hint: 'Type John 3:16 or a hymn number to link it.'),
+        hint: 'Type John 3:16 to link it.'),
     TemplateSection(_text, 'Application',
         hint: 'What will you do this week?'),
     TemplateSection(_text, 'Pray', hint: 'Prayer prompts, or your own words.'),

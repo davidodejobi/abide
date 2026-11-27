@@ -36,6 +36,7 @@ class HymnLanguagesSheet extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final c = context.lum;
     final enabled = ref.watch(enabledHymnLanguagesProvider);
+    final showing = ref.watch(languageProvider);
     return SafeArea(
       child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(LumSize.screenGutter, LumSpace.md,
@@ -78,8 +79,10 @@ class HymnLanguagesSheet extends ConsumerWidget {
                     _LanguageRow(
                       code: code,
                       on: enabled.contains(code),
-                      // The last language on can't be turned off.
-                      locked: enabled.length == 1 && enabled.contains(code),
+                      // The last language on, and the one Songs is showing,
+                      // can't be turned off.
+                      locked: (enabled.length == 1 && enabled.contains(code)) ||
+                          code == showing,
                     ),
                 ],
               ),

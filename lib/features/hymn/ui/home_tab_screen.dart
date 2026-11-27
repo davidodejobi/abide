@@ -70,7 +70,7 @@ class HomeTabScreen extends HookConsumerWidget {
     }
 
     String idOf(HymnTranslation hymn) =>
-        hymn.id ?? 'hymn_${hymn.number.toString().padLeft(4, '0')}';
+        hymn.id!;
 
     return Stack(
       children: [

@@ -41,15 +41,32 @@ void main() {
     expect(c.read(enabledHymnLanguagesProvider), ['en']);
   });
 
-  test('English can go off once Yorùbá is on; selection moves; persisted',
+  test('The language Songs is showing cannot go off; others can; persisted',
       () async {
     final c = await _container({});
     final n = c.read(enabledHymnLanguagesProvider.notifier);
     await n.setEnabled('yo', true);
+    await n.setEnabled('en', false); // showing English: refused
+    expect(c.read(enabledHymnLanguagesProvider), ['en', 'yo']);
+    c.read(languageProvider.notifier).state = 'yo';
     await n.setEnabled('en', false);
     expect(c.read(enabledHymnLanguagesProvider), ['yo']);
-    expect(c.read(languageProvider), 'yo');
     final prefs = c.read(sharedPreferencesProvider);
     expect(prefs.getStringList('hymn_languages_enabled'), ['yo']);
+  });
+
+  test('The first-run default is saved, so a relaunch keeps it', () async {
+    final c = await _container({}, language: 'yo');
+    expect(c.read(enabledHymnLanguagesProvider), ['en', 'yo']);
+    final prefs = c.read(sharedPreferencesProvider);
+    expect(prefs.getStringList('hymn_languages_enabled'), ['en', 'yo']);
+  });
+
+  test('Opening a hymn in a language that is off turns it on', () async {
+    final c = await _container({});
+    expect(c.read(enabledHymnLanguagesProvider), ['en']);
+    c.read(languageProvider.notifier).state = 'yo';
+    await Future<void>.delayed(Duration.zero);
+    expect(c.read(enabledHymnLanguagesProvider), ['en', 'yo']);
   });
 }
