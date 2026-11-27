@@ -4,6 +4,8 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:vector_graphics/vector_graphics.dart';
+import 'package:openbaptisthymnal/core/utils/extensions/string_extensions.dart';
 import 'package:openbaptisthymnal/core/theme/lum_theme.dart';
 import 'package:openbaptisthymnal/core/widgets/lum_button.dart';
 
@@ -202,7 +204,13 @@ class _SaveRoadSheetState extends ConsumerState<SaveRoadSheet> {
           LumButton(
             label: AccountStrings.continueGoogle,
             kind: LumButtonKind.secondary,
-            icon: Icon(PhosphorIcons.googleLogo(PhosphorIconsStyle.bold)),
+            // Google's own four-colour G: brand rules ask for it, and it is
+            // easier to recognise than a one-colour glyph.
+            icon: VectorGraphic(
+              loader: AssetBytesLoader('google_g'.iconSvg),
+              width: LumSize.iconSm,
+              height: LumSize.iconSm,
+            ),
             onPressed: _busy ? null : () => _native((r) => r.signInWithGoogle()),
           ),
           const SizedBox(height: LumSpace.sm),
