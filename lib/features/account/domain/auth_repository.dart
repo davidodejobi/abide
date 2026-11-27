@@ -58,6 +58,7 @@ abstract interface class AuthRepository {
   bool get appleAvailable;
   bool get googleAvailable;
 
-  /// Back to a fresh anonymous session. Local data is never touched.
+  /// Ends the session. Touches no local data and starts no new session: the
+  /// caller clears the reader's data, then calls [ensureAnonymousSession].
   Future<void> signOut();
 }

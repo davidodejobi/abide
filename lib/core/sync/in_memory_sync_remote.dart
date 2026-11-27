@@ -1,7 +1,9 @@
 import 'sync_remote.dart';
 
 /// In-process stand-in for the server, used by tests. Mimics the real contract:
-/// last-write-wins by `updatedAt`, tombstones kept, a monotonic cursor.
+/// last-write-wins by `updatedAt`, tombstones kept, a monotonic cursor, and
+/// every row keyed per account: the same row id under two owners is two rows
+/// (the server's primary key is `(user_id, id)`).
 class InMemorySyncRemote implements SyncRemote {
   final _byOwner = <String, Map<String, Map<String, (int, SyncRecord)>>>{};
 

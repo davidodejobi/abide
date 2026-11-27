@@ -21,8 +21,13 @@ abstract final class AccountStrings {
   static const signOut = 'Sign out';
   static const signOutTitle = 'Sign out?';
   static const signOutBody =
-      'Your notes, highlights and reading progress stay on this phone. '
-      'Sign in again any time to keep them in sync.';
+      'Your notes, highlights and progress are saved to your account. '
+      'Signing out removes them from this phone. '
+      'Sign in again any time to get them back.';
+  static const signOutUnsaved =
+      "Some changes haven't been saved to your account yet. "
+      'Connect to the internet and try again.';
+  static const ok = 'OK';
   static const cancel = 'Cancel';
   static const emailLabel = 'Email address';
   static const sendCode = 'Send me a code';

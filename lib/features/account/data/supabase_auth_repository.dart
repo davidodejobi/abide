@@ -1,7 +1,10 @@
 import 'dart:async';
 import 'dart:io' show SocketException;
 
+import 'package:flutter/services.dart' show PlatformException;
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+import 'package:google_sign_in/google_sign_in.dart' show GoogleSignIn;
 
 import '../domain/auth_repository.dart';
 import 'native_sign_in.dart';
@@ -16,9 +19,19 @@ AuthFailure mapAuthError(Object e, {bool verifying = false}) {
       e is TimeoutException) {
     return const AuthFailure(AuthFailureKind.network);
   }
+  if (e is PlatformException) return const AuthFailure(AuthFailureKind.unknown);
+  if (e is AuthSessionMissingException) {
+    return const AuthFailure(AuthFailureKind.unknown);
+  }
   if (e is AuthException) {
     final code = e.code ?? '';
-    if (code == 'otp_expired' || (verifying && e.statusCode != '429')) {
+    final msg = e.message.toLowerCase();
+    final rejected = {'400', '401', '403'}.contains(e.statusCode) &&
+        (msg.contains('token') || msg.contains('otp') || msg.contains('code'));
+    if (code == 'otp_expired' ||
+        code == 'invalid_otp' ||
+        code == 'otp_invalid' ||
+        (verifying && rejected)) {
       return const AuthFailure(AuthFailureKind.wrongCode);
     }
     if (code == 'email_address_invalid' ||
@@ -39,8 +52,10 @@ class SupabaseAuthRepository implements AuthRepository {
     this._auth, {
     Future<IdCredential> Function()? apple,
     Future<IdCredential> Function()? google,
+    Future<void> Function()? googleSignOut,
   })  : _apple = apple,
-        _google = google;
+        _google = google,
+        _googleSignOut = googleSignOut;
 
   /// Production wiring: native Apple / Google where the build supports them.
   factory SupabaseAuthRepository.native(GoTrueClient auth) =>
@@ -48,11 +63,14 @@ class SupabaseAuthRepository implements AuthRepository {
         auth,
         apple: appleSignInSupported ? appleCredential : null,
         google: googleSignInSupported ? googleCredential : null,
+        googleSignOut:
+            googleSignInSupported ? () => GoogleSignIn.instance.signOut() : null,
       );
 
   final GoTrueClient _auth;
   final Future<IdCredential> Function()? _apple;
   final Future<IdCredential> Function()? _google;
+  final Future<void> Function()? _googleSignOut;
 
   /// True when the pending code belongs to an existing account (sign-in), false
   /// when it confirms an email change on the anonymous user.
@@ -68,7 +86,16 @@ class SupabaseAuthRepository implements AuthRepository {
   static AuthAccount accountOf(User? user) {
     if (user == null || user.isAnonymous) return const AuthAccount();
     final email = user.email;
-    final provider = user.appMetadata['provider'] as String?;
+    // The newest non-anonymous identity decides the label; appMetadata only
+    // records the provider the account was first created with.
+    final ids = [
+      for (final i in user.identities ?? const <UserIdentity>[])
+        if (i.provider != 'anonymous') i,
+    ]..sort((a, b) => (b.lastSignInAt ?? b.createdAt ?? '')
+        .compareTo(a.lastSignInAt ?? a.createdAt ?? ''));
+    final provider = ids.isEmpty
+        ? user.appMetadata['provider'] as String?
+        : ids.first.provider;
     return AuthAccount(
       email: email == null || email.isEmpty ? null : email,
       provider: provider ?? 'email',
@@ -98,6 +125,7 @@ class SupabaseAuthRepository implements AuthRepository {
   @override
   Future<void> sendEmailCode(String email) async {
     try {
+      await ensureAnonymousSession();
       final user = _auth.currentUser;
       if (user != null && user.isAnonymous) {
         try {
@@ -142,6 +170,7 @@ class SupabaseAuthRepository implements AuthRepository {
   ) async {
     if (credential == null) throw const AuthFailure(AuthFailureKind.unknown);
     try {
+      await ensureAnonymousSession();
       final c = await credential();
       final user = _auth.currentUser;
       if (user != null && user.isAnonymous) {
@@ -165,8 +194,11 @@ class SupabaseAuthRepository implements AuthRepository {
 
   @override
   Future<void> signOut() async {
+    try {
+      await _googleSignOut?.call();
+    } catch (_) {
+      // Only clears Google's cached account; never blocks signing out.
+    }
     await _auth.signOut();
-    // Local data stays; the next sync re-keys onto this fresh anonymous user.
-    await ensureAnonymousSession();
   }
 }

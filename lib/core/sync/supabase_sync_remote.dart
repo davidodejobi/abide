@@ -182,7 +182,7 @@ class SupabaseSyncRemote implements SyncRemote {
       switch (r.entity) {
         case 'notes':
           if (!Uuid.isValidUUID(fromString: r.rowId)) break; // not syncable
-          up('u_notes', 'id', {
+          up('u_notes', 'user_id,id', {
             'id': r.rowId,
             'title': _clip(p['title'] as String),
             'body_md': p['content_markdown'],
@@ -272,7 +272,11 @@ class SupabaseSyncRemote implements SyncRemote {
     switch (r.entity) {
       case 'notes':
         if (!Uuid.isValidUUID(fromString: r.rowId)) return;
-        await _client.from('u_notes').update(patch).eq('id', r.rowId);
+        await _client
+            .from('u_notes')
+            .update(patch)
+            .eq('user_id', _appUserId!)
+            .eq('id', r.rowId);
       case 'bible_annotations':
         final v = _parseVerse(r.rowId.replaceFirst('highlight:', ''));
         if (v == null) return;
@@ -308,14 +312,15 @@ class SupabaseSyncRemote implements SyncRemote {
       retryAfterAuthLoss(() => _pull(entity, cursor), _reauth);
 
   Future<SyncPage> _pull(String entity, String? cursor) async {
-    await _ensureUser();
+    final userId = await _ensureUser();
     final table = switch (entity) {
       'notes' => 'u_notes',
       'bible_annotations' => 'u_highlights',
       'plan_subscriptions' => 'u_settings',
       _ => 'u_reading_progress',
     };
-    var q = _client.from(table).select();
+    // Notes are keyed (user_id, id), so every pull is explicitly this user's.
+    var q = _client.from(table).select().eq('user_id', userId);
     if (entity == 'reading_days') q = q.like('plan_key', 'days@%');
     if (entity == 'plan_day_progress') q = q.not('plan_key', 'like', 'days@%');
     if (entity == 'plan_subscriptions') q = q.like('key', 'plan:%');

@@ -48,11 +48,80 @@ class SyncService {
 
   Future<void>? _inFlight;
   bool _again = false;
+  bool _locked = false;
+
+  /// Syncs and reports whether it is safe to leave this account: the run
+  /// succeeded and nothing is left in the push queue.
+  Future<bool> flush() async {
+    if (!await sync()) return false;
+    final r = await _db
+        .customSelect('SELECT COUNT(*) AS c FROM sync_outbox')
+        .getSingle();
+    return r.read<int>('c') == 0;
+  }
+
+  /// Runs [body] with sync held off (a sync that starts meanwhile returns
+  /// false), after any running sync has finished. Used by sign-out so a
+  /// background sync can never re-queue data that is being wiped.
+  Future<T> runExclusive<T>(Future<T> Function() body) async {
+    await _inFlight;
+    _locked = true;
+    try {
+      return await body();
+    } finally {
+      _locked = false;
+    }
+  }
+
+  /// Wipes this reader's data from the phone: notes (with their folders, tags,
+  /// links, attachment rows and own templates), highlights, reading progress,
+  /// plan subscriptions, and all sync bookkeeping (queue, cursors, owner).
+  /// App preferences live elsewhere and are untouched. Sync is off afterwards
+  /// until the next [sync] turns it back on for the next account.
+  Future<void> clearLocalData() async {
+    await _db.transaction(() async {
+      for (final t in const [
+        'note_tags',
+        'note_links',
+        'attachments',
+        'notes',
+        'tags',
+        'folders',
+        'note_templates',
+        'bible_annotations',
+        'reading_days',
+        'plan_day_progress',
+        'plan_subscriptions',
+        // Last: the deletes above fire triggers that queue into the outbox.
+        'sync_outbox',
+        'sync_state',
+      ]) {
+        await _db.customStatement('DELETE FROM $t');
+      }
+    });
+    _db.notifyUpdates({
+      for (final t in const [
+        'notes',
+        'note_tags',
+        'note_links',
+        'attachments',
+        'tags',
+        'folders',
+        'note_templates',
+        'bible_annotations',
+        'reading_days',
+        'plan_day_progress',
+        'plan_subscriptions',
+      ])
+        TableUpdate(t),
+    });
+  }
 
   /// Pull then push. Returns true on success, false when disabled, offline or
   /// failed (the outbox keeps everything for the next run). Overlapping calls
   /// coalesce into one follow-up run.
   Future<bool> sync() async {
+    if (_locked) return false;
     if (!enabled) {
       // Paused (consent withdrawn, local-only): nothing leaves the device, but
       // keep queueing so re-enabling pushes without a full re-queue. Only an

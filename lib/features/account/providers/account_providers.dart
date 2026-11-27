@@ -4,6 +4,8 @@ import 'package:openbaptisthymnal/core/config/supabase_config.dart';
 import 'package:openbaptisthymnal/core/storage/storage_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'package:openbaptisthymnal/core/sync/sync_providers.dart';
+
 import '../data/fake_auth_repository.dart';
 import '../data/supabase_auth_repository.dart';
 import '../domain/auth_repository.dart';
@@ -39,5 +41,38 @@ class SaveRoadPromptedNotifier extends Notifier<bool> {
   void markShown() {
     state = true;
     ref.read(sharedPreferencesProvider).setBool(_promptedKey, true);
+  }
+}
+
+/// Signs the reader out of a phone that may be handed to someone else: their
+/// data is saved to the account first, then removed from the device.
+final signOutProvider = NotifierProvider<SignOutController, void>(
+  SignOutController.new,
+);
+
+class SignOutController extends Notifier<void> {
+  @override
+  void build() {}
+
+  /// Returns false, changing nothing, when the reader's changes could not be
+  /// saved to their account (offline, or a failed sync). Otherwise signs out,
+  /// clears this reader's synced data, and starts a fresh anonymous session.
+  Future<bool> signOut() async {
+    final auth = ref.read(authRepositoryProvider);
+    if (auth == null) return true;
+    final sync = ref.read(syncServiceProvider);
+    if (sync == null) {
+      // No sync, so no account data on the phone to protect.
+      await auth.signOut();
+      await auth.ensureAnonymousSession();
+      return true;
+    }
+    if (!await sync.flush()) return false;
+    await sync.runExclusive(() async {
+      await auth.signOut();
+      await sync.clearLocalData();
+      await auth.ensureAnonymousSession();
+    });
+    return true;
   }
 }

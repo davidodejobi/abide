@@ -165,7 +165,7 @@ void main() {
     expect(find.text(AccountStrings.sendCode), findsOneWidget);
   });
 
-  testWidgets('Sign out asks first and says data stays on the phone',
+  testWidgets('Sign out asks first and warns that data leaves the phone',
       (tester) async {
     await _pump(tester, const SettingsTabScreen());
     await _openSheet(tester);
@@ -179,7 +179,7 @@ void main() {
     await tester.tap(find.text(AccountStrings.signOut));
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.text(AccountStrings.signOutBody), findsOneWidget);
-    expect(AccountStrings.signOutBody, contains('stay on this phone'));
+    expect(AccountStrings.signOutBody, contains('removes them from this phone'));
     await tester.tap(find.text(AccountStrings.signOut).last);
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.text(AccountStrings.saveRow), findsOneWidget);

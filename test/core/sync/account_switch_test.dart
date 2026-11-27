@@ -80,4 +80,31 @@ void main() {
     expect(remote.get('notes', 'n1'), isNotNull, reason: 'queued into anon-2');
     await db.close();
   });
+
+  test('the same note id under two accounts is two rows', () async {
+    final remote = InMemorySyncRemote()..owner = 'account-1';
+    final a = AppDatabase.forTesting(NativeDatabase.memory());
+    final sa = SyncService(db: a, remote: remote);
+    await sa.sync();
+    await note(a, 'same-id', 'account one', t(1));
+    await sa.sync();
+
+    // A shared phone: another account writes a note with the same id.
+    remote.owner = 'account-2';
+    final b = AppDatabase.forTesting(NativeDatabase.memory());
+    final sb = SyncService(db: b, remote: remote);
+    await sb.sync();
+    await note(b, 'same-id', 'account two', t(0));
+    await sb.sync();
+
+    // Even though it is older, account two's write is not dropped by account
+    // one's row, and neither overwrites the other.
+    expect(remote.get('notes', 'same-id')?.payload['content_markdown'],
+        'account two');
+    remote.owner = 'account-1';
+    expect(remote.get('notes', 'same-id')?.payload['content_markdown'],
+        'account one');
+    await a.close();
+    await b.close();
+  });
 }

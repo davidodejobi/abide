@@ -1,15 +1,22 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/services.dart' show PlatformException;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:openbaptisthymnal/features/account/data/native_sign_in.dart';
 import 'package:openbaptisthymnal/features/account/data/supabase_auth_repository.dart';
 import 'package:openbaptisthymnal/features/account/domain/auth_repository.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-User _user({bool anon = true, String? email, String provider = 'anonymous'}) =>
+User _user({
+  bool anon = true,
+  String? email,
+  String provider = 'anonymous',
+  List<UserIdentity>? identities,
+}) =>
     User(
       id: 'u1',
+      identities: identities,
       appMetadata: {'provider': provider},
       userMetadata: const {},
       aud: 'authenticated',
@@ -29,8 +36,26 @@ class _FakeAuth implements GoTrueClient {
   @override
   User? get currentUser => user;
 
+  /// ensureAnonymousSession signs in when there is no session.
+  bool hasSession = true;
+
   @override
-  Session? get currentSession => null;
+  Session? get currentSession => hasSession
+      ? Session(accessToken: 't', tokenType: 'bearer', user: _user())
+      : null;
+
+  @override
+  Future<AuthResponse> signInAnonymously(
+      {Map<String, dynamic>? data, String? captchaToken}) async {
+    calls.add('signInAnonymously');
+    hasSession = true;
+    return AuthResponse();
+  }
+
+  @override
+  Future<void> signOut({SignOutScope scope = SignOutScope.local}) async {
+    calls.add('signOut');
+  }
 
   @override
   Future<UserResponse> updateUser(UserAttributes attributes,
@@ -141,10 +166,27 @@ void main() {
               .kind,
           AuthFailureKind.wrongCode);
       expect(
-          mapAuthError(AuthApiException('bad', statusCode: '403'),
+          mapAuthError(
+                  AuthApiException('Token has expired or is invalid',
+                      statusCode: '403'),
                   verifying: true)
               .kind,
           AuthFailureKind.wrongCode);
+      expect(
+          mapAuthError(AuthApiException('bad', statusCode: '403', code: 'invalid_otp'),
+                  verifying: true)
+              .kind,
+          AuthFailureKind.wrongCode);
+      // Unrelated rejections and a missing session are not a wrong code.
+      expect(
+          mapAuthError(AuthApiException('bad', statusCode: '403'),
+                  verifying: true)
+              .kind,
+          AuthFailureKind.unknown);
+      expect(mapAuthError(AuthSessionMissingException(), verifying: true).kind,
+          AuthFailureKind.unknown);
+      expect(mapAuthError(PlatformException(code: 'x')).kind,
+          AuthFailureKind.unknown);
       expect(
           mapAuthError(AuthApiException('slow down', statusCode: '429'),
                   verifying: true)
@@ -174,7 +216,42 @@ void main() {
     });
   });
 
+  test('provider label comes from the newest identity', () {
+    UserIdentity id(String p, String at) => UserIdentity(
+        id: p,
+        userId: 'u1',
+        identityData: const {},
+        identityId: p,
+        provider: p,
+        createdAt: at,
+        lastSignInAt: at);
+    final a = SupabaseAuthRepository.accountOf(_user(
+      anon: false,
+      email: 'a@b.co',
+      provider: 'email',
+      identities: [id('email', '2026-01-01'), id('google', '2026-02-01')],
+    ));
+    expect(a.provider, 'google');
+  });
+
   group('email flow', () {
+    test('a missing session is started before the email step', () async {
+      final auth = _FakeAuth()..hasSession = false;
+      await SupabaseAuthRepository(auth).sendEmailCode('a@b.co');
+      expect(auth.calls.first, 'signInAnonymously');
+    });
+
+    test('sign out only ends the session', () async {
+      final auth = _FakeAuth();
+      var google = 0;
+      await SupabaseAuthRepository(auth, googleSignOut: () async {
+        google++;
+        throw StateError('ignored');
+      }).signOut();
+      expect(auth.calls, ['signOut']);
+      expect(google, 1);
+    });
+
     test('anonymous user: updateUser then emailChange keeps the user id',
         () async {
       final auth = _FakeAuth();
@@ -201,7 +278,8 @@ void main() {
 
     test('a wrong code maps to wrongCode', () async {
       final auth = _FakeAuth()
-        ..verifyError = AuthApiException('bad', statusCode: '403');
+        ..verifyError = AuthApiException('Token has expired or is invalid',
+            statusCode: '403');
       final repo = SupabaseAuthRepository(auth);
       await repo.sendEmailCode('a@b.co');
       expect(await _kind(() => repo.verifyCode('a@b.co', '000000')),

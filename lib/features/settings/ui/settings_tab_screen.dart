@@ -394,5 +394,25 @@ Future<void> _confirmSignOut(BuildContext context, WidgetRef ref) async {
       ],
     ),
   );
-  if (ok == true) await ref.read(authRepositoryProvider)?.signOut();
+  if (ok != true) return;
+  var saved = false;
+  try {
+    saved = await ref.read(signOutProvider.notifier).signOut();
+  } catch (_) {
+    // Offline or a failed call: nothing was removed, so say the same thing.
+  }
+  if (!saved && context.mounted) {
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        content: const Text(AccountStrings.signOutUnsaved),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text(AccountStrings.ok),
+          ),
+        ],
+      ),
+    );
+  }
 }
