@@ -111,6 +111,21 @@ void main() {
     expect((await db.notesDao.getNote(noteId))?.contentMarkdown, 'mine');
   });
 
+  test('a note with a photo stays on the phone so its file is never swept',
+      () async {
+    const mediaId = '22222222-2222-4222-8222-222222222222';
+    await db.notesDao.upsertNote(NotesCompanion.insert(
+      id: mediaId,
+      contentMarkdown: const Value('![x](note_images/a.png)'),
+      createdAt: t(2),
+      updatedAt: t(2),
+    ));
+    final saved = await container.read(signOutProvider.notifier).signOut();
+    expect(saved, isTrue);
+    expect(await db.notesDao.getNote(mediaId), isNotNull);
+    expect(await db.notesDao.getNote(noteId), isNull);
+  });
+
   test('a sync started during the lock does not repopulate wiped rows',
       () async {
     final service = container.read(syncServiceProvider)!;

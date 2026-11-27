@@ -57,6 +57,9 @@ class SyncService {
   Future<bool> flushThenLock(Future<void> Function() body) async {
     if (!await sync()) return false;
     return runExclusive(() async {
+      // A sync that never completed its first run queues nothing, so an empty
+      // outbox alone does not prove the data reached the server.
+      if (await _state('sync_enabled') != '1') return false;
       if (!await _outboxEmpty()) return false;
       await body();
       return true;
@@ -91,7 +94,12 @@ class SyncService {
   /// until the next [sync] turns it back on for the next account.
   Future<void> clearLocalData() async {
     // Notes that sync have uuid ids; anything else never left the phone.
-    const synced = "id GLOB '????????-????-????-????-????????????'";
+    // Notes with photos or recordings stay too: media never syncs, and the
+    // orphan sweep would delete files no note points at any more.
+    const synced = "id GLOB '????????-????-????-????-????????????' "
+        "AND content_markdown NOT LIKE '%note_images/%' "
+        "AND content_markdown NOT LIKE '%note_audio/%' "
+        'AND id NOT IN (SELECT note_id FROM attachments)';
     const ofSynced = "SELECT id FROM notes WHERE $synced";
     await _db.transaction(() async {
       for (final q in const [
