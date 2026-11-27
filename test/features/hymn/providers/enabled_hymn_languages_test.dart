@@ -30,7 +30,7 @@ void main() {
 
   test('Yorùbá on when there is a Yorùbá favourite', () async {
     final c = await _container({
-      'favorite_hymns': '["yo:hymn_0005"]',
+      'favorites_hymn_ids': '["yo:hymn_0005"]',
     });
     expect(c.read(enabledHymnLanguagesProvider), ['en', 'yo']);
   });
