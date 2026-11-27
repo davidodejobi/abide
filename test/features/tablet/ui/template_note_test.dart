@@ -100,7 +100,7 @@ void main() {
     await t.pump(const Duration(seconds: 2));
     expect(repo.created, hasLength(1));
     expect(repo.created.single.title, 'Abide in me');
-    expect(repo.created.single.body, contains('## Main points'));
+    expect(repo.created.single.body, contains('## Main point 1'));
     expect(prefs.getString('note_template_last_speaker'), 'Ada Obi');
     // Saving the first note also retires the empty-notes hint.
     expect(prefs.getBool('notes_template_hint_seen'), isTrue);

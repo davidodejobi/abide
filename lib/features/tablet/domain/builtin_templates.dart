@@ -13,19 +13,23 @@ const sermonTemplate = NoteTemplate(
   name: 'Sermon',
   icon: 'church',
   builtIn: true,
-  subtitle: 'Speaker · Passages · Points · Application · Prayer',
+  subtitle: 'Speaker · Passage · Points · Application · Pray',
   sections: [
     TemplateSection(_field, 'Speaker', hint: 'Who is speaking'),
     TemplateSection(_field, 'Place', hint: 'Church or venue'),
     TemplateSection(_field, 'Date'),
     TemplateSection(_scripture, 'Passage'),
-    TemplateSection(_bullet, 'Main points',
+    // Matches the design (templates_04): three numbered points, then
+    // references, application and a prayer.
+    TemplateSection(_text, 'Main point 1',
         hint: 'The first big idea, in your own words'),
-    TemplateSection(_text, 'Passages referenced',
-        hint: 'Verses mentioned. Tap Verse to link them'),
+    TemplateSection(_text, 'Main point 2', hint: 'The second idea'),
+    TemplateSection(_text, 'Main point 3', hint: 'The third idea'),
+    TemplateSection(_text, 'Scriptures referenced',
+        hint: 'Type John 3:16 to link it.'),
     TemplateSection(_text, 'Application',
         hint: 'What will you do this week?'),
-    TemplateSection(_text, 'Prayer', hint: 'A line of prayer in response'),
+    TemplateSection(_text, 'Pray', hint: 'Prayer prompts, or your own words.'),
   ],
 );
 

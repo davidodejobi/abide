@@ -111,8 +111,7 @@ class FavoritesTabScreen extends ConsumerWidget {
                               borderRadius: HymnListTile.edgeRadius(
                                   index, favorites.length),
                               onToggleFavorite: () {
-                                final id = hymn.id ??
-                                    'hymn_${hymn.number.toString().padLeft(4, '0')}';
+                                final id = hymn.id!;
                                 ref
                                     .read(favoritesProvider.notifier)
                                     .toggle(id, favorite.language);
@@ -123,8 +122,7 @@ class FavoritesTabScreen extends ConsumerWidget {
                                 // saved translation.
                                 ref.read(languageProvider.notifier).state =
                                     favorite.language;
-                                final hymnId = hymn.id ??
-                                    'hymn_${hymn.number.toString().padLeft(4, '0')}';
+                                final hymnId = hymn.id!;
                                 context.router
                                     .push(HymnDetailRoute(hymnId: hymnId));
                               },

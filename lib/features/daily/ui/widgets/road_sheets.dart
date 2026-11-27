@@ -95,6 +95,7 @@ Future<RoadOpen?> showLandmarkSheet(
 Future<RoadOpen?> _show(BuildContext context, WidgetBuilder builder,
     {double? maxHeightFraction}) {
   return showModalBottomSheet<RoadOpen>(
+    useRootNavigator: true,
     context: context,
     isScrollControlled: true,
     constraints: maxHeightFraction == null

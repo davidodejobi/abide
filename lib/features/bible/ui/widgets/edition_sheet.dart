@@ -20,6 +20,7 @@ Future<String?> showEditionSheet(
 }) {
   final c = context.lum;
   return showModalBottomSheet<String>(
+    useRootNavigator: true,
     context: context,
     isScrollControlled: true,
     useSafeArea: true,

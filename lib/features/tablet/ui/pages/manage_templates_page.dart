@@ -254,6 +254,7 @@ class _MineRow extends ConsumerWidget {
       final isPinned =
           ref.read(pinnedTemplateIdsProvider).contains(template.id);
       showModalBottomSheet<void>(
+        useRootNavigator: true,
         context: context,
         showDragHandle: true,
         builder: (sheetContext) => SafeArea(

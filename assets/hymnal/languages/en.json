@@ -3,7 +3,7 @@
   "hymnal_name": "Baptist Hymnal",
   "hymns": {
     "hymn_0001": {
-      "number": 1,
+      "number": 2,
       "title": "Holy, Holy, Holy",
       "lyrics": {
         "stanzas": [
@@ -28,7 +28,7 @@
       }
     },
     "hymn_0003": {
-      "number": 3,
+      "number": 4,
       "title": "To God Be the Glory",
       "lyrics": {
         "stanzas": [
@@ -49,7 +49,7 @@
       }
     },
     "hymn_0004": {
-      "number": 4,
+      "number": 5,
       "title": "All People That on Earth Do Dwell",
       "lyrics": {
         "stanzas": [
@@ -78,7 +78,7 @@
       }
     },
     "hymn_0005": {
-      "number": 5,
+      "number": 6,
       "title": "Immortal Invisible God Only Wise",
       "lyrics": {
         "stanzas": [
@@ -103,7 +103,7 @@
       }
     },
     "hymn_0006": {
-      "number": 6,
+      "number": 7,
       "title": "Joyful Joyful We Adore Thee",
       "lyrics": {
         "stanzas": [
@@ -124,7 +124,7 @@
       }
     },
     "hymn_0007": {
-      "number": 7,
+      "number": 8,
       "title": "A Mighty Fortress Is Our God",
       "lyrics": {
         "stanzas": [
@@ -149,7 +149,7 @@
       }
     },
     "hymn_0012": {
-      "number": 12,
+      "number": 13,
       "title": "From All That Dwell Below the Skies",
       "lyrics": {
         "stanzas": [
@@ -166,7 +166,7 @@
       }
     },
     "hymn_0013": {
-      "number": 13,
+      "number": 14,
       "title": "Praise to the Lord, the Almighty",
       "lyrics": {
         "stanzas": [
@@ -191,7 +191,7 @@
       }
     },
     "hymn_0014": {
-      "number": 14,
+      "number": 15,
       "title": "Come, Thou Fount of Every Blessing",
       "lyrics": {
         "stanzas": [
@@ -212,7 +212,7 @@
       }
     },
     "hymn_0015": {
-      "number": 15,
+      "number": 16,
       "title": "O Worship the King",
       "lyrics": {
         "stanzas": [
@@ -237,7 +237,7 @@
       }
     },
     "hymn_0018": {
-      "number": 18,
+      "number": 19,
       "title": "We Praise You, O God, Our Redeemer",
       "lyrics": {
         "stanzas": [
@@ -258,7 +258,7 @@
       }
     },
     "hymn_0019": {
-      "number": 19,
+      "number": 20,
       "title": "Sing Praise to God Who Reigns Above",
       "lyrics": {
         "stanzas": [
@@ -283,7 +283,7 @@
       }
     },
     "hymn_0020": {
-      "number": 20,
+      "number": 21,
       "title": "O My Soul, Bless God the Father",
       "lyrics": {
         "stanzas": [
@@ -316,7 +316,7 @@
       }
     },
     "hymn_0022": {
-      "number": 22,
+      "number": 23,
       "title": "God Is So Good",
       "lyrics": {
         "stanzas": [
@@ -341,7 +341,7 @@
       }
     },
     "hymn_0023": {
-      "number": 23,
+      "number": 24,
       "title": "He Is Able to Deliver Thee",
       "lyrics": {
         "stanzas": [
@@ -362,7 +362,7 @@
       }
     },
     "hymn_0024": {
-      "number": 24,
+      "number": 25,
       "title": "There's a Wideness in God's Mercy",
       "lyrics": {
         "stanzas": [
@@ -391,7 +391,7 @@
       }
     },
     "hymn_0029": {
-      "number": 29,
+      "number": 30,
       "title": "Stand Up and Bless the Lord",
       "lyrics": {
         "stanzas": [
@@ -420,7 +420,7 @@
       }
     },
     "hymn_0030": {
-      "number": 30,
+      "number": 31,
       "title": "Praise Him, All Ye Little Children",
       "lyrics": {
         "stanzas": [
@@ -441,7 +441,7 @@
       }
     },
     "hymn_0032": {
-      "number": 32,
+      "number": 33,
       "title": "Praise the Lord Who Reigns Above",
       "lyrics": {
         "stanzas": [
@@ -462,7 +462,7 @@
       }
     },
     "hymn_0033": {
-      "number": 33,
+      "number": 34,
       "title": "The God of Abraham Praise",
       "lyrics": {
         "stanzas": [
@@ -483,7 +483,7 @@
       }
     },
     "hymn_0034": {
-      "number": 34,
+      "number": 35,
       "title": "I'll Praise My Maker",
       "lyrics": {
         "stanzas": [
@@ -508,7 +508,7 @@
       }
     },
     "hymn_0035": {
-      "number": 35,
+      "number": 36,
       "title": "Praise the Lord! Ye Heavens, Adore Him",
       "lyrics": {
         "stanzas": [
@@ -529,7 +529,7 @@
       }
     },
     "hymn_0038": {
-      "number": 38,
+      "number": 39,
       "title": "Rejoice Ye Pure in Heart",
       "lyrics": {
         "stanzas": [
@@ -554,7 +554,7 @@
       }
     },
     "hymn_0042": {
-      "number": 42,
+      "number": 43,
       "title": "This is My Father's World",
       "lyrics": {
         "stanzas": [
@@ -575,7 +575,7 @@
       }
     },
     "hymn_0043": {
-      "number": 43,
+      "number": 44,
       "title": "For the Beauty of the Earth",
       "lyrics": {
         "stanzas": [
@@ -608,7 +608,7 @@
       }
     },
     "hymn_0045": {
-      "number": 45,
+      "number": 46,
       "title": "All Things Bright and Beautiful",
       "lyrics": {
         "stanzas": [
@@ -625,7 +625,7 @@
       }
     },
     "hymn_0051": {
-      "number": 51,
+      "number": 52,
       "title": "He Leadeth Me! O Blessed Thought",
       "lyrics": {
         "stanzas": [
@@ -650,7 +650,7 @@
       }
     },
     "hymn_0054": {
-      "number": 54,
+      "number": 55,
       "title": "Children of the Heavenly Father",
       "lyrics": {
         "stanzas": [
@@ -675,7 +675,7 @@
       }
     },
     "hymn_0055": {
-      "number": 55,
+      "number": 56,
       "title": "Guide Me, O Thou Great Jehovah",
       "lyrics": {
         "stanzas": [
@@ -696,7 +696,7 @@
       }
     },
     "hymn_0056": {
-      "number": 56,
+      "number": 57,
       "title": "If You Will Only Let God Guide You",
       "lyrics": {
         "stanzas": [
@@ -717,7 +717,7 @@
       }
     },
     "hymn_0057": {
-      "number": 57,
+      "number": 58,
       "title": "Like a River Glorious",
       "lyrics": {
         "stanzas": [
@@ -738,7 +738,7 @@
       }
     },
     "hymn_0060": {
-      "number": 60,
+      "number": 61,
       "title": "Savior, Like a Shepherd Lead Us",
       "lyrics": {
         "stanzas": [
@@ -763,7 +763,7 @@
       }
     },
     "hymn_0061": {
-      "number": 61,
+      "number": 62,
       "title": "All the Way My Savior Leads Me",
       "lyrics": {
         "stanzas": [
@@ -784,7 +784,7 @@
       }
     },
     "hymn_0062": {
-      "number": 62,
+      "number": 63,
       "title": "Abide With Me",
       "lyrics": {
         "stanzas": [
@@ -809,7 +809,7 @@
       }
     },
     "hymn_0063": {
-      "number": 63,
+      "number": 64,
       "title": "God Will Take Care of You",
       "lyrics": {
         "stanzas": [
@@ -830,7 +830,7 @@
       }
     },
     "hymn_0064": {
-      "number": 64,
+      "number": 65,
       "title": "Just When I Need Him Most",
       "lyrics": {
         "stanzas": [
@@ -855,7 +855,7 @@
       }
     },
     "hymn_0065": {
-      "number": 65,
+      "number": 66,
       "title": "Day by Day",
       "lyrics": {
         "stanzas": [
@@ -876,7 +876,7 @@
       }
     },
     "hymn_0066": {
-      "number": 66,
+      "number": 67,
       "title": "Come, Ye Disconsolate",
       "lyrics": {
         "stanzas": [
@@ -897,7 +897,7 @@
       }
     },
     "hymn_0068": {
-      "number": 68,
+      "number": 69,
       "title": "Eternal Father, Strong to Save",
       "lyrics": {
         "stanzas": [
@@ -922,7 +922,7 @@
       }
     },
     "hymn_0071": {
-      "number": 71,
+      "number": 72,
       "title": "I Will Not Be Afraid",
       "lyrics": {
         "stanzas": [
@@ -955,7 +955,7 @@
       }
     },
     "hymn_0072": {
-      "number": 72,
+      "number": 73,
       "title": "God Moves in a Mysterious Way",
       "lyrics": {
         "stanzas": [
@@ -980,7 +980,7 @@
       }
     },
     "hymn_0073": {
-      "number": 73,
+      "number": 74,
       "title": "O God, Our Help in Ages Past",
       "lyrics": {
         "stanzas": [
@@ -1013,7 +1013,7 @@
       }
     },
     "hymn_0075": {
-      "number": 75,
+      "number": 76,
       "title": "O Come, O Come, Emmanuel",
       "lyrics": {
         "stanzas": [
@@ -1038,7 +1038,7 @@
       }
     },
     "hymn_0076": {
-      "number": 76,
+      "number": 77,
       "title": "Come, Thou Long-Expected Jesus",
       "lyrics": {
         "stanzas": [
@@ -1055,7 +1055,7 @@
       }
     },
     "hymn_0077": {
-      "number": 77,
+      "number": 78,
       "title": "Lo, How a Rose E'er Blooming",
       "lyrics": {
         "stanzas": [
@@ -1076,7 +1076,7 @@
       }
     },
     "hymn_0079": {
-      "number": 79,
+      "number": 80,
       "title": "Let All Mortal Flesh Keep Silence",
       "lyrics": {
         "stanzas": [
@@ -1097,7 +1097,7 @@
       }
     },
     "hymn_0084": {
-      "number": 84,
+      "number": 85,
       "title": "The First Nowell",
       "lyrics": {
         "stanzas": [
@@ -1122,7 +1122,7 @@
       }
     },
     "hymn_0085": {
-      "number": 85,
+      "number": 86,
       "title": "O Little Town of Bethlehem",
       "lyrics": {
         "stanzas": [
@@ -1147,7 +1147,7 @@
       }
     },
     "hymn_0086": {
-      "number": 86,
+      "number": 87,
       "title": "Joy to the World! The Lord Is Come",
       "lyrics": {
         "stanzas": [
@@ -1172,7 +1172,7 @@
       }
     },
     "hymn_0087": {
-      "number": 87,
+      "number": 88,
       "title": "Hark!The Herald Angels Sing",
       "lyrics": {
         "stanzas": [
@@ -1193,7 +1193,7 @@
       }
     },
     "hymn_0088": {
-      "number": 88,
+      "number": 89,
       "title": "O Come, All Ye Faithful",
       "lyrics": {
         "stanzas": [
@@ -1214,7 +1214,7 @@
       }
     },
     "hymn_0090": {
-      "number": 90,
+      "number": 91,
       "title": "Silent Night, Holy Night",
       "lyrics": {
         "stanzas": [
@@ -1239,7 +1239,7 @@
       }
     },
     "hymn_0092": {
-      "number": 92,
+      "number": 93,
       "title": "It Came Upon the Midnight Clear",
       "lyrics": {
         "stanzas": [
@@ -1264,7 +1264,7 @@
       }
     },
     "hymn_0093": {
-      "number": 93,
+      "number": 94,
       "title": "Angels, from the Realms of Glory",
       "lyrics": {
         "stanzas": [
@@ -1289,7 +1289,7 @@
       }
     },
     "hymn_0095": {
-      "number": 95,
+      "number": 96,
       "title": "Good Christian Men, Rejoice",
       "lyrics": {
         "stanzas": [
@@ -1310,7 +1310,7 @@
       }
     },
     "hymn_0097": {
-      "number": 97,
+      "number": 98,
       "title": "I Heard the Bells on Christmas Day",
       "lyrics": {
         "stanzas": [
@@ -1339,7 +1339,7 @@
       }
     },
     "hymn_0099": {
-      "number": 99,
+      "number": 100,
       "title": "Angels We Have Heard on High",
       "lyrics": {
         "stanzas": [
@@ -1364,7 +1364,7 @@
       }
     },
     "hymn_0100": {
-      "number": 100,
+      "number": 101,
       "title": "Gentle Mary Laid Her Child",
       "lyrics": {
         "stanzas": [
@@ -1385,7 +1385,7 @@
       }
     },
     "hymn_0101": {
-      "number": 101,
+      "number": 102,
       "title": "The Birthday of a King",
       "lyrics": {
         "stanzas": [
@@ -1402,7 +1402,7 @@
       }
     },
     "hymn_0102": {
-      "number": 102,
+      "number": 103,
       "title": "Away in A Manger",
       "lyrics": {
         "stanzas": [
@@ -1423,7 +1423,7 @@
       }
     },
     "hymn_0106": {
-      "number": 106,
+      "number": 107,
       "title": "Oh, Come, Little Children",
       "lyrics": {
         "stanzas": [
@@ -1444,7 +1444,7 @@
       }
     },
     "hymn_0107": {
-      "number": 107,
+      "number": 108,
       "title": "How Great Our Joy",
       "lyrics": {
         "stanzas": [
@@ -1469,7 +1469,7 @@
       }
     },
     "hymn_0112": {
-      "number": 112,
+      "number": 113,
       "title": "We Three Kings of Orient Are",
       "lyrics": {
         "stanzas": [
@@ -1498,7 +1498,7 @@
       }
     },
     "hymn_0113": {
-      "number": 113,
+      "number": 114,
       "title": "Break Forth, O Beauteous Heavenly Light",
       "lyrics": {
         "stanzas": [
@@ -1515,7 +1515,7 @@
       }
     },
     "hymn_0116": {
-      "number": 116,
+      "number": 117,
       "title": "As with Gladness Men of Old",
       "lyrics": {
         "stanzas": [
@@ -1540,7 +1540,7 @@
       }
     },
     "hymn_0117": {
-      "number": 117,
+      "number": 118,
       "title": "What Child is This",
       "lyrics": {
         "stanzas": [
@@ -1561,7 +1561,7 @@
       }
     },
     "hymn_0120": {
-      "number": 120,
+      "number": 121,
       "title": "Thou Didst Leave Thy Throne",
       "lyrics": {
         "stanzas": [
@@ -1590,7 +1590,7 @@
       }
     },
     "hymn_0121": {
-      "number": 121,
+      "number": 122,
       "title": "Tell Me the Story of Jesus",
       "lyrics": {
         "stanzas": [
@@ -1611,7 +1611,7 @@
       }
     },
     "hymn_0122": {
-      "number": 122,
+      "number": 123,
       "title": "Jesus, Thy Boundless Love to Me",
       "lyrics": {
         "stanzas": [
@@ -1636,7 +1636,7 @@
       }
     },
     "hymn_0123": {
-      "number": 123,
+      "number": 124,
       "title": "Who Is He in Yonder Stall",
       "lyrics": {
         "stanzas": [
@@ -1665,7 +1665,7 @@
       }
     },
     "hymn_0125": {
-      "number": 125,
+      "number": 126,
       "title": "All Glory, Laud, and Honor",
       "lyrics": {
         "stanzas": [
@@ -1686,7 +1686,7 @@
       }
     },
     "hymn_0127": {
-      "number": 127,
+      "number": 128,
       "title": "Lift Up Your Heads",
       "lyrics": {
         "stanzas": [
@@ -1707,7 +1707,7 @@
       }
     },
     "hymn_0128": {
-      "number": 128,
+      "number": 129,
       "title": "Tell Me the Stories of Jesus",
       "lyrics": {
         "stanzas": [
@@ -1728,7 +1728,7 @@
       }
     },
     "hymn_0129": {
-      "number": 129,
+      "number": 130,
       "title": "Hosanna, Loud Hosanna",
       "lyrics": {
         "stanzas": [
@@ -1749,7 +1749,7 @@
       }
     },
     "hymn_0131": {
-      "number": 131,
+      "number": 132,
       "title": "There Is Power in the Blood",
       "lyrics": {
         "stanzas": [
@@ -1774,7 +1774,7 @@
       }
     },
     "hymn_0133": {
-      "number": 133,
+      "number": 134,
       "title": "Jesus Paid It All",
       "lyrics": {
         "stanzas": [
@@ -1799,7 +1799,7 @@
       }
     },
     "hymn_0134": {
-      "number": 134,
+      "number": 135,
       "title": "Nothing but the Blood",
       "lyrics": {
         "stanzas": [
@@ -1824,7 +1824,7 @@
       }
     },
     "hymn_0135": {
-      "number": 135,
+      "number": 136,
       "title": "Are You Washed in the Blood",
       "lyrics": {
         "stanzas": [
@@ -1849,7 +1849,7 @@
       }
     },
     "hymn_0136": {
-      "number": 136,
+      "number": 137,
       "title": "O Sacred Head, Now Wounded",
       "lyrics": {
         "stanzas": [
@@ -1870,7 +1870,7 @@
       }
     },
     "hymn_0137": {
-      "number": 137,
+      "number": 138,
       "title": "At Calvary",
       "lyrics": {
         "stanzas": [
@@ -1895,7 +1895,7 @@
       }
     },
     "hymn_0138": {
-      "number": 138,
+      "number": 139,
       "title": "At the Cross",
       "lyrics": {
         "stanzas": [
@@ -1924,7 +1924,7 @@
       }
     },
     "hymn_0139": {
-      "number": 139,
+      "number": 140,
       "title": "Down at the Cross",
       "lyrics": {
         "stanzas": [
@@ -1949,7 +1949,7 @@
       }
     },
     "hymn_0140": {
-      "number": 140,
+      "number": 141,
       "title": "The Old Rugged Cross",
       "lyrics": {
         "stanzas": [
@@ -1974,7 +1974,7 @@
       }
     },
     "hymn_0141": {
-      "number": 141,
+      "number": 142,
       "title": "There Is a Fountain",
       "lyrics": {
         "stanzas": [
@@ -1999,7 +1999,7 @@
       }
     },
     "hymn_0142": {
-      "number": 142,
+      "number": 143,
       "title": "What Wondrous Love Is This",
       "lyrics": {
         "stanzas": [
@@ -2024,7 +2024,7 @@
       }
     },
     "hymn_0143": {
-      "number": 143,
+      "number": 144,
       "title": "When I Survey the Wondrous Cross",
       "lyrics": {
         "stanzas": [
@@ -2049,7 +2049,7 @@
       }
     },
     "hymn_0144": {
-      "number": 144,
+      "number": 145,
       "title": "Alas and Did My Savior Bleed",
       "lyrics": {
         "stanzas": [
@@ -2074,7 +2074,7 @@
       }
     },
     "hymn_0146": {
-      "number": 146,
+      "number": 147,
       "title": "And Can It Be",
       "lyrics": {
         "stanzas": [
@@ -2099,7 +2099,7 @@
       }
     },
     "hymn_0147": {
-      "number": 147,
+      "number": 148,
       "title": "Tis Finished! The Messiah Dies",
       "lyrics": {
         "stanzas": [
@@ -2124,7 +2124,7 @@
       }
     },
     "hymn_0149": {
-      "number": 149,
+      "number": 150,
       "title": "Go to Dark Gethsemane",
       "lyrics": {
         "stanzas": [
@@ -2149,7 +2149,7 @@
       }
     },
     "hymn_0150": {
-      "number": 150,
+      "number": 151,
       "title": "The Way of the Cross Leads Home",
       "lyrics": {
         "stanzas": [
@@ -2170,7 +2170,7 @@
       }
     },
     "hymn_0154": {
-      "number": 154,
+      "number": 155,
       "title": "I Know a Fount",
       "lyrics": {
         "stanzas": [],
@@ -2178,7 +2178,7 @@
       }
     },
     "hymn_0155": {
-      "number": 155,
+      "number": 156,
       "title": "Were You There",
       "lyrics": {
         "stanzas": [
@@ -2203,7 +2203,7 @@
       }
     },
     "hymn_0158": {
-      "number": 158,
+      "number": 159,
       "title": "Christ the Lord Is Risen Today",
       "lyrics": {
         "stanzas": [
@@ -2228,7 +2228,7 @@
       }
     },
     "hymn_0159": {
-      "number": 159,
+      "number": 160,
       "title": "Low in the Grave He Lay",
       "lyrics": {
         "stanzas": [
@@ -2249,7 +2249,7 @@
       }
     },
     "hymn_0160": {
-      "number": 160,
+      "number": 161,
       "title": "Crown Him with Many Crowns",
       "lyrics": {
         "stanzas": [
@@ -2274,7 +2274,7 @@
       }
     },
     "hymn_0163": {
-      "number": 163,
+      "number": 164,
       "title": "The Day of Resurrection",
       "lyrics": {
         "stanzas": [
@@ -2295,7 +2295,7 @@
       }
     },
     "hymn_0167": {
-      "number": 167,
+      "number": 168,
       "title": "We Welcome Glad Easter",
       "lyrics": {
         "stanzas": [
@@ -2320,7 +2320,7 @@
       }
     },
     "hymn_0168": {
-      "number": 168,
+      "number": 169,
       "title": "Look Ye Saints! The Sight Is Glorious",
       "lyrics": {
         "stanzas": [
@@ -2345,7 +2345,7 @@
       }
     },
     "hymn_0171": {
-      "number": 171,
+      "number": 172,
       "title": "The Strife Is O'er",
       "lyrics": {
         "stanzas": [
@@ -2370,7 +2370,7 @@
       }
     },
     "hymn_0174": {
-      "number": 174,
+      "number": 175,
       "title": "Man of Sorrows, What a Name",
       "lyrics": {
         "stanzas": [
@@ -2399,7 +2399,7 @@
       }
     },
     "hymn_0175": {
-      "number": 175,
+      "number": 176,
       "title": "Fairest Lord Jesus",
       "lyrics": {
         "stanzas": [
@@ -2424,7 +2424,7 @@
       }
     },
     "hymn_0179": {
-      "number": 179,
+      "number": 180,
       "title": "Jesus, Lover of My Soul",
       "lyrics": {
         "stanzas": [
@@ -2449,7 +2449,7 @@
       }
     },
     "hymn_0180": {
-      "number": 180,
+      "number": 181,
       "title": "No, Not One",
       "lyrics": {
         "stanzas": [
@@ -2478,7 +2478,7 @@
       }
     },
     "hymn_0181": {
-      "number": 181,
+      "number": 182,
       "title": "What a Friend We Have in Jesus",
       "lyrics": {
         "stanzas": [
@@ -2499,7 +2499,7 @@
       }
     },
     "hymn_0182": {
-      "number": 182,
+      "number": 183,
       "title": "I've Found a Friend, O Such a Friend",
       "lyrics": {
         "stanzas": [
@@ -2524,7 +2524,7 @@
       }
     },
     "hymn_0183": {
-      "number": 183,
+      "number": 184,
       "title": "Jesus Is All the World to Me",
       "lyrics": {
         "stanzas": [
@@ -2549,7 +2549,7 @@
       }
     },
     "hymn_0184": {
-      "number": 184,
+      "number": 185,
       "title": "Jesus! What a Friend for Sinners",
       "lyrics": {
         "stanzas": [
@@ -2578,7 +2578,7 @@
       }
     },
     "hymn_0186": {
-      "number": 186,
+      "number": 187,
       "title": "In the Garden",
       "lyrics": {
         "stanzas": [
@@ -2599,7 +2599,7 @@
       }
     },
     "hymn_0187": {
-      "number": 187,
+      "number": 188,
       "title": "The Great Physician",
       "lyrics": {
         "stanzas": [
@@ -2624,7 +2624,7 @@
       }
     },
     "hymn_0188": {
-      "number": 188,
+      "number": 189,
       "title": "The Lily of the Valley",
       "lyrics": {
         "stanzas": [
@@ -2645,7 +2645,7 @@
       }
     },
     "hymn_0190": {
-      "number": 190,
+      "number": 191,
       "title": "I Know That My Redeemer Liveth",
       "lyrics": {
         "stanzas": [
@@ -2666,7 +2666,7 @@
       }
     },
     "hymn_0192": {
-      "number": 192,
+      "number": 193,
       "title": "One Day",
       "lyrics": {
         "stanzas": [
@@ -2695,7 +2695,7 @@
       }
     },
     "hymn_0194": {
-      "number": 194,
+      "number": 195,
       "title": "What If It Were Today",
       "lyrics": {
         "stanzas": [
@@ -2716,7 +2716,7 @@
       }
     },
     "hymn_0196": {
-      "number": 196,
+      "number": 197,
       "title": "Rejoice, the Lord Is King",
       "lyrics": {
         "stanzas": [
@@ -2741,7 +2741,7 @@
       }
     },
     "hymn_0197": {
-      "number": 197,
+      "number": 198,
       "title": "At the Name of Jesus",
       "lyrics": {
         "stanzas": [
@@ -2766,7 +2766,7 @@
       }
     },
     "hymn_0198": {
-      "number": 198,
+      "number": 199,
       "title": "Lo, He Comes with Clouds Descending",
       "lyrics": {
         "stanzas": [
@@ -2791,7 +2791,7 @@
       }
     },
     "hymn_0199": {
-      "number": 199,
+      "number": 200,
       "title": "All Hail the Power of Jesus' Name",
       "lyrics": {
         "stanzas": [
@@ -2816,7 +2816,7 @@
       }
     },
     "hymn_0200": {
-      "number": 200,
+      "number": 201,
       "title": "All Hail the Power of Jesus' Name",
       "lyrics": {
         "stanzas": [
@@ -2841,7 +2841,7 @@
       }
     },
     "hymn_0201": {
-      "number": 201,
+      "number": 202,
       "title": "All Hail the Power of Jesus' Name",
       "lyrics": {
         "stanzas": [
@@ -2866,15 +2866,28 @@
       }
     },
     "hymn_0204": {
-      "number": 204,
+      "number": 205,
       "title": "Jesus Is the Sweetest Name I Know",
       "lyrics": {
-        "stanzas": [],
-        "chorus": null
+        "stanzas": [
+          {
+            "index": 1,
+            "text": "There have been names that I have loved to hear,\nBut never has there been a name so dear\nTo this heart of mine, as the name divine,\nThe precious, precious name of Jesus."
+          },
+          {
+            "index": 2,
+            "text": "There is no name in earth or Heav'n above,\nThat we should give such honor and such love\nAs the blessed name, let us all acclaim,\nThat wondrous, glorious name of Jesus."
+          },
+          {
+            "index": 3,
+            "text": "And some day I shall see Him face to face\nTo thank and praise Him for His wondrous grace,\nWhich He gave to me, when He made me free,\nThe blessed Son of God called Jesus."
+          }
+        ],
+        "chorus": "Jesus is the sweetest name I know,\nAnd He's just the same as His lovely name,\nAnd that's the reason why I love Him so;\nOh, Jesus is the sweetest name I know."
       }
     },
     "hymn_0205": {
-      "number": 205,
+      "number": 206,
       "title": "Blessed Be the Name",
       "lyrics": {
         "stanzas": [
@@ -2899,7 +2912,7 @@
       }
     },
     "hymn_0207": {
-      "number": 207,
+      "number": 208,
       "title": "Love Divine, All Loves Excelling",
       "lyrics": {
         "stanzas": [
@@ -2924,7 +2937,7 @@
       }
     },
     "hymn_0209": {
-      "number": 209,
+      "number": 210,
       "title": "My Jesus, I Love Thee",
       "lyrics": {
         "stanzas": [
@@ -2949,7 +2962,7 @@
       }
     },
     "hymn_0210": {
-      "number": 210,
+      "number": 211,
       "title": "I Love Thee",
       "lyrics": {
         "stanzas": [
@@ -2974,7 +2987,7 @@
       }
     },
     "hymn_0215": {
-      "number": 215,
+      "number": 216,
       "title": "O for a Thousand Tongues to Sing",
       "lyrics": {
         "stanzas": [
@@ -2999,7 +3012,7 @@
       }
     },
     "hymn_0216": {
-      "number": 216,
+      "number": 217,
       "title": "Oh, How I Love Jesus",
       "lyrics": {
         "stanzas": [
@@ -3024,7 +3037,7 @@
       }
     },
     "hymn_0218": {
-      "number": 218,
+      "number": 219,
       "title": "Majestic Sweetness Sits Enthroned",
       "lyrics": {
         "stanzas": [
@@ -3049,7 +3062,7 @@
       }
     },
     "hymn_0220": {
-      "number": 220,
+      "number": 221,
       "title": "When Morning Gilds the Skies",
       "lyrics": {
         "stanzas": [
@@ -3074,7 +3087,7 @@
       }
     },
     "hymn_0224": {
-      "number": 224,
+      "number": 225,
       "title": "Jesus, the Very Thought of Thee",
       "lyrics": {
         "stanzas": [
@@ -3099,7 +3112,7 @@
       }
     },
     "hymn_0226": {
-      "number": 226,
+      "number": 227,
       "title": "Praise Him! Praise Him!",
       "lyrics": {
         "stanzas": [
@@ -3120,7 +3133,7 @@
       }
     },
     "hymn_0230": {
-      "number": 230,
+      "number": 231,
       "title": "Come, Christians, Join to Sing",
       "lyrics": {
         "stanzas": [
@@ -3141,7 +3154,7 @@
       }
     },
     "hymn_0234": {
-      "number": 234,
+      "number": 235,
       "title": "Songs of Praise the Angels Sang",
       "lyrics": {
         "stanzas": [
@@ -3170,7 +3183,7 @@
       }
     },
     "hymn_0235": {
-      "number": 235,
+      "number": 236,
       "title": "Bless That Wonderful Name",
       "lyrics": {
         "stanzas": [
@@ -3199,7 +3212,7 @@
       }
     },
     "hymn_0240": {
-      "number": 240,
+      "number": 241,
       "title": "Breathe on Me, Breath of God",
       "lyrics": {
         "stanzas": [
@@ -3224,7 +3237,7 @@
       }
     },
     "hymn_0241": {
-      "number": 241,
+      "number": 242,
       "title": "Pentecostal Power",
       "lyrics": {
         "stanzas": [
@@ -3249,7 +3262,7 @@
       }
     },
     "hymn_0244": {
-      "number": 244,
+      "number": 245,
       "title": "Spirit of God, Descend upon My Heart",
       "lyrics": {
         "stanzas": [
@@ -3274,7 +3287,7 @@
       }
     },
     "hymn_0246": {
-      "number": 246,
+      "number": 247,
       "title": "Come, Thou Almighty King",
       "lyrics": {
         "stanzas": [
@@ -3299,7 +3312,7 @@
       }
     },
     "hymn_0247": {
-      "number": 247,
+      "number": 248,
       "title": "God, Our Father, We Adore Thee",
       "lyrics": {
         "stanzas": [
@@ -3324,23 +3337,33 @@
       }
     },
     "hymn_0251": {
-      "number": 251,
+      "number": 252,
       "title": "Glory Be to the Father",
       "lyrics": {
-        "stanzas": [],
+        "stanzas": [
+          {
+            "index": 1,
+            "text": "Glory be to the Father, and to the Son,\nand to the Holy Ghost;\nAs it was in the beginning,\nis now, and ever shall be,\nworld without end. Amen, Amen."
+          }
+        ],
         "chorus": null
       }
     },
     "hymn_0252": {
-      "number": 252,
+      "number": 253,
       "title": "Praise God, from Whom All Blessings Flow",
       "lyrics": {
-        "stanzas": [],
+        "stanzas": [
+          {
+            "index": 1,
+            "text": "Praise God, from whom all blessings flow;\nPraise Him, all creatures here below;\nPraise Him above, ye heav'nly host;\nPraise Father, Son, and Holy Ghost.\nAmen."
+          }
+        ],
         "chorus": null
       }
     },
     "hymn_0259": {
-      "number": 259,
+      "number": 260,
       "title": "Holy Bible, Book Divine",
       "lyrics": {
         "stanzas": [
@@ -3365,7 +3388,7 @@
       }
     },
     "hymn_0260": {
-      "number": 260,
+      "number": 261,
       "title": "Wonderful Words of Life",
       "lyrics": {
         "stanzas": [
@@ -3386,7 +3409,7 @@
       }
     },
     "hymn_0262": {
-      "number": 262,
+      "number": 263,
       "title": "Break Thou the Bread of Life",
       "lyrics": {
         "stanzas": [
@@ -3411,7 +3434,7 @@
       }
     },
     "hymn_0266": {
-      "number": 266,
+      "number": 267,
       "title": "Dear Lord and Father of Mankind",
       "lyrics": {
         "stanzas": [
@@ -3436,7 +3459,7 @@
       }
     },
     "hymn_0268": {
-      "number": 268,
+      "number": 269,
       "title": "There Is a Balm in Gilead",
       "lyrics": {
         "stanzas": [
@@ -3453,7 +3476,7 @@
       }
     },
     "hymn_0269": {
-      "number": 269,
+      "number": 270,
       "title": "No, Not Despairingly",
       "lyrics": {
         "stanzas": [
@@ -3482,7 +3505,7 @@
       }
     },
     "hymn_0271": {
-      "number": 271,
+      "number": 272,
       "title": "I Lay My Sins",
       "lyrics": {
         "stanzas": [
@@ -3503,7 +3526,7 @@
       }
     },
     "hymn_0274": {
-      "number": 274,
+      "number": 275,
       "title": "I Surrender All",
       "lyrics": {
         "stanzas": [
@@ -3524,7 +3547,7 @@
       }
     },
     "hymn_0275": {
-      "number": 275,
+      "number": 276,
       "title": "O Jesus, I Have Promised",
       "lyrics": {
         "stanzas": [
@@ -3549,7 +3572,7 @@
       }
     },
     "hymn_0276": {
-      "number": 276,
+      "number": 277,
       "title": "Take My Life, and Let It Be Consecrated",
       "lyrics": {
         "stanzas": [
@@ -3574,7 +3597,7 @@
       }
     },
     "hymn_0277": {
-      "number": 277,
+      "number": 278,
       "title": "Make Me a Captive, Lord",
       "lyrics": {
         "stanzas": [
@@ -3599,7 +3622,7 @@
       }
     },
     "hymn_0278": {
-      "number": 278,
+      "number": 279,
       "title": "O Master, Let Me Walk with Thee",
       "lyrics": {
         "stanzas": [
@@ -3624,7 +3647,7 @@
       }
     },
     "hymn_0279": {
-      "number": 279,
+      "number": 280,
       "title": "Jesus, Keep Me Near the Cross",
       "lyrics": {
         "stanzas": [
@@ -3649,7 +3672,7 @@
       }
     },
     "hymn_0282": {
-      "number": 282,
+      "number": 283,
       "title": "Take My Life, and Let It Be Consecrated",
       "lyrics": {
         "stanzas": [
@@ -3674,7 +3697,7 @@
       }
     },
     "hymn_0285": {
-      "number": 285,
+      "number": 286,
       "title": "I Saw the Cross of Jesus",
       "lyrics": {
         "stanzas": [
@@ -3699,7 +3722,7 @@
       }
     },
     "hymn_0287": {
-      "number": 287,
+      "number": 288,
       "title": "Where He Leads Me",
       "lyrics": {
         "stanzas": [
@@ -3724,7 +3747,7 @@
       }
     },
     "hymn_0288": {
-      "number": 288,
+      "number": 289,
       "title": "My Lord, I Did Not Choose You",
       "lyrics": {
         "stanzas": [
@@ -3741,7 +3764,7 @@
       }
     },
     "hymn_0289": {
-      "number": 289,
+      "number": 290,
       "title": "I Am Thine, O Lord",
       "lyrics": {
         "stanzas": [
@@ -3766,7 +3789,7 @@
       }
     },
     "hymn_0290": {
-      "number": 290,
+      "number": 291,
       "title": "Beneath the Cross of Jesus",
       "lyrics": {
         "stanzas": [
@@ -3787,7 +3810,7 @@
       }
     },
     "hymn_0291": {
-      "number": 291,
+      "number": 292,
       "title": "O Love That Wilt Not Let Me Go",
       "lyrics": {
         "stanzas": [
@@ -3812,7 +3835,7 @@
       }
     },
     "hymn_0292": {
-      "number": 292,
+      "number": 293,
       "title": "Jesus Calls Us O'er the Tumult",
       "lyrics": {
         "stanzas": [
@@ -3837,7 +3860,7 @@
       }
     },
     "hymn_0293": {
-      "number": 293,
+      "number": 294,
       "title": "Have Thine Own Way, Lord",
       "lyrics": {
         "stanzas": [
@@ -3862,7 +3885,7 @@
       }
     },
     "hymn_0294": {
-      "number": 294,
+      "number": 295,
       "title": "Near to the Heart of God",
       "lyrics": {
         "stanzas": [
@@ -3883,7 +3906,7 @@
       }
     },
     "hymn_0296": {
-      "number": 296,
+      "number": 297,
       "title": "Search Me, O God",
       "lyrics": {
         "stanzas": [
@@ -3908,7 +3931,7 @@
       }
     },
     "hymn_0297": {
-      "number": 297,
+      "number": 298,
       "title": "I'll Live for Him",
       "lyrics": {
         "stanzas": [
@@ -3929,7 +3952,7 @@
       }
     },
     "hymn_0300": {
-      "number": 300,
+      "number": 301,
       "title": "I Am Resolved",
       "lyrics": {
         "stanzas": [
@@ -3958,7 +3981,7 @@
       }
     },
     "hymn_0301": {
-      "number": 301,
+      "number": 302,
       "title": "I Hear Thy Welcome Voice",
       "lyrics": {
         "stanzas": [
@@ -3983,7 +4006,7 @@
       }
     },
     "hymn_0305": {
-      "number": 305,
+      "number": 306,
       "title": "Depth of Mercy",
       "lyrics": {
         "stanzas": [
@@ -4008,7 +4031,7 @@
       }
     },
     "hymn_0306": {
-      "number": 306,
+      "number": 307,
       "title": "Just As I Am",
       "lyrics": {
         "stanzas": [
@@ -4041,7 +4064,7 @@
       }
     },
     "hymn_0307": {
-      "number": 307,
+      "number": 308,
       "title": "Pass Me Not, O Gentle Savior",
       "lyrics": {
         "stanzas": [
@@ -4066,7 +4089,7 @@
       }
     },
     "hymn_0308": {
-      "number": 308,
+      "number": 309,
       "title": "Lord, I'm Coming Home",
       "lyrics": {
         "stanzas": [
@@ -4091,7 +4114,7 @@
       }
     },
     "hymn_0309": {
-      "number": 309,
+      "number": 310,
       "title": "Out of My Bondage, Sorrow, and Night",
       "lyrics": {
         "stanzas": [
@@ -4116,7 +4139,7 @@
       }
     },
     "hymn_0310": {
-      "number": 310,
+      "number": 311,
       "title": "Let Jesus Come into Your Heart",
       "lyrics": {
         "stanzas": [
@@ -4141,7 +4164,7 @@
       }
     },
     "hymn_0311": {
-      "number": 311,
+      "number": 312,
       "title": "Softly and Tenderly",
       "lyrics": {
         "stanzas": [
@@ -4166,7 +4189,7 @@
       }
     },
     "hymn_0313": {
-      "number": 313,
+      "number": 314,
       "title": "Whosoever Will",
       "lyrics": {
         "stanzas": [
@@ -4187,7 +4210,7 @@
       }
     },
     "hymn_0315": {
-      "number": 315,
+      "number": 316,
       "title": "Jesus is Tenderly Calling",
       "lyrics": {
         "stanzas": [
@@ -4212,7 +4235,7 @@
       }
     },
     "hymn_0316": {
-      "number": 316,
+      "number": 317,
       "title": "Only Trust Him",
       "lyrics": {
         "stanzas": [
@@ -4237,7 +4260,7 @@
       }
     },
     "hymn_0321": {
-      "number": 321,
+      "number": 322,
       "title": "Ye Must Be Born Again",
       "lyrics": {
         "stanzas": [
@@ -4262,7 +4285,7 @@
       }
     },
     "hymn_0322": {
-      "number": 322,
+      "number": 323,
       "title": "Come, Ye Sinners, Poor and Needy",
       "lyrics": {
         "stanzas": [
@@ -4287,7 +4310,7 @@
       }
     },
     "hymn_0324": {
-      "number": 324,
+      "number": 325,
       "title": "Whiter than Snow",
       "lyrics": {
         "stanzas": [
@@ -4308,7 +4331,7 @@
       }
     },
     "hymn_0328": {
-      "number": 328,
+      "number": 329,
       "title": "Grace Greater than Our Sin",
       "lyrics": {
         "stanzas": [
@@ -4329,7 +4352,7 @@
       }
     },
     "hymn_0329": {
-      "number": 329,
+      "number": 330,
       "title": "Amazing Grace! How Sweet the Sound",
       "lyrics": {
         "stanzas": [
@@ -4358,7 +4381,7 @@
       }
     },
     "hymn_0331": {
-      "number": 331,
+      "number": 332,
       "title": "Free from the Law, O Happy Condition",
       "lyrics": {
         "stanzas": [
@@ -4379,7 +4402,7 @@
       }
     },
     "hymn_0332": {
-      "number": 332,
+      "number": 333,
       "title": "Leaning on the Everlasting Arms",
       "lyrics": {
         "stanzas": [
@@ -4400,7 +4423,7 @@
       }
     },
     "hymn_0333": {
-      "number": 333,
+      "number": 334,
       "title": "Blessed Assurance, Jesus Is Mine",
       "lyrics": {
         "stanzas": [
@@ -4421,7 +4444,7 @@
       }
     },
     "hymn_0334": {
-      "number": 334,
+      "number": 335,
       "title": "Standing on the Promises",
       "lyrics": {
         "stanzas": [
@@ -4446,7 +4469,7 @@
       }
     },
     "hymn_0335": {
-      "number": 335,
+      "number": 336,
       "title": "I Am His, and He Is Mine",
       "lyrics": {
         "stanzas": [
@@ -4471,7 +4494,7 @@
       }
     },
     "hymn_0336": {
-      "number": 336,
+      "number": 337,
       "title": "I Know Whom I Have Believed",
       "lyrics": {
         "stanzas": [
@@ -4496,7 +4519,7 @@
       }
     },
     "hymn_0337": {
-      "number": 337,
+      "number": 338,
       "title": "How Firm a Foundation",
       "lyrics": {
         "stanzas": [
@@ -4521,7 +4544,7 @@
       }
     },
     "hymn_0338": {
-      "number": 338,
+      "number": 339,
       "title": "Not What My Hands Have Done",
       "lyrics": {
         "stanzas": [
@@ -4542,7 +4565,7 @@
       }
     },
     "hymn_0339": {
-      "number": 339,
+      "number": 340,
       "title": "He Hideth My Soul",
       "lyrics": {
         "stanzas": [
@@ -4567,7 +4590,7 @@
       }
     },
     "hymn_0341": {
-      "number": 341,
+      "number": 342,
       "title": "Rock of Ages, Cleft for Me",
       "lyrics": {
         "stanzas": [
@@ -4588,7 +4611,7 @@
       }
     },
     "hymn_0343": {
-      "number": 343,
+      "number": 344,
       "title": "Jesus Loves Me",
       "lyrics": {
         "stanzas": [
@@ -4613,7 +4636,7 @@
       }
     },
     "hymn_0347": {
-      "number": 347,
+      "number": 348,
       "title": "In Heavenly Love Abiding",
       "lyrics": {
         "stanzas": [
@@ -4634,7 +4657,7 @@
       }
     },
     "hymn_0349": {
-      "number": 349,
+      "number": 350,
       "title": "The Church's One Foundation",
       "lyrics": {
         "stanzas": [
@@ -4655,7 +4678,7 @@
       }
     },
     "hymn_0351": {
-      "number": 351,
+      "number": 352,
       "title": "Faith of Our Fathers",
       "lyrics": {
         "stanzas": [
@@ -4676,7 +4699,7 @@
       }
     },
     "hymn_0353": {
-      "number": 353,
+      "number": 354,
       "title": "I Love Thy Kingdom, Lord",
       "lyrics": {
         "stanzas": [
@@ -4705,7 +4728,7 @@
       }
     },
     "hymn_0355": {
-      "number": 355,
+      "number": 356,
       "title": "Christ Is Made the Sure Foundation",
       "lyrics": {
         "stanzas": [
@@ -4730,7 +4753,7 @@
       }
     },
     "hymn_0357": {
-      "number": 357,
+      "number": 358,
       "title": "This Is the Day the Lord Has Made",
       "lyrics": {
         "stanzas": [
@@ -4755,7 +4778,7 @@
       }
     },
     "hymn_0362": {
-      "number": 362,
+      "number": 363,
       "title": "Jesus, Our Lord and King",
       "lyrics": {
         "stanzas": [
@@ -4780,7 +4803,7 @@
       }
     },
     "hymn_0363": {
-      "number": 363,
+      "number": 364,
       "title": "Come, Holy Spirit, Dove Divine",
       "lyrics": {
         "stanzas": [
@@ -4805,7 +4828,7 @@
       }
     },
     "hymn_0365": {
-      "number": 365,
+      "number": 366,
       "title": "Let Us Break Bread Together",
       "lyrics": {
         "stanzas": [
@@ -4826,7 +4849,7 @@
       }
     },
     "hymn_0367": {
-      "number": 367,
+      "number": 368,
       "title": "Here, at Your Table, Lord",
       "lyrics": {
         "stanzas": [
@@ -4843,7 +4866,7 @@
       }
     },
     "hymn_0371": {
-      "number": 371,
+      "number": 372,
       "title": "According to Thy Gracious Word",
       "lyrics": {
         "stanzas": [
@@ -4868,7 +4891,7 @@
       }
     },
     "hymn_0374": {
-      "number": 374,
+      "number": 375,
       "title": "A Parting Hymn We Sing",
       "lyrics": {
         "stanzas": [
@@ -4893,7 +4916,7 @@
       }
     },
     "hymn_0377": {
-      "number": 377,
+      "number": 378,
       "title": "Christian Hearts, in Love United",
       "lyrics": {
         "stanzas": [
@@ -4918,7 +4941,7 @@
       }
     },
     "hymn_0378": {
-      "number": 378,
+      "number": 379,
       "title": "Brethren, We Have Met to Worship",
       "lyrics": {
         "stanzas": [
@@ -4943,7 +4966,7 @@
       }
     },
     "hymn_0386": {
-      "number": 386,
+      "number": 387,
       "title": "Blest Be the Tie",
       "lyrics": {
         "stanzas": [
@@ -4968,7 +4991,7 @@
       }
     },
     "hymn_0397": {
-      "number": 397,
+      "number": 398,
       "title": "Glorious Things of Thee Are Spoken",
       "lyrics": {
         "stanzas": [
@@ -4989,7 +5012,7 @@
       }
     },
     "hymn_0399": {
-      "number": 399,
+      "number": 400,
       "title": "Rise Up, O Men of God",
       "lyrics": {
         "stanzas": [
@@ -5014,7 +5037,7 @@
       }
     },
     "hymn_0405": {
-      "number": 405,
+      "number": 406,
       "title": "The Solid Rock",
       "lyrics": {
         "stanzas": [
@@ -5039,7 +5062,7 @@
       }
     },
     "hymn_0409": {
-      "number": 409,
+      "number": 410,
       "title": "It Is Well with My Soul",
       "lyrics": {
         "stanzas": [
@@ -5064,7 +5087,7 @@
       }
     },
     "hymn_0410": {
-      "number": 410,
+      "number": 411,
       "title": "Tis So Sweet to Trust in Jesus",
       "lyrics": {
         "stanzas": [
@@ -5089,7 +5112,7 @@
       }
     },
     "hymn_0411": {
-      "number": 411,
+      "number": 412,
       "title": "My Faith Has Found a Resting Place",
       "lyrics": {
         "stanzas": [
@@ -5114,7 +5137,7 @@
       }
     },
     "hymn_0412": {
-      "number": 412,
+      "number": 413,
       "title": "Faith Is the Victory",
       "lyrics": {
         "stanzas": [
@@ -5135,7 +5158,7 @@
       }
     },
     "hymn_0413": {
-      "number": 413,
+      "number": 414,
       "title": "O Christ, Our Hope, Our Heart's Desire",
       "lyrics": {
         "stanzas": [
@@ -5160,7 +5183,7 @@
       }
     },
     "hymn_0414": {
-      "number": 414,
+      "number": 415,
       "title": "Moment by Moment",
       "lyrics": {
         "stanzas": [
@@ -5181,7 +5204,7 @@
       }
     },
     "hymn_0415": {
-      "number": 415,
+      "number": 416,
       "title": "My Faith Looks Up to Thee",
       "lyrics": {
         "stanzas": [
@@ -5206,7 +5229,7 @@
       }
     },
     "hymn_0416": {
-      "number": 416,
+      "number": 417,
       "title": "Trusting Jesus",
       "lyrics": {
         "stanzas": [
@@ -5231,7 +5254,7 @@
       }
     },
     "hymn_0417": {
-      "number": 417,
+      "number": 418,
       "title": "I've Got Peace Like a River",
       "lyrics": {
         "stanzas": [
@@ -5252,7 +5275,7 @@
       }
     },
     "hymn_0423": {
-      "number": 423,
+      "number": 424,
       "title": "Heavenly Sunlight",
       "lyrics": {
         "stanzas": [
@@ -5273,7 +5296,7 @@
       }
     },
     "hymn_0424": {
-      "number": 424,
+      "number": 425,
       "title": "He Keeps Me Singing",
       "lyrics": {
         "stanzas": [
@@ -5302,7 +5325,7 @@
       }
     },
     "hymn_0426": {
-      "number": 426,
+      "number": 427,
       "title": "For He Alone Is Worthy",
       "lyrics": {
         "stanzas": [
@@ -5323,7 +5346,7 @@
       }
     },
     "hymn_0427": {
-      "number": 427,
+      "number": 428,
       "title": "Ring the Bells of Heaven",
       "lyrics": {
         "stanzas": [
@@ -5344,7 +5367,7 @@
       }
     },
     "hymn_0429": {
-      "number": 429,
+      "number": 430,
       "title": "Sunshine in My Soul",
       "lyrics": {
         "stanzas": [
@@ -5369,15 +5392,20 @@
       }
     },
     "hymn_0432": {
-      "number": 432,
+      "number": 433,
       "title": "Rejoice in the Lord Always",
       "lyrics": {
-        "stanzas": [],
+        "stanzas": [
+          {
+            "index": 1,
+            "text": "Rejoice in the Lord always: Again I say, Rejoice. (repeat)\nRejoice, rejoice, And again I say, Rejoice. (repeat)\nRejoice in the Lord always: Again I say, Rejoice. (repeat)"
+          }
+        ],
         "chorus": null
       }
     },
     "hymn_0433": {
-      "number": 433,
+      "number": 434,
       "title": "Wonderful, Wonderful Jesus",
       "lyrics": {
         "stanzas": [
@@ -5402,7 +5430,7 @@
       }
     },
     "hymn_0435": {
-      "number": 435,
+      "number": 436,
       "title": "He Included Me",
       "lyrics": {
         "stanzas": [
@@ -5427,7 +5455,7 @@
       }
     },
     "hymn_0438": {
-      "number": 438,
+      "number": 439,
       "title": "O Happy Day That Fixed My Choice",
       "lyrics": {
         "stanzas": [
@@ -5452,7 +5480,7 @@
       }
     },
     "hymn_0440": {
-      "number": 440,
+      "number": 441,
       "title": "Since Jesus Came Into My Heart",
       "lyrics": {
         "stanzas": [
@@ -5477,7 +5505,7 @@
       }
     },
     "hymn_0443": {
-      "number": 443,
+      "number": 444,
       "title": "Sunlight",
       "lyrics": {
         "stanzas": [
@@ -5506,7 +5534,7 @@
       }
     },
     "hymn_0444": {
-      "number": 444,
+      "number": 445,
       "title": "Sweet Hour of Prayer",
       "lyrics": {
         "stanzas": [
@@ -5527,7 +5555,7 @@
       }
     },
     "hymn_0445": {
-      "number": 445,
+      "number": 446,
       "title": "Take Time to Be Holy",
       "lyrics": {
         "stanzas": [
@@ -5552,7 +5580,7 @@
       }
     },
     "hymn_0446": {
-      "number": 446,
+      "number": 447,
       "title": "Trust and Obey",
       "lyrics": {
         "stanzas": [
@@ -5577,7 +5605,7 @@
       }
     },
     "hymn_0447": {
-      "number": 447,
+      "number": 448,
       "title": "Just a Closer Walk with Thee",
       "lyrics": {
         "stanzas": [
@@ -5598,7 +5626,7 @@
       }
     },
     "hymn_0448": {
-      "number": 448,
+      "number": 449,
       "title": "All Praise to You, My God, This Night",
       "lyrics": {
         "stanzas": [
@@ -5623,7 +5651,7 @@
       }
     },
     "hymn_0449": {
-      "number": 449,
+      "number": 450,
       "title": "I Need Thee Every Hour",
       "lyrics": {
         "stanzas": [
@@ -5652,7 +5680,7 @@
       }
     },
     "hymn_0450": {
-      "number": 450,
+      "number": 451,
       "title": "Tell It to Jesus",
       "lyrics": {
         "stanzas": [
@@ -5677,7 +5705,7 @@
       }
     },
     "hymn_0451": {
-      "number": 451,
+      "number": 452,
       "title": "He Is So Precious to Me",
       "lyrics": {
         "stanzas": [
@@ -5702,7 +5730,7 @@
       }
     },
     "hymn_0452": {
-      "number": 452,
+      "number": 453,
       "title": "How Sweet the Name of Jesus Sounds",
       "lyrics": {
         "stanzas": [
@@ -5727,7 +5755,7 @@
       }
     },
     "hymn_0454": {
-      "number": 454,
+      "number": 455,
       "title": "I Must Tell Jesus",
       "lyrics": {
         "stanzas": [
@@ -5752,7 +5780,7 @@
       }
     },
     "hymn_0457": {
-      "number": 457,
+      "number": 458,
       "title": "Nearer, My God, to Thee",
       "lyrics": {
         "stanzas": [
@@ -5773,7 +5801,7 @@
       }
     },
     "hymn_0460": {
-      "number": 460,
+      "number": 461,
       "title": "Savior, Teach Me Day by Day",
       "lyrics": {
         "stanzas": [
@@ -5798,7 +5826,7 @@
       }
     },
     "hymn_0463": {
-      "number": 463,
+      "number": 464,
       "title": "Close to Thee",
       "lyrics": {
         "stanzas": [
@@ -5819,7 +5847,7 @@
       }
     },
     "hymn_0466": {
-      "number": 466,
+      "number": 467,
       "title": "There Shall Be Showers of Blessing",
       "lyrics": {
         "stanzas": [
@@ -5844,7 +5872,7 @@
       }
     },
     "hymn_0468": {
-      "number": 468,
+      "number": 469,
       "title": "Revive Us Again",
       "lyrics": {
         "stanzas": [
@@ -5869,7 +5897,7 @@
       }
     },
     "hymn_0469": {
-      "number": 469,
+      "number": 470,
       "title": "Once to Every Man and Nation",
       "lyrics": {
         "stanzas": [
@@ -5894,7 +5922,7 @@
       }
     },
     "hymn_0470": {
-      "number": 470,
+      "number": 471,
       "title": "Jesus, I My Cross Have Taken",
       "lyrics": {
         "stanzas": [
@@ -5915,7 +5943,7 @@
       }
     },
     "hymn_0472": {
-      "number": 472,
+      "number": 473,
       "title": "More Love to Thee, O Christ",
       "lyrics": {
         "stanzas": [
@@ -5936,7 +5964,7 @@
       }
     },
     "hymn_0473": {
-      "number": 473,
+      "number": 474,
       "title": "We Are Climbing Jacob's Ladder",
       "lyrics": {
         "stanzas": [
@@ -5961,7 +5989,7 @@
       }
     },
     "hymn_0474": {
-      "number": 474,
+      "number": 475,
       "title": "Must Jesus Bear the Cross Alone",
       "lyrics": {
         "stanzas": [
@@ -5990,7 +6018,7 @@
       }
     },
     "hymn_0479": {
-      "number": 479,
+      "number": 480,
       "title": "Immortal Love, Forever Full",
       "lyrics": {
         "stanzas": [
@@ -6015,7 +6043,7 @@
       }
     },
     "hymn_0480": {
-      "number": 480,
+      "number": 481,
       "title": "Am I a Soldier of the Cross",
       "lyrics": {
         "stanzas": [
@@ -6040,7 +6068,7 @@
       }
     },
     "hymn_0482": {
-      "number": 482,
+      "number": 483,
       "title": "Footsteps of Jesus",
       "lyrics": {
         "stanzas": [
@@ -6065,7 +6093,7 @@
       }
     },
     "hymn_0483": {
-      "number": 483,
+      "number": 484,
       "title": "Higher Ground",
       "lyrics": {
         "stanzas": [
@@ -6090,7 +6118,7 @@
       }
     },
     "hymn_0484": {
-      "number": 484,
+      "number": 485,
       "title": "Stand Up, Stand Up for Jesus",
       "lyrics": {
         "stanzas": [
@@ -6115,7 +6143,7 @@
       }
     },
     "hymn_0486": {
-      "number": 486,
+      "number": 487,
       "title": "Stand Up, Stand Up for Jesus",
       "lyrics": {
         "stanzas": [
@@ -6140,7 +6168,7 @@
       }
     },
     "hymn_0488": {
-      "number": 488,
+      "number": 489,
       "title": "Lord, I Want to Be a Christian",
       "lyrics": {
         "stanzas": [
@@ -6165,7 +6193,7 @@
       }
     },
     "hymn_0491": {
-      "number": 491,
+      "number": 492,
       "title": "Purer in Heart, O God",
       "lyrics": {
         "stanzas": [
@@ -6186,7 +6214,7 @@
       }
     },
     "hymn_0492": {
-      "number": 492,
+      "number": 493,
       "title": "Onward, Christian Soldiers",
       "lyrics": {
         "stanzas": [
@@ -6211,7 +6239,7 @@
       }
     },
     "hymn_0493": {
-      "number": 493,
+      "number": 494,
       "title": "Take Up Your Cross",
       "lyrics": {
         "stanzas": [
@@ -6236,7 +6264,7 @@
       }
     },
     "hymn_0496": {
-      "number": 496,
+      "number": 497,
       "title": "The Master Hath Come",
       "lyrics": {
         "stanzas": [
@@ -6257,7 +6285,7 @@
       }
     },
     "hymn_0501": {
-      "number": 501,
+      "number": 502,
       "title": "Open My Eyes That I May See",
       "lyrics": {
         "stanzas": [
@@ -6278,7 +6306,7 @@
       }
     },
     "hymn_0503": {
-      "number": 503,
+      "number": 504,
       "title": "God, Give Us Christian Homes",
       "lyrics": {
         "stanzas": [
@@ -6303,7 +6331,7 @@
       }
     },
     "hymn_0513": {
-      "number": 513,
+      "number": 514,
       "title": "When We All Get To Heaven",
       "lyrics": {
         "stanzas": [
@@ -6328,7 +6356,7 @@
       }
     },
     "hymn_0514": {
-      "number": 514,
+      "number": 515,
       "title": "There's a Land that Is Fairer Than Day",
       "lyrics": {
         "stanzas": [
@@ -6349,7 +6377,7 @@
       }
     },
     "hymn_0515": {
-      "number": 515,
+      "number": 516,
       "title": "When the Roll Is Called Up Yonder",
       "lyrics": {
         "stanzas": [
@@ -6370,7 +6398,7 @@
       }
     },
     "hymn_0517": {
-      "number": 517,
+      "number": 518,
       "title": "Shall We Gather at the River",
       "lyrics": {
         "stanzas": [
@@ -6395,7 +6423,7 @@
       }
     },
     "hymn_0518": {
-      "number": 518,
+      "number": 519,
       "title": "Face To Face with Christ, My Savior",
       "lyrics": {
         "stanzas": [
@@ -6420,7 +6448,7 @@
       }
     },
     "hymn_0519": {
-      "number": 519,
+      "number": 520,
       "title": "O That Will Be Glory",
       "lyrics": {
         "stanzas": [
@@ -6441,7 +6469,7 @@
       }
     },
     "hymn_0520": {
-      "number": 520,
+      "number": 521,
       "title": "On Jordan's Stormy Banks",
       "lyrics": {
         "stanzas": [
@@ -6466,7 +6494,7 @@
       }
     },
     "hymn_0521": {
-      "number": 521,
+      "number": 522,
       "title": "When the Morning Comes",
       "lyrics": {
         "stanzas": [
@@ -6487,7 +6515,7 @@
       }
     },
     "hymn_0523": {
-      "number": 523,
+      "number": 524,
       "title": "We're Marching to Zion",
       "lyrics": {
         "stanzas": [
@@ -6512,7 +6540,7 @@
       }
     },
     "hymn_0524": {
-      "number": 524,
+      "number": 525,
       "title": "Come, We That Love the Lord",
       "lyrics": {
         "stanzas": [
@@ -6537,7 +6565,7 @@
       }
     },
     "hymn_0526": {
-      "number": 526,
+      "number": 527,
       "title": "Jerusalem, the Golden",
       "lyrics": {
         "stanzas": [
@@ -6558,7 +6586,7 @@
       }
     },
     "hymn_0527": {
-      "number": 527,
+      "number": 528,
       "title": "My Savior First of All",
       "lyrics": {
         "stanzas": [
@@ -6583,7 +6611,7 @@
       }
     },
     "hymn_0528": {
-      "number": 528,
+      "number": 529,
       "title": "Forever With the Lord",
       "lyrics": {
         "stanzas": [
@@ -6604,7 +6632,7 @@
       }
     },
     "hymn_0534": {
-      "number": 534,
+      "number": 535,
       "title": "I Will Sing the Wondrous Story",
       "lyrics": {
         "stanzas": [
@@ -6625,7 +6653,7 @@
       }
     },
     "hymn_0536": {
-      "number": 536,
+      "number": 537,
       "title": "I Will Sing the Wondrous Story",
       "lyrics": {
         "stanzas": [
@@ -6654,7 +6682,7 @@
       }
     },
     "hymn_0537": {
-      "number": 537,
+      "number": 538,
       "title": "Ask Ye What Great Thing I Know",
       "lyrics": {
         "stanzas": [
@@ -6679,7 +6707,7 @@
       }
     },
     "hymn_0538": {
-      "number": 538,
+      "number": 539,
       "title": "Satisfied",
       "lyrics": {
         "stanzas": [
@@ -6704,7 +6732,7 @@
       }
     },
     "hymn_0539": {
-      "number": 539,
+      "number": 540,
       "title": "Saved, Saved",
       "lyrics": {
         "stanzas": [
@@ -6725,7 +6753,7 @@
       }
     },
     "hymn_0541": {
-      "number": 541,
+      "number": 542,
       "title": "In Loving-Kindness Jesus Came",
       "lyrics": {
         "stanzas": [
@@ -6750,7 +6778,7 @@
       }
     },
     "hymn_0542": {
-      "number": 542,
+      "number": 543,
       "title": "Since I Have Been Redeemed",
       "lyrics": {
         "stanzas": [
@@ -6775,7 +6803,7 @@
       }
     },
     "hymn_0543": {
-      "number": 543,
+      "number": 544,
       "title": "Redeemed, How I Love to Proclaim It",
       "lyrics": {
         "stanzas": [
@@ -6800,7 +6828,7 @@
       }
     },
     "hymn_0544": {
-      "number": 544,
+      "number": 545,
       "title": "Love Is the Theme",
       "lyrics": {
         "stanzas": [
@@ -6825,7 +6853,7 @@
       }
     },
     "hymn_0545": {
-      "number": 545,
+      "number": 546,
       "title": "Love Lifted Me",
       "lyrics": {
         "stanzas": [
@@ -6846,7 +6874,7 @@
       }
     },
     "hymn_0546": {
-      "number": 546,
+      "number": 547,
       "title": "I Stand Amazed in the Presence",
       "lyrics": {
         "stanzas": [
@@ -6871,7 +6899,7 @@
       }
     },
     "hymn_0550": {
-      "number": 550,
+      "number": 551,
       "title": "I Heard the Voice of Jesus Say",
       "lyrics": {
         "stanzas": [
@@ -6892,7 +6920,7 @@
       }
     },
     "hymn_0553": {
-      "number": 553,
+      "number": 554,
       "title": "In the Cross of Christ I Glory",
       "lyrics": {
         "stanzas": [
@@ -6917,7 +6945,7 @@
       }
     },
     "hymn_0554": {
-      "number": 554,
+      "number": 555,
       "title": "A Child Of The King",
       "lyrics": {
         "stanzas": [
@@ -6938,7 +6966,7 @@
       }
     },
     "hymn_0558": {
-      "number": 558,
+      "number": 559,
       "title": "Rescue the Perishing",
       "lyrics": {
         "stanzas": [
@@ -6963,7 +6991,7 @@
       }
     },
     "hymn_0562": {
-      "number": 562,
+      "number": 563,
       "title": "Christ Receiveth Sinful Men",
       "lyrics": {
         "stanzas": [
@@ -6988,7 +7016,7 @@
       }
     },
     "hymn_0563": {
-      "number": 563,
+      "number": 564,
       "title": "Make Me a Channel of Blessing",
       "lyrics": {
         "stanzas": [
@@ -7013,7 +7041,7 @@
       }
     },
     "hymn_0567": {
-      "number": 567,
+      "number": 568,
       "title": "Lord, Speak to Me, that I May Speak",
       "lyrics": {
         "stanzas": [
@@ -7038,7 +7066,7 @@
       }
     },
     "hymn_0571": {
-      "number": 571,
+      "number": 572,
       "title": "I Love to Tell the Story",
       "lyrics": {
         "stanzas": [
@@ -7059,7 +7087,7 @@
       }
     },
     "hymn_0573": {
-      "number": 573,
+      "number": 574,
       "title": "Soldiers of Christ, in Truth Arrayed",
       "lyrics": {
         "stanzas": [
@@ -7084,7 +7112,7 @@
       }
     },
     "hymn_0574": {
-      "number": 574,
+      "number": 575,
       "title": "I Will Sing of My Redeemer",
       "lyrics": {
         "stanzas": [
@@ -7109,7 +7137,7 @@
       }
     },
     "hymn_0575": {
-      "number": 575,
+      "number": 576,
       "title": "Take the Name of Jesus with You",
       "lyrics": {
         "stanzas": [
@@ -7134,7 +7162,7 @@
       }
     },
     "hymn_0580": {
-      "number": 580,
+      "number": 581,
       "title": "We Have Heard the Joyful Sound",
       "lyrics": {
         "stanzas": [
@@ -7159,7 +7187,7 @@
       }
     },
     "hymn_0582": {
-      "number": 582,
+      "number": 583,
       "title": "O Zion, Haste",
       "lyrics": {
         "stanzas": [
@@ -7184,7 +7212,7 @@
       }
     },
     "hymn_0583": {
-      "number": 583,
+      "number": 584,
       "title": "We Have Heard the Joyful Sound",
       "lyrics": {
         "stanzas": [
@@ -7205,7 +7233,7 @@
       }
     },
     "hymn_0585": {
-      "number": 585,
+      "number": 586,
       "title": "Weve a Story to Tell",
       "lyrics": {
         "stanzas": [
@@ -7230,7 +7258,7 @@
       }
     },
     "hymn_0586": {
-      "number": 586,
+      "number": 587,
       "title": "Jesus Shall Reign",
       "lyrics": {
         "stanzas": [
@@ -7255,7 +7283,7 @@
       }
     },
     "hymn_0588": {
-      "number": 588,
+      "number": 589,
       "title": "Ye Servants of God",
       "lyrics": {
         "stanzas": [
@@ -7280,7 +7308,7 @@
       }
     },
     "hymn_0590": {
-      "number": 590,
+      "number": 591,
       "title": "Hark, the Voice of Jesus Calling",
       "lyrics": {
         "stanzas": [
@@ -7301,7 +7329,7 @@
       }
     },
     "hymn_0594": {
-      "number": 594,
+      "number": 595,
       "title": "Send the Light",
       "lyrics": {
         "stanzas": [
@@ -7326,7 +7354,7 @@
       }
     },
     "hymn_0599": {
-      "number": 599,
+      "number": 600,
       "title": "More About Jesus",
       "lyrics": {
         "stanzas": [
@@ -7351,7 +7379,7 @@
       }
     },
     "hymn_0605": {
-      "number": 605,
+      "number": 606,
       "title": "I Gave My Life for Thee",
       "lyrics": {
         "stanzas": [
@@ -7376,7 +7404,7 @@
       }
     },
     "hymn_0606": {
-      "number": 606,
+      "number": 607,
       "title": "Something for Thee",
       "lyrics": {
         "stanzas": [
@@ -7401,7 +7429,7 @@
       }
     },
     "hymn_0607": {
-      "number": 607,
+      "number": 608,
       "title": "We'll Work Till Jesus Comes",
       "lyrics": {
         "stanzas": [
@@ -7422,7 +7450,7 @@
       }
     },
     "hymn_0608": {
-      "number": 608,
+      "number": 609,
       "title": "We Give Thee But Thine Own",
       "lyrics": {
         "stanzas": [
@@ -7447,7 +7475,7 @@
       }
     },
     "hymn_0614": {
-      "number": 614,
+      "number": 615,
       "title": "To the Work",
       "lyrics": {
         "stanzas": [
@@ -7472,7 +7500,7 @@
       }
     },
     "hymn_0618": {
-      "number": 618,
+      "number": 619,
       "title": "O God of Love, O King of Peace",
       "lyrics": {
         "stanzas": [
@@ -7493,7 +7521,7 @@
       }
     },
     "hymn_0620": {
-      "number": 620,
+      "number": 621,
       "title": "Lead On, O King Eternal",
       "lyrics": {
         "stanzas": [
@@ -7514,7 +7542,7 @@
       }
     },
     "hymn_0628": {
-      "number": 628,
+      "number": 629,
       "title": "God of Our Fathers",
       "lyrics": {
         "stanzas": [
@@ -7539,7 +7567,7 @@
       }
     },
     "hymn_0629": {
-      "number": 629,
+      "number": 630,
       "title": "America the Beautiful",
       "lyrics": {
         "stanzas": [
@@ -7560,7 +7588,7 @@
       }
     },
     "hymn_0632": {
-      "number": 632,
+      "number": 633,
       "title": "Mine Eyes Have Seen the Glory",
       "lyrics": {
         "stanzas": [
@@ -7589,7 +7617,7 @@
       }
     },
     "hymn_0633": {
-      "number": 633,
+      "number": 634,
       "title": "My Country, 'Tis of Thee",
       "lyrics": {
         "stanzas": [
@@ -7614,7 +7642,7 @@
       }
     },
     "hymn_0634": {
-      "number": 634,
+      "number": 635,
       "title": "The Star-Spangled Banner",
       "lyrics": {
         "stanzas": [
@@ -7631,7 +7659,7 @@
       }
     },
     "hymn_0635": {
-      "number": 635,
+      "number": 636,
       "title": "We Gather Together",
       "lyrics": {
         "stanzas": [
@@ -7652,7 +7680,7 @@
       }
     },
     "hymn_0636": {
-      "number": 636,
+      "number": 637,
       "title": "Come, Ye Thankful People, Come",
       "lyrics": {
         "stanzas": [
@@ -7677,7 +7705,7 @@
       }
     },
     "hymn_0637": {
-      "number": 637,
+      "number": 638,
       "title": "Now Thank We All Our God",
       "lyrics": {
         "stanzas": [
@@ -7698,7 +7726,7 @@
       }
     },
     "hymn_0643": {
-      "number": 643,
+      "number": 644,
       "title": "Count Your Blessings",
       "lyrics": {
         "stanzas": [
@@ -7723,66 +7751,106 @@
       }
     },
     "hymn_0646": {
-      "number": 646,
+      "number": 647,
       "title": "Christ, We Do All Adore Thee",
       "lyrics": {
-        "stanzas": [],
+        "stanzas": [
+          {
+            "index": 1,
+            "text": "Christ, we do all adore Thee,\nAnd we do praise Thee forever;\nChrist, we do all adore Thee,\nAnd we do praise Thee forever,\nFor on the holy cross Thou hast\nThe world from sin redeemed.\nChrist, we do all adore Thee,\nAnd we do praise Thee forever.\nChrist, we do all adore Thee."
+          }
+        ],
         "chorus": null
       }
     },
     "hymn_0649": {
-      "number": 649,
+      "number": 650,
       "title": "Amen",
       "lyrics": {
-        "stanzas": [],
+        "stanzas": [
+          {
+            "index": 1,
+            "text": "Amen, Amen, A-men."
+          }
+        ],
         "chorus": null
       }
     },
     "hymn_0650": {
-      "number": 650,
+      "number": 651,
       "title": "Amen",
       "lyrics": {
-        "stanzas": [],
+        "stanzas": [
+          {
+            "index": 1,
+            "text": "Amen, Amen."
+          }
+        ],
         "chorus": null
       }
     },
     "hymn_0651": {
-      "number": 651,
+      "number": 652,
       "title": "Amen",
       "lyrics": {
-        "stanzas": [],
+        "stanzas": [
+          {
+            "index": 1,
+            "text": "Amen, Amen, Amen."
+          }
+        ],
         "chorus": null
       }
     },
     "hymn_0655": {
-      "number": 655,
+      "number": 656,
       "title": "Almighty Father, Hear Our Prayer",
       "lyrics": {
-        "stanzas": [],
+        "stanzas": [
+          {
+            "index": 1,
+            "text": "Almighty Father, hear our prayer,\nAnd bless all souls that wait before Thee.\nAmen."
+          }
+        ],
         "chorus": null
       }
     },
     "hymn_0657": {
-      "number": 657,
+      "number": 658,
       "title": "Hear Our Prayer, O Lord",
       "lyrics": {
-        "stanzas": [],
+        "stanzas": [
+          {
+            "index": 1,
+            "text": "Hear our prayer, O Lord,\nHear our prayer, O Lord;\nIncline Thine ear to us,\nAnd grant us Thy peace."
+          }
+        ],
         "chorus": null
       }
     },
     "hymn_0661": {
-      "number": 661,
+      "number": 662,
       "title": "The Lord Bless You and Keep You",
       "lyrics": {
-        "stanzas": [],
+        "stanzas": [
+          {
+            "index": 1,
+            "text": "The Lord bless you and keep you;\nThe Lord lift His countenance upon you,\nAnd give you peace, and give you peace,\nThe Lord make His face to shine upon you,\nAnd be gracious unto you, be gracious,\nThe Lord be gracious, gracious unto you.\nAmen!"
+          }
+        ],
         "chorus": null
       }
     },
     "hymn_0665": {
-      "number": 665,
+      "number": 666,
       "title": "Holy Is the Lord",
       "lyrics": {
-        "stanzas": [],
+        "stanzas": [
+          {
+            "index": 1,
+            "text": "Holy, holy, holy, holy is the Lord.\nHoly, holy, holy, holy is the Lord.\nHoly is the Father, holy is the Son,\nHoly is the Spirit; blessed Three in One."
+          }
+        ],
         "chorus": null
       }
     }

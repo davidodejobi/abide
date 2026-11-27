@@ -203,11 +203,11 @@ class _VerseListState extends ConsumerState<_VerseList> {
         final isFlashing = hiFrom != null &&
             verse.number >= hiFrom &&
             verse.number <= (hiTo ?? hiFrom);
-        final fill = isSelected
-            ? c.bgAccentContainer
-            : isFlashing
-                ? c.bgAccentContainer
-                : marked != null
+        // The accent container token is ~14% and vanished on a phone in
+        // daylight; selection uses a stronger tint of the focus accent.
+        final fill = isSelected || isFlashing
+            ? c.borderFocus.withValues(alpha: 0.28)
+            : marked != null
                     ? highlightColorFor(c, marked)
                     : Colors.transparent;
         final text = Text.rich(

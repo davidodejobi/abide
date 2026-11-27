@@ -171,6 +171,7 @@ Future<YouChoice?> showYouPicker(
   required String? selected,
 }) {
   return showModalBottomSheet<YouChoice>(
+    useRootNavigator: true,
     context: context,
     showDragHandle: true,
     isScrollControlled: true,

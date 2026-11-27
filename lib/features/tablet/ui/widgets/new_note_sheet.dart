@@ -35,6 +35,7 @@ class CreateTemplateChoice extends NewNoteChoice {
 Future<void> startNewNote(BuildContext context) async {
   final router = context.router;
   final choice = await showModalBottomSheet<NewNoteChoice>(
+    useRootNavigator: true,
     context: context,
     showDragHandle: true,
     isScrollControlled: true,

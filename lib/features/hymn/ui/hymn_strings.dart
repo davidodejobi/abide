@@ -2,7 +2,6 @@
 /// move (DAO-131). Plain English, denomination-neutral.
 abstract final class HymnStrings {
   static const songs = 'Songs';
-  static const eyebrow = 'HYMNAL · ENGLISH AND YORÙBÁ';
   static const searchHint = 'Number, title or first line';
   static const clearSearch = 'Clear search';
   static const english = 'English';
@@ -30,9 +29,23 @@ abstract final class HymnStrings {
   static const pickSearchHint = 'Search by number or title';
   static const noMatches = 'No matches.';
   static const pickAnother = 'Pick another';
+  static const addLanguage = '+ Language';
+  static const languagesTitle = 'Hymn languages';
+  static const languagesClose = 'Close';
+
   static const scrollToTop = 'Scroll to top';
   static const scrollToBottom = 'Scroll to bottom';
 
+  /// 'HYMNAL · ENGLISH', 'HYMNAL · ENGLISH AND YORÙBÁ', and so on.
+  static String eyebrow(List<String> codes) {
+    final names = [for (final c in codes) languageName(c).toUpperCase()];
+    final list = names.length < 2
+        ? names.join()
+        : '${names.sublist(0, names.length - 1).join(', ')} AND ${names.last}';
+    return 'HYMNAL · $list';
+  }
+
+  static String hymnCount(int n) => n == 1 ? '1 hymn' : '$n hymns';
   static String hymnEyebrow(int number) => 'HYMN $number · HYMNAL';
   static String stanzas(int n) => n == 1 ? '1 stanza' : '$n stanzas';
   static String noResults(String q) => 'No results for “$q”';

@@ -12,6 +12,7 @@ import 'account_strings.dart';
 
 Future<void> showSaveRoadSheet(BuildContext context) {
   return showModalBottomSheet<void>(
+    useRootNavigator: true,
     context: context,
     isScrollControlled: true,
     showDragHandle: true,

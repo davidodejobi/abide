@@ -10,6 +10,7 @@ import 'plan_option_tile.dart';
 
 Future<void> showPlanPickerSheet(BuildContext context) {
   return showModalBottomSheet<void>(
+    useRootNavigator: true,
     context: context,
     isScrollControlled: true,
     showDragHandle: true,

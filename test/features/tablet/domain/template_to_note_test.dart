@@ -28,7 +28,8 @@ void main() {
       final labels = sermonTemplate.sections.map((s) => s.label).toList();
       expect(labels, [
         'Speaker', 'Place', 'Date', 'Passage', //
-        'Main points', 'Passages referenced', 'Application', 'Prayer',
+        'Main point 1', 'Main point 2', 'Main point 3', 'Scriptures referenced',
+          'Application', 'Pray',
       ]);
       final copy = sermonTemplate.sections.map((s) => s.hint).join(' ') +
           sermonTemplate.summary;
@@ -46,10 +47,10 @@ void main() {
       expect(md, contains('**Place:**'));
       expect(md, contains('**Date:** 26 Nov 2026'));
       expect(md, contains('**Passage:**'));
-      expect(md, contains('## Main points'));
-      expect(md, contains('## Passages referenced'));
+      expect(md, contains('## Main point 1'));
+      expect(md, contains('## Scriptures referenced'));
       expect(md, contains('## Application'));
-      expect(md, contains('## Prayer'));
+      expect(md, contains('## Pray'));
       // Hints are placeholders only: none of them is in the note.
       expect(md, isNot(contains('The first big idea')));
       expect(md, isNot(contains('What will you do this week')));
@@ -90,9 +91,10 @@ void main() {
       final doc = templateToDocument(sermonTemplate, now: now);
       final hints = templateHints(sermonTemplate);
       final nodes = doc.root.children.toList();
-      final bullet =
-          nodes.firstWhere((n) => n.type == BulletedListBlockKeys.type);
-      expect(hintFor(bullet, hints), 'The first big idea, in your own words');
+      final point = nodes.firstWhere((n) =>
+          n.type == ParagraphBlockKeys.type && n.previous?.delta != null &&
+          n.previous!.delta!.toPlainText() == 'Main point 1');
+      expect(hintFor(point, hints), 'The first big idea, in your own words');
       final application = nodes.lastWhere((n) =>
           n.type == ParagraphBlockKeys.type && n.previous?.delta != null &&
           n.previous!.delta!.toPlainText() == 'Application');
@@ -145,10 +147,12 @@ void main() {
         (TemplateSectionType.field, 'Place'),
         (TemplateSectionType.field, 'Date'),
         (TemplateSectionType.scripture, 'Passage'),
-        (TemplateSectionType.bullet, 'Main points'),
-        (TemplateSectionType.heading, 'Passages referenced'),
+        (TemplateSectionType.heading, 'Main point 1'),
+        (TemplateSectionType.heading, 'Main point 2'),
+        (TemplateSectionType.heading, 'Main point 3'),
+        (TemplateSectionType.heading, 'Scriptures referenced'),
         (TemplateSectionType.heading, 'Application'),
-        (TemplateSectionType.heading, 'Prayer'),
+        (TemplateSectionType.heading, 'Pray'),
       ]);
     });
   });
@@ -163,8 +167,8 @@ void main() {
           sections.firstWhere((s) => s.label == 'Application');
       expect(application.type, TemplateSectionType.text);
       expect(application.hint, 'What will you do this week?');
-      final points = sections.firstWhere((s) => s.label == 'Main points');
-      expect(points.type, TemplateSectionType.bullet);
+      final points = sections.firstWhere((s) => s.label == 'Main point 1');
+      expect(points.type, TemplateSectionType.text);
       expect(points.hint, 'The first big idea, in your own words');
     });
 

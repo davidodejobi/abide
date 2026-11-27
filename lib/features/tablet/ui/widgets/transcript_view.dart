@@ -69,6 +69,7 @@ Future<void> showTranscribeSheet(BuildContext context,
       container.read(bibleReadingPositionProvider).editionId.startsWith('en');
   if (!context.mounted) return;
   await showModalBottomSheet<void>(
+    useRootNavigator: true,
     context: context,
     showDragHandle: true,
     isScrollControlled: true,

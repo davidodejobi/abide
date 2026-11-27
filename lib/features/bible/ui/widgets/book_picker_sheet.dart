@@ -12,6 +12,7 @@ Future<int?> showBookPicker(
   required int currentOrdinal,
 }) {
   return showModalBottomSheet<int>(
+    useRootNavigator: true,
     context: context,
     showDragHandle: true,
     isScrollControlled: true,
