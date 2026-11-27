@@ -92,7 +92,8 @@ void main() {
 
     await tester.tap(find.text(AccountStrings.done));
     await tester.pump(const Duration(milliseconds: 400));
-    expect(find.text(AccountStrings.savedAs('a@b.co')), findsOneWidget);
+    expect(find.text(AccountStrings.signedInWith(
+        const AuthAccount(email: 'a@b.co', provider: 'email'))), findsOneWidget);
     expect(find.text(AccountStrings.saveRow), findsNothing);
   });
 
@@ -144,5 +145,43 @@ void main() {
     expect(container.read(saveRoadPromptedProvider), isTrue);
     expect(container.read(sharedPreferencesProvider).getBool('save_road_prompted'),
         isTrue);
+  });
+
+  testWidgets('Apple and Google buttons show when available', (tester) async {
+    await _pump(tester, const SettingsTabScreen());
+    await _openSheet(tester);
+    expect(find.text(AccountStrings.continueApple), findsOneWidget);
+    expect(find.text(AccountStrings.continueGoogle), findsOneWidget);
+  });
+
+  testWidgets('Apple and Google buttons hide when unavailable', (tester) async {
+    final (_, repo) = await _pump(tester, const SettingsTabScreen());
+    repo.appleAvailable = false;
+    repo.googleAvailable = false;
+    await _openSheet(tester);
+    expect(find.text(AccountStrings.continueApple), findsNothing);
+    expect(find.text(AccountStrings.continueGoogle), findsNothing);
+    expect(find.text(AccountStrings.orEmail), findsNothing);
+    expect(find.text(AccountStrings.sendCode), findsOneWidget);
+  });
+
+  testWidgets('Sign out asks first and warns that data leaves the phone',
+      (tester) async {
+    await _pump(tester, const SettingsTabScreen());
+    await _openSheet(tester);
+    await tester.tap(find.text(AccountStrings.continueApple));
+    await tester.pump(_delay);
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.tap(find.text(AccountStrings.done));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('Signed in with Apple'), findsOneWidget);
+
+    await tester.tap(find.text(AccountStrings.signOut));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text(AccountStrings.signOutBody), findsOneWidget);
+    expect(AccountStrings.signOutBody, contains('removed from this phone'));
+    await tester.tap(find.text(AccountStrings.signOut).last);
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text(AccountStrings.saveRow), findsOneWidget);
   });
 }

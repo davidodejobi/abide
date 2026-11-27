@@ -49,3 +49,4 @@ app.*.map.json
 
 **.md
 !CLAUDE.md
+ios/Flutter/Local.xcconfig

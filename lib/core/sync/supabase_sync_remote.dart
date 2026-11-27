@@ -50,24 +50,42 @@ Future<T> retryAfterAuthLoss<T>(
 /// verse ranges and non-highlight annotations have no remote column and stay
 /// device-local.
 class SupabaseSyncRemote implements SyncRemote {
-  SupabaseSyncRemote(this._client);
+  SupabaseSyncRemote(this._client, {Future<void> Function()? ensureSession})
+      : _ensureSession = ensureSession;
 
   final SupabaseClient _client;
+
+  /// Starts the anonymous session when there is none. Wired to the auth
+  /// repository so there is one place that signs in; falls back to signing in
+  /// directly (tests, or auth not provided).
+  final Future<void> Function()? _ensureSession;
 
   static const _pageSize = 500;
 
   String? _appUserId;
 
+  /// The auth user [_appUserId] was resolved for. When the session moves to a
+  /// different user (sign-in, sign-out) the cache is stale and is dropped.
+  String? _cachedAuthId;
+
   /// Signs in anonymously if there is no session yet (so app start never waits
-  /// on the network), then makes sure our user row exists. Cached once done.
+  /// on the network), then makes sure our user row exists. Cached per auth user.
   Future<String> _ensureUser() async {
-    final cached = _appUserId;
-    if (cached != null) return cached;
     final auth = _client.auth;
     if (auth.currentSession == null) {
-      await auth.signInAnonymously().timeout(const Duration(seconds: 10));
+      final ensure = _ensureSession;
+      if (ensure != null) {
+        await ensure();
+      } else {
+        await auth.signInAnonymously().timeout(const Duration(seconds: 10));
+      }
     }
+    final authId = auth.currentUser?.id;
+    final cached = _appUserId;
+    if (cached != null && authId == _cachedAuthId) return cached;
+    _appUserId = null;
     final id = await _client.rpc('ensure_app_user');
+    _cachedAuthId = authId;
     return _appUserId = id as String;
   }
 
@@ -164,7 +182,7 @@ class SupabaseSyncRemote implements SyncRemote {
       switch (r.entity) {
         case 'notes':
           if (!Uuid.isValidUUID(fromString: r.rowId)) break; // not syncable
-          up('u_notes', 'id', {
+          up('u_notes', 'user_id,id', {
             'id': r.rowId,
             'title': _clip(p['title'] as String),
             'body_md': p['content_markdown'],
@@ -254,7 +272,11 @@ class SupabaseSyncRemote implements SyncRemote {
     switch (r.entity) {
       case 'notes':
         if (!Uuid.isValidUUID(fromString: r.rowId)) return;
-        await _client.from('u_notes').update(patch).eq('id', r.rowId);
+        await _client
+            .from('u_notes')
+            .update(patch)
+            .eq('user_id', _appUserId!)
+            .eq('id', r.rowId);
       case 'bible_annotations':
         final v = _parseVerse(r.rowId.replaceFirst('highlight:', ''));
         if (v == null) return;
@@ -290,14 +312,15 @@ class SupabaseSyncRemote implements SyncRemote {
       retryAfterAuthLoss(() => _pull(entity, cursor), _reauth);
 
   Future<SyncPage> _pull(String entity, String? cursor) async {
-    await _ensureUser();
+    final userId = await _ensureUser();
     final table = switch (entity) {
       'notes' => 'u_notes',
       'bible_annotations' => 'u_highlights',
       'plan_subscriptions' => 'u_settings',
       _ => 'u_reading_progress',
     };
-    var q = _client.from(table).select();
+    // Notes are keyed (user_id, id), so every pull is explicitly this user's.
+    var q = _client.from(table).select().eq('user_id', userId);
     if (entity == 'reading_days') q = q.like('plan_key', 'days@%');
     if (entity == 'plan_day_progress') q = q.not('plan_key', 'like', 'days@%');
     if (entity == 'plan_subscriptions') q = q.like('key', 'plan:%');

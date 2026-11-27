@@ -1,13 +1,24 @@
-/// The reader's account. [email] is null while the session is anonymous.
+/// The reader's account. [email] and [provider] are null while the session is
+/// anonymous. [provider] is `email`, `apple` or `google`.
 class AuthAccount {
-  const AuthAccount({this.email});
+  const AuthAccount({this.email, this.provider});
 
   final String? email;
+  final String? provider;
 
-  bool get isSaved => email != null;
+  bool get isSaved => email != null || provider != null;
+
+  @override
+  bool operator ==(Object other) =>
+      other is AuthAccount && other.email == email && other.provider == provider;
+
+  @override
+  int get hashCode => Object.hash(email, provider);
 }
 
-enum AuthFailureKind { invalidEmail, wrongCode, network, unknown }
+/// [cancelled] is the reader backing out of Apple or Google: not an error to
+/// show.
+enum AuthFailureKind { invalidEmail, wrongCode, network, cancelled, unknown }
 
 /// What the UI can show. Real backends map their own errors onto this.
 class AuthFailure implements Exception {
@@ -19,8 +30,8 @@ class AuthFailure implements Exception {
   String toString() => 'AuthFailure($kind)';
 }
 
-/// Account seam. The fake lives in `data/`; the Supabase layer implements this
-/// later and is swapped in through `authRepositoryProvider`.
+/// Account seam. `FakeAuthRepository` and `SupabaseAuthRepository` live in
+/// `data/` and are swapped in through `authRepositoryProvider`.
 ///
 /// "Save" converts the anonymous session in place (same user id, so rows
 /// already keyed to it stay): [sendEmailCode] then [verifyCode].
@@ -37,6 +48,17 @@ abstract interface class AuthRepository {
   /// Throws [AuthFailure] (wrongCode, network).
   Future<void> verifyCode(String email, String code);
 
-  /// Back to a fresh anonymous session.
+  /// Native Apple / Google sign-in. Keeps the same user id when the session is
+  /// anonymous; lands on the existing account when the identity is already
+  /// registered. Throws [AuthFailure] (cancelled, network, unknown).
+  Future<void> signInWithApple();
+  Future<void> signInWithGoogle();
+
+  /// Whether the buttons should be offered at all on this device/build.
+  bool get appleAvailable;
+  bool get googleAvailable;
+
+  /// Ends the session. Touches no local data and starts no new session: the
+  /// caller clears the reader's data, then calls [ensureAnonymousSession].
   Future<void> signOut();
 }

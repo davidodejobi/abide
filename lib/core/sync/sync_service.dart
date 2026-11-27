@@ -48,11 +48,105 @@ class SyncService {
 
   Future<void>? _inFlight;
   bool _again = false;
+  bool _locked = false;
+
+  /// For leaving this account: syncs, takes the sync lock, re-checks that the
+  /// push queue is empty (a write may have landed meanwhile) and only then runs
+  /// [body] with sync held off. Returns false, without running [body], when the
+  /// sync failed or anything is still queued.
+  Future<bool> flushThenLock(Future<void> Function() body) async {
+    if (!await sync()) return false;
+    return runExclusive(() async {
+      // A sync that never completed its first run queues nothing, so an empty
+      // outbox alone does not prove the data reached the server.
+      if (await _state('sync_enabled') != '1') return false;
+      if (!await _outboxEmpty()) return false;
+      await body();
+      return true;
+    });
+  }
+
+  Future<bool> _outboxEmpty() async {
+    final r = await _db
+        .customSelect('SELECT COUNT(*) AS c FROM sync_outbox')
+        .getSingle();
+    return r.read<int>('c') == 0;
+  }
+
+  /// Runs [body] with sync held off (a sync that starts meanwhile returns
+  /// false), after any running sync has finished.
+  Future<T> runExclusive<T>(Future<T> Function() body) async {
+    _locked = true;
+    try {
+      while (_inFlight != null) {
+        await _inFlight;
+      }
+      return await body();
+    } finally {
+      _locked = false;
+    }
+  }
+
+  /// Removes what lives on the server from the phone: synced notes, plain
+  /// single-verse highlights, reading days, plan progress and subscriptions,
+  /// and all sync bookkeeping (queue, cursors, owner). Local-only data (folders,
+  /// tags, templates, verse notes) and app preferences stay. Sync is off afterwards
+  /// until the next [sync] turns it back on for the next account.
+  Future<void> clearLocalData() async {
+    // Notes that sync have uuid ids; anything else never left the phone.
+    // Notes with photos or recordings stay too: media never syncs, and the
+    // orphan sweep would delete files no note points at any more.
+    const synced = "id GLOB '????????-????-????-????-????????????' "
+        "AND content_markdown NOT LIKE '%note_images/%' "
+        "AND content_markdown NOT LIKE '%note_audio/%' "
+        'AND id NOT IN (SELECT note_id FROM attachments)';
+    const ofSynced = "SELECT id FROM notes WHERE $synced";
+    await _db.transaction(() async {
+      for (final q in const [
+        // Rows that hang off the notes being removed (foreign keys are on).
+        // Folders, tags and templates themselves stay.
+        'DELETE FROM note_tags WHERE note_id IN ($ofSynced)',
+        'DELETE FROM note_links WHERE source_note_id IN ($ofSynced)',
+        'DELETE FROM attachments WHERE note_id IN ($ofSynced)',
+        'UPDATE bible_annotations SET note_id = NULL '
+            'WHERE note_id IN ($ofSynced)',
+        // Only plain single-verse highlights live on the server; verse notes,
+        // ranges and highlights carrying text or a note link stay.
+        "DELETE FROM bible_annotations WHERE kind = 'highlight' "
+            'AND inline_text IS NULL AND note_id IS NULL '
+            "AND verse_ref NOT LIKE '%-%' "
+            "AND length(verse_ref) - length(replace(verse_ref, '.', '')) = 2",
+        'DELETE FROM notes WHERE $synced',
+        'DELETE FROM reading_days',
+        'DELETE FROM plan_day_progress',
+        'DELETE FROM plan_subscriptions',
+        // Last: the writes above fire triggers that queue into the outbox.
+        'DELETE FROM sync_outbox',
+        'DELETE FROM sync_state',
+      ]) {
+        await _db.customStatement(q);
+      }
+    });
+    _db.notifyUpdates({
+      for (final t in const [
+        'notes',
+        'note_tags',
+        'note_links',
+        'attachments',
+        'bible_annotations',
+        'reading_days',
+        'plan_day_progress',
+        'plan_subscriptions',
+      ])
+        TableUpdate(t),
+    });
+  }
 
   /// Pull then push. Returns true on success, false when disabled, offline or
   /// failed (the outbox keeps everything for the next run). Overlapping calls
   /// coalesce into one follow-up run.
   Future<bool> sync() async {
+    if (_locked) return false;
     if (!enabled) {
       // Paused (consent withdrawn, local-only): nothing leaves the device, but
       // keep queueing so re-enabling pushes without a full re-queue. Only an
@@ -74,7 +168,7 @@ class SyncService {
       _inFlight = run.then((v) => ok = v);
       await _inFlight;
       _inFlight = null;
-    } while (_again && ok);
+    } while (_again && ok && !_locked);
     return ok;
   }
 
@@ -105,9 +199,10 @@ class SyncService {
       if (flag == 'paused') await _setState('sync_enabled', '1');
       return;
     }
-    // TODO(sync): a device that signs in to an existing account (second device,
-    // email sign-in) takes the owner-change path: it re-queues local rows into
-    // the other account. Decide merge vs. replace before launching linking.
+    // Signing in to an existing account (new phone, sign-out and back in) lands
+    // here: local rows are re-queued into that account (merge, never replace;
+    // last write wins per row) and its rows are pulled from a fresh cursor.
+    // Nothing local is deleted.
     await _db.transaction(() async {
       await _setState('sync_enabled', '1');
       await _setState('owner', owner);

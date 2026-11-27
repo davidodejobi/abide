@@ -106,7 +106,7 @@ class _SettingsTabScreenState extends ConsumerState<SettingsTabScreen>
             ],
             if (ref.watch(authRepositoryProvider) != null) ...[
               const YouSectionLabel(AccountStrings.youSection),
-              YouGroup(children: [_AccountRow()]),
+              YouGroup(children: _accountRows(context, ref)),
             ],
             const YouSectionLabel(YouStrings.appearance),
             YouGroup(children: [
@@ -350,21 +350,69 @@ class _RoadLandmarksRowState extends ConsumerState<RoadLandmarksRow> {
 }
 
 /// "Saved as x@y" once the road is saved, otherwise the way into the sheet.
-class _AccountRow extends ConsumerWidget {
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final email = ref.watch(accountProvider).valueOrNull?.email;
-    return email != null
-        ? YouRow(
-            icon: PhosphorIcons.userCheck(),
-            title: AccountStrings.savedAs(email),
-            subtitle: AccountStrings.savedHint,
-          )
-        : YouRow(
-            icon: PhosphorIcons.userCirclePlus(),
-            title: AccountStrings.saveRow,
-            subtitle: AccountStrings.saveRowHint,
-            onTap: () => showSaveRoadSheet(context),
-          );
+List<Widget> _accountRows(BuildContext context, WidgetRef ref) {
+  final account = ref.watch(accountProvider).valueOrNull;
+  if (account == null || !account.isSaved) {
+    return [
+      YouRow(
+        icon: PhosphorIcons.userCirclePlus(),
+        title: AccountStrings.saveRow,
+        subtitle: AccountStrings.saveRowHint,
+        onTap: () => showSaveRoadSheet(context),
+      ),
+    ];
+  }
+  return [
+    YouRow(
+      icon: PhosphorIcons.userCheck(),
+      title: AccountStrings.signedInWith(account),
+      subtitle: AccountStrings.savedHint,
+    ),
+    YouRow(
+      icon: PhosphorIcons.signOut(),
+      title: AccountStrings.signOut,
+      onTap: () => _confirmSignOut(context, ref),
+    ),
+  ];
+}
+
+Future<void> _confirmSignOut(BuildContext context, WidgetRef ref) async {
+  final ok = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text(AccountStrings.signOutTitle),
+      content: const Text(AccountStrings.signOutBody),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(ctx).pop(false),
+          child: const Text(AccountStrings.cancel),
+        ),
+        TextButton(
+          onPressed: () => Navigator.of(ctx).pop(true),
+          child: const Text(AccountStrings.signOut),
+        ),
+      ],
+    ),
+  );
+  if (ok != true) return;
+  var saved = false;
+  try {
+    saved = await ref.read(signOutProvider.notifier).signOut();
+  } catch (_) {
+    // Offline or a failed call: nothing was removed, so say the same thing.
+  }
+  if (!saved && context.mounted) {
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        content: const Text(AccountStrings.signOutUnsaved),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text(AccountStrings.ok),
+          ),
+        ],
+      ),
+    );
   }
 }
