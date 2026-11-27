@@ -105,9 +105,10 @@ class SyncService {
       if (flag == 'paused') await _setState('sync_enabled', '1');
       return;
     }
-    // TODO(sync): a device that signs in to an existing account (second device,
-    // email sign-in) takes the owner-change path: it re-queues local rows into
-    // the other account. Decide merge vs. replace before launching linking.
+    // Signing in to an existing account (new phone, sign-out and back in) lands
+    // here: local rows are re-queued into that account (merge, never replace;
+    // last write wins per row) and its rows are pulled from a fresh cursor.
+    // Nothing local is deleted.
     await _db.transaction(() async {
       await _setState('sync_enabled', '1');
       await _setState('owner', owner);

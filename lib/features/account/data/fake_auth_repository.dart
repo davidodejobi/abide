@@ -46,7 +46,25 @@ class FakeAuthRepository implements AuthRepository {
     if (!RegExp(r'^\d{6}$').hasMatch(code)) {
       throw const AuthFailure(AuthFailureKind.wrongCode);
     }
-    _set(AuthAccount(email: email));
+    _set(AuthAccount(email: email, provider: 'email'));
+  }
+
+  @override
+  bool appleAvailable = true;
+
+  @override
+  bool googleAvailable = true;
+
+  @override
+  Future<void> signInWithApple() async {
+    await _wait();
+    _set(const AuthAccount(email: 'reader@privaterelay.appleid.com', provider: 'apple'));
+  }
+
+  @override
+  Future<void> signInWithGoogle() async {
+    await _wait();
+    _set(const AuthAccount(email: 'reader@gmail.com', provider: 'google'));
   }
 
   @override

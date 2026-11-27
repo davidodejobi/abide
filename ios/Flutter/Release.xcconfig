@@ -1,2 +1,6 @@
 #include? "Pods/Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"
 #include "Generated.xcconfig"
+// Google sign-in URL scheme: the iOS client's reversed id. Override in the
+// untracked Local.xcconfig; the placeholder keeps the Info.plist valid.
+GOOGLE_REVERSED_CLIENT_ID = com.daoxstudio.lumway.google-unconfigured
+#include? "Local.xcconfig"

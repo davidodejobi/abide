@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../config/supabase_config.dart';
+import '../../features/account/providers/account_providers.dart';
 import '../storage/database/database_provider.dart';
 import 'supabase_sync_remote.dart';
 import 'sync_remote.dart';
@@ -15,7 +16,10 @@ import 'sync_service.dart';
 /// off by default.
 final syncRemoteProvider = Provider<SyncRemote?>((ref) {
   if (!supabaseConfigured) return null;
-  return SupabaseSyncRemote(Supabase.instance.client);
+  return SupabaseSyncRemote(
+    Supabase.instance.client,
+    ensureSession: ref.watch(authRepositoryProvider)?.ensureAnonymousSession,
+  );
 });
 
 final syncServiceProvider = Provider<SyncService?>((ref) {
@@ -67,6 +71,10 @@ class SyncController extends Notifier<void> {
         .listen((_) {
       _timer?.cancel();
       _timer = Timer(debounce, service.sync);
+    });
+    // A new account (sign-in, sign-out) re-keys sync: run it right away.
+    ref.listen(accountProvider, (prev, next) {
+      if (prev?.value != null && prev!.value != next.value) service.sync();
     });
     unawaited(service.sync());
   }

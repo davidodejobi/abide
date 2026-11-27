@@ -3,7 +3,11 @@ import 'sync_remote.dart';
 /// In-process stand-in for the server, used by tests. Mimics the real contract:
 /// last-write-wins by `updatedAt`, tombstones kept, a monotonic cursor.
 class InMemorySyncRemote implements SyncRemote {
-  final _rows = <String, Map<String, (int, SyncRecord)>>{};
+  final _byOwner = <String, Map<String, Map<String, (int, SyncRecord)>>>{};
+
+  /// Each account has its own rows, like the real server.
+  Map<String, Map<String, (int, SyncRecord)>> get _rows =>
+      _byOwner.putIfAbsent(owner, () => {});
   var _seq = 0;
 
   /// Account id reported to the service; change it to simulate a new account.

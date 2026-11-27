@@ -5,12 +5,25 @@ abstract final class AccountStrings {
   static const youSection = 'Account';
   static const saveRow = 'Save your road';
   static const saveRowHint = 'Keep your progress on every device';
-  static String savedAs(String email) => 'Saved as $email';
   static const savedHint = 'Your road is safe';
 
   static const title = 'Save your road';
   static const body =
-      'Keep your progress and notes across your phone, tablet and the web.';
+      'Signing in keeps your notes, highlights and reading progress safe on every phone.';
+  static const continueApple = 'Continue with Apple';
+  static const continueGoogle = 'Continue with Google';
+  static const orEmail = 'or use your email';
+  static String signedInWith(AuthAccount a) => switch (a.provider) {
+        'apple' => 'Signed in with Apple',
+        'google' => 'Signed in with Google',
+        _ => 'Signed in as ${a.email}',
+      };
+  static const signOut = 'Sign out';
+  static const signOutTitle = 'Sign out?';
+  static const signOutBody =
+      'Your notes, highlights and reading progress stay on this phone. '
+      'Sign in again any time to keep them in sync.';
+  static const cancel = 'Cancel';
   static const emailLabel = 'Email address';
   static const sendCode = 'Send me a code';
   static const notNow = 'Not now';
@@ -21,8 +34,9 @@ abstract final class AccountStrings {
   static const resend = 'Send again';
   static String resendIn(int s) => 'Send again in ${s}s';
   static const successTitle = 'Your road is saved';
-  static String successBody(String email) =>
-      'Your progress and notes now follow you. Signed in as $email.';
+  static String successBody(String email) => email.isEmpty
+      ? 'Your progress and notes now follow you.'
+      : 'Your progress and notes now follow you. Signed in as $email.';
   static const done = 'Done';
 
   static String error(AuthFailureKind k) => switch (k) {
@@ -31,6 +45,7 @@ abstract final class AccountStrings {
           'That code did not match. Check it and try again.',
         AuthFailureKind.network =>
           'No connection. Check your network and try again.',
+        AuthFailureKind.cancelled => '',
         AuthFailureKind.unknown => 'Something went wrong. Please try again.',
       };
 }

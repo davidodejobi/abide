@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:openbaptisthymnal/core/theme/lum_theme.dart';
 import 'package:openbaptisthymnal/core/widgets/lum_button.dart';
 
@@ -70,13 +71,20 @@ class _SaveRoadSheetState extends ConsumerState<SaveRoadSheet> {
       await op();
       return true;
     } on AuthFailure catch (f) {
-      if (mounted) setState(() => _error = f.kind);
+      if (mounted && f.kind != AuthFailureKind.cancelled) {
+        setState(() => _error = f.kind);
+      }
     } catch (_) {
       if (mounted) setState(() => _error = AuthFailureKind.unknown);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
     return false;
+  }
+
+  Future<void> _native(Future<void> Function(AuthRepository r) op) async {
+    final ok = await _run(() => op(ref.read(authRepositoryProvider)!));
+    if (ok && mounted) setState(() => _step = _Step.success);
   }
 
   Future<void> _sendCode() async {
@@ -138,6 +146,11 @@ class _SaveRoadSheetState extends ConsumerState<SaveRoadSheet> {
     );
   }
 
+  bool get _hasNative {
+    final r = ref.read(authRepositoryProvider);
+    return r != null && (r.appleAvailable || r.googleAvailable);
+  }
+
   Widget _title(LumColors c, String text) => Semantics(
         header: true,
         child: Text(text,
@@ -175,6 +188,32 @@ class _SaveRoadSheetState extends ConsumerState<SaveRoadSheet> {
         Text(AccountStrings.body,
             style: LumText.subheadline.copyWith(color: c.textSecondary)),
         const SizedBox(height: LumSpace.lg),
+        if (ref.watch(authRepositoryProvider)?.appleAvailable ?? false) ...[
+          // Apple's guidelines: a black (or white) button with the Apple logo.
+          // Primary is ink in light mode and paper in dark mode.
+          LumButton(
+            label: AccountStrings.continueApple,
+            icon: Icon(PhosphorIcons.appleLogo(PhosphorIconsStyle.fill)),
+            onPressed: _busy ? null : () => _native((r) => r.signInWithApple()),
+          ),
+          const SizedBox(height: LumSpace.sm),
+        ],
+        if (ref.watch(authRepositoryProvider)?.googleAvailable ?? false) ...[
+          LumButton(
+            label: AccountStrings.continueGoogle,
+            kind: LumButtonKind.secondary,
+            icon: Icon(PhosphorIcons.googleLogo(PhosphorIconsStyle.bold)),
+            onPressed: _busy ? null : () => _native((r) => r.signInWithGoogle()),
+          ),
+          const SizedBox(height: LumSpace.sm),
+        ],
+        if (_hasNative)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: LumSpace.sm),
+            child: Text(AccountStrings.orEmail,
+                textAlign: TextAlign.center,
+                style: LumText.subheadline.copyWith(color: c.textSecondary)),
+          ),
         TextField(
           controller: _email,
           readOnly: _busy,
