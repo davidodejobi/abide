@@ -181,7 +181,7 @@ void main() {
 
   test('storeUrlFor falls back when the config has no url', () {
     expect(storeUrlFor(null, ios: false),
-        'https://play.google.com/store/apps/details?id=com.openbaptisthymnal');
+        'https://play.google.com/store/apps/details?id=com.daoxstudio.lumway');
     expect(storeUrlFor(cfg(), ios: true), 'https://apps.apple.com/');
     const withUrl = AppConfig(
         minVersion: '1',
