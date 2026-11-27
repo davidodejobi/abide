@@ -11,8 +11,8 @@ import '../theme/lum_tokens.dart';
 /// same sun, see abide-design-work/lumway/icon/make_icon.py, whose geometry the
 /// constants below repeat). Then:
 ///
-/// - 0-520 ms: the gold rays turn a few degrees and the core brightens with a
-///   soft glow pulse.
+/// - 0-520 ms: the gold rays wind back a few degrees, then turn forward and
+///   lock into place while the core brightens with a soft glow pulse.
 /// - 520-800 ms: the mark swells slightly and fades over the page colour (one
 ///   light haptic as it starts to go).
 /// - 800-1200 ms: a circle opens from the core and grows to reveal the app.
@@ -205,8 +205,12 @@ class _IntroPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final centre = size.center(Offset.zero);
 
-    // Phase 1: the gold rays turn, the core brightens, a soft glow pulses.
-    final turn = Curves.easeInOut.transform(_span(ms, 0, _openAtMs));
+    // Phase 1: the rays wind back, then turn forward and lock into the
+    // icon's angle (the haptic lands on the lock). They start and end at the
+    // native splash angle, so there is no jump either side.
+    final turnDeg = ms < 180
+        ? -12 * Curves.easeOut.transform(_span(ms, 0, 180))
+        : -12 * (1 - Curves.easeOutBack.transform(_span(ms, 180, _openAtMs)));
     final pulse = math.sin(math.pi * _span(ms, 0, _openAtMs));
     // Phase 2: the circle opens from the core; the mark swells and fades.
     final open = Curves.easeInCubic
@@ -257,7 +261,7 @@ class _IntroPainter extends CustomPainter {
     );
     canvas
       ..save()
-      ..rotate(10 * turn * math.pi / 180)
+      ..rotate(turnDeg * math.pi / 180)
       ..drawPath(art.rays, Paint()..color = _gold)
       ..restore();
     canvas
