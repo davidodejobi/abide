@@ -98,5 +98,5 @@ String storeUrlFor(AppConfig? config, {required bool ios}) {
   // (https://apps.apple.com/app/id<id>) once the listing exists.
   return ios
       ? 'https://apps.apple.com/'
-      : 'https://play.google.com/store/apps/details?id=com.openbaptisthymnal';
+      : 'https://play.google.com/store/apps/details?id=com.daoxstudio.lumway';
 }
