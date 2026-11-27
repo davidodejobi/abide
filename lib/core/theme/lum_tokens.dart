@@ -797,7 +797,7 @@ class LumColors {
     bgDangerContainer: Color(0x24FFB7B2),
     bgDisabled: Color(0x0FFFFFFF),
     bgInverse: Color(0xFFEEF0F3),
-    bgElevated: Color(0x16FFFFFF),
+    bgElevated: Color(0xFF2B2F37), // opaque: sheets were see-through
     bgGrouped: Color(0xFF161A22),
     bgGroupedCell: Color(0x0BFFFFFF),
     bgFeature: Color(0x16FFFFFF),

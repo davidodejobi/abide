@@ -22,6 +22,7 @@ Future<bool> requirePlus(
   if (!ref.read(plusEnabledProvider)) return true;
   if (!isGated(ref.read(plusProvider), feature, enabled: true)) return true;
   final plans = await showModalBottomSheet<bool>(
+    useRootNavigator: true,
     context: context,
     showDragHandle: true,
     isScrollControlled: true,

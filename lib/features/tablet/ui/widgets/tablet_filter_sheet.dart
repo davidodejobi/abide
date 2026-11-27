@@ -182,6 +182,7 @@ Future<_ManageAction?> _showManageSheet(
   required String deleteSubtitle,
 }) {
   return showModalBottomSheet<_ManageAction>(
+    useRootNavigator: true,
     context: context,
     builder: (context) => SafeArea(
       child: Column(

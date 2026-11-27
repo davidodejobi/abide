@@ -393,6 +393,7 @@ class _NoteEditorView extends HookConsumerWidget {
 
     Future<void> openNoteMenu() async {
       final choice = await showModalBottomSheet<bool>(
+        useRootNavigator: true,
         context: context,
         showDragHandle: true,
         builder: (sheetContext) => SafeArea(
@@ -788,6 +789,7 @@ class _NoteEditorView extends HookConsumerWidget {
                               final id = currentId.value;
                               if (id == null || !context.mounted) return;
                               showModalBottomSheet<void>(
+                                useRootNavigator: true,
                                 context: context,
                                 showDragHandle: true,
                                 builder: (_) => FolderPickerSheet(noteId: id),
@@ -803,6 +805,7 @@ class _NoteEditorView extends HookConsumerWidget {
                               final id = currentId.value;
                               if (id == null || !context.mounted) return;
                               showModalBottomSheet<void>(
+                                useRootNavigator: true,
                                 context: context,
                                 showDragHandle: true,
                                 builder: (_) => TagPickerSheet(noteId: id),
@@ -817,6 +820,7 @@ class _NoteEditorView extends HookConsumerWidget {
                               await save();
                               if (!context.mounted) return;
                               showModalBottomSheet<void>(
+                                useRootNavigator: true,
                                 context: context,
                                 showDragHandle: true,
                                 isScrollControlled: true,

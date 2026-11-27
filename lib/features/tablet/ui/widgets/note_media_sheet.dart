@@ -58,6 +58,7 @@ Future<void> showNoteMediaSheet(
 ) {
   HapticFeedback.selectionClick();
   return showModalBottomSheet<void>(
+    useRootNavigator: true,
     context: context,
     showDragHandle: true,
     isScrollControlled: true,
@@ -325,6 +326,7 @@ enum InsertChoice { camera, photos, record, checklist }
 /// The Insert popover opened from the editor toolbar.
 Future<InsertChoice?> showInsertSheet(BuildContext context) {
   return showModalBottomSheet<InsertChoice>(
+    useRootNavigator: true,
     context: context,
     showDragHandle: true,
     backgroundColor: context.lum.bgElevated,

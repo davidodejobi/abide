@@ -246,6 +246,7 @@ class _FilterRow extends ConsumerWidget {
           label: NotesStrings.filter,
           icon: PhosphorIcons.funnel(),
           onTap: () => showModalBottomSheet<void>(
+            useRootNavigator: true,
             context: context,
             showDragHandle: true,
             isScrollControlled: true,

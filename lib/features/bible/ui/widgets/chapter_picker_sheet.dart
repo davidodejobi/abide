@@ -10,6 +10,7 @@ Future<int?> showChapterPicker(
   required int currentChapter,
 }) {
   return showModalBottomSheet<int>(
+    useRootNavigator: true,
     context: context,
     showDragHandle: true,
     isScrollControlled: true,

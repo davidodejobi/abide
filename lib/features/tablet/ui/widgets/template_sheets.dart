@@ -90,6 +90,7 @@ Future<void> showTemplateMenu(
   final pins = ref.read(pinnedTemplateIdsProvider.notifier);
   final isPinned = ref.read(pinnedTemplateIdsProvider).contains(template.id);
   return showModalBottomSheet<void>(
+    useRootNavigator: true,
     context: context,
     showDragHandle: true,
     builder: (sheetContext) => SafeArea(
@@ -143,6 +144,7 @@ Future<void> duplicateTemplate(
 /// Read-only list of a template's sections and their types.
 Future<void> showTemplatePreview(BuildContext context, NoteTemplate template) {
   return showModalBottomSheet<void>(
+    useRootNavigator: true,
     context: context,
     showDragHandle: true,
     isScrollControlled: true,
@@ -163,6 +165,7 @@ Future<void> showSectionsPreview(
   required List<TemplateSection> sections,
 }) {
   return showModalBottomSheet<void>(
+    useRootNavigator: true,
     context: context,
     showDragHandle: true,
     isScrollControlled: true,

@@ -108,6 +108,7 @@ class TemplateForm extends HookConsumerWidget {
 
     Future<void> addSection() async {
       final type = await showModalBottomSheet<TemplateSectionType>(
+        useRootNavigator: true,
         context: context,
         showDragHandle: true,
         builder: (sheetContext) => SafeArea(

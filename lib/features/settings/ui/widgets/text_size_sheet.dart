@@ -7,6 +7,7 @@ import 'package:openbaptisthymnal/features/settings/ui/widgets/font_size_control
 /// the font scale provider.
 Future<void> showTextSizeSheet(BuildContext context, {required String title}) {
   return showModalBottomSheet<void>(
+    useRootNavigator: true,
     context: context,
     showDragHandle: true,
     builder: (context) => SafeArea(

@@ -236,6 +236,7 @@ class BibleTabScreen extends HookConsumerWidget {
           final items = backlinks[verse];
           if (items == null || items.isEmpty) return;
           showModalBottomSheet<void>(
+            useRootNavigator: true,
             context: context,
             showDragHandle: true,
             isScrollControlled: true,
